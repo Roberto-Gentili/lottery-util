@@ -165,16 +165,16 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 
 		double effectiveness = 100d - ((discardedFromHistory * 100) / (double)allWinningCombos.size());
 		double discardedFromIntegralSystemPercentage = (discardedFromIntegralSystem * 100) / (double)comboHandler.getSize();
-		System.out.println("Total extractions analyzed:\t\t" + rightAlignedString(integerFormat.format(allWinningCombos.size())));
-		System.out.println("Discarded winning combos:\t\t" + rightAlignedString(integerFormat.format(discardedFromHistory)));
-		System.out.println("Discarded winning combos percentage:\t" + rightAlignedString(decimalFormat.format(effectiveness) + "%"));
-		System.out.println("Integral system total combos:\t\t" + rightAlignedString(decimalFormat.format(comboHandler.getSize())));
-		System.out.println("Integral system discarded combos:\t" + rightAlignedString(decimalFormat.format(discardedFromIntegralSystem)));
-		System.out.println("Integral system discarded combos percentage:" + rightAlignedString(decimalFormat.format(discardedFromIntegralSystemPercentage) + "%") + "\n\n");
+		System.out.println("Total extractions analyzed:" + rightAlignedString(integerFormat.format(allWinningCombos.size()), 25));
+		System.out.println("Discarded winning combos:" + rightAlignedString(integerFormat.format(discardedFromHistory), 27));
+		System.out.println("Discarded winning combos percentage:" + rightAlignedString(decimalFormat.format(effectiveness) + "%", 16));
+		System.out.println("Integral system total combos:" + rightAlignedString(decimalFormat.format(comboHandler.getSize()), 23));
+		System.out.println("Integral system discarded combos:" + rightAlignedString(decimalFormat.format(discardedFromIntegralSystem), 19));
+		System.out.println("Integral system discarded combos percentage:" + rightAlignedString(decimalFormat.format(discardedFromIntegralSystemPercentage) + "%", 8) + "\n\n");
 	}
 
-	private String rightAlignedString(String value) {
-		return String.format("%11s", value);
+	private String rightAlignedString(String value, int emptySpacesCount) {
+		return String.format("%" + emptySpacesCount + "s", value);
 	}
 
 }
