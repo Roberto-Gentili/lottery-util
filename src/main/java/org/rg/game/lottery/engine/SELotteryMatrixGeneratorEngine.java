@@ -6,7 +6,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -113,26 +115,66 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	public void testEffectiveness(String filterAsString, List<Integer> numbers, boolean fineLog) {
 		Predicate<List<Integer>> combinationFilter = CombinationFilterFactory.INSTANCE.parse(filterAsString);
 		Set<Entry<Date, List<Integer>>> allWinningCombos = SEExtractionArchive.get(getExtractionArchiveStartDate()).getAllWinningCombos().entrySet();
-		int discarded = 0;
+		int discardedFromHistory = 0;
+		System.out.println("Starting filter analysis\n");
 		for (Map.Entry<Date, List<Integer>> comboForDate : allWinningCombos) {
 			if (!combinationFilter.test(comboForDate.getValue())) {
-				discarded++;
+				discardedFromHistory++;
 				if (fineLog) {
 					System.out.println("Filter discarded winning combo of " + CombinationFilterFactory.INSTANCE.simpleDateFormatter.format(comboForDate.getKey()) + ":  " +
 						CombinationFilterFactory.INSTANCE.toString(comboForDate.getValue()));
 				}
 			}
 		}
-		if (fineLog && discarded > 0) {
+		if (fineLog) {
 			System.out.println();
 		}
-		double effectiveness = 100d - ((discarded * 100) / (double)allWinningCombos.size());
-		System.out.println("Total extractions: " + integerFormat.format(allWinningCombos.size()));
-		System.out.println("Filter discarded combos: " + integerFormat.format(discarded));
-		System.out.println("Effectiveness: " + decimalFormat.format(effectiveness) + "%\n\n");
-
 		ComboHandler comboHandler = new ComboHandler(numbers, 6);
+		Collection<Integer> comboPartitionIndexes = new HashSet<>();
+		int discardedFromIntegralSystem = 0;
+		int elaborationUnitSize = 25_000_000;
+		for (int i = 0 ; i < comboHandler.getSize(); i++) {
+			comboPartitionIndexes.add(i);
+			if (comboPartitionIndexes.size() == elaborationUnitSize) {
+				if (fineLog) {
+					System.out.println("Loaded " + integerFormat.format(comboPartitionIndexes.size()) + " of indexes");
+				}
+				for (List<Integer> combo : comboHandler.find(comboPartitionIndexes, true).values()) {
+					if (!combinationFilter.test(combo)) {
+						discardedFromIntegralSystem++;
+					}
+				}
+				if (fineLog) {
+					System.out.println("Processed " + integerFormat.format(comboPartitionIndexes.size()) + " of combo");
+				}
+			}
+		}
+		if (comboPartitionIndexes.size() > 0) {
+			for (List<Integer> combo : comboHandler.find(comboPartitionIndexes, true).values()) {
+				if (!combinationFilter.test(combo)) {
+					discardedFromIntegralSystem++;
+				}
+			}
+			if (fineLog && comboHandler.getSize() >= elaborationUnitSize) {
+				System.out.println("Processed " + integerFormat.format(comboHandler.getSize()) + " of combo");
+			}
+		}
+		if (fineLog && discardedFromHistory > 0) {
+			System.out.println();
+		}
 
+		double effectiveness = 100d - ((discardedFromHistory * 100) / (double)allWinningCombos.size());
+		double discardedFromIntegralSystemPercentage = (discardedFromIntegralSystem * 100) / (double)comboHandler.getSize();
+		System.out.println("Total extractions analyzed:\t\t" + rightAlignedString(integerFormat.format(allWinningCombos.size())));
+		System.out.println("Discarded winning combos:\t\t" + rightAlignedString(integerFormat.format(discardedFromHistory)));
+		System.out.println("Discarded winning combos percentage:\t" + rightAlignedString(decimalFormat.format(effectiveness) + "%"));
+		System.out.println("Integral system total combos:\t\t" + rightAlignedString(decimalFormat.format(comboHandler.getSize())));
+		System.out.println("Integral system discarded combos:\t" + rightAlignedString(decimalFormat.format(discardedFromIntegralSystem)));
+		System.out.println("Integral system discarded combos percentage:" + rightAlignedString(decimalFormat.format(discardedFromIntegralSystemPercentage) + "%") + "\n\n");
+	}
+
+	private String rightAlignedString(String value) {
+		return String.format("%11s", value);
 	}
 
 }

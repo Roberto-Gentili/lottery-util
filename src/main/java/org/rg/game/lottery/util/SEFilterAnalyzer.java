@@ -19,7 +19,7 @@ public class SEFilterAnalyzer {
 		SELotteryMatrixGeneratorEngine engine = new SELotteryMatrixGeneratorEngine();
 		engine.testEffectiveness(
 			filter,
-			IntStream.rangeClosed(1, 91)
+			IntStream.rangeClosed(1, 90)
 		    .boxed().collect(Collectors.toList()),
 			true
 		);
