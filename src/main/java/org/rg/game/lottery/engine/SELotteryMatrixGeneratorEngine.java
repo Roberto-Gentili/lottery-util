@@ -110,7 +110,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	@Override
-	public void testEffectiveness(String filterAsString, boolean fineLog) {
+	public void testEffectiveness(String filterAsString, List<Integer> numbers, boolean fineLog) {
 		Predicate<List<Integer>> combinationFilter = CombinationFilterFactory.INSTANCE.parse(filterAsString);
 		Set<Entry<Date, List<Integer>>> allWinningCombos = SEExtractionArchive.get(getExtractionArchiveStartDate()).getAllWinningCombos().entrySet();
 		int discarded = 0;
@@ -130,6 +130,9 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		System.out.println("Total extractions: " + integerFormat.format(allWinningCombos.size()));
 		System.out.println("Filter discarded combos: " + integerFormat.format(discarded));
 		System.out.println("Effectiveness: " + decimalFormat.format(effectiveness) + "%\n\n");
+
+		ComboHandler comboHandler = new ComboHandler(numbers, 6);
+
 	}
 
 }

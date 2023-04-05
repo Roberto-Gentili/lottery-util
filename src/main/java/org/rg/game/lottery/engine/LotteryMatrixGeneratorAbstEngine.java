@@ -58,7 +58,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 
 	public void setup(Properties config) {
 		Collection<LocalDate> extractionDates = new LinkedHashSet<>();
-		extractionArchiveStartDate = config.getProperty("competition.archive.start-date", getDefaultExtractionArchiveStartDate());
+		extractionArchiveStartDate = config.getProperty("competition.archive.start-date");
 		String extractionDatesAsString = config.getProperty("competition");
 		if (extractionDatesAsString == null || extractionDatesAsString.isEmpty()) {
 			extractionDates.add(LocalDate.now());
@@ -105,9 +105,6 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		storageType = config.getProperty("storage", "memory").replaceAll("\\s+","");
 		String combinationFilterRaw = config.getProperty("combination.filter");
 		combinationFilter = CombinationFilterFactory.INSTANCE.parse(combinationFilterRaw);
-		if (combinationFilterRaw != null && Boolean.parseBoolean(config.getProperty("combination.filter.test", "true"))) {
-			testEffectiveness(combinationFilterRaw, Boolean.parseBoolean(config.getProperty("combination.filter.test.fine-info", "true")));
-		}
 		Function<LocalDate, Map<String, Object>> basicDataSupplier = extractionDate -> {
 			Map<String, Object> data = adjustSeed(extractionDate);
 			String numbersOrdered = config.getProperty("numbers.ordered");
@@ -157,6 +154,9 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 			for (LocalDate extractionDate : extractionDates) {
 				generate(
 					basicDataSupplier,
+					combinationFilterRaw,
+					Boolean.parseBoolean(config.getProperty("combination.filter.test", "true")),
+					Boolean.parseBoolean(config.getProperty("combination.filter.test.fine-info", "true")),
 					Integer.valueOf(config.getProperty("combination.components")),
 					Optional.ofNullable(config.getProperty("numbers.occurrences")).map(Double::parseDouble).orElseGet(() -> null),
 					Optional.ofNullable(config.getProperty("combination.count")).map(Integer::parseInt).orElseGet(() -> null),
@@ -190,7 +190,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		}
 	}
 
-	protected abstract void testEffectiveness(String combinationFilterRaw, boolean parseBoolean);
+	protected abstract void testEffectiveness(String combinationFilterRaw, List<Integer> numbers, boolean parseBoolean);
 
 	private List<LocalDate> forThisWeek() {
 		return forWeekOf(LocalDate.now());
@@ -219,6 +219,9 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 
 	public void generate(
 		Function<LocalDate, Map<String, Object>> basicDataSupplier,
+		String combinationFilterRaw,
+		boolean testFilter,
+		boolean testFilterFineInfo,
 		int combinationComponents,
 		Double occurrencesNumberRequested,
 		Integer numberOfCombosRequested,
@@ -231,6 +234,9 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	) {
 		Map<String, Object> data = basicDataSupplier.apply(extractionDate);
 		List<Integer> numbers = (List<Integer>)data.get("numbersToBePlayed");
+		if (combinationFilterRaw != null && testFilter) {
+			testEffectiveness(combinationFilterRaw, numbers, testFilterFineInfo);
+		}
 		Double ratio;
 		Double occurrencesNumber = occurrencesNumberRequested;
 		Integer numberOfCombos = numberOfCombosRequested;
@@ -520,7 +526,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	}
 
 	protected String getExtractionArchiveStartDate() {
-		return extractionArchiveStartDate;
+		return extractionArchiveStartDate != null ? extractionArchiveStartDate : getDefaultExtractionArchiveStartDate();
 	}
 
 	protected abstract String getDefaultExtractionArchiveStartDate();
