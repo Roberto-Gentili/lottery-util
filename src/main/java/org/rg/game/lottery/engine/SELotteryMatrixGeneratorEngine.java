@@ -136,9 +136,9 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		for (int i = 0 ; i < comboHandler.getSize(); i++) {
 			comboPartitionIndexes.add(i);
 			if (comboPartitionIndexes.size() == elaborationUnitSize) {
-				if (fineLog) {
+				/*if (fineLog) {
 					System.out.println("Loaded " + integerFormat.format(i + 1) + " of indexes");
-				}
+				}*/
 				for (List<Integer> combo : comboHandler.find(comboPartitionIndexes, true).values()) {
 					if (!combinationFilter.test(combo)) {
 						discardedFromIntegralSystem++;
