@@ -83,7 +83,7 @@ public class CombinationFilterFactory {
 				}
 				previousNumber = number;
 			}
-			if (maxConsecutiveNumberCounter > 0 ) {
+			if (maxConsecutiveNumberCounter > 0) {
 				maxConsecutiveNumberCounter++;
 			}
 			return maxConsecutiveNumberCounter >= bounds[0] && maxConsecutiveNumberCounter <= bounds[1];
@@ -192,10 +192,6 @@ public class CombinationFilterFactory {
 			}
 			if (maxConsecutiveLastDigitCounter > 0) {
 				maxConsecutiveLastDigitCounter++;
-			}
-			boolean flag = maxConsecutiveLastDigitCounter >= bounds[0] && maxConsecutiveLastDigitCounter <= bounds[1];
-			if (!flag) {
-				flag = false;
 			}
 			return maxConsecutiveLastDigitCounter >= bounds[0] && maxConsecutiveLastDigitCounter <= bounds[1];
 		};
