@@ -48,9 +48,7 @@ public class CombinationFilterFactory {
 	}
 
 	private Predicate<List<Integer>> parseSimpleExpression(String filterAsString) {
-		if (filterAsString.contains("->")) {
-			return buildNumberGroupFilter(filterAsString);
-		} else if (filterAsString.contains("odd") || filterAsString.contains("even")) {
+		if (filterAsString.contains("odd") || filterAsString.contains("even")) {
 			return buildOddOrEvenFilter(filterAsString);
 		} else if (filterAsString.contains("sameLastDigit")) {
 			return buildSameLastDigitFilter(filterAsString);
@@ -58,8 +56,58 @@ public class CombinationFilterFactory {
 			return buildConsecutiveLastDigitFilter(filterAsString);
 		} else if (filterAsString.contains("consecutiveNumber")) {
 			return buildConsecutiveNumberFilter(filterAsString);
+		} else if (filterAsString.contains("radius")) {
+			return buildRadiusFilter(filterAsString);
+		} else if (filterAsString.contains("->")) {
+			return buildNumberGroupFilter(filterAsString);
 		}
 		return null;
+	}
+
+	private Predicate<List<Integer>> buildRadiusFilter(String filterAsString) {
+		String[] radiusOptions = filterAsString.replaceAll("\\s+","").split("radius");
+		String[] rangeOptions = radiusOptions[0].split("->");
+		Integer leftRangeBounds = rangeOptions.length > 1 ? Integer.parseInt(rangeOptions[0]) : null;
+		Integer rightRangeBounds =  rangeOptions.length > 1 ? Integer.parseInt(rangeOptions[1]) : null;
+		String[] options = radiusOptions[1].split(":");
+		String[] boundsAsString = options[1].split(",");
+		int leftOffset = Integer.parseInt(options[0].split(",")[0]);
+		int rightOffset = Integer.parseInt(options[0].split(",")[1]);
+		int[] bounds = {
+			Integer.parseInt(boundsAsString[0]),
+			Integer.parseInt(boundsAsString[1])
+		};
+		return combo -> {
+			int maxNumbersInRange = 0;
+			for (Integer number : new TreeSet<>(combo)) {
+				if (rangeOptions.length > 1) {
+					if (number > rightRangeBounds) {
+						return true;
+					} else if (number < leftRangeBounds) {
+						continue;
+					}
+				}
+				int numbersInRangeCounter = 0;
+				int leftBound = number + leftOffset;
+				int rightBound = number + rightOffset;
+				for (Integer innNumber : combo) {
+					if (number != innNumber && innNumber >= leftBound && innNumber <= rightBound) {
+						if (numbersInRangeCounter == 0) {
+							numbersInRangeCounter++;
+						}
+						if (++numbersInRangeCounter > bounds[1]) {
+							return false;
+						} else if (numbersInRangeCounter > maxNumbersInRange) {
+							maxNumbersInRange = numbersInRangeCounter;
+						}
+					}
+				}
+				if (rangeOptions.length > 1 && numbersInRangeCounter < bounds[0]) {
+					return false;
+				}
+			}
+			return rangeOptions.length > 1 || maxNumbersInRange >= bounds[0];
+		};
 	}
 
 	private Predicate<List<Integer>> buildConsecutiveNumberFilter(String filterAsString) {
@@ -72,19 +120,18 @@ public class CombinationFilterFactory {
 			int counter = 0;
 			int maxConsecutiveNumberCounter = 0;
 			Integer previousNumber = null;
-			for (int number : combo) {
+			for (int number : new TreeSet<>(combo)) {
 				if (previousNumber != null && ((number != 0 && previousNumber == number -1) || (number == 0 && previousNumber == 9))) {
-					counter++;
-					if (counter > maxConsecutiveNumberCounter) {
+					if (counter == 0) {
+						counter++;
+					}
+					if (++counter > maxConsecutiveNumberCounter) {
 						maxConsecutiveNumberCounter = counter;
 					}
 				} else {
 					counter = 0;
 				}
 				previousNumber = number;
-			}
-			if (maxConsecutiveNumberCounter > 0) {
-				maxConsecutiveNumberCounter++;
 			}
 			return maxConsecutiveNumberCounter >= bounds[0] && maxConsecutiveNumberCounter <= bounds[1];
 		};
@@ -181,17 +228,16 @@ public class CombinationFilterFactory {
 			Integer previousNumber = null;
 			for (int number : lastDigits) {
 				if (previousNumber != null && ((number != 0 && previousNumber == number -1) || (number == 0 && previousNumber == 9))) {
-					counter++;
-					if (counter > maxConsecutiveLastDigitCounter) {
+					if (counter == 0) {
+						counter++;
+					}
+					if (++counter > maxConsecutiveLastDigitCounter) {
 						maxConsecutiveLastDigitCounter = counter;
 					}
 				} else {
 					counter = 0;
 				}
 				previousNumber = number;
-			}
-			if (maxConsecutiveLastDigitCounter > 0) {
-				maxConsecutiveLastDigitCounter++;
 			}
 			return maxConsecutiveLastDigitCounter >= bounds[0] && maxConsecutiveLastDigitCounter <= bounds[1];
 		};
