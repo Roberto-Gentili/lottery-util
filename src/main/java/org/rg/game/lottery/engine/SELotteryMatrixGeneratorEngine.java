@@ -137,7 +137,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 			comboPartitionIndexes.add(i);
 			if (comboPartitionIndexes.size() == elaborationUnitSize) {
 				if (fineLog) {
-					System.out.println("Loaded " + integerFormat.format(elaborationUnitSize) + " of indexes");
+					System.out.println("Loaded " + integerFormat.format(i + 1) + " of indexes");
 				}
 				for (List<Integer> combo : comboHandler.find(comboPartitionIndexes, true).values()) {
 					if (!combinationFilter.test(combo)) {
@@ -145,7 +145,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 					}
 				}
 				if (fineLog) {
-					System.out.println("Processed " + integerFormat.format(elaborationUnitSize) + " of combo");
+					System.out.println("Processed " + integerFormat.format(i + 1) + " of combos");
 				}
 			}
 		}
