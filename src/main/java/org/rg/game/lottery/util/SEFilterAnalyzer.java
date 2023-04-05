@@ -6,7 +6,9 @@ import java.util.stream.IntStream;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 
 public class SEFilterAnalyzer {
-	private static String filter = 	"1 -> 9: 0,3;" +
+	private static String filter =
+		"sameLastDigit: 0,4&" +
+		"1 -> 9: 0,3;" +
 		"10 -> 19: 0,3;" +
 		"20 -> 29: 0,3;" +
 		"30 -> 39: 0,3;" +
