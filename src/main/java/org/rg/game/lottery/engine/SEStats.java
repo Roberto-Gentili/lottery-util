@@ -73,7 +73,6 @@ public class SEStats {
 		Map<String, Integer> extractedNumberCountersMap = new LinkedHashMap<>();
 		allWinningCombos = new LinkedHashMap<>();
 		allWinningCombosWithJollyAndSuperstar = new LinkedHashMap<>();
-		boolean loadedFromInternet = false;
 		try {
 			try {
 				if (forceLoadingFromExcel) {
@@ -81,7 +80,6 @@ public class SEStats {
 				}
 				loadRawDataFromInternet(extractedNumberPairCountersMap, extractedNumberCountersMap);
 				loadData(extractedNumberPairCountersMap, extractedNumberCountersMap);
-				loadedFromInternet = true;
 			} catch (Throwable exc) {
 				if (!forceLoadingFromExcel) {
 					System.out.println("Unable to load data from Internet: " + exc.getMessage());
@@ -94,14 +92,12 @@ public class SEStats {
 		} catch (Throwable exc) {
 			throw new RuntimeException(exc);
 		}
-		if (loadedFromInternet) {
-			try {
-				storeToExcel(
-					PersistentStorage.buildWorkingPath()
-				);
-			} catch (IOException exc) {
-				throw new RuntimeException(exc);
-			}
+		try {
+			storeToExcel(
+				PersistentStorage.buildWorkingPath()
+			);
+		} catch (IOException exc) {
+			throw new RuntimeException(exc);
 		}
 		System.out.println("\nAll extraction data have been succesfully loaded\n\n");
 	}
