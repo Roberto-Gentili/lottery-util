@@ -3,6 +3,7 @@ package org.rg.game.lottery.engine;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -27,7 +28,11 @@ public class CombinationFilterFactory {
 		if (filterAsString == null || filterAsString.replaceAll("\\s+","").isEmpty()) {
 			return numbers -> true;
 		}
-		return parseComplexExpression(filterAsString);
+		Predicate<List<Integer>> predicate = parseComplexExpression(filterAsString);
+		return combo -> {
+			Collections.sort(combo);
+			return predicate.test(combo);
+		};
 	}
 
 	private Predicate<List<Integer>> parseComplexExpression(String filterAsString) {
@@ -95,7 +100,7 @@ public class CombinationFilterFactory {
 		};
 		return combo -> {
 			int maxNumbersInRange = 0;
-			for (Integer number : new TreeSet<>(combo)) {
+			for (Integer number : combo) {
 				if (rangeOptions.length > 1) {
 					if (number > rightRangeBounds) {
 						return true;
@@ -141,7 +146,7 @@ public class CombinationFilterFactory {
 			int counter = 0;
 			int maxConsecutiveNumberCounter = 0;
 			Integer previousNumber = null;
-			for (int number : new TreeSet<>(combo)) {
+			for (int number : combo) {
 				if (rangeOptions.length > 1) {
 					if (number > rightRangeBounds) {
 						break;
@@ -220,7 +225,7 @@ public class CombinationFilterFactory {
 			number -> number % divisor != 0;
 		return combo -> {
 			int evenOrOddCounter = 0;
-			for (Integer number : new TreeSet<>(combo)) {
+			for (Integer number : combo) {
 				if (rangeOptions.length > 1) {
 					if (number > rightRangeBounds) {
 						break;
@@ -249,7 +254,7 @@ public class CombinationFilterFactory {
 		};
 		return combo -> {
 			int[] counters = new int[10];
-			for (Integer number : new TreeSet<>(combo)) {
+			for (Integer number : combo) {
 				if (rangeOptions.length > 1) {
 					if (number > rightRangeBounds) {
 						break;
@@ -277,7 +282,7 @@ public class CombinationFilterFactory {
 		};
 		return combo -> {
 			Set<Integer> lastDigits = new TreeSet<>();
-			for (Integer number : new TreeSet<>(combo)) {
+			for (Integer number : combo) {
 				if (rangeOptions.length > 1) {
 					if (number > rightRangeBounds) {
 						break;
