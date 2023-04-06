@@ -75,9 +75,10 @@ public class SEExtractionArchive {
 		boolean loadedFromInternet = false;
 		try {
 			try {
-				loadRawDataFromInternet(extractedNumberPairCountersMap, extractedNumberCountersMap);
-				loadData(extractedNumberPairCountersMap, extractedNumberCountersMap);
-				loadedFromInternet = true;
+				throw new RuntimeException();
+				//loadRawDataFromInternet(extractedNumberPairCountersMap, extractedNumberCountersMap);
+				//loadData(extractedNumberPairCountersMap, extractedNumberCountersMap);
+				//loadedFromInternet = true;
 			} catch (Throwable exc) {
 				System.out.println("Unable to load data from Internet: " + exc.getMessage());
 				extractedNumberPairCountersMap = buildExtractedNumberPairCountersMap();
