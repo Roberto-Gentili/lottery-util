@@ -20,6 +20,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEngine {
 	private static final List<Map<String,List<Integer>>> allChosenNumbers;
@@ -110,7 +111,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	@Override
-	public void testEffectiveness(String filterAsString, List<Integer> numbers, boolean fineLog) {
+	public Map<String, Number> testEffectiveness(String filterAsString, List<Integer> numbers, boolean fineLog) {
 		filterAsString = preprocess(filterAsString);
 		Predicate<List<Integer>> combinationFilter = CombinationFilterFactory.INSTANCE.parse(filterAsString, fineLog);
 		Set<Entry<Date, List<Integer>>> allWinningCombos = SEStats.get(getExtractionArchiveStartDate()).getAllWinningCombos().entrySet();
@@ -162,7 +163,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		if (fineLog && discardedFromHistory > 0) {
 			System.out.println();
 		}
-
+		Map<String, Number> stats = new LinkedHashMap<>();
 		double discardedPercentageFromHistory = (discardedFromHistory * 100) / (double)allWinningCombos.size();
 		double maintainedPercentageFromHistory = 100d - discardedPercentageFromHistory;
 		double discardedFromIntegralSystemPercentage = (discardedFromIntegralSystem * 100) / (double)comboHandler.getSize();
@@ -182,6 +183,15 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		System.out.println("Integral system discarded combos:" + rightAlignedString(decimalFormat.format(discardedFromIntegralSystem), 19));
 		System.out.println("Integral system discarded combos percentage:" + rightAlignedString(decimalFormat.format(discardedFromIntegralSystemPercentage) + " %", 10));
 		System.out.println("Effectiveness:" + rightAlignedString(decimalFormat.format(effectiveness) + " %", 40) +"\n\n");
+		stats.put("totalExtractionsAnalyzed", allWinningCombos.size());
+		stats.put("discardedWinningCombos", discardedFromHistory);
+		stats.put("discardedWinningCombosPercentage", discardedPercentageFromHistory);
+		stats.put("maintainedWinningCombosPercentage", maintainedPercentageFromHistory);
+		stats.put("estimatedMaintainedWinningCombos", maintainedFromHistoryEstimation);
+		stats.put("integralSystemTotalCombos", comboHandler.getSize());
+		stats.put("integralSystemDiscardedCombos", discardedFromIntegralSystem);
+		stats.put("integralSystemDiscardedCombosPercentage", discardedFromIntegralSystemPercentage);
+		return stats;
 	}
 
 	private String rightAlignedString(String value, int emptySpacesCount) {
@@ -207,6 +217,12 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 				} else if (expression.contains("mostExt")) {
 					numbersToBeTested =
 						SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberRank();
+				}
+				String[] subRange = options[0].split("->");
+				if (subRange.length == 2) {
+					Integer leftBound = Integer.parseInt(subRange[0]);
+					Integer rightBound = Integer.parseInt(subRange[1]);
+					numbersToBeTested = numbersToBeTested.stream().filter(number -> number >= leftBound && number <= rightBound).collect(Collectors.toList());
 				}
 				String[] groupOptions = options[1].split(":");
 				List<String> numbers = new ArrayList<>();

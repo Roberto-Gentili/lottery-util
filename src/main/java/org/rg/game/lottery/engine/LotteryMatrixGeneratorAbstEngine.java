@@ -194,7 +194,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		return filterAsString;
 	}
 
-	protected abstract void testEffectiveness(String combinationFilterRaw, List<Integer> numbers, boolean parseBoolean);
+	protected abstract Map<String, Number> testEffectiveness(String combinationFilterRaw, List<Integer> numbers, boolean parseBoolean);
 
 	private List<LocalDate> forThisWeek() {
 		return forWeekOf(LocalDate.now());
