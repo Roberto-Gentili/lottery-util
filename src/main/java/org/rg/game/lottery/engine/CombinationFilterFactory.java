@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.function.IntPredicate;
+import java.util.function.DoublePredicate;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -48,8 +48,8 @@ public class CombinationFilterFactory {
 	}
 
 	private Predicate<List<Integer>> parseSimpleExpression(String filterAsString) {
-		if (filterAsString.contains("odd") || filterAsString.contains("even")) {
-			return buildOddOrEvenFilter(filterAsString);
+		if (filterAsString.contains("emainder")) {
+			return buildRemainderFilter(filterAsString);
 		} else if (filterAsString.contains("sameLastDigit")) {
 			return buildSameLastDigitFilter(filterAsString);
 		} else if (filterAsString.contains("consecutiveLastDigit")) {
@@ -185,20 +185,23 @@ public class CombinationFilterFactory {
 		};
 	}
 
-	private Predicate<List<Integer>> buildOddOrEvenFilter(String filterAsString) {
-		String[] operationOptions = filterAsString.replaceAll("\\s+","").split("odd|even");
+	private Predicate<List<Integer>> buildRemainderFilter(String filterAsString) {
+		String[] operationOptions = filterAsString.replaceAll("\\s+","").split("noRemainder|remainder");
 		String[] rangeOptions = operationOptions[0].split("->");
-		Integer leftRangeBounds = rangeOptions.length > 1 ? Integer.parseInt(rangeOptions[0]) : null;
-		Integer rightRangeBounds =  rangeOptions.length > 1 ? Integer.parseInt(rangeOptions[1]) : null;
+		Integer leftRangeBounds = rangeOptions.length > 1 ?
+			Integer.parseInt(rangeOptions[0]) : null;
+		Integer rightRangeBounds =  rangeOptions.length > 1 ?
+			Integer.parseInt(rangeOptions[1]) : null;
 		String[] options = operationOptions[1].split(":");
+		double divisor = options[0].isEmpty() ? 2 : Double.parseDouble(options[0]);
 		String[] boundsAsString = options[1].split(",");
 		int[] bounds = {
 			Integer.parseInt(boundsAsString[0]),
 			Integer.parseInt(boundsAsString[1])
 		};
-		IntPredicate evenOrOddTester = filterAsString.contains("even") ?
-			number -> number % 2 == 0 :
-			number -> number % 2 != 0;
+		DoublePredicate evenOrOddTester = filterAsString.contains("noRemainder") ?
+			number -> number % divisor == 0 :
+			number -> number % divisor != 0;
 		return combo -> {
 			int evenOrOddCounter = 0;
 			for (Integer number : new TreeSet<>(combo)) {

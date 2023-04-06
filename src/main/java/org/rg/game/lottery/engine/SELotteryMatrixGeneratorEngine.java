@@ -1,5 +1,6 @@
 package org.rg.game.lottery.engine;
 
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -166,11 +167,18 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		double discardedPercentageFromHistory = (discardedFromHistory * 100) / (double)allWinningCombos.size();
 		double maintainedPercentageFromHistory = 100d - discardedPercentageFromHistory;
 		double discardedFromIntegralSystemPercentage = (discardedFromIntegralSystem * 100) / (double)comboHandler.getSize();
-		double effectiveness = (maintainedPercentageFromHistory + discardedFromIntegralSystemPercentage) / 2d;
+		double discardedFromHistoryEstimation = new BigDecimal(comboHandler.getSize()).multiply(new BigDecimal(discardedFromHistory))
+				.divide(new BigDecimal(allWinningCombos.size())).doubleValue();
+		double maintainedFromHistoryEstimation = new BigDecimal(comboHandler.getSize()).multiply(new BigDecimal(allWinningCombos.size() - discardedFromHistory))
+				.divide(new BigDecimal(allWinningCombos.size())).doubleValue();
+		//double effectiveness = (maintainedPercentageFromHistory + discardedFromIntegralSystemPercentage) / 2d;
+		double effectiveness = ((discardedFromIntegralSystem - discardedFromHistoryEstimation) * 100d) /
+				comboHandler.getSize();
 		System.out.println("Total extractions analyzed:" + rightAlignedString(integerFormat.format(allWinningCombos.size()), 25));
 		System.out.println("Discarded winning combos:" + rightAlignedString(integerFormat.format(discardedFromHistory), 27));
 		System.out.println("Discarded winning combos percentage:" + rightAlignedString(decimalFormat.format(discardedPercentageFromHistory) + " %", 18));
 		System.out.println("Maintained winning combos percentage:" + rightAlignedString(decimalFormat.format(maintainedPercentageFromHistory) + " %", 17));
+		System.out.println("Estimated maintained winning combos:" + rightAlignedString(decimalFormat.format(maintainedFromHistoryEstimation), 16));
 		System.out.println("Integral system total combos:" + rightAlignedString(decimalFormat.format(comboHandler.getSize()), 23));
 		System.out.println("Integral system discarded combos:" + rightAlignedString(decimalFormat.format(discardedFromIntegralSystem), 19));
 		System.out.println("Integral system discarded combos percentage:" + rightAlignedString(decimalFormat.format(discardedFromIntegralSystemPercentage) + " %", 10));
