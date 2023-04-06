@@ -1,6 +1,7 @@
 package org.rg.game.lottery.engine;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -168,9 +169,9 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		double maintainedPercentageFromHistory = 100d - discardedPercentageFromHistory;
 		double discardedFromIntegralSystemPercentage = (discardedFromIntegralSystem * 100) / (double)comboHandler.getSize();
 		double discardedFromHistoryEstimation = new BigDecimal(comboHandler.getSize()).multiply(new BigDecimal(discardedFromHistory))
-				.divide(new BigDecimal(allWinningCombos.size())).doubleValue();
+				.divide(new BigDecimal(allWinningCombos.size()), 2, RoundingMode.HALF_UP).doubleValue();
 		double maintainedFromHistoryEstimation = new BigDecimal(comboHandler.getSize()).multiply(new BigDecimal(allWinningCombos.size() - discardedFromHistory))
-				.divide(new BigDecimal(allWinningCombos.size())).doubleValue();
+				.divide(new BigDecimal(allWinningCombos.size()), 2, RoundingMode.HALF_DOWN).doubleValue();
 		//double effectiveness = (maintainedPercentageFromHistory + discardedFromIntegralSystemPercentage) / 2d;
 		double effectiveness = ((discardedFromIntegralSystem - discardedFromHistoryEstimation) * 100d) /
 				comboHandler.getSize();
