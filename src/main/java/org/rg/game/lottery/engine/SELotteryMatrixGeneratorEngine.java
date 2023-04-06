@@ -172,9 +172,9 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 				.divide(new BigDecimal(allWinningCombos.size()), 2, RoundingMode.HALF_UP).doubleValue();
 		int maintainedFromHistoryEstimation = new BigDecimal(comboHandler.getSize()).multiply(new BigDecimal(allWinningCombos.size() - discardedFromHistory))
 				.divide(new BigDecimal(allWinningCombos.size()), 2, RoundingMode.HALF_DOWN).intValue();
-		//double effectiveness = (maintainedPercentageFromHistory + discardedFromIntegralSystemPercentage) / 2d;
-		double effectiveness = ((discardedFromIntegralSystem - discardedFromHistoryEstimation) * 100d) /
-				comboHandler.getSize();
+		double effectiveness = (maintainedPercentageFromHistory + discardedFromIntegralSystemPercentage) / 2d;
+		/*double effectiveness = ((discardedFromIntegralSystem - discardedFromHistoryEstimation) * 100d) /
+				comboHandler.getSize();*/
 		System.out.println("Total extractions analyzed:" + rightAlignedString(integerFormat.format(allWinningCombos.size()), 25));
 		System.out.println("Discarded winning combos:" + rightAlignedString(integerFormat.format(discardedFromHistory), 27));
 		System.out.println("Discarded winning combos percentage:" + rightAlignedString(decimalFormat.format(discardedPercentageFromHistory) + " %", 18));
