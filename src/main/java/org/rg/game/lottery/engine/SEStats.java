@@ -323,6 +323,12 @@ public class SEStats {
 		return new ArrayList<>(extractedNumberFromMostExtractedCoupleRank);
 	}
 
+	public List<Integer> getExtractedNumberFromMostExtractedCoupleRankReversed() {
+		List<Integer> reversed = new ArrayList<>(extractedNumberFromMostExtractedCoupleRank);
+		Collections.reverse(reversed);
+		return reversed;
+	}
+
 	public List<Integer> getExtractedNumberRank() {
 		return new ArrayList<>(extractedNumberRank);
 	}

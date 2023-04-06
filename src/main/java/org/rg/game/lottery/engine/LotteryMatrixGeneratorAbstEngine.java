@@ -104,7 +104,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		}
 		storageType = config.getProperty("storage", "memory").replaceAll("\\s+","");
 		String combinationFilterRaw = config.getProperty("combination.filter");
-		combinationFilter = CombinationFilterFactory.INSTANCE.parse(combinationFilterRaw);
+		combinationFilter = CombinationFilterFactory.INSTANCE.parse(preprocess(combinationFilterRaw));
 		Function<LocalDate, Map<String, Object>> basicDataSupplier = extractionDate -> {
 			Map<String, Object> data = adjustSeed(extractionDate);
 			String numbersOrdered = config.getProperty("numbers.ordered");
@@ -188,6 +188,10 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		} else if (avoidModeConfigValue.equals("if not strongly suggested")) {
 			avoidMode = 2;
 		}
+	}
+
+	public String preprocess(String filterAsString) {
+		return filterAsString;
 	}
 
 	protected abstract void testEffectiveness(String combinationFilterRaw, List<Integer> numbers, boolean parseBoolean);

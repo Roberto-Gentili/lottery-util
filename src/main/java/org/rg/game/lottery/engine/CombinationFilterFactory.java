@@ -70,27 +70,36 @@ public class CombinationFilterFactory {
 			return buildPredicate(filterAsString, this::buildRadiusFilter, logFalseResults);
 		} else if (filterAsString.contains("sum")) {
 			return buildPredicate(filterAsString, this::buildSumFilter, logFalseResults);
+		} else if (filterAsString.contains("in")) {
+			return buildPredicate(filterAsString, this::inFilter, logFalseResults);
 		} else if (filterAsString.contains("->")) {
 			return buildPredicate(filterAsString, this::buildNumberGroupFilter, logFalseResults);
 		}
 		return null;
 	}
 
-	private Predicate<List<Integer>> buildPredicate(
-		String filterAsString, Function<String, Predicate<List<Integer>>> predicateBuilder, boolean logFalseResults
+	private Predicate<List<Integer>> inFilter(
+		String filterAsString
 	) {
-		Predicate<List<Integer>> predicate = predicateBuilder.apply(filterAsString);
-		if (logFalseResults) {
-			return combo -> {
-				boolean result = predicate.test(combo);
-				if (!result) {
-					System.out.println("[" + filterAsString + "] returned false on combo:\t" + toString(combo));
+		String[] operationOptions = filterAsString.replaceAll("\\s+","").split("in");
+		String[] options = operationOptions[1].split(":");
+		List<Integer> numbers = Arrays.stream(options[0].split(",")).map(Integer::parseInt).collect(Collectors.toList());
+		String[] boundsAsString = options[1].split(",");
+		int[] bounds = {
+			Integer.parseInt(boundsAsString[0]),
+			Integer.parseInt(boundsAsString[1])
+		};
+		return combo -> {
+			int counter = 0;
+			for (Integer number : combo) {
+				if (numbers.indexOf(number) > -1) {
+					counter++;
 				}
-				return result;
-			};
-		}
-		return predicate;
+			}
+			return counter >= bounds[0] && counter <= bounds[1];
+		};
 	}
+
 
 	private Predicate<List<Integer>> buildSumFilter(String filterAsString) {
 		String[] operationOptions = filterAsString.replaceAll("\\s+","").split("sum");
@@ -334,6 +343,22 @@ public class CombinationFilterFactory {
 			}
 			return maxConsecutiveLastDigitCounter >= bounds[0] && maxConsecutiveLastDigitCounter <= bounds[1];
 		};
+	}
+
+	private Predicate<List<Integer>> buildPredicate(
+		String filterAsString, Function<String, Predicate<List<Integer>>> predicateBuilder, boolean logFalseResults
+	) {
+		Predicate<List<Integer>> predicate = predicateBuilder.apply(filterAsString);
+		if (logFalseResults) {
+			return combo -> {
+				boolean result = predicate.test(combo);
+				if (!result) {
+					System.out.println("[" + filterAsString + "] returned false on combo:\t" + toString(combo));
+				}
+				return result;
+			};
+		}
+		return predicate;
 	}
 
 	String toString(List<Integer> combo) {

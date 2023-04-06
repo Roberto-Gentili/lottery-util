@@ -30,10 +30,6 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		allDiscardedNumbers = new ArrayList<>();
 	}
 
-	public SELotteryMatrixGeneratorEngine() {
-		super();
-	}
-
 	@Override
 	protected LocalDate computeNextExtractionDate(LocalDate startDate, boolean incrementIfExpired) {
 		if (incrementIfExpired) {
@@ -115,6 +111,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 
 	@Override
 	public void testEffectiveness(String filterAsString, List<Integer> numbers, boolean fineLog) {
+		filterAsString = preprocess(filterAsString);
 		Predicate<List<Integer>> combinationFilter = CombinationFilterFactory.INSTANCE.parse(filterAsString, fineLog);
 		Set<Entry<Date, List<Integer>>> allWinningCombos = SEStats.get(getExtractionArchiveStartDate()).getAllWinningCombos().entrySet();
 		int discardedFromHistory = 0;
@@ -189,6 +186,33 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 
 	private String rightAlignedString(String value, int emptySpacesCount) {
 		return String.format("%" + emptySpacesCount + "s", value);
+	}
+
+	@Override
+	public String preprocess(String filterAsString) {
+		String[] splittedfilter= filterAsString.split("&|\\|");
+		for (String expression : splittedfilter) {
+			if (expression.contains("lessExtCouple")) {
+				String[] options = expression.replaceAll("\\s+","").split("lessExtCouple");
+				String[] groupOptions = options[1].split(":");
+				List<String> numbers = new ArrayList<>();
+				List<Integer> extractedNumberFromMostExtractedCoupleRankReversed =
+						SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberFromMostExtractedCoupleRankReversed();
+				if (groupOptions[0].contains("->")) {
+					String[] bounds = groupOptions[0].split("->");
+					for (int i = Integer.parseInt(bounds[0]); i <= Integer.parseInt(bounds[1]); i++) {
+						numbers.add(extractedNumberFromMostExtractedCoupleRankReversed.get(i - 1).toString());
+					}
+				} else if (groupOptions[0].contains(",")) {
+					for (String index : groupOptions[0].split(",")) {
+						numbers.add(extractedNumberFromMostExtractedCoupleRankReversed.get(Integer.parseInt(index) - 1).toString());
+					}
+				}
+				String newExpression = "in " + String.join(",", numbers) + ": " + groupOptions[1];
+				filterAsString = filterAsString.replace(expression, newExpression);
+			}
+		}
+		return super.preprocess(filterAsString);
 	}
 
 }
