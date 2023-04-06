@@ -58,10 +58,26 @@ public class CombinationFilterFactory {
 			return buildConsecutiveNumberFilter(filterAsString);
 		} else if (filterAsString.contains("radius")) {
 			return buildRadiusFilter(filterAsString);
+		} else if (filterAsString.contains("sum")) {
+			return buildSumFilter(filterAsString);
 		} else if (filterAsString.contains("->")) {
 			return buildNumberGroupFilter(filterAsString);
 		}
 		return null;
+	}
+
+	private Predicate<List<Integer>> buildSumFilter(String filterAsString) {
+		String[] operationOptions = filterAsString.replaceAll("\\s+","").split("sum");
+		String[] options = operationOptions[1].split(":");
+		String[] boundsAsString = options[1].split(",");
+		int[] bounds = {
+			Integer.parseInt(boundsAsString[0]),
+			Integer.parseInt(boundsAsString[1])
+		};
+		return combo -> {
+			int sum = combo.stream().collect(Collectors.summingInt(Integer::intValue)).intValue();
+			return sum >= bounds[0] && sum <= bounds[1];
+		};
 	}
 
 	private Predicate<List<Integer>> buildRadiusFilter(String filterAsString) {
