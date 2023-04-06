@@ -40,6 +40,7 @@ import org.jsoup.select.Elements;
 
 public class SEExtractionArchive {
 	private static final Map<String, SEExtractionArchive> INSTANCES;
+	public static boolean forceExcelLoading;
 
 	static {
 		INSTANCES = new ConcurrentHashMap<>();
@@ -75,11 +76,16 @@ public class SEExtractionArchive {
 		boolean loadedFromInternet = false;
 		try {
 			try {
+				if (forceExcelLoading) {
+					throw new RuntimeException();
+				}
 				loadRawDataFromInternet(extractedNumberPairCountersMap, extractedNumberCountersMap);
 				loadData(extractedNumberPairCountersMap, extractedNumberCountersMap);
 				loadedFromInternet = true;
 			} catch (Throwable exc) {
-				System.out.println("Unable to load data from Internet: " + exc.getMessage());
+				if (!forceExcelLoading) {
+					System.out.println("Unable to load data from Internet: " + exc.getMessage());
+				}
 				extractedNumberPairCountersMap = buildExtractedNumberPairCountersMap();
 				extractedNumberCountersMap = new LinkedHashMap<>();
 				loadRawDataFromExcel(extractedNumberPairCountersMap, extractedNumberCountersMap);
