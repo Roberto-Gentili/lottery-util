@@ -111,7 +111,12 @@ public class CombinationFilterFactory {
 	}
 
 	private Predicate<List<Integer>> buildConsecutiveNumberFilter(String filterAsString) {
-		String[] boundsAsString = filterAsString.replaceAll("\\s+","").split(":")[1].split(",");
+		String[] operationOptions = filterAsString.replaceAll("\\s+","").split("consecutiveNumber");
+		String[] rangeOptions = operationOptions[0].split("->");
+		Integer leftRangeBounds = rangeOptions.length > 1 ? Integer.parseInt(rangeOptions[0]) : null;
+		Integer rightRangeBounds =  rangeOptions.length > 1 ? Integer.parseInt(rangeOptions[1]) : null;
+		String[] options = operationOptions[1].split(":");
+		String[] boundsAsString = options[1].split(",");
 		int[] bounds = {
 			Integer.parseInt(boundsAsString[0]),
 			Integer.parseInt(boundsAsString[1])
@@ -121,6 +126,13 @@ public class CombinationFilterFactory {
 			int maxConsecutiveNumberCounter = 0;
 			Integer previousNumber = null;
 			for (int number : new TreeSet<>(combo)) {
+				if (rangeOptions.length > 1) {
+					if (number > rightRangeBounds) {
+						return true;
+					} else if (number < leftRangeBounds) {
+						continue;
+					}
+				}
 				if (previousNumber != null && ((number != 0 && previousNumber == number -1) || (number == 0 && previousNumber == 9))) {
 					if (counter == 0) {
 						counter++;
