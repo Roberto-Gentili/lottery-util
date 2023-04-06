@@ -115,7 +115,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 
 	@Override
 	public void testEffectiveness(String filterAsString, List<Integer> numbers, boolean fineLog) {
-		Predicate<List<Integer>> combinationFilter = CombinationFilterFactory.INSTANCE.parse(filterAsString);
+		Predicate<List<Integer>> combinationFilter = CombinationFilterFactory.INSTANCE.parse(filterAsString, fineLog);
 		Set<Entry<Date, List<Integer>>> allWinningCombos = SEExtractionArchive.get(getExtractionArchiveStartDate()).getAllWinningCombos().entrySet();
 		int discardedFromHistory = 0;
 		System.out.println("Starting filter analysis\n");
@@ -123,7 +123,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 			if (!combinationFilter.test(comboForDate.getValue())) {
 				discardedFromHistory++;
 				if (fineLog) {
-					System.out.println("Filter discarded winning combo of " + CombinationFilterFactory.INSTANCE.simpleDateFormatter.format(comboForDate.getKey()) + ":  " +
+					System.out.println("  Filter discarded winning combo of " + CombinationFilterFactory.INSTANCE.simpleDateFormatter.format(comboForDate.getKey()) + ":  " +
 						CombinationFilterFactory.INSTANCE.toString(comboForDate.getValue()));
 				}
 			}
@@ -135,6 +135,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		Collection<Integer> comboPartitionIndexes = new HashSet<>();
 		int discardedFromIntegralSystem = 0;
 		int elaborationUnitSize = 25_000_000;
+		combinationFilter = CombinationFilterFactory.INSTANCE.parse(filterAsString);
 		for (int i = 0 ; i < comboHandler.getSize(); i++) {
 			comboPartitionIndexes.add(i);
 			if (comboPartitionIndexes.size() == elaborationUnitSize) {

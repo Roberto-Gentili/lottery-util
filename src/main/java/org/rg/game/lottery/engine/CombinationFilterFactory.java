@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.DoublePredicate;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -25,50 +26,70 @@ public class CombinationFilterFactory {
 	private CombinationFilterFactory() {}
 
 	public Predicate<List<Integer>> parse(String filterAsString) {
+		return parse(filterAsString, false);
+	}
+
+	public Predicate<List<Integer>> parse(String filterAsString, boolean logFalseResults) {
 		if (filterAsString == null || filterAsString.replaceAll("\\s+","").isEmpty()) {
 			return numbers -> true;
 		}
-		Predicate<List<Integer>> predicate = parseComplexExpression(filterAsString);
+		Predicate<List<Integer>> predicate = parseComplexExpression(filterAsString, logFalseResults);
 		return combo -> {
 			Collections.sort(combo);
 			return predicate.test(combo);
 		};
 	}
 
-	private Predicate<List<Integer>> parseComplexExpression(String filterAsString) {
+	private Predicate<List<Integer>> parseComplexExpression(String filterAsString, boolean logFalseResults) {
 		if (filterAsString.contains("&") || filterAsString.contains("|")) {
 			int andCharacterIndex = filterAsString.indexOf("&");
 			int orCharacterIndex = filterAsString.indexOf("|");
 			if ((andCharacterIndex > -1 && orCharacterIndex > -1) ?
 					andCharacterIndex < orCharacterIndex :
 					andCharacterIndex > -1) {
-				return parseSimpleExpression(filterAsString.substring(0, andCharacterIndex))
-					.and(parseComplexExpression(filterAsString.substring(andCharacterIndex +1, filterAsString.length())));
+				return parseSimpleExpression(filterAsString.substring(0, andCharacterIndex), logFalseResults)
+					.and(parseComplexExpression(filterAsString.substring(andCharacterIndex +1, filterAsString.length()), logFalseResults));
 			} else {
-				return parseSimpleExpression(filterAsString.substring(0, orCharacterIndex))
-					.or(parseComplexExpression(filterAsString.substring(orCharacterIndex +1, filterAsString.length())));
+				return parseSimpleExpression(filterAsString.substring(0, orCharacterIndex), logFalseResults)
+					.or(parseComplexExpression(filterAsString.substring(orCharacterIndex +1, filterAsString.length()), logFalseResults));
 			}
 		}
-		return parseSimpleExpression(filterAsString);
+		return parseSimpleExpression(filterAsString, logFalseResults);
 	}
 
-	private Predicate<List<Integer>> parseSimpleExpression(String filterAsString) {
+	private Predicate<List<Integer>> parseSimpleExpression(String filterAsString, boolean logFalseResults) {
 		if (filterAsString.contains("emainder")) {
-			return buildRemainderFilter(filterAsString);
+			return buildPredicate(filterAsString, this::buildRemainderFilter, logFalseResults);
 		} else if (filterAsString.contains("sameLastDigit")) {
-			return buildSameLastDigitFilter(filterAsString);
+			return buildPredicate(filterAsString, this::buildSameLastDigitFilter, logFalseResults);
 		} else if (filterAsString.contains("consecutiveLastDigit")) {
-			return buildConsecutiveLastDigitFilter(filterAsString);
+			return buildPredicate(filterAsString, this::buildConsecutiveLastDigitFilter, logFalseResults);
 		} else if (filterAsString.contains("consecutiveNumber")) {
-			return buildConsecutiveNumberFilter(filterAsString);
+			return buildPredicate(filterAsString, this::buildConsecutiveNumberFilter, logFalseResults);
 		} else if (filterAsString.contains("radius")) {
-			return buildRadiusFilter(filterAsString);
+			return buildPredicate(filterAsString, this::buildRadiusFilter, logFalseResults);
 		} else if (filterAsString.contains("sum")) {
-			return buildSumFilter(filterAsString);
+			return buildPredicate(filterAsString, this::buildSumFilter, logFalseResults);
 		} else if (filterAsString.contains("->")) {
-			return buildNumberGroupFilter(filterAsString);
+			return buildPredicate(filterAsString, this::buildNumberGroupFilter, logFalseResults);
 		}
 		return null;
+	}
+
+	private Predicate<List<Integer>> buildPredicate(
+		String filterAsString, Function<String, Predicate<List<Integer>>> predicateBuilder, boolean logFalseResults
+	) {
+		Predicate<List<Integer>> predicate = predicateBuilder.apply(filterAsString);
+		if (logFalseResults) {
+			return combo -> {
+				boolean result = predicate.test(combo);
+				if (!result) {
+					System.out.println("[" + filterAsString + "] returned false on combo:\t" + toString(combo));
+				}
+				return result;
+			};
+		}
+		return predicate;
 	}
 
 	private Predicate<List<Integer>> buildSumFilter(String filterAsString) {
