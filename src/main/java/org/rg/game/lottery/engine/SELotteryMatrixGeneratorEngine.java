@@ -100,9 +100,9 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 			if (generatorType == 3) {
 				return random.ints(leftBound , rightBound + 1).iterator();
 			} else if (generatorType == 1) {
-				return new BoundedIterator(SEExtractionArchive.get(getExtractionArchiveStartDate()).getExtractedNumberRank(), leftBound, rightBound);
+				return new BoundedIterator(SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberRank(), leftBound, rightBound);
 			} else if (generatorType == 2) {
-				return new BoundedIterator(SEExtractionArchive.get(getExtractionArchiveStartDate()).getExtractedNumberFromMostExtractedCoupleRank(), leftBound, rightBound);
+				return new BoundedIterator(SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberFromMostExtractedCoupleRank(), leftBound, rightBound);
 			}
 			throw new IllegalArgumentException("Unvalid generator type");
 		};
@@ -116,7 +116,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	@Override
 	public void testEffectiveness(String filterAsString, List<Integer> numbers, boolean fineLog) {
 		Predicate<List<Integer>> combinationFilter = CombinationFilterFactory.INSTANCE.parse(filterAsString, fineLog);
-		Set<Entry<Date, List<Integer>>> allWinningCombos = SEExtractionArchive.get(getExtractionArchiveStartDate()).getAllWinningCombos().entrySet();
+		Set<Entry<Date, List<Integer>>> allWinningCombos = SEStats.get(getExtractionArchiveStartDate()).getAllWinningCombos().entrySet();
 		int discardedFromHistory = 0;
 		System.out.println("Starting filter analysis\n");
 		for (Map.Entry<Date, List<Integer>> comboForDate : allWinningCombos) {

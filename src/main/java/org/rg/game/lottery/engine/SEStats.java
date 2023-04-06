@@ -38,9 +38,9 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-public class SEExtractionArchive {
-	private static final Map<String, SEExtractionArchive> INSTANCES;
-	public static boolean forceExcelLoading;
+public class SEStats {
+	private static final Map<String, SEStats> INSTANCES;
+	public static boolean forceLoadingFromExcel;
 
 	static {
 		INSTANCES = new ConcurrentHashMap<>();
@@ -59,12 +59,12 @@ public class SEExtractionArchive {
 	private List<Integer> extractedNumberFromMostExtractedCoupleRank;
 	private List<Integer> extractedNumberRank;
 
-	private SEExtractionArchive(String startDate) {
+	private SEStats(String startDate) {
 		init(startDate);
 	}
 
-	public final static SEExtractionArchive get(String startDate) {
-		return INSTANCES.computeIfAbsent(startDate, key -> new SEExtractionArchive(startDate));
+	public final static SEStats get(String startDate) {
+		return INSTANCES.computeIfAbsent(startDate, key -> new SEStats(startDate));
 	}
 
 	private void init(String startDate) {
@@ -76,14 +76,14 @@ public class SEExtractionArchive {
 		boolean loadedFromInternet = false;
 		try {
 			try {
-				if (forceExcelLoading) {
+				if (forceLoadingFromExcel) {
 					throw new RuntimeException();
 				}
 				loadRawDataFromInternet(extractedNumberPairCountersMap, extractedNumberCountersMap);
 				loadData(extractedNumberPairCountersMap, extractedNumberCountersMap);
 				loadedFromInternet = true;
 			} catch (Throwable exc) {
-				if (!forceExcelLoading) {
+				if (!forceLoadingFromExcel) {
 					System.out.println("Unable to load data from Internet: " + exc.getMessage());
 				}
 				extractedNumberPairCountersMap = buildExtractedNumberPairCountersMap();
