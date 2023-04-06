@@ -65,11 +65,11 @@ public class CombinationFilterFactory {
 	}
 
 	private Predicate<List<Integer>> buildRadiusFilter(String filterAsString) {
-		String[] radiusOptions = filterAsString.replaceAll("\\s+","").split("radius");
-		String[] rangeOptions = radiusOptions[0].split("->");
+		String[] operationOptions = filterAsString.replaceAll("\\s+","").split("radius");
+		String[] rangeOptions = operationOptions[0].split("->");
 		Integer leftRangeBounds = rangeOptions.length > 1 ? Integer.parseInt(rangeOptions[0]) : null;
 		Integer rightRangeBounds =  rangeOptions.length > 1 ? Integer.parseInt(rangeOptions[1]) : null;
-		String[] options = radiusOptions[1].split(":");
+		String[] options = operationOptions[1].split(":");
 		String[] boundsAsString = options[1].split(",");
 		int leftOffset = Integer.parseInt(options[0].split(",")[0]);
 		int rightOffset = Integer.parseInt(options[0].split(",")[1]);
@@ -194,14 +194,26 @@ public class CombinationFilterFactory {
 	}
 
 	private Predicate<List<Integer>> buildSameLastDigitFilter(String filterAsString) {
-		String[] boundsAsString = filterAsString.replaceAll("\\s+","").split(":")[1].split(",");
+		String[] operationOptions = filterAsString.replaceAll("\\s+","").split("sameLastDigit");
+		String[] rangeOptions = operationOptions[0].split("->");
+		Integer leftRangeBounds = rangeOptions.length > 1 ? Integer.parseInt(rangeOptions[0]) : null;
+		Integer rightRangeBounds =  rangeOptions.length > 1 ? Integer.parseInt(rangeOptions[1]) : null;
+		String[] options = operationOptions[1].split(":");
+		String[] boundsAsString = options[1].split(",");
 		int[] bounds = {
 			Integer.parseInt(boundsAsString[0]),
 			Integer.parseInt(boundsAsString[1])
 		};
 		return combo -> {
 			int[] counters = new int[10];
-			for (Integer number : combo) {
+			for (Integer number : new TreeSet<>(combo)) {
+				if (rangeOptions.length > 1) {
+					if (number > rightRangeBounds) {
+						break;
+					} else if (number < leftRangeBounds) {
+						continue;
+					}
+				}
 				counters[(number % 10)]++;
 			}
 			int maxSameDigitCount = Arrays.stream(counters).summaryStatistics().getMax();
@@ -210,14 +222,26 @@ public class CombinationFilterFactory {
 	}
 
 	private Predicate<List<Integer>> buildConsecutiveLastDigitFilter(String filterAsString) {
-		String[] boundsAsString = filterAsString.replaceAll("\\s+","").split(":")[1].split(",");
+		String[] operationOptions = filterAsString.replaceAll("\\s+","").split("consecutiveLastDigit");
+		String[] rangeOptions = operationOptions[0].split("->");
+		Integer leftRangeBounds = rangeOptions.length > 1 ? Integer.parseInt(rangeOptions[0]) : null;
+		Integer rightRangeBounds =  rangeOptions.length > 1 ? Integer.parseInt(rangeOptions[1]) : null;
+		String[] options = operationOptions[1].split(":");
+		String[] boundsAsString = options[1].split(",");
 		int[] bounds = {
 			Integer.parseInt(boundsAsString[0]),
 			Integer.parseInt(boundsAsString[1])
 		};
 		return combo -> {
 			Set<Integer> lastDigits = new TreeSet<>();
-			for (Integer number : combo) {
+			for (Integer number : new TreeSet<>(combo)) {
+				if (rangeOptions.length > 1) {
+					if (number > rightRangeBounds) {
+						break;
+					} else if (number < leftRangeBounds) {
+						continue;
+					}
+				}
 				lastDigits.add(number % 10);
 			}
 			if (lastDigits.size() >= bounds[0] && lastDigits.size() <= bounds[1]) {
