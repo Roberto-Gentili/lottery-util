@@ -210,7 +210,6 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 				}
 				String[] groupOptions = options[1].split(":");
 				List<String> numbers = new ArrayList<>();
-
 				if (groupOptions[0].contains("->")) {
 					String[] bounds = groupOptions[0].split("->");
 					for (int i = Integer.parseInt(bounds[0]); i <= Integer.parseInt(bounds[1]); i++) {
