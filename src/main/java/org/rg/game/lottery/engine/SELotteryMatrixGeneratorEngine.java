@@ -192,20 +192,33 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	public String preprocess(String filterAsString) {
 		String[] splittedfilter= filterAsString.split("&|\\|");
 		for (String expression : splittedfilter) {
-			if (expression.contains("lessExtCouple")) {
-				String[] options = expression.replaceAll("\\s+","").split("lessExtCouple");
+			List<Integer> numbersToBeTested = null;
+			String[] options = expression.replaceAll("\\s+","").split("lessExtCouple|lessExt|mostExtCouple|mostExt");
+			if (options.length > 1) {
+				if (expression.contains("lessExtCouple")) {
+					numbersToBeTested =
+						SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberFromMostExtractedCoupleRankReversed();
+				} else if (expression.contains("lessExt")) {
+					numbersToBeTested =
+						SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberRankReversed();
+				} else if (expression.contains("mostExtCouple")) {
+					numbersToBeTested =
+						SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberFromMostExtractedCoupleRank();
+				} else if (expression.contains("mostExt")) {
+					numbersToBeTested =
+						SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberRank();
+				}
 				String[] groupOptions = options[1].split(":");
 				List<String> numbers = new ArrayList<>();
-				List<Integer> extractedNumberFromMostExtractedCoupleRankReversed =
-						SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberFromMostExtractedCoupleRankReversed();
+
 				if (groupOptions[0].contains("->")) {
 					String[] bounds = groupOptions[0].split("->");
 					for (int i = Integer.parseInt(bounds[0]); i <= Integer.parseInt(bounds[1]); i++) {
-						numbers.add(extractedNumberFromMostExtractedCoupleRankReversed.get(i - 1).toString());
+						numbers.add(numbersToBeTested.get(i - 1).toString());
 					}
 				} else if (groupOptions[0].contains(",")) {
 					for (String index : groupOptions[0].split(",")) {
-						numbers.add(extractedNumberFromMostExtractedCoupleRankReversed.get(Integer.parseInt(index) - 1).toString());
+						numbers.add(numbersToBeTested.get(Integer.parseInt(index) - 1).toString());
 					}
 				}
 				String newExpression = "in " + String.join(",", numbers) + ": " + groupOptions[1];

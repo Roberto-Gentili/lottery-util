@@ -333,6 +333,12 @@ public class SEStats {
 		return new ArrayList<>(extractedNumberRank);
 	}
 
+	public List<Integer> getExtractedNumberRankReversed() {
+		List<Integer> reversed = new ArrayList<>(extractedNumberRank);
+		Collections.reverse(reversed);
+		return reversed;
+	}
+
 	public Map<Date, List<Integer>> getAllWinningCombos() {
 		return allWinningCombos;
 	}
