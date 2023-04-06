@@ -4,12 +4,16 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.DoublePredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class CombinationFilterFactory {
@@ -30,31 +34,33 @@ public class CombinationFilterFactory {
 	}
 
 	public Predicate<List<Integer>> parse(String filterAsString, boolean logFalseResults) {
-		if (filterAsString == null || filterAsString.replaceAll("\\s+","").isEmpty()) {
+		if (filterAsString == null || (filterAsString = filterAsString.replaceAll("\\s+","")).isEmpty()) {
 			return numbers -> true;
 		}
-		Predicate<List<Integer>> predicate = parseComplexExpression(filterAsString, logFalseResults);
+		Map<String, String> nestedExpression = new LinkedHashMap<>();
+		Predicate<List<Integer>> predicate = parseComplexExpression(filterAsString, nestedExpression, logFalseResults);
 		return combo -> {
 			Collections.sort(combo);
 			return predicate.test(combo);
 		};
 	}
 
-	private Predicate<List<Integer>> parseComplexExpression(String filterAsString, boolean logFalseResults) {
-		if (filterAsString.contains("&") || filterAsString.contains("|")) {
-			int andCharacterIndex = filterAsString.indexOf("&");
-			int orCharacterIndex = filterAsString.indexOf("|");
-			if ((andCharacterIndex > -1 && orCharacterIndex > -1) ?
-					andCharacterIndex < orCharacterIndex :
-					andCharacterIndex > -1) {
-				return parseSimpleExpression(filterAsString.substring(0, andCharacterIndex), logFalseResults)
-					.and(parseComplexExpression(filterAsString.substring(andCharacterIndex +1, filterAsString.length()), logFalseResults));
-			} else {
-				return parseSimpleExpression(filterAsString.substring(0, orCharacterIndex), logFalseResults)
-					.or(parseComplexExpression(filterAsString.substring(orCharacterIndex +1, filterAsString.length()), logFalseResults));
+	//"\\((.|\\n)*\\)"
+	private Predicate<List<Integer>> parseComplexExpression(String filterAsString, Map<String, String> nestedExpression, boolean logFalseResults) {
+		Matcher matcher = Pattern.compile("(.*?)(&|\\||\\/)").matcher(filterAsString + "/");
+		Predicate<List<Integer>> predicate = null;
+		String logicalOperator = null;
+		while (matcher.find()) {
+			if (predicate == null) {
+				predicate = parseSimpleExpression(matcher.group(1), logFalseResults);
+			} else if ("&".equals(logicalOperator)) {
+				predicate = predicate.and(parseSimpleExpression(matcher.group(1), logFalseResults));
+			} else if ("|".equals(logicalOperator)) {
+				predicate = predicate.or(parseSimpleExpression(matcher.group(1), logFalseResults));
 			}
+			logicalOperator = matcher.group(2);
 		}
-		return parseSimpleExpression(filterAsString, logFalseResults);
+		return predicate;
 	}
 
 	private Predicate<List<Integer>> parseSimpleExpression(String filterAsString, boolean logFalseResults) {

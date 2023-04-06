@@ -200,8 +200,12 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 
 	@Override
 	public String preprocess(String filterAsString) {
+		if (filterAsString == null) {
+			return filterAsString;
+		}
 		String[] splittedfilter= filterAsString.split("&|\\|");
 		for (String expression : splittedfilter) {
+			expression = expression.replace("(", "").replace(")", "");
 			List<Integer> numbersToBeTested = null;
 			String[] options = expression.replaceAll("\\s+","").split("lessExtCouple|lessExt|mostExtCouple|mostExt");
 			if (options.length > 1) {
@@ -240,7 +244,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 				filterAsString = filterAsString.replace(expression, newExpression);
 			}
 		}
-		return super.preprocess(filterAsString);
+		return filterAsString;
 	}
 
 }
