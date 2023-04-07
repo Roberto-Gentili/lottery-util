@@ -93,14 +93,18 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	@Override
-	protected Function<Integer, Function<Integer, Function<Integer, Iterator<Integer>>>> getNumberGeneratorFactory() {
+	protected Function<String, Function<Integer, Function<Integer, Iterator<Integer>>>> getNumberGeneratorFactory() {
 		return generatorType-> leftBound -> rightBound -> {
-			if (generatorType == 3) {
+			if (NumberProcessor.RANDOM_KEY.equals(generatorType)) {
 				return random.ints(leftBound , rightBound + 1).iterator();
-			} else if (generatorType == 1) {
+			} else if (NumberProcessor.MOST_EXTRACTED_KEY.equals(generatorType)) {
 				return new BoundedIterator(SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberRank(), leftBound, rightBound);
-			} else if (generatorType == 2) {
+			} else if (NumberProcessor.MOST_EXTRACTED_COUPLE_KEY.equals(generatorType)) {
 				return new BoundedIterator(SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberFromMostExtractedCoupleRank(), leftBound, rightBound);
+			} else if (NumberProcessor.LESS_EXTRACTED_KEY.equals(generatorType)) {
+				return new BoundedIterator(SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberRankReversed(), leftBound, rightBound);
+			} else if (NumberProcessor.LESS_EXTRACTED_COUPLE_KEY.equals(generatorType)) {
+				return new BoundedIterator(SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberFromMostExtractedCoupleRankReversed(), leftBound, rightBound);
 			}
 			throw new IllegalArgumentException("Unvalid generator type");
 		};
@@ -259,6 +263,11 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 			throw new UnsupportedOperationException("Expression is not supported: " + expression);
 		}
 		return expression;
+	}
+
+	@Override
+	protected String getDefaultNumberRange() {
+		return "1 -> 90";
 	}
 
 }

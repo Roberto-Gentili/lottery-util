@@ -83,9 +83,9 @@ public class MDLotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	@Override
-	protected Function<Integer, Function<Integer, Function<Integer, Iterator<Integer>>>> getNumberGeneratorFactory() {
+	protected Function<String, Function<Integer, Function<Integer, Iterator<Integer>>>> getNumberGeneratorFactory() {
 		return generatorType-> leftBound -> rightBound -> {
-			if (generatorType == 3) {
+			if (NumberProcessor.RANDOM_KEY.equals(generatorType)) {
 				return random.ints(leftBound , rightBound + 1).iterator();
 			}
 			throw new IllegalArgumentException("Unvalid generator type");
@@ -101,5 +101,10 @@ public class MDLotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	@Override
 	protected String getDefaultExtractionArchiveStartDate() {
 		return null;
+	}
+
+	@Override
+	protected String getDefaultNumberRange() {
+		return "1 -> 55";
 	}
 }

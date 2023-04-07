@@ -110,10 +110,12 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		Function<LocalDate, Map<String, Object>> basicDataSupplier = extractionDate -> {
 			Map<String, Object> data = adjustSeed(extractionDate);
 			String numbersOrdered = config.getProperty("numbers.ordered");
-			NumberProcessor.Context numberProcessorContext = new NumberProcessor.Context(getNumberGeneratorFactory(), engineIndex, getAllChosenNumbers(), getAllDiscardedNumbers());
+			NumberProcessor.Context numberProcessorContext = new NumberProcessor.Context(
+				getNumberGeneratorFactory(), engineIndex, getAllChosenNumbers(), getAllDiscardedNumbers()
+			);
 			List<Integer> chosenNumbers = numberProcessor.retrieveNumbersToBePlayed(
 				numberProcessorContext,
-				config.getProperty("numbers"),
+				config.getProperty("numbers", getDefaultNumberRange()),
 				extractionDate,
 				numbersOrdered != null && Boolean.parseBoolean(numbersOrdered)
 			);
@@ -191,6 +193,8 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 			avoidMode = 2;
 		}
 	}
+
+	protected abstract String getDefaultNumberRange();
 
 	public String preprocess(String filterAsString) {
 		if (filterAsString == null) {
@@ -592,7 +596,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 
 	protected abstract int getIncrementDays(LocalDate startDate);
 
-	protected abstract Function<Integer, Function<Integer, Function<Integer, Iterator<Integer>>>> getNumberGeneratorFactory();
+	protected abstract Function<String, Function<Integer, Function<Integer, Iterator<Integer>>>> getNumberGeneratorFactory();
 
 }
 

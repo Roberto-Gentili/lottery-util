@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class NumberProcessor {
 
@@ -18,8 +20,11 @@ public class NumberProcessor {
 	public static final String RANDOM_KEY = "rand";
 	public static final String MOST_EXTRACTED_KEY = "mostExt";
 	public static final String MOST_EXTRACTED_COUPLE_KEY = "mostExtCouple";
+	public static final String LESS_EXTRACTED_KEY = "lessExt";
+	public static final String LESS_EXTRACTED_COUPLE_KEY = "lessExtCouple";
 	public static final String PREVIOUS_SYSTEM_KEY = PREVIOUS_KEY + "Sys";
 	public static final String SKIP_KEY = "skip";
+	public static final String NUMERICAL_SET_REG_EX = RANDOM_KEY + "|" + MOST_EXTRACTED_COUPLE_KEY + "|" + MOST_EXTRACTED_KEY + "|" + LESS_EXTRACTED_COUPLE_KEY + "|" + LESS_EXTRACTED_KEY;
 
 
 	protected DateTimeFormatter simpleDateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -30,9 +35,6 @@ public class NumberProcessor {
 		LocalDate extractionDate,
 		boolean sorted
 	) {
-		if (numbersAsString == null || numbersAsString.isEmpty()) {
-			numbersAsString = "1 -> 90";
-		}
 		return retrieveNumbers(
 			context,
 			numbersAsString, extractionDate, new ArrayList<>(),
@@ -70,15 +72,13 @@ public class NumberProcessor {
 		for (String numberAsString : numbersAsString.replaceAll("\\s+","").split(",")) {
 			String[] rangeValues = numberAsString.split("->");
 			if (rangeValues.length == 2) {
-				String[] options = rangeValues[1].split(RANDOM_KEY + "|" + MOST_EXTRACTED_COUPLE_KEY + "|" + MOST_EXTRACTED_KEY);
+				String[] options = rangeValues[1].split(NUMERICAL_SET_REG_EX);
 				Integer leftBound = Integer.parseInt(rangeValues[0]);
 				Integer rightBound = null;
 				if (options.length == 2) {
-					int numberGeneratorType =
-						rangeValues[1].contains(RANDOM_KEY) ? 3 :
-							rangeValues[1].contains(MOST_EXTRACTED_COUPLE_KEY) ? 2 :
-								rangeValues[1].contains(MOST_EXTRACTED_KEY) ? 1 :
-						-1;
+					Matcher numericalSetRegExMatcher = Pattern.compile("(" + NUMERICAL_SET_REG_EX + ")").matcher(rangeValues[1]);
+					numericalSetRegExMatcher.find();
+					String numberGeneratorType = numericalSetRegExMatcher.group(1);
 					rangeValues[1] = options[0];
 					rightBound = Integer.parseInt(rangeValues[1]);
 					List<Integer> numberToBeIncluded = new ArrayList<>();
@@ -278,10 +278,10 @@ public class NumberProcessor {
 		final Integer elaborationIndex;
 		final List<Map<String,List<Integer>>> allChosenNumbers;
 		final List<Map<String,List<Integer>>> allDiscardedNumbers;
-		final Function<Integer, Function<Integer, Function<Integer, Iterator<Integer>>>> numberGeneratorFactory;
+		final Function<String, Function<Integer, Function<Integer, Iterator<Integer>>>> numberGeneratorFactory;
 
 		public Context(
-			Function<Integer, Function<Integer, Function<Integer, Iterator<Integer>>>> numberGeneratorFactory,
+			Function<String, Function<Integer, Function<Integer, Iterator<Integer>>>> numberGeneratorFactory,
 			Integer elaborationIndex,
 			List<Map<String, List<Integer>>> allChosenNumbers,
 			List<Map<String, List<Integer>>> allDiscardedNumbers
