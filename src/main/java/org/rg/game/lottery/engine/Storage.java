@@ -17,15 +17,6 @@ public interface Storage extends AutoCloseable {
 
 	void printAll();
 
-	default String toString(List<Integer> combo) {
-		return String.join(
-			"\t",
-			combo.stream()
-		    .map(Object::toString)
-		    .collect(Collectors.toList())
-		);
-	}
-
 	default String toSimpleString(List<Integer> combo) {
 		return String.join(
 			",",

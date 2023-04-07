@@ -96,7 +96,7 @@ public class PersistentStorage implements Storage {
 	public boolean addCombo(List<Integer> selectedCombo) {
 		if (!contains(selectedCombo)) {
 			try {
-				bufferedWriter.write("\n" + toString(selectedCombo));
+				bufferedWriter.write("\n" + ComboHandler.toString(selectedCombo));
 				bufferedWriter.flush();
 				++size;
 			} catch (IOException exc) {
@@ -110,7 +110,7 @@ public class PersistentStorage implements Storage {
 	@Override
 	public void addUnindexedCombo(List<Integer> selectedCombo) {
 		try {
-			bufferedWriter.write("\n" + toString(selectedCombo));
+			bufferedWriter.write("\n" + ComboHandler.toString(selectedCombo));
 			bufferedWriter.flush();
 		} catch (IOException exc) {
 			throw new RuntimeException(exc);

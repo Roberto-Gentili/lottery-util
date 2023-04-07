@@ -76,10 +76,6 @@ public class CombinationFilterFactory {
 	}
 
 	private Predicate<List<Integer>> parseSimpleExpression(String expression, boolean logFalseResults) {
-		String originalExpression = expression;
-		if (expression.contains("!")) {
-			throw new IllegalArgumentException("A bug here");
-		}
 		Predicate<List<Integer>> filter = null;
 		if (expression.contains("emainder")) {
 			filter = buildPredicate(expression, this::buildRemainderFilter, logFalseResults);
@@ -103,7 +99,7 @@ public class CombinationFilterFactory {
 			filter = combo -> false;
 		}
 		if (filter == null) {
-			throw new IllegalArgumentException("Unrecognized expression: " + originalExpression);
+			throw new IllegalArgumentException("Unrecognized expression: " + expression);
 		}
 		return filter;
 	}
@@ -429,21 +425,12 @@ public class CombinationFilterFactory {
 			return combo -> {
 				boolean result = predicate.test(combo);
 				if (!result) {
-					System.out.println("[" + filterAsString + "] returned false on combo:\t" + toString(combo));
+					System.out.println("[" + filterAsString + "] returned false on combo:\t" + ComboHandler.toString(combo));
 				}
 				return result;
 			};
 		}
 		return predicate;
-	}
-
-	String toString(List<Integer> combo) {
-		return String.join(
-			"\t",
-			combo.stream()
-		    .map(Object::toString)
-		    .collect(Collectors.toList())
-		);
 	}
 
 }

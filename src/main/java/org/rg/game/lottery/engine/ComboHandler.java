@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -116,6 +117,38 @@ public class ComboHandler {
 	        find(numbers, combinationCounter, indexes, start + 1, end, index, indexesToBeFound, collector);
 	    }
 	    return collector;
+	}
+
+	public static String toExpression(Collection<Integer> comboSums) {
+		String expression = "";
+		Integer previousNumber = null;
+		for (Integer sum : new TreeSet<>(comboSums)) {
+			if (previousNumber == null) {
+				expression += sum;
+				previousNumber = sum;
+			} else if (previousNumber == sum - 1) {
+				if (!expression.endsWith("->")) {
+					expression += "->";
+				}
+				previousNumber = sum;
+			} else if (expression.endsWith("->")) {
+				expression += previousNumber + "," + sum;
+				previousNumber = sum;
+			} else {
+				expression += "," +sum;
+				previousNumber = sum;
+			}
+		}
+		return expression;
+	}
+
+	public static String toString(List<Integer> combo) {
+		return String.join(
+			"\t",
+			combo.stream()
+		    .map(Object::toString)
+		    .collect(Collectors.toList())
+		);
 	}
 
 }

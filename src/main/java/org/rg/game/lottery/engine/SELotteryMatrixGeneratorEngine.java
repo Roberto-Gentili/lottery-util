@@ -122,16 +122,22 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		Set<Entry<Date, List<Integer>>> allWinningCombos = SEStats.get(getExtractionArchiveStartDate()).getAllWinningCombos().entrySet();
 		int discardedFromHistory = 0;
 		System.out.println("Starting filter analysis\n");
+		Collection<Integer> comboSums = new TreeSet<>();
 		for (Map.Entry<Date, List<Integer>> comboForDate : allWinningCombos) {
 			if (!combinationFilter.test(comboForDate.getValue())) {
 				discardedFromHistory++;
 				if (fineLog) {
+					comboSums.add(comboForDate.getValue().stream().mapToInt(Integer::intValue).sum());
 					System.out.println("  Filter discarded winning combo of " + CombinationFilterFactory.INSTANCE.simpleDateFormatter.format(comboForDate.getKey()) + ":  " +
-						CombinationFilterFactory.INSTANCE.toString(comboForDate.getValue()));
+						ComboHandler.toString(comboForDate.getValue()));
 				}
 			}
 		}
 		if (fineLog) {
+			String comboExpression = ComboHandler.toExpression(comboSums);
+			if (!comboExpression.isEmpty()) {
+				System.out.println("\n" + ComboHandler.toExpression(comboSums));
+			}
 			System.out.println();
 		}
 		ComboHandler comboHandler = new ComboHandler(numbers, 6);

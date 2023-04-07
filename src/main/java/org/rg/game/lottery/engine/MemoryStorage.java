@@ -27,7 +27,7 @@ public class MemoryStorage implements Storage {
 	@Override
 	public boolean addCombo(List<Integer> selectedCombo) {
 		if (!contains(selectedCombo)) {
-			output += "\n" + toString(selectedCombo);
+			output += "\n" + ComboHandler.toString(selectedCombo);
 			return combos.add(selectedCombo);
 		}
 		return false;
@@ -46,7 +46,7 @@ public class MemoryStorage implements Storage {
 
 	@Override
 	public void addUnindexedCombo(List<Integer> selectedCombo) {
-		addLine(toString(selectedCombo));
+		addLine(ComboHandler.toString(selectedCombo));
 	}
 
 	@Override
