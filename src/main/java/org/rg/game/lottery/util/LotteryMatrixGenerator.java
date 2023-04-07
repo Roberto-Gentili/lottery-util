@@ -13,6 +13,7 @@ import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.io.FileSystemItem;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.MDLotteryMatrixGeneratorEngine;
+import org.rg.game.lottery.engine.PersistentStorage;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 
 
@@ -36,6 +37,11 @@ public class LotteryMatrixGenerator {
 		Collection<FileSystemItem> configurationFiles = new TreeSet<>((fISOne, fISTwo) -> {
 			return fISOne.getName().compareTo(fISTwo.getName());
 		});
+		configurationFiles.addAll(FileSystemItem.ofPath(
+			PersistentStorage.buildWorkingPath()).findInChildren(
+				FileSystemItem.Criteria.forAllFileThat(file -> file.getName().contains("-matrix-generator"))
+			)
+		);
 		configurationFiles.addAll(
 			ComponentContainer.getInstance().getPathHelper().findResources(absolutePath -> {
 				return absolutePath.contains(configFilePrefix + "-matrix-generator");
