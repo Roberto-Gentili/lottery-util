@@ -14,15 +14,12 @@ import org.burningwave.core.io.FileSystemItem;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.MDLotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
-import org.rg.game.lottery.engine.SEStats;
 
 
 
 public class LotteryMatrixGenerator {
 
 	public static void main(String[] args) throws IOException {
-		SEStats.forceLoadingFromExcel =
-			Boolean.parseBoolean(System.getenv().getOrDefault("se-stats.force-loading-from excel", "false"));
 		Collection<CompletableFuture<Void>> futures = new ArrayList<>();
 		execute("se", futures);
 		execute("md", futures);
