@@ -199,52 +199,41 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	@Override
-	public String preprocess(String filterAsString) {
-		if (filterAsString == null) {
-			return filterAsString;
+	protected String processStatsExpression(String expression) {
+		String[] options = expression.replaceAll("\\s+","").split("lessExtCouple|lessExt|mostExtCouple|mostExt");
+		List<Integer> numbersToBeTested = null;
+		if (expression.contains("lessExtCouple")) {
+			numbersToBeTested =
+				SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberFromMostExtractedCoupleRankReversed();
+		} else if (expression.contains("lessExt")) {
+			numbersToBeTested =
+				SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberRankReversed();
+		} else if (expression.contains("mostExtCouple")) {
+			numbersToBeTested =
+				SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberFromMostExtractedCoupleRank();
+		} else if (expression.contains("mostExt")) {
+			numbersToBeTested =
+				SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberRank();
 		}
-		String[] splittedfilter= filterAsString.split("&|\\|");
-		for (String expression : splittedfilter) {
-			expression = expression.replace("(", "").replace(")", "");
-			List<Integer> numbersToBeTested = null;
-			String[] options = expression.replaceAll("\\s+","").split("lessExtCouple|lessExt|mostExtCouple|mostExt");
-			if (options.length > 1) {
-				if (expression.contains("lessExtCouple")) {
-					numbersToBeTested =
-						SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberFromMostExtractedCoupleRankReversed();
-				} else if (expression.contains("lessExt")) {
-					numbersToBeTested =
-						SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberRankReversed();
-				} else if (expression.contains("mostExtCouple")) {
-					numbersToBeTested =
-						SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberFromMostExtractedCoupleRank();
-				} else if (expression.contains("mostExt")) {
-					numbersToBeTested =
-						SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberRank();
-				}
-				String[] subRange = options[0].split("->");
-				if (subRange.length == 2) {
-					Integer leftBound = Integer.parseInt(subRange[0]);
-					Integer rightBound = Integer.parseInt(subRange[1]);
-					numbersToBeTested = numbersToBeTested.stream().filter(number -> number >= leftBound && number <= rightBound).collect(Collectors.toList());
-				}
-				String[] groupOptions = options[1].split(":");
-				List<String> numbers = new ArrayList<>();
-				if (groupOptions[0].contains("->")) {
-					String[] bounds = groupOptions[0].split("->");
-					for (int i = Integer.parseInt(bounds[0]); i <= Integer.parseInt(bounds[1]); i++) {
-						numbers.add(numbersToBeTested.get(i - 1).toString());
-					}
-				} else if (groupOptions[0].contains(",")) {
-					for (String index : groupOptions[0].split(",")) {
-						numbers.add(numbersToBeTested.get(Integer.parseInt(index) - 1).toString());
-					}
-				}
-				String newExpression = "in " + String.join(",", numbers) + ": " + groupOptions[1];
-				filterAsString = filterAsString.replace(expression, newExpression);
+		String[] subRange = options[0].split("->");
+		if (subRange.length == 2) {
+			Integer leftBound = Integer.parseInt(subRange[0]);
+			Integer rightBound = Integer.parseInt(subRange[1]);
+			numbersToBeTested = numbersToBeTested.stream().filter(number -> number >= leftBound && number <= rightBound).collect(Collectors.toList());
+		}
+		String[] groupOptions = options[1].split(":");
+		List<String> numbers = new ArrayList<>();
+		if (groupOptions[0].contains("->")) {
+			String[] bounds = groupOptions[0].split("->");
+			for (int i = Integer.parseInt(bounds[0]); i <= Integer.parseInt(bounds[1]); i++) {
+				numbers.add(numbersToBeTested.get(i - 1).toString());
+			}
+		} else if (groupOptions[0].contains(",")) {
+			for (String index : groupOptions[0].split(",")) {
+				numbers.add(numbersToBeTested.get(Integer.parseInt(index) - 1).toString());
 			}
 		}
-		return filterAsString;
+		return "in " + String.join(",", numbers) + ": " + groupOptions[1];
 	}
 
 }

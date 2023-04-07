@@ -30,6 +30,8 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public abstract class LotteryMatrixGeneratorAbstEngine {
@@ -191,7 +193,46 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	}
 
 	public String preprocess(String filterAsString) {
+		if (filterAsString == null) {
+			return filterAsString;
+		}
+		Map<String, Object> nestedExpressionsData = new LinkedHashMap<>();
+		filterAsString = CombinationFilterFactory.bracketAreasToPlaceholders(filterAsString, nestedExpressionsData);
+		Matcher logicalOperatorSplitter = Pattern.compile("(.*?)(&|\\||\\/)").matcher(filterAsString + "/");
+		while (logicalOperatorSplitter.find()) {
+			String originalPredicateUnitExpression = logicalOperatorSplitter.group(1);
+			String predicateUnitExpression = originalPredicateUnitExpression.startsWith("!") ?
+				logicalOperatorSplitter.group(1).split("\\!")[1] :
+				originalPredicateUnitExpression;
+			String nestedPredicateExpression = (String)nestedExpressionsData.get(predicateUnitExpression);
+			String newExpression = nestedPredicateExpression != null ? preprocess(nestedPredicateExpression) :
+				processSimpleExpression(predicateUnitExpression);
+			if (nestedPredicateExpression != null) {
+				filterAsString = filterAsString.replace(
+					originalPredicateUnitExpression,
+					((originalPredicateUnitExpression.startsWith("!") ? "!" : "") + "(" + newExpression + ")"
+				));
+			} else {
+				filterAsString = filterAsString.replace(
+					originalPredicateUnitExpression,
+					((originalPredicateUnitExpression.startsWith("!") ? "!" : "") + newExpression
+				));
+			}
+		}
 		return filterAsString;
+	}
+
+	protected String processSimpleExpression(String expression) {
+		expression = expression.replace("(", "").replace(")", "");
+		String[] options = expression.replaceAll("\\s+","").split("lessExtCouple|lessExt|mostExtCouple|mostExt");
+		if (options.length > 1) {
+			return processStatsExpression(expression);
+		}
+		return expression;
+	}
+
+	protected String processStatsExpression(String expression) {
+		throw new UnsupportedOperationException("Expression is not supported: " + expression);
 	}
 
 	protected abstract Map<String, Number> testEffectiveness(String combinationFilterRaw, List<Integer> numbers, boolean parseBoolean);
