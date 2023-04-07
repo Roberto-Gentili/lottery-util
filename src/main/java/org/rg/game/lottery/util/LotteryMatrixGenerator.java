@@ -46,7 +46,7 @@ public class LotteryMatrixGenerator {
 				Properties config = new Properties();
 				config.load(configIS);
 				if (Boolean.parseBoolean(config.getProperty("enabled", "false"))) {
-					System.out.println("Processing file " + fIS.getName());
+					System.out.println("Processing file " + fIS.getName() + " located in " + fIS.getParent().getAbsolutePath());
 					LotteryMatrixGeneratorAbstEngine engine = engineSupplier.get();
 					config.setProperty("nameSuffix", fIS.getName().replace("." + fIS.getExtension(), ""));
 					engine.setup(config);
