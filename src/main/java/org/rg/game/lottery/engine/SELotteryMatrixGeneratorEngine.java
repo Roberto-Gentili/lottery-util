@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -234,6 +235,30 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 			}
 		}
 		return "in " + String.join(",", numbers) + ": " + groupOptions[1];
+	}
+
+	@Override
+	protected String processComboSumxpression(String expression) {
+		String[] options = expression.split("allWinningCombos");
+		if (options.length > 1) {
+			Set<Integer> sums = new TreeSet<>();
+			String[] sumSubOptions = options[1].split("sum|rangeOfSum");
+			if (sumSubOptions.length == 1) {
+				SEStats.get(getExtractionArchiveStartDate()).getAllWinningCombos().values().stream().forEach(combo -> {
+					sums.add(combo.stream().collect(Collectors.summingInt(Integer::intValue)).intValue());
+				});
+				if (options[1].contains("sum")) {
+					if (!sums.isEmpty()) {
+						return "sum " + String.join(",", sums.stream().map(Object::toString).collect(Collectors.toList()));
+					}
+					return "true";
+				} else if (options[1].contains("rangeOfSum")) {
+					return "sum " + sums.iterator().next() + " -> " + sums.stream().reduce((prev, next) -> next).orElse(null);
+				}
+			}
+			throw new UnsupportedOperationException("Expression is not supported: " + expression);
+		}
+		return expression;
 	}
 
 }

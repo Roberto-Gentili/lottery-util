@@ -223,12 +223,16 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	}
 
 	protected String processSimpleExpression(String expression) {
-		expression = expression.replace("(", "").replace(")", "");
-		String[] options = expression.replaceAll("\\s+","").split("lessExtCouple|lessExt|mostExtCouple|mostExt");
-		if (options.length > 1) {
+		if (expression.split("lessExtCouple|lessExt|mostExtCouple|mostExt").length > 1) {
 			return processStatsExpression(expression);
+		} else if (expression.contains("sum")) {
+			return processComboSumxpression(expression);
 		}
 		return expression;
+	}
+
+	protected String processComboSumxpression(String expression) {
+		throw new UnsupportedOperationException("Expression is not supported: " + expression);
 	}
 
 	protected String processStatsExpression(String expression) {

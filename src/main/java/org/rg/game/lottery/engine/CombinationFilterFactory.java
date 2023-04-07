@@ -15,6 +15,7 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class CombinationFilterFactory {
 	public static final CombinationFilterFactory INSTANCE;
@@ -96,6 +97,10 @@ public class CombinationFilterFactory {
 			filter = buildPredicate(expression, this::inFilter, logFalseResults);
 		} else if (expression.contains("->")) {
 			filter = buildPredicate(expression, this::buildNumberGroupFilter, logFalseResults);
+		} else if (expression.equals("true")) {
+			filter = combo -> true;
+		} else if (expression.equals("false")) {
+			filter = combo -> false;
 		}
 		if (filter == null) {
 			throw new IllegalArgumentException("Unrecognized expression: " + originalExpression);
@@ -166,16 +171,23 @@ public class CombinationFilterFactory {
 
 
 	private Predicate<List<Integer>> buildSumFilter(String filterAsString) {
+		Set<Integer> sums = new TreeSet<>();
 		String[] operationOptions = filterAsString.replaceAll("\\s+","").split("sum");
-		String[] options = operationOptions[1].split(":");
-		String[] boundsAsString = options[1].split(",");
-		int[] bounds = {
-			Integer.parseInt(boundsAsString[0]),
-			Integer.parseInt(boundsAsString[1])
-		};
+		for (String sumAsString : operationOptions[1].split(",")) {
+			String[] rangeOptions = sumAsString.split("->");
+			if (rangeOptions.length > 1) {
+				IntStream.rangeClosed(
+					Integer.parseInt(rangeOptions[0]),
+					Integer.parseInt(rangeOptions[1])).boxed().collect(Collectors.toCollection(() -> sums)
+				);
+			} else {
+				sums.add(Integer.parseInt(sumAsString));
+			}
+		}
 		return combo -> {
-			int sum = combo.stream().collect(Collectors.summingInt(Integer::intValue)).intValue();
-			return sum >= bounds[0] && sum <= bounds[1];
+			return sums.contains(
+				combo.stream().collect(Collectors.summingInt(Integer::intValue)).intValue()
+			);
 		};
 	}
 
