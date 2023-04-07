@@ -25,6 +25,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.burningwave.core.io.FileSystemItem;
+import org.rg.game.lottery.engine.PersistentStorage;
 
 public class ExpireDateUpdater {
 	static DateTimeFormatter datePattern = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
@@ -49,7 +50,7 @@ public class ExpireDateUpdater {
 	);
 
 	public static void main(String[] args) {
-		String destFileAbsolutePath = "M:\\Il mio Drive\\Superenalotto\\Abbonamenti e altre informazioni.xlsx";
+		String destFileAbsolutePath = PersistentStorage.buildWorkingPath() + "\\Abbonamenti e altre informazioni.xlsx";
 		File srcFile = new File(destFileAbsolutePath);
 		File history = new File(srcFile.getParentFile() + "\\Storico abbonamenti");
 		history.mkdirs();

@@ -43,11 +43,12 @@ public class PersistentStorage implements Storage {
 	}
 
 	public static String buildWorkingPath() {
-		String workingPath =
-			/*System.getProperty("user.home") + File.separator +
+		String workingPath = System.getenv("lottery-util.working-path");
+		workingPath =
+			workingPath != null ? workingPath :
+			System.getProperty("user.home") + File.separator +
 			"Desktop" + File.separator +
-			"Combos";*/
-			"M:"  + File.separator + "Il mio Drive" + File.separator + "Superenalotto";
+			"Combos";
 		File workingFolder = new File(workingPath);
 		workingFolder.mkdirs();
 		return workingPath;
