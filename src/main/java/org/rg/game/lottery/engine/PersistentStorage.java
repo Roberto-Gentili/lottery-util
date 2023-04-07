@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PersistentStorage implements Storage {
+	private static String workingPath;
 	BufferedWriter bufferedWriter = null;
 	String absolutePath;
 	int size;
@@ -43,12 +44,20 @@ public class PersistentStorage implements Storage {
 	}
 
 	public static String buildWorkingPath() {
-		String workingPath = System.getenv("lottery-util.working-path");
-		workingPath =
-			workingPath != null ? workingPath :
-			System.getProperty("user.home") + File.separator +
-			"Desktop" + File.separator +
-			"Combos";
+		if (workingPath == null) {
+		synchronized (PersistentStorage.class) {
+				if (workingPath == null) {
+					String workingPath = System.getenv("lottery-util.working-path");
+					workingPath =
+						workingPath != null ? workingPath :
+						System.getProperty("user.home") + File.separator +
+						"Desktop" + File.separator +
+						"Combos";
+					System.out.println("Set working path to: " + workingPath);
+					PersistentStorage.workingPath = workingPath;
+				}
+			}
+		}
 		File workingFolder = new File(workingPath);
 		workingFolder.mkdirs();
 		return workingPath;
