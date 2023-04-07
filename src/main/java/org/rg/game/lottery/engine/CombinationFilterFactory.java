@@ -34,34 +34,79 @@ public class CombinationFilterFactory {
 	}
 
 	public Predicate<List<Integer>> parse(String filterAsString, boolean logFalseResults) {
-		if (filterAsString == null || (filterAsString = filterAsString.replaceAll("\\s+","")).isEmpty()) {
+		if (filterAsString == null || filterAsString.isEmpty()) {
 			return numbers -> true;
 		}
-		Map<String, String> nestedExpression = new LinkedHashMap<>();
-		Predicate<List<Integer>> predicate = parseComplexExpression(filterAsString, nestedExpression, logFalseResults);
+		Predicate<List<Integer>> predicate = parseComplexExpression(filterAsString, logFalseResults);
 		return combo -> {
 			Collections.sort(combo);
 			return predicate.test(combo);
 		};
 	}
 
-	//"\\((.|\\n)*\\)"
-	private Predicate<List<Integer>> parseComplexExpression(String filterAsString, Map<String, String> nestedExpression, boolean logFalseResults) {
-		Matcher matcher = Pattern.compile("(.*?)(&|\\||\\/)").matcher(filterAsString + "/");
+	private Predicate<List<Integer>> parseComplexExpression(String filterAsString, boolean logFalseResults) {
+		Map<String, Object> nestedExpressionsData = new LinkedHashMap<>();
+		filterAsString = bracketAreasToPlaceholders(filterAsString, nestedExpressionsData);
+		Matcher logicalOperatorSplitter = Pattern.compile("(.*?)(&|\\||\\/)").matcher(filterAsString + "/");
 		Predicate<List<Integer>> predicate = null;
 		String logicalOperator = null;
-		while (matcher.find()) {
+		while (logicalOperatorSplitter.find()) {
+			String predicateUnitExpression = logicalOperatorSplitter.group(1);
+			String nestedPredicateExpression = (String)nestedExpressionsData.get(predicateUnitExpression);
+			Predicate<List<Integer>> predicateUnit = nestedPredicateExpression != null ?
+				parseComplexExpression(nestedPredicateExpression, logFalseResults) :
+				parseSimpleExpression(predicateUnitExpression, logFalseResults);
 			if (predicate == null) {
-				predicate = parseSimpleExpression(matcher.group(1), logFalseResults);
+				predicate = predicateUnit;
 			} else if ("&".equals(logicalOperator)) {
-				predicate = predicate.and(parseSimpleExpression(matcher.group(1), logFalseResults));
+				predicate = predicate.and(predicateUnit);
 			} else if ("|".equals(logicalOperator)) {
-				predicate = predicate.or(parseSimpleExpression(matcher.group(1), logFalseResults));
+				predicate = predicate.or(predicateUnit);
 			}
-			logicalOperator = matcher.group(2);
+			logicalOperator = logicalOperatorSplitter.group(2);
 		}
 		return predicate;
 	}
+
+	private static String bracketAreasToPlaceholders(String value, Map<String, Object> values) {
+		Boolean foundBracket = null;
+		values.computeIfAbsent("nestedIndex", key -> 0);
+		while (foundBracket == null || foundBracket) {
+			foundBracket = false;
+			for (int index = 0; index < value.length();) {
+	            if (value.charAt(index) == '(') {
+	                int close = findClose(value, index);  // find the  close parentheses
+	                String bracketInnerArea = value.substring(index + 1, close);
+	                Integer nestedIndex = (Integer)values.get("nestedIndex");
+	                String placeHolder = "__NESTED-"+ nestedIndex++ +"__";
+	                value = value.substring(0, index) + placeHolder + value.substring(close + 1, value.length());
+	                values.put("nestedIndex", nestedIndex);
+	                values.put(placeHolder, bracketInnerArea);
+	                foundBracket = true;
+	                break;
+	            } else {
+	                index++;
+	            }
+	        }
+		}
+		return value;
+	}
+
+	private static int findClose(String input, int start) {
+        java.util.Stack<Integer> stack = new java.util.Stack<>();
+        for (int index = start; index < input.length(); index++) {
+            if (input.charAt(index) == '(') {
+                stack.push(index);
+            } else if (input.charAt(index) == ')') {
+                stack.pop();
+                if (stack.isEmpty()) {
+                    return index;
+                }
+            }
+        }
+        // unreachable if your parentheses is balanced
+        return 0;
+    }
 
 	private Predicate<List<Integer>> parseSimpleExpression(String filterAsString, boolean logFalseResults) {
 		if (filterAsString.contains("emainder")) {
