@@ -77,9 +77,9 @@ public class CombinationFilterFactory {
 
 	private Predicate<List<Integer>> parseSimpleExpression(String expression, boolean logFalseResults) {
 		String originalExpression = expression;
-		expression = originalExpression.startsWith("!") ?
-			expression.split("\\!")[1] :
-			expression;
+		if (expression.contains("!")) {
+			throw new IllegalArgumentException("A bug here");
+		}
 		Predicate<List<Integer>> filter = null;
 		if (expression.contains("emainder")) {
 			filter = buildPredicate(expression, this::buildRemainderFilter, logFalseResults);
@@ -105,7 +105,7 @@ public class CombinationFilterFactory {
 		if (filter == null) {
 			throw new IllegalArgumentException("Unrecognized expression: " + originalExpression);
 		}
-		return originalExpression.startsWith("!") ? filter.negate() : filter;
+		return filter;
 	}
 
 	static String bracketAreasToPlaceholders(String expression, Map<String, Object> values) {
