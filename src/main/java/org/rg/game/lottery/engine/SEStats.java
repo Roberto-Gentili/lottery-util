@@ -361,8 +361,14 @@ public class SEStats {
 		return reversed;
 	}
 
-	public List<Integer> getCounterOfAbsencesFromCompetitionsRank() {
+	public List<Integer> getMostAbsentNumbersRank() {
 		return counterOfAbsencesFromCompetitions.stream().map(entry -> Integer.parseInt(entry.getKey())).collect(Collectors.toList());
+	}
+
+	public List<Integer> getMostAbsentNumbersRankReversed() {
+		List<Integer> reversed = getMostAbsentNumbersRank();
+		Collections.reverse(reversed);
+		return reversed;
 	}
 
 	public List<Integer> getExtractedNumberRank() {
