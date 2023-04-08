@@ -20,6 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -74,10 +75,6 @@ public class SEStats {
 		Map<String, Integer> extractedNumberCountersMap = new LinkedHashMap<>();
 		allWinningCombos = new LinkedHashMap<>();
 		allWinningCombosWithJollyAndSuperstar = new LinkedHashMap<>();
-		Map<String, Integer> counterOfAbsencesFromCompetitionsMap = new LinkedHashMap<>();
-		for (int i = 1; i <= 90; i++) {
-			 counterOfAbsencesFromCompetitionsMap.put(String.valueOf(i), 0);
-		}
 		try {
 			try {
 				if (forceLoadingFromExcel) {
@@ -85,8 +82,7 @@ public class SEStats {
 				}
 				loadRawDataFromInternet(
 					extractedNumberPairCountersMap,
-					extractedNumberCountersMap,
-					counterOfAbsencesFromCompetitionsMap
+					extractedNumberCountersMap
 				);
 			} catch (Throwable exc) {
 				if (!forceLoadingFromExcel) {
@@ -94,21 +90,14 @@ public class SEStats {
 				}
 				extractedNumberPairCountersMap = buildExtractedNumberPairCountersMap();
 				extractedNumberCountersMap = new LinkedHashMap<>();
-				counterOfAbsencesFromCompetitionsMap = new LinkedHashMap<>();
-				counterOfAbsencesFromCompetitionsMap = new LinkedHashMap<>();
-				for (int i = 1; i <= 90; i++) {
-					 counterOfAbsencesFromCompetitionsMap.put(String.valueOf(i), 0);
-				}
 				loadRawDataFromExcel(
 					extractedNumberPairCountersMap,
-					extractedNumberCountersMap,
-					counterOfAbsencesFromCompetitionsMap
+					extractedNumberCountersMap
 				);
 			}
 			loadData(
 				extractedNumberPairCountersMap,
-				extractedNumberCountersMap,
-				counterOfAbsencesFromCompetitionsMap
+				extractedNumberCountersMap
 			);
 		} catch (Throwable exc) {
 			throw new RuntimeException(exc);
@@ -146,8 +135,7 @@ public class SEStats {
 
 	private void loadRawDataFromExcel(
 		Map<String, Integer> extractedNumberPairCountersMap,
-		Map<String, Integer> extractedNumberCountersMap,
-		Map<String, Integer> counterOfAbsencesFromCompetitionsMap
+		Map<String, Integer> extractedNumberCountersMap
 	) throws IOException {
 		try (InputStream inputStream = new FileInputStream(PersistentStorage.buildWorkingPath() + File.separator + getExcelFileName());
 			Workbook workbook = new XSSFWorkbook(inputStream);
@@ -167,11 +155,7 @@ public class SEStats {
 						extractedCombo.add(number);
 						Integer counter = extractedNumberCountersMap.computeIfAbsent(number.toString(), key -> 0);
 						extractedNumberCountersMap.put(number.toString(), ++counter);
-						counterOfAbsencesFromCompetitionsMap.put(number.toString(), 0);
 						if (extractedCombo.size() == 6) {
-							counterOfAbsencesFromCompetitionsMap.entrySet().stream()
-							.filter(entry -> !extractedCombo.contains(Integer.valueOf(entry.getKey())))
-							.forEach(entry -> entry.setValue(entry.getValue() + 1));
 							break;
 						}
 					}
@@ -199,8 +183,7 @@ public class SEStats {
 
 	private void loadData(
 		Map<String, Integer> extractedNumberPairCountersMap,
-		Map<String, Integer> extractedNumberCountersMap,
-		Map<String, Integer> counterOfAbsencesFromCompetitionsMap
+		Map<String, Integer> extractedNumberCountersMap
 	) {
 		Comparator<Map.Entry<?, Integer>> comparator = (c1, c2) -> c1.getValue().compareTo(c2.getValue());
 		extractedNumberPairCounters = extractedNumberPairCountersMap.entrySet().stream().sorted(comparator.reversed()).collect(Collectors.toList());
@@ -216,15 +199,31 @@ public class SEStats {
 		});
 		extractedNumberCountersFromMostExtractedCouple =
 			extractedNumberFromMostExtractedCoupleMap.entrySet().stream().sorted(comparator.reversed()).collect(Collectors.toList());
+		Map<String, Integer> counterOfAbsencesFromCompetitionsMap = new LinkedHashMap<>();
+		new TreeMap<>(allWinningCombos).values().stream().forEach(extractedCombo -> {
+			extractedCombo.stream().forEach(extractedNumber -> {
+				counterOfAbsencesFromCompetitionsMap.put(String.valueOf(extractedNumber), 0);
+			});
+			counterOfAbsencesFromCompetitionsMap.entrySet().stream()
+			.filter(entry -> !extractedCombo.contains(Integer.valueOf(entry.getKey())))
+			.forEach(entry -> entry.setValue(entry.getValue() + 1));
+		});
 		counterOfAbsencesFromCompetitions =
-			counterOfAbsencesFromCompetitionsMap.entrySet().stream().sorted(comparator.reversed()).collect(Collectors.toList());
+			counterOfAbsencesFromCompetitionsMap.entrySet().stream().sorted(
+				((Comparator<Map.Entry<String, Integer>>)(itemOne, itemTwo) -> {
+					int result = itemOne.getValue().compareTo(itemTwo.getValue());
+					if (result == 0) {
+						return Integer.valueOf(itemOne.getKey()).compareTo(Integer.valueOf(itemTwo.getKey()));
+					}
+					return result;
+				}).reversed()
+			).collect(Collectors.toList());
 	}
 
 
 	private void loadRawDataFromInternet(
 		Map<String, Integer> extractedNumberPairCountersMap,
-		Map<String, Integer> extractedNumberCountersMap,
-		Map<String, Integer> counterOfAbsencesFromCompetitionsMap
+		Map<String, Integer> extractedNumberCountersMap
 	) throws ParseException, IOException {
 		int startYear = 2009;
 		int endYear = Calendar.getInstance().get(Calendar.YEAR);
@@ -251,9 +250,6 @@ public class SEStats {
 							//System.out.print(extractedNumber + "\t");
 						}
 						Collections.sort(extractedCombo);
-						counterOfAbsencesFromCompetitionsMap.entrySet().stream()
-						.filter(entry -> !extractedCombo.contains(Integer.valueOf(entry.getKey())))
-						.forEach(entry -> entry.setValue(entry.getValue() + 1));
 						allWinningCombos.put(extractionDate, extractedCombo);
 						List<Integer> extractedComboWithJollyAndSuperstar = new ArrayList<>(extractedCombo);
 						extractedComboWithJollyAndSuperstar.add(Integer.parseInt(tableRow.select("li[class=jolly]").first().text()));
