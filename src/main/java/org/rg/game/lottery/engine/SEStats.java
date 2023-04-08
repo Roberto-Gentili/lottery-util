@@ -209,14 +209,11 @@ public class SEStats {
 			.forEach(entry -> entry.setValue(entry.getValue() + 1));
 		});
 		counterOfAbsencesFromCompetitions =
-			counterOfAbsencesFromCompetitionsMap.entrySet().stream().sorted(
-				((Comparator<Map.Entry<String, Integer>>)(itemOne, itemTwo) -> {
-					int result = itemOne.getValue().compareTo(itemTwo.getValue());
-					if (result == 0) {
-						return Integer.valueOf(itemOne.getKey()).compareTo(Integer.valueOf(itemTwo.getKey()));
-					}
-					return result;
-				}).reversed()
+			counterOfAbsencesFromCompetitionsMap.entrySet().stream().sorted((itemOne, itemTwo) ->
+				(itemOne.getValue() < itemTwo.getValue()) ? 1 :
+					(itemOne.getValue() == itemTwo.getValue()) ?
+						Integer.valueOf(itemOne.getKey()).compareTo(Integer.valueOf(itemTwo.getKey())) : 0
+
 			).collect(Collectors.toList());
 	}
 
