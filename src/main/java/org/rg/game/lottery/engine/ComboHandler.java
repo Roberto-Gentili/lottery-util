@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 public class ComboHandler {
@@ -155,8 +156,14 @@ public class ComboHandler {
 		return combo.stream().collect(Collectors.summingInt(Integer::intValue)).intValue();
 	}
 
+
+
 	public static int sumPowerOfValues(List<Integer> combo, Integer exponent) {
-		return combo.stream().map(number -> (int)Math.pow(number, exponent)).collect(Collectors.toList())
+		return processAndSum(combo, number -> (int)Math.pow(number, exponent));
+	}
+
+	public static int processAndSum(List<Integer> combo, UnaryOperator<Integer> numberProcessor) {
+		return combo.stream().map(numberProcessor).collect(Collectors.toList())
 		.stream().collect(Collectors.summingInt(Integer::intValue)).intValue();
 	}
 
