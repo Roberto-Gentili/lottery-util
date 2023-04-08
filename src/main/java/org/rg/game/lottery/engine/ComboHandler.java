@@ -156,7 +156,9 @@ public class ComboHandler {
 		return combo.stream().collect(Collectors.summingInt(Integer::intValue)).intValue();
 	}
 
-
+	public static int sumMultiplicationOfEachValueByItselfReduced(List<Integer> combo, Integer reduction) {
+		return processAndSum(combo, number -> number * (number - reduction));
+	}
 
 	public static int sumPowerOfValues(List<Integer> combo, Integer exponent) {
 		return processAndSum(combo, number -> (int)Math.pow(number, exponent));
