@@ -2,7 +2,9 @@ package org.rg.game.lottery.engine;
 
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -12,6 +14,7 @@ import java.util.TreeSet;
 import java.util.function.DoublePredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -169,47 +172,45 @@ public class CombinationFilterFactory {
 
 
 	private Predicate<List<Integer>> buildSumFilter(String filterAsString) {
-		Set<Integer> sums = new TreeSet<>();
-		String[] operationOptions = filterAsString.replaceAll("\\s+","").split("sum");
-		for (String sumAsString : operationOptions[1].split(",")) {
-			String[] rangeOptions = sumAsString.split("->");
-			if (rangeOptions.length > 1) {
-				IntStream.rangeClosed(
-					Integer.parseInt(rangeOptions[0]),
-					Integer.parseInt(rangeOptions[1])).boxed().collect(Collectors.toCollection(() -> sums)
-				);
-			} else {
-				sums.add(Integer.parseInt(sumAsString));
-			}
-		}
+		String[] operationOptions = filterAsString.replaceAll("\\s+","").split("sum")[1].split(":");
+		Set<Integer> numbers = retrieveNumbersFromOption(operationOptions[1], TreeSet::new);
 		return combo ->
-			sums.contains(
+			numbers.contains(
 				ComboHandler.sumValues(combo)
-			)
-		;
+			);
 	}
 
 	private Predicate<List<Integer>> buildSumOfPowerFilter(String filterAsString) {
-		Set<Integer> sums = new TreeSet<>();
-		String[] operationOptions = filterAsString.replaceAll("\\s+","").split("sumOfPower");
-		String[] numberOptions = operationOptions[1].split(":");
-		Integer exponent = Integer.parseInt(numberOptions[0]);
-		for (String sumAsString : numberOptions[1].split(",")) {
+		String[] operationOptions = filterAsString.replaceAll("\\s+","").split("sumOfPower")[1].split(":");
+		List<Integer> operationOptionNumber = retrieveNumbersFromOption(
+			operationOptions[0], ArrayList::new
+		);
+		Integer exponent = operationOptionNumber.get(0);
+		Set<Integer> numbers = retrieveNumbersFromOption(operationOptions[1], TreeSet::new);
+		return combo ->
+			numbers.contains(
+					ComboHandler.sumPowerOfValues(combo, exponent)
+			);
+
+	}
+
+	private <C extends Collection<Integer>> C retrieveNumbersFromOption(String numberOptions, Supplier<C> collectionBuilder) {
+		Collection<Integer> system = collectionBuilder.get();
+		if (numberOptions.replaceAll("\\s+","").isEmpty()) {
+			return (C)system;
+		}
+		for (String sumAsString : numberOptions.split(",")) {
 			String[] rangeOptions = sumAsString.split("->");
 			if (rangeOptions.length > 1) {
 				IntStream.rangeClosed(
 					Integer.parseInt(rangeOptions[0]),
-					Integer.parseInt(rangeOptions[1])).boxed().collect(Collectors.toCollection(() -> sums)
+					Integer.parseInt(rangeOptions[1])).boxed().collect(Collectors.toCollection(() -> system)
 				);
 			} else {
-				sums.add(Integer.parseInt(sumAsString));
+				system.add(Integer.parseInt(sumAsString));
 			}
 		}
-		return combo ->
-			sums.contains(
-				ComboHandler.sumPowerOfValues(combo, exponent)
-			);
-
+		return (C)system;
 	}
 
 	private Predicate<List<Integer>> buildRadiusFilter(String filterAsString) {

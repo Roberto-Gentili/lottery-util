@@ -144,8 +144,12 @@ public class ComboHandler {
 	}
 
 	public static String toString(List<Integer> combo) {
+		return toString(combo, "\t");
+	}
+
+	public static String toString(List<Integer> combo, String separator) {
 		return String.join(
-			"\t",
+			separator,
 			combo.stream()
 		    .map(Object::toString)
 		    .collect(Collectors.toList())

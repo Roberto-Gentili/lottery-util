@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
@@ -253,41 +254,63 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	protected String processMathExpression(String expression) {
 		String[] options = expression.split("allWinningCombos");
 		if (options.length > 1) {
-			Set<Integer> sums = new TreeSet<>();
-			Matcher comboSumExpFinder = Pattern.compile("(sum|rangeOfSum):").matcher(expression);
-			if (comboSumExpFinder.find()) {
-				SEStats.get(getExtractionArchiveStartDate()).getAllWinningCombos().values().stream().forEach(combo ->
-					sums.add(ComboHandler.sumValues(combo))
-				);
-				if (comboSumExpFinder.group(1).contains("sum")) {
-					if (!sums.isEmpty()) {
-						return "sum " + String.join(",", sums.stream().map(Object::toString).collect(Collectors.toList()));
-					}
-					return "true";
-				} else if (comboSumExpFinder.group(1).contains("rangeOfSum")) {
-					return "sum " + sums.iterator().next() + " -> " + sums.stream().reduce((prev, next) -> next).orElse(null);
+			options[1] = options[1].startsWith(".") ?
+					options[1].replaceFirst("\\.", "") : options[1];
+			String manipulatedExpression = null;
+			if ((manipulatedExpression = processMathManipulationExpression(
+				options[1], "sum", "rangeOfSum",
+				operationOptionValue -> {
+					Collection<Integer> sums = new TreeSet<>();
+					SEStats.get(getExtractionArchiveStartDate()).getAllWinningCombos().values().stream().forEach(combo ->
+						sums.add(ComboHandler.sumValues(combo))
+					);
+					return sums;
 				}
-			}
-			Pattern comboPowerExpPattern = Pattern.compile("(sumOfPower|rangeOfSumPower)");
-			Matcher comboPowerExpFinder = comboPowerExpPattern.matcher(options[1]);
-			if (comboPowerExpFinder.find()) {
-				String mathExpressionType = comboPowerExpFinder.group(1);
-				Integer exponent = Integer.parseInt(options[1].replaceAll("\\s+","").split(comboPowerExpPattern.pattern())[1]);
-				SEStats.get(getExtractionArchiveStartDate()).getAllWinningCombos().values().stream().forEach(combo ->
-					sums.add(ComboHandler.sumPowerOfValues(combo, exponent))
-				);
-				if (mathExpressionType.contains("sum")) {
-					if (!sums.isEmpty()) {
-						return "sumOfPower " + exponent + ": " + String.join(",", sums.stream().map(Object::toString).collect(Collectors.toList()));
-					}
-					return "true";
-				} else if (mathExpressionType.contains("rangeOfSum")) {
-					return "sumOfPower " + exponent + ": " + sums.iterator().next() + " -> " + sums.stream().reduce((prev, next) -> next).orElse(null);
+			)) != null) {
+				return manipulatedExpression;
+			} else if ((manipulatedExpression = processMathManipulationExpression(
+				options[1], "sumOfPower", "rangeOfSumPower",
+				operationOptionValue -> {
+					Collection<Integer> sums = new TreeSet<>();
+					SEStats.get(getExtractionArchiveStartDate()).getAllWinningCombos().values().stream().forEach(combo -> {
+						sums.add(ComboHandler.sumPowerOfValues(combo, operationOptionValue.get(0)));
+					});
+					return sums;
 				}
+			)) != null) {
+				return manipulatedExpression;
 			}
 			throw new UnsupportedOperationException("Expression is not supported: " + expression);
 		}
 		return expression;
+	}
+
+	private String processMathManipulationExpression(
+		String expressionNameWithOptions,
+		String expressionNameToMatch,
+		String rangedExpressionNameToMatch,
+		Function<List<Integer>, Collection<Integer>> processor
+	) {
+		Pattern comboPowerExpPattern = Pattern.compile("(\\b" + expressionNameToMatch +"\\b|\\b" + rangedExpressionNameToMatch + "\\b)");
+		Matcher comboPowerExpFinder = comboPowerExpPattern.matcher(expressionNameWithOptions);
+		if (comboPowerExpFinder.find()) {
+			String mathExpressionType = comboPowerExpFinder.group(1);
+			String[] operationOptions = expressionNameWithOptions.split(comboPowerExpPattern.pattern());
+			List<Integer> operationOptionValues = new ArrayList<>();
+			if (operationOptions.length > 1) {
+				operationOptionValues.addAll(Arrays.stream(operationOptions[1].replaceAll("\\s+","").split(",")).map(Integer::parseInt).collect(Collectors.toList()));
+			}
+			Collection<Integer> sums = processor.apply(operationOptionValues);
+			if (mathExpressionType.contains(expressionNameToMatch)) {
+				if (!sums.isEmpty()) {
+					return expressionNameToMatch + ComboHandler.toString(operationOptionValues, ",") + ": " + String.join(",", sums.stream().map(Object::toString).collect(Collectors.toList()));
+				}
+				return "true";
+			} else if (mathExpressionType.contains(rangedExpressionNameToMatch)) {
+				return expressionNameToMatch + ComboHandler.toString(operationOptionValues, ",") + ": " + sums.iterator().next() + " -> " + sums.stream().reduce((prev, next) -> next).orElse(null);
+			}
+		}
+		return null;
 	}
 
 	@Override
