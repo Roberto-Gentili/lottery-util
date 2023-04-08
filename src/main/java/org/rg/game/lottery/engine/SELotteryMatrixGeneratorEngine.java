@@ -21,6 +21,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEngine {
@@ -248,22 +250,39 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	@Override
-	protected String processComboSumxpression(String expression) {
+	protected String processMathExpression(String expression) {
 		String[] options = expression.split("allWinningCombos");
 		if (options.length > 1) {
 			Set<Integer> sums = new TreeSet<>();
-			String[] sumSubOptions = options[1].split("sum|rangeOfSum");
-			if (sumSubOptions.length == 1) {
-				SEStats.get(getExtractionArchiveStartDate()).getAllWinningCombos().values().stream().forEach(combo -> {
-					sums.add(combo.stream().collect(Collectors.summingInt(Integer::intValue)).intValue());
-				});
-				if (options[1].contains("sum")) {
+			Matcher comboSumExpFinder = Pattern.compile("(sum|rangeOfSum):").matcher(expression);
+			if (comboSumExpFinder.find()) {
+				SEStats.get(getExtractionArchiveStartDate()).getAllWinningCombos().values().stream().forEach(combo ->
+					sums.add(ComboHandler.sumValues(combo))
+				);
+				if (comboSumExpFinder.group(1).contains("sum")) {
 					if (!sums.isEmpty()) {
 						return "sum " + String.join(",", sums.stream().map(Object::toString).collect(Collectors.toList()));
 					}
 					return "true";
-				} else if (options[1].contains("rangeOfSum")) {
+				} else if (comboSumExpFinder.group(1).contains("rangeOfSum")) {
 					return "sum " + sums.iterator().next() + " -> " + sums.stream().reduce((prev, next) -> next).orElse(null);
+				}
+			}
+			Pattern comboPowerExpPattern = Pattern.compile("(sumOfPower|rangeOfSumPower)");
+			Matcher comboPowerExpFinder = comboPowerExpPattern.matcher(options[1]);
+			if (comboPowerExpFinder.find()) {
+				String mathExpressionType = comboPowerExpFinder.group(1);
+				Integer exponent = Integer.parseInt(options[1].replaceAll("\\s+","").split(comboPowerExpPattern.pattern())[1]);
+				SEStats.get(getExtractionArchiveStartDate()).getAllWinningCombos().values().stream().forEach(combo ->
+					sums.add(ComboHandler.sumPowerOfValues(combo, exponent))
+				);
+				if (mathExpressionType.contains("sum")) {
+					if (!sums.isEmpty()) {
+						return "sumOfPower " + exponent + ": " + String.join(",", sums.stream().map(Object::toString).collect(Collectors.toList()));
+					}
+					return "true";
+				} else if (mathExpressionType.contains("rangeOfSum")) {
+					return "sumOfPower " + exponent + ": " + sums.iterator().next() + " -> " + sums.stream().reduce((prev, next) -> next).orElse(null);
 				}
 			}
 			throw new UnsupportedOperationException("Expression is not supported: " + expression);

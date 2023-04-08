@@ -151,4 +151,13 @@ public class ComboHandler {
 		);
 	}
 
+	public static int sumValues(List<Integer> combo) {
+		return combo.stream().collect(Collectors.summingInt(Integer::intValue)).intValue();
+	}
+
+	public static int sumPowerOfValues(List<Integer> combo, Integer exponent) {
+		return combo.stream().map(number -> (int)Math.pow(number, exponent)).collect(Collectors.toList())
+		.stream().collect(Collectors.summingInt(Integer::intValue)).intValue();
+	}
+
 }

@@ -87,6 +87,8 @@ public class CombinationFilterFactory {
 			filter = buildPredicate(expression, this::buildConsecutiveNumberFilter, logFalseResults);
 		} else if (expression.contains("radius")) {
 			filter = buildPredicate(expression, this::buildRadiusFilter, logFalseResults);
+		} else if (expression.contains("sumOfPower")) {
+			filter = buildPredicate(expression, this::buildSumOfPowerFilter, logFalseResults);
 		} else if (expression.contains("sum")) {
 			filter = buildPredicate(expression, this::buildSumFilter, logFalseResults);
 		} else if (expression.contains("in")) {
@@ -180,11 +182,34 @@ public class CombinationFilterFactory {
 				sums.add(Integer.parseInt(sumAsString));
 			}
 		}
-		return combo -> {
-			return sums.contains(
-				combo.stream().collect(Collectors.summingInt(Integer::intValue)).intValue()
+		return combo ->
+			sums.contains(
+				ComboHandler.sumValues(combo)
+			)
+		;
+	}
+
+	private Predicate<List<Integer>> buildSumOfPowerFilter(String filterAsString) {
+		Set<Integer> sums = new TreeSet<>();
+		String[] operationOptions = filterAsString.replaceAll("\\s+","").split("sumOfPower");
+		String[] numberOptions = operationOptions[1].split(":");
+		Integer exponent = Integer.parseInt(numberOptions[0]);
+		for (String sumAsString : numberOptions[1].split(",")) {
+			String[] rangeOptions = sumAsString.split("->");
+			if (rangeOptions.length > 1) {
+				IntStream.rangeClosed(
+					Integer.parseInt(rangeOptions[0]),
+					Integer.parseInt(rangeOptions[1])).boxed().collect(Collectors.toCollection(() -> sums)
+				);
+			} else {
+				sums.add(Integer.parseInt(sumAsString));
+			}
+		}
+		return combo ->
+			sums.contains(
+				ComboHandler.sumPowerOfValues(combo, exponent)
 			);
-		};
+
 	}
 
 	private Predicate<List<Integer>> buildRadiusFilter(String filterAsString) {

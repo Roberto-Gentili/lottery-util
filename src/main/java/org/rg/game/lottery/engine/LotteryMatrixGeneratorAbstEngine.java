@@ -230,12 +230,12 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		if (expression.split("lessExtCouple|lessExt|mostExtCouple|mostExt").length > 1) {
 			return processStatsExpression(expression);
 		} else if (expression.contains("sum")) {
-			return processComboSumxpression(expression);
+			return processMathExpression(expression);
 		}
 		return expression;
 	}
 
-	protected String processComboSumxpression(String expression) {
+	protected String processMathExpression(String expression) {
 		throw new UnsupportedOperationException("Expression is not supported: " + expression);
 	}
 
