@@ -310,7 +310,7 @@ public class SEStats {
 			sheet = template.getOrCreateSheet("Coppie più estratte", true);
 			sheet.setColumnWidth(0, 25 * 112);
 			sheet.setColumnWidth(1, 25 * 112);
-			sheet.setColumnWidth(2, 25 * 192);
+			sheet.setColumnWidth(2, 25 * 208);
 			template.createHeader(true, Arrays.asList("1° numero", "2° numero", "Conteggio estrazioni"));
 			for (Map.Entry<String, Integer> extractedNumberPairCounter : extractedNumberPairCounters) {
 				String[] numbers = extractedNumberPairCounter.getKey().split("-");
@@ -321,7 +321,7 @@ public class SEStats {
 			}
 			sheet = template.getOrCreateSheet("Numeri ritardatari", true);
 			sheet.setColumnWidth(0, 25 * 112);
-			sheet.setColumnWidth(1, 25 * 144);
+			sheet.setColumnWidth(1, 25 * 176);
 			template.createHeader(true, Arrays.asList("Numero", "Conteggio assenze"));
 			for (Map.Entry<String, Integer> extractionData : counterOfAbsencesFromCompetitions) {
 				template.addRow();
