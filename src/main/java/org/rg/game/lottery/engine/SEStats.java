@@ -212,8 +212,8 @@ public class SEStats {
 			counterOfAbsencesFromCompetitionsMap.entrySet().stream().sorted((itemOne, itemTwo) ->
 				(itemOne.getValue() < itemTwo.getValue()) ? 1 :
 					(itemOne.getValue() == itemTwo.getValue()) ?
-						Integer.valueOf(itemOne.getKey()).compareTo(Integer.valueOf(itemTwo.getKey())) : 0
-
+						Integer.valueOf(itemOne.getKey()).compareTo(Integer.valueOf(itemTwo.getKey())) :
+						-1
 			).collect(Collectors.toList());
 	}
 
