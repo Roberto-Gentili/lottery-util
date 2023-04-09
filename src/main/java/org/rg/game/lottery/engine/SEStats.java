@@ -438,7 +438,7 @@ public class SEStats {
 				}
 				sheet = template.getOrCreateSheet("Numeri più estratti per coppia", true);
 				sheet.setColumnWidth(0, 25 * 112);
-				sheet.setColumnWidth(1, 25 * 272);
+				sheet.setColumnWidth(1, 25 * 400);
 				template.createHeader(true, Arrays.asList("Numero", "Conteggio presenze nelle coppie più estratte"));
 				for (Map.Entry<Integer, Integer> extractionData : extractedNumberCountersFromMostExtractedCouple) {
 					template.addRow();
