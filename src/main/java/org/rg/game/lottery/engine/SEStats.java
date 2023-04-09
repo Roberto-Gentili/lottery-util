@@ -366,7 +366,7 @@ public class SEStats {
 
 		@Override
 		public boolean load() throws Throwable {
-			try (InputStream inputStream = new FileInputStream(PersistentStorage.buildWorkingPath() + File.separator + new ToExcelDataStorerV1().getFileName());
+			try (InputStream inputStream = new FileInputStream(PersistentStorage.buildWorkingPath() + File.separator + new ToExcelDataStorerV2().getFileName());
 				Workbook workbook = new XSSFWorkbook(inputStream);
 			) {
 				Sheet sheet = workbook.getSheet("Storico estrazioni");
@@ -438,7 +438,7 @@ public class SEStats {
 				}
 				sheet = template.getOrCreateSheet("Numeri più estratti per coppia", true);
 				sheet.setColumnWidth(0, 25 * 112);
-				sheet.setColumnWidth(1, 25 * 192);
+				sheet.setColumnWidth(1, 25 * 272);
 				template.createHeader(true, Arrays.asList("Numero", "Conteggio presenze nelle coppie più estratte"));
 				for (Map.Entry<Integer, Integer> extractionData : extractedNumberCountersFromMostExtractedCouple) {
 					template.addRow();
