@@ -550,25 +550,25 @@ public class SEStats {
 				);
 
 				Sheet sheet = template.getOrCreateSheet("Statistiche per numero", true);
-				sheet.setColumnWidth(0, 25 * 128);
-				sheet.setColumnWidth(1, 25 * 232);
-				sheet.setColumnWidth(2, 25 * 432);
-				sheet.setColumnWidth(3, 25 * 216);
-				sheet.setColumnWidth(4, 25 * 208);
-				sheet.setColumnWidth(5, 25 * 312);
-				sheet.setColumnWidth(6, 25 * 416);
+				sheet.setColumnWidth(0, 2702);
+				sheet.setColumnWidth(1, 2929);
+				sheet.setColumnWidth(2, 3982);
+				sheet.setColumnWidth(3, 3697);
+				sheet.setColumnWidth(4, 3441);
+				sheet.setColumnWidth(5, 3953);
+				sheet.setColumnWidth(6, 4181);
 				template.createHeader(
 					true,
 					Arrays.asList(
 						"Numero",
 						"Conteggio estrazioni",
 						"Conteggio presenze nelle coppie più estratte",
-						"Conteggio assenze",
-						"Record di assenze",
-						"Distanza dal record di assenze",
-						"Distanza dal record di assenze percentuale"
+						"Conteggio assenze consecutive",
+						"Record di assenze consecutive",
+						"Distanza dal record di assenze consecutive",
+						"Distanza in % dal record di assenze consecutive"
 					)
-				);
+				).setHeight((short)1152);
 				for (Map.Entry<String, Integer> extractionData : extractedNumberCounters) {
 					template.addRow();
 					template.addCell(Integer.parseInt(extractionData.getKey()), "0");
@@ -582,11 +582,12 @@ public class SEStats {
 					).setCellStyle(percentageNumberStyle);
 				}
 				template.setAutoFilter();
+
 				sheet = template.getOrCreateSheet("Coppie più estratte", true);
-				sheet.setColumnWidth(0, 25 * 144);
-				sheet.setColumnWidth(1, 25 * 144);
-				sheet.setColumnWidth(2, 25 * 240);
-				template.createHeader(true, Arrays.asList("1° numero", "2° numero", "Conteggio estrazioni"));
+				sheet.setColumnWidth(0, 3640);
+				sheet.setColumnWidth(1, 3640);
+				sheet.setColumnWidth(2,	3584);
+				template.createHeader(true, Arrays.asList("1° numero", "2° numero", "Conteggio estrazioni")).setHeight((short)576);
 				for (Map.Entry<String, Integer> extractedNumberPairCounter : extractedNumberPairCounters) {
 					String[] numbers = extractedNumberPairCounter.getKey().split("-");
 					template.addRow();
@@ -596,16 +597,19 @@ public class SEStats {
 				}
 				template.setAutoFilter();
 				sheet = template.getOrCreateSheet("Storico estrazioni", true);
-				sheet.setColumnWidth(0, 25 * 144);
-				sheet.setColumnWidth(1, 25 * 144);
-				sheet.setColumnWidth(2, 25 * 144);
-				sheet.setColumnWidth(3, 25 * 144);
-				sheet.setColumnWidth(4, 25 * 144);
-				sheet.setColumnWidth(5, 25 * 144);
-				sheet.setColumnWidth(6, 25 * 144);
-				sheet.setColumnWidth(7, 25 * 144);
-				sheet.setColumnWidth(8, 25 * 144);
-				template.createHeader(true, Arrays.asList("Data", "1° numero", "2° numero", "3° numero", "4° numero", "5° numero", "6° numero", "Jolly", "Superstar"));
+				sheet.setColumnWidth(0, 2702);
+				sheet.setColumnWidth(1,	3640);
+				sheet.setColumnWidth(2,	3640);
+				sheet.setColumnWidth(3,	3640);
+				sheet.setColumnWidth(4,	3640);
+				sheet.setColumnWidth(5,	3640);
+				sheet.setColumnWidth(6,	3640);
+				sheet.setColumnWidth(7,	2332);
+				sheet.setColumnWidth(8,	3441);
+				template.createHeader(
+					true,
+					Arrays.asList("Data", "1° numero", "2° numero", "3° numero", "4° numero", "5° numero", "6° numero", "Jolly", "Superstar")
+				).setHeight((short)288);
 				for (Map.Entry<Date, List<Integer>> extractionData : allWinningCombosWithJollyAndSuperstar.entrySet()) {
 					template.addRow();
 					template.addCell(extractionData.getKey()).getCellStyle().setAlignment(HorizontalAlignment.LEFT);

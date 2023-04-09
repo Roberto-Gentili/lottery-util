@@ -45,7 +45,7 @@ public class PersistentStorage implements Storage {
 
 	public static String buildWorkingPath() {
 		if (workingPath == null) {
-		synchronized (PersistentStorage.class) {
+			synchronized (PersistentStorage.class) {
 				if (workingPath == null) {
 					String workingPath = System.getenv("lottery-util.working-path");
 					workingPath =
