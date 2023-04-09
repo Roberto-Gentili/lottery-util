@@ -116,6 +116,45 @@ public class SimpleWorkbookTemplate implements Closeable {
 		return "dd/MM/yyyy";
 	}
 
+	public CellStyle getOrCreateStyle(Object... objects) {
+		String name = null;
+		String patternTemp = null;
+		for (int i = 0; i < objects.length; i++) {
+			if ((i == 0 && objects[i] instanceof String) ||
+				i > 0 && name == null && objects[i] instanceof String) {
+				name = (String)objects[i];
+				if (i > 0) {
+					patternTemp = name;
+				}
+			}
+		}
+		CellStyle style = formattedContentStyle.get(name);
+		String pattern = patternTemp;
+		if (style == null) {
+			style = createStyle(
+				workbook,
+				pattern != null ?
+					cellStyle -> fontStyle -> {
+						cellStyle.setDataFormat(dataFormat.getFormat(pattern));
+					} :
+					null
+				);
+			formattedContentStyle.put(name, style);
+		}
+		for (int i = 0; i < objects.length; i++) {
+			if (objects[i] instanceof CellStyle) {
+				style.cloneStyleFrom((CellStyle)objects[i]);
+			} else if (objects[i] instanceof HorizontalAlignment) {
+				style.setAlignment((HorizontalAlignment)objects[i]);
+			} else if (objects[i] instanceof FillPatternType) {
+				style.setFillPattern((FillPatternType) objects[i]);
+			}else if (objects[i] instanceof IndexedColors) {
+				style.setFillForegroundColor(((IndexedColors) objects[i]).getIndex());
+			}
+		}
+		return style;
+	}
+
 	public CellStyle getOrCreateStyle(Workbook workbook, String pattern) {
 		CellStyle style = formattedContentStyle.get(pattern);
 		if (style == null) {
@@ -319,7 +358,9 @@ public class SimpleWorkbookTemplate implements Closeable {
 		CellStyle cellStyle = workbook.createCellStyle();
 		Font fontStyle = workbook.createFont();
 		cellStyle.setFont(fontStyle);
-		styleSetter.apply(cellStyle).accept(fontStyle);
+		if (styleSetter != null) {
+			styleSetter.apply(cellStyle).accept(fontStyle);
+		}
 		return cellStyle;
 	}
 

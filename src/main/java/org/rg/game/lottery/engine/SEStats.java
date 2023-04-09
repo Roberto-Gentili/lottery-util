@@ -387,16 +387,26 @@ public class SEStats {
 			try (FileOutputStream outputStream = new FileOutputStream(PersistentStorage.buildWorkingPath() + File.separator +  getFileName());
 				SimpleWorkbookTemplate template = new SimpleWorkbookTemplate(true);
 			) {
-				CellStyle defaultNumberCellStyle = template.getOrCreateStyle(template.getWorkbook(), "0");
-				defaultNumberCellStyle.setAlignment(HorizontalAlignment.CENTER);
-				CellStyle altOne = template.getWorkbook().createCellStyle();
-				altOne.cloneStyleFrom(defaultNumberCellStyle);
-				altOne.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-				altOne.setFillForegroundColor(IndexedColors.YELLOW.getIndex());
-				CellStyle altTwo = template.getWorkbook().createCellStyle();
-				altTwo.cloneStyleFrom(defaultNumberCellStyle);
-				altTwo.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-				altTwo.setFillForegroundColor(IndexedColors.RED.getIndex());
+				CellStyle defaultNumberCellStyle = template.getOrCreateStyle(
+					HorizontalAlignment.CENTER,
+					"0"
+				);
+				CellStyle percentageNumberStyle = template.getOrCreateStyle(
+					defaultNumberCellStyle,
+					"0.00%"
+				);
+				CellStyle yellowBackground = template.getOrCreateStyle(
+					"yellowBackgroundStyle",
+					defaultNumberCellStyle,
+					FillPatternType.SOLID_FOREGROUND,
+					IndexedColors.YELLOW
+				);
+				CellStyle redBackground = template.getOrCreateStyle(
+					"redBackgroundStyle",
+					defaultNumberCellStyle,
+					FillPatternType.SOLID_FOREGROUND,
+					IndexedColors.RED
+				);
 
 				Sheet sheet = template.getOrCreateSheet("Numeri più estratti", true);
 				sheet.setColumnWidth(0, 25 * 112);
@@ -464,10 +474,10 @@ public class SEStats {
 					for (int i = 0; i < extractedNumers.size(); i++) {
 						Cell cell = template.addCell(extractedNumers.get(i), "0");
 						if (i == 6) {
-							cell.setCellStyle(altOne);
+							cell.setCellStyle(yellowBackground);
 						}
 						if (i == 7) {
-							cell.setCellStyle(altTwo);
+							cell.setCellStyle(redBackground);
 						}
 					}
 				}
@@ -489,20 +499,26 @@ public class SEStats {
 			try (FileOutputStream outputStream = new FileOutputStream(PersistentStorage.buildWorkingPath() + File.separator +  getFileName());
 				SimpleWorkbookTemplate template = new SimpleWorkbookTemplate(true);
 			) {
-				CellStyle defaultNumberCellStyle = template.getOrCreateStyle(template.getWorkbook(), "0");
-				defaultNumberCellStyle.setAlignment(HorizontalAlignment.CENTER);
-				CellStyle percentageNumberStyle = template.getWorkbook().createCellStyle();
-				percentageNumberStyle.cloneStyleFrom(defaultNumberCellStyle);
-				percentageNumberStyle.setDataFormat(template.getWorkbook().createDataFormat().getFormat("0.00%"));
-
-				CellStyle yellowBackground = template.getWorkbook().createCellStyle();
-				yellowBackground.cloneStyleFrom(defaultNumberCellStyle);
-				yellowBackground.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-				yellowBackground.setFillForegroundColor(IndexedColors.YELLOW.getIndex());
-				CellStyle redBackground = template.getWorkbook().createCellStyle();
-				redBackground.cloneStyleFrom(defaultNumberCellStyle);
-				redBackground.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-				redBackground.setFillForegroundColor(IndexedColors.RED.getIndex());
+				CellStyle defaultNumberCellStyle = template.getOrCreateStyle(
+					HorizontalAlignment.CENTER,
+					"0"
+				);
+				CellStyle percentageNumberStyle = template.getOrCreateStyle(
+					defaultNumberCellStyle,
+					"0.00%"
+				);
+				CellStyle yellowBackground = template.getOrCreateStyle(
+					"yellowBackgroundStyle",
+					defaultNumberCellStyle,
+					FillPatternType.SOLID_FOREGROUND,
+					IndexedColors.YELLOW
+				);
+				CellStyle redBackground = template.getOrCreateStyle(
+					"redBackgroundStyle",
+					defaultNumberCellStyle,
+					FillPatternType.SOLID_FOREGROUND,
+					IndexedColors.RED
+				);
 
 				Sheet sheet = template.getOrCreateSheet("Statistiche per numero", true);
 				sheet.setColumnWidth(0, 25 * 112);
