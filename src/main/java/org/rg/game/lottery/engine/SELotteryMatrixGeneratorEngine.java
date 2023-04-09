@@ -108,6 +108,8 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 				return new BoundedIterator(SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberRankReversed(), leftBound, rightBound);
 			} else if (NumberProcessor.LESS_EXTRACTED_COUPLE_KEY.equals(generatorType)) {
 				return new BoundedIterator(SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberFromMostExtractedCoupleRankReversed(), leftBound, rightBound);
+			} else if (NumberProcessor.NEAREST_FROM_RECORD_ABSENCE_PERCENTAGE_KEY.equals(generatorType)) {
+				return new BoundedIterator(SEStats.get(getExtractionArchiveStartDate()).getDistanceFromAbsenceRecordPercentageRankReversed(), leftBound, rightBound);
 			}
 			throw new IllegalArgumentException("Unvalid generator type");
 		};

@@ -22,9 +22,12 @@ public class NumberProcessor {
 	public static final String MOST_EXTRACTED_COUPLE_KEY = "mostExtCouple";
 	public static final String LESS_EXTRACTED_KEY = "lessExt";
 	public static final String LESS_EXTRACTED_COUPLE_KEY = "lessExtCouple";
+	public static final String NEAREST_FROM_RECORD_ABSENCE_PERCENTAGE_KEY = "nearFromRecAbsPerc";
 	public static final String PREVIOUS_SYSTEM_KEY = PREVIOUS_KEY + "Sys";
 	public static final String SKIP_KEY = "skip";
-	public static final String NUMERICAL_SET_REG_EX = RANDOM_KEY + "|" + MOST_EXTRACTED_COUPLE_KEY + "|" + MOST_EXTRACTED_KEY + "|" + LESS_EXTRACTED_COUPLE_KEY + "|" + LESS_EXTRACTED_KEY;
+	public static final String NUMERICAL_SET_REG_EX =
+		RANDOM_KEY + "|" + MOST_EXTRACTED_COUPLE_KEY + "|" + MOST_EXTRACTED_KEY + "|" + LESS_EXTRACTED_COUPLE_KEY + "|" +
+		LESS_EXTRACTED_KEY + "|" + NEAREST_FROM_RECORD_ABSENCE_PERCENTAGE_KEY;
 
 
 	protected DateTimeFormatter simpleDateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");

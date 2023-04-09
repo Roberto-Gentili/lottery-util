@@ -7,7 +7,6 @@ import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -63,7 +62,7 @@ public class SEStats {
 	private List<Map.Entry<String, Integer>> counterOfAbsencesFromCompetitions;
 	private List<Map.Entry<String, Integer>> absencesRecordFromCompetitions;
 	private List<Map.Entry<String, Integer>> distanceFromAbsenceRecord;
-	private List<Map.Entry<String, Integer>> distanceFromAbsenceRecordPercentage;
+	private List<Map.Entry<String, Double>> distanceFromAbsenceRecordPercentage;
 	private Map<Date, List<Integer>> allWinningCombos;
 	private Map<Date, List<Integer>> allWinningCombosWithJollyAndSuperstar;
 
@@ -180,6 +179,14 @@ public class SEStats {
 			(itemOne.getValue() == itemTwo.getValue()) ?
 				Integer.valueOf(itemOne.getKey()).compareTo(Integer.valueOf(itemTwo.getKey())) :
 				-1;
+
+		Comparator<Map.Entry<String, Double>> integerDoubleComparator= (itemOne, itemTwo) -> {
+			return (itemOne.getValue() < itemTwo.getValue()) ? -1 :
+				(itemOne.getValue() == itemTwo.getValue()) ?
+					Integer.valueOf(itemOne.getKey()).compareTo(Integer.valueOf(itemTwo.getKey())) :
+					1;
+		};
+
 		extractedNumberPairCounters = extractedNumberPairCountersMap.entrySet().stream().sorted(integerComparator.reversed()).collect(Collectors.toList());
 		//extractedNumberPairCounters.stream().forEach(entry -> System.out.println(String.join("\t", Arrays.asList(entry.getKey().split("-"))) + "\t" + entry.getValue()));
 		extractedNumberCounters = extractedNumberCountersMap.entrySet().stream().sorted(integerComparator.reversed()).collect(Collectors.toList());
@@ -196,15 +203,18 @@ public class SEStats {
 		counterOfAbsencesFromCompetitions =
 			counterOfAbsencesFromCompetitionsMap.entrySet().stream().sorted(doubleIntegerComparatorReversed).collect(Collectors.toList());
 		absencesRecordFromCompetitions =
-			absencesRecordFromCompetitionsMap.entrySet().stream().sorted(doubleIntegerComparator).collect(Collectors.toList());
-		distanceFromAbsenceRecord = new ArrayList<>();
-		distanceFromAbsenceRecordPercentage = new ArrayList<>();
+			absencesRecordFromCompetitionsMap.entrySet().stream().sorted(doubleIntegerComparator.reversed()).collect(Collectors.toList());
+		Map<String, Integer> distanceFromAbsenceRecordMap = new LinkedHashMap<>();
+		Map<String, Double> distanceFromAbsenceRecordPercentageMap = new LinkedHashMap<>();
 		counterOfAbsencesFromCompetitions.stream().forEach(entry -> {
 			Integer absenceRecord = absencesRecordFromCompetitionsMap.get(entry.getKey());
 			Integer distanceFromRecord = entry.getValue() - absenceRecord;
-			distanceFromAbsenceRecord.add(new AbstractMap.SimpleEntry(entry.getKey(), distanceFromRecord));
-			distanceFromAbsenceRecordPercentage.add(new AbstractMap.SimpleEntry(entry.getKey(), (distanceFromRecord * 100) / (double)absenceRecord));
+			distanceFromAbsenceRecordMap.put(entry.getKey(), distanceFromRecord);
+			distanceFromAbsenceRecordPercentageMap.put(entry.getKey(), (distanceFromRecord * 100) / (double)absenceRecord);
 		});
+		distanceFromAbsenceRecord = distanceFromAbsenceRecordMap.entrySet().stream().sorted(integerComparator).collect(Collectors.toList());
+		distanceFromAbsenceRecordPercentage =
+			distanceFromAbsenceRecordPercentageMap.entrySet().stream().sorted(integerDoubleComparator).collect(Collectors.toList());
 	}
 
 	public List<Integer> getExtractedNumberFromMostExtractedCoupleRank() {
