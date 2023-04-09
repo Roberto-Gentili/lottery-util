@@ -536,14 +536,26 @@ public class SEStats {
 					defaultNumberCellStyle,
 					"0.00%"
 				);
+				CellStyle yellowPercentageNumber = template.getOrCreateStyle(
+					"yellowPercentageNumber",
+					percentageNumberStyle,
+					FillPatternType.SOLID_FOREGROUND,
+					IndexedColors.YELLOW
+				);
+				CellStyle redPercentageNumber = template.getOrCreateStyle(
+					"redPercentageNumber",
+					yellowPercentageNumber,
+					IndexedColors.RED
+				);
+
 				CellStyle yellowBackground = template.getOrCreateStyle(
-					"yellowBackgroundStyle",
+					"yellowBackground",
 					defaultNumberCellStyle,
 					FillPatternType.SOLID_FOREGROUND,
 					IndexedColors.YELLOW
 				);
 				CellStyle redBackground = template.getOrCreateStyle(
-					"redBackgroundStyle",
+					"redBackground",
 					defaultNumberCellStyle,
 					FillPatternType.SOLID_FOREGROUND,
 					IndexedColors.RED
@@ -577,9 +589,21 @@ public class SEStats {
 					template.addCell(getCounterOfAbsencesFromCompetitionsFor(extractionData.getKey()), "0");
 					template.addCell(getAbsenceRecordFromCompetitionsFor(extractionData.getKey()), "0");
 					template.addCell(getDistanceFromAbsenceRecordFor(extractionData.getKey()), "0");
-					template.addCell(
-						getDistanceFromAbsenceRecordPercentageFor(extractionData.getKey()) /100
-					).setCellStyle(percentageNumberStyle);
+					Double distanceFromAbsenceRecordPerc = getDistanceFromAbsenceRecordPercentageFor(extractionData.getKey());
+					Cell distanceFromAbsenceRecordPercentageCell = template.addCell(
+							distanceFromAbsenceRecordPerc /100
+					);
+					if (distanceFromAbsenceRecordPerc <= -20) {
+						distanceFromAbsenceRecordPercentageCell.setCellStyle(percentageNumberStyle);
+					} else if (distanceFromAbsenceRecordPerc > -20 && distanceFromAbsenceRecordPerc < -10) {
+						distanceFromAbsenceRecordPercentageCell.setCellStyle(
+							yellowPercentageNumber
+						);
+					} else {
+						distanceFromAbsenceRecordPercentageCell.setCellStyle(
+							redPercentageNumber
+						);
+					}
 				}
 				template.setAutoFilter();
 
