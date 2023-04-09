@@ -169,7 +169,12 @@ public class SEStats {
 		});
 
 		Comparator<Map.Entry<?, Integer>> integerComparator = (c1, c2) -> c1.getValue().compareTo(c2.getValue());
-		Comparator<Map.Entry<String, Integer>> doubleComparator = (itemOne, itemTwo) ->
+		Comparator<Map.Entry<String, Integer>> doubleIntegerComparator = (itemOne, itemTwo) ->
+		(itemOne.getValue() < itemTwo.getValue()) ? -1 :
+			(itemOne.getValue() == itemTwo.getValue()) ?
+				Integer.valueOf(itemOne.getKey()).compareTo(Integer.valueOf(itemTwo.getKey())) :
+				1;
+		Comparator<Map.Entry<String, Integer>> doubleIntegerComparatorReversed = (itemOne, itemTwo) ->
 		(itemOne.getValue() < itemTwo.getValue()) ? 1 :
 			(itemOne.getValue() == itemTwo.getValue()) ?
 				Integer.valueOf(itemOne.getKey()).compareTo(Integer.valueOf(itemTwo.getKey())) :
@@ -188,9 +193,9 @@ public class SEStats {
 		extractedNumberCountersFromMostExtractedCouple =
 			extractedNumberFromMostExtractedCoupleMap.entrySet().stream().sorted(integerComparator.reversed()).collect(Collectors.toList());
 		counterOfAbsencesFromCompetitions =
-			counterOfAbsencesFromCompetitionsMap.entrySet().stream().sorted(doubleComparator).collect(Collectors.toList());
+			counterOfAbsencesFromCompetitionsMap.entrySet().stream().sorted(doubleIntegerComparatorReversed).collect(Collectors.toList());
 		counterOfMaxAbsencesFromCompetitions =
-			counterOfMaxAbsencesFromCompetitionsMap.entrySet().stream().sorted(doubleComparator).collect(Collectors.toList());
+			counterOfMaxAbsencesFromCompetitionsMap.entrySet().stream().sorted(doubleIntegerComparator).collect(Collectors.toList());
 	}
 
 	public List<Integer> getExtractedNumberFromMostExtractedCoupleRank() {
@@ -380,7 +385,7 @@ public class SEStats {
 					template.addCell(Integer.parseInt(extractionData.getKey()), "0");
 					template.addCell(extractionData.getValue(), "0");
 				}
-				sheet = template.getOrCreateSheet("Numeri per ritardo massimo", true);
+				sheet = template.getOrCreateSheet("Numeri più frequenti", true);
 				sheet.setColumnWidth(0, 25 * 112);
 				sheet.setColumnWidth(1, 25 * 256);
 				template.createHeader(true, Arrays.asList("Numero", "Conteggio assenze massime"));
