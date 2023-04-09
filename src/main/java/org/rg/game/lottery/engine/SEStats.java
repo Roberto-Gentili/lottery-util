@@ -129,10 +129,6 @@ public class SEStats {
 		return extractedNumberPairCountersMap;
 	}
 
-	private String getExcelFileName() {
-		return "[SE" + defaultDateFmtForFile.format(startDate) + "] - Archivio estrazioni.xlsx";
-	}
-
 	private void loadStats() {
 		Map<String, Integer> extractedNumberPairCountersMap = buildExtractedNumberPairCountersMap();
 		Map<String, Integer> extractedNumberCountersMap = new LinkedHashMap<>();
@@ -296,7 +292,7 @@ public class SEStats {
 
 		@Override
 		public boolean load() throws Throwable {
-			try (InputStream inputStream = new FileInputStream(PersistentStorage.buildWorkingPath() + File.separator + getExcelFileName());
+			try (InputStream inputStream = new FileInputStream(PersistentStorage.buildWorkingPath() + File.separator + new ToExcelDataStorerV1().getFileName());
 				Workbook workbook = new XSSFWorkbook(inputStream);
 			) {
 				Sheet sheet = workbook.getSheet("Storico estrazioni");
@@ -331,9 +327,13 @@ public class SEStats {
 
 	private class ToExcelDataStorerV1 implements DataStorer {
 
+		private String getFileName() {
+			return "[SE" + defaultDateFmtForFile.format(startDate) + "] - Archivio estrazioni v1.xlsx";
+		}
+
 		@Override
 		public boolean store() throws Throwable {
-			try (FileOutputStream outputStream = new FileOutputStream(PersistentStorage.buildWorkingPath() + File.separator +  getExcelFileName());
+			try (FileOutputStream outputStream = new FileOutputStream(PersistentStorage.buildWorkingPath() + File.separator +  getFileName());
 				SimpleWorkbookTemplate template = new SimpleWorkbookTemplate(true);
 			) {
 				Sheet sheet = template.getOrCreateSheet("Numeri più estratti", true);
