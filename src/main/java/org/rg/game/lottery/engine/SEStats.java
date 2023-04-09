@@ -158,12 +158,15 @@ public class SEStats {
 	private void loadStats() {
 		Map<String, Integer> extractedNumberPairCountersMap = buildExtractedNumberPairCountersMap();
 		Map<String, Integer> extractedNumberCountersMap = new LinkedHashMap<>();
+		Map<String, Integer> counterOfAbsencesFromCompetitionsMap = new LinkedHashMap<>();
+		Map<String, Integer> counterOfMaxAbsencesFromCompetitionsMap = new LinkedHashMap<>();
 		new TreeMap<>(allWinningCombos).entrySet().forEach(dateAndExtractedCombo -> {
-			dateAndExtractedCombo.getValue().stream().forEach(number -> {
+			List<Integer> extractedCombo = dateAndExtractedCombo.getValue();
+			extractedCombo.stream().forEach(number -> {
 				Integer counter = extractedNumberCountersMap.computeIfAbsent(number.toString(), key -> 0);
 				extractedNumberCountersMap.put(number.toString(), ++counter);
 			});
-			ComboHandler comboHandler = new ComboHandler(dateAndExtractedCombo.getValue(), 2);
+			ComboHandler comboHandler = new ComboHandler(extractedCombo, 2);
 			Collection<List<Integer>> allCouples = comboHandler.find(IntStream.range(0, comboHandler.getSize())
 				.boxed().collect(Collectors.toList()), true).values();
 			List<String> extractedCoupleCounters = allCouples.stream().map(couple ->
@@ -172,25 +175,6 @@ public class SEStats {
 			for (String couple : extractedCoupleCounters) {
 				extractedNumberPairCountersMap.put(couple, extractedNumberPairCountersMap.get(couple) + 1);
 			}
-		});
-
-		Comparator<Map.Entry<?, Integer>> comparator = (c1, c2) -> c1.getValue().compareTo(c2.getValue());
-		extractedNumberPairCounters = extractedNumberPairCountersMap.entrySet().stream().sorted(comparator.reversed()).collect(Collectors.toList());
-		//extractedNumberPairCounters.stream().forEach(entry -> System.out.println(String.join("\t", Arrays.asList(entry.getKey().split("-"))) + "\t" + entry.getValue()));
-		extractedNumberCounters = extractedNumberCountersMap.entrySet().stream().sorted(comparator.reversed()).collect(Collectors.toList());
-		//extractedNumberCounters.stream().forEach(entry -> System.out.println(String.join("\t", Arrays.asList(entry.getKey().split("-"))) + "\t" + entry.getValue()));
-		Map<Integer, Integer> extractedNumberFromMostExtractedCoupleMap = new LinkedHashMap<>();
-		extractedNumberPairCounters.stream().forEach(entry -> {
-			for (Integer number : Arrays.stream(entry.getKey().split("-")).map(Integer::parseInt).collect(Collectors.toList())) {
-				Integer counter = extractedNumberFromMostExtractedCoupleMap.computeIfAbsent(number, key -> 0);
-				extractedNumberFromMostExtractedCoupleMap.put(number, counter + entry.getValue());
-			}
-		});
-		extractedNumberCountersFromMostExtractedCouple =
-			extractedNumberFromMostExtractedCoupleMap.entrySet().stream().sorted(comparator.reversed()).collect(Collectors.toList());
-		Map<String, Integer> counterOfAbsencesFromCompetitionsMap = new LinkedHashMap<>();
-		Map<String, Integer> counterOfMaxAbsencesFromCompetitionsMap = new LinkedHashMap<>();
-		new TreeMap<>(allWinningCombos).values().stream().forEach(extractedCombo -> {
 			extractedCombo.stream().forEach(extractedNumber -> {
 				counterOfAbsencesFromCompetitionsMap.put(String.valueOf(extractedNumber), 0);
 			});
@@ -205,11 +189,26 @@ public class SEStats {
 				}
 			});
 		});
+
+		Comparator<Map.Entry<?, Integer>> integerComparator = (c1, c2) -> c1.getValue().compareTo(c2.getValue());
 		Comparator<Map.Entry<String, Integer>> doubleComparator = (itemOne, itemTwo) ->
 		(itemOne.getValue() < itemTwo.getValue()) ? 1 :
 			(itemOne.getValue() == itemTwo.getValue()) ?
 				Integer.valueOf(itemOne.getKey()).compareTo(Integer.valueOf(itemTwo.getKey())) :
 				-1;
+		extractedNumberPairCounters = extractedNumberPairCountersMap.entrySet().stream().sorted(integerComparator.reversed()).collect(Collectors.toList());
+		//extractedNumberPairCounters.stream().forEach(entry -> System.out.println(String.join("\t", Arrays.asList(entry.getKey().split("-"))) + "\t" + entry.getValue()));
+		extractedNumberCounters = extractedNumberCountersMap.entrySet().stream().sorted(integerComparator.reversed()).collect(Collectors.toList());
+		//extractedNumberCounters.stream().forEach(entry -> System.out.println(String.join("\t", Arrays.asList(entry.getKey().split("-"))) + "\t" + entry.getValue()));
+		Map<Integer, Integer> extractedNumberFromMostExtractedCoupleMap = new LinkedHashMap<>();
+		extractedNumberPairCounters.stream().forEach(entry -> {
+			for (Integer number : Arrays.stream(entry.getKey().split("-")).map(Integer::parseInt).collect(Collectors.toList())) {
+				Integer counter = extractedNumberFromMostExtractedCoupleMap.computeIfAbsent(number, key -> 0);
+				extractedNumberFromMostExtractedCoupleMap.put(number, counter + entry.getValue());
+			}
+		});
+		extractedNumberCountersFromMostExtractedCouple =
+			extractedNumberFromMostExtractedCoupleMap.entrySet().stream().sorted(integerComparator.reversed()).collect(Collectors.toList());
 		counterOfAbsencesFromCompetitions =
 			counterOfAbsencesFromCompetitionsMap.entrySet().stream().sorted(doubleComparator).collect(Collectors.toList());
 		counterOfMaxAbsencesFromCompetitions =
