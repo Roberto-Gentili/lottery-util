@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -60,7 +61,9 @@ public class SEStats {
 	private List<Map.Entry<Integer, Integer>> extractedNumberCountersFromMostExtractedCouple;
 	private List<Map.Entry<String, Integer>> extractedNumberCounters;
 	private List<Map.Entry<String, Integer>> counterOfAbsencesFromCompetitions;
-	private List<Map.Entry<String, Integer>> counterOfMaxAbsencesFromCompetitions;
+	private List<Map.Entry<String, Integer>> absencesRecordFromCompetitions;
+	private List<Map.Entry<String, Integer>> distanceFromAbsenceRecord;
+	private List<Map.Entry<String, Integer>> distanceFromAbsenceRecordPercentage;
 	private Map<Date, List<Integer>> allWinningCombos;
 	private Map<Date, List<Integer>> allWinningCombosWithJollyAndSuperstar;
 
@@ -135,7 +138,7 @@ public class SEStats {
 		Map<String, Integer> extractedNumberPairCountersMap = buildExtractedNumberPairCountersMap();
 		Map<String, Integer> extractedNumberCountersMap = new LinkedHashMap<>();
 		Map<String, Integer> counterOfAbsencesFromCompetitionsMap = new LinkedHashMap<>();
-		Map<String, Integer> counterOfMaxAbsencesFromCompetitionsMap = new LinkedHashMap<>();
+		Map<String, Integer> absencesRecordFromCompetitionsMap = new LinkedHashMap<>();
 		new TreeMap<>(allWinningCombos).entrySet().forEach(dateAndExtractedCombo -> {
 			List<Integer> extractedCombo = dateAndExtractedCombo.getValue();
 			extractedCombo.stream().forEach(number -> {
@@ -159,9 +162,9 @@ public class SEStats {
 			.forEach(entry -> {
 				Integer latestMaxCounter = entry.getValue() + 1;
 				entry.setValue(latestMaxCounter);
-				Integer maxCounter = counterOfMaxAbsencesFromCompetitionsMap.get(entry.getKey());
+				Integer maxCounter = absencesRecordFromCompetitionsMap.get(entry.getKey());
 				if (maxCounter == null || maxCounter < latestMaxCounter) {
-					counterOfMaxAbsencesFromCompetitionsMap.put(entry.getKey(), latestMaxCounter);
+					absencesRecordFromCompetitionsMap.put(entry.getKey(), latestMaxCounter);
 				}
 			});
 		});
@@ -192,8 +195,16 @@ public class SEStats {
 			extractedNumberFromMostExtractedCoupleMap.entrySet().stream().sorted(integerComparator.reversed()).collect(Collectors.toList());
 		counterOfAbsencesFromCompetitions =
 			counterOfAbsencesFromCompetitionsMap.entrySet().stream().sorted(doubleIntegerComparatorReversed).collect(Collectors.toList());
-		counterOfMaxAbsencesFromCompetitions =
-			counterOfMaxAbsencesFromCompetitionsMap.entrySet().stream().sorted(doubleIntegerComparator).collect(Collectors.toList());
+		absencesRecordFromCompetitions =
+			absencesRecordFromCompetitionsMap.entrySet().stream().sorted(doubleIntegerComparator).collect(Collectors.toList());
+		distanceFromAbsenceRecord = new ArrayList<>();
+		distanceFromAbsenceRecordPercentage = new ArrayList<>();
+		counterOfAbsencesFromCompetitions.stream().forEach(entry -> {
+			Integer absenceRecord = absencesRecordFromCompetitionsMap.get(entry.getKey());
+			Integer distanceFromRecord = entry.getValue() - absenceRecord;
+			distanceFromAbsenceRecord.add(new AbstractMap.SimpleEntry(entry.getKey(), distanceFromRecord));
+			distanceFromAbsenceRecordPercentage.add(new AbstractMap.SimpleEntry(entry.getKey(), (distanceFromRecord * 100) / (double)absenceRecord));
+		});
 	}
 
 	public List<Integer> getExtractedNumberFromMostExtractedCoupleRank() {
@@ -226,7 +237,7 @@ public class SEStats {
 		return reversed;
 	}
 
-	private Integer getStatFor(Collection<?> stats, Object numberObject) {
+	private <N extends Number> N getStatFor(Collection<?> stats, Object numberObject) {
 		Integer number = numberObject instanceof String ?
 			Integer.parseInt((String)numberObject) :
 			(Integer)numberObject;
@@ -237,7 +248,7 @@ public class SEStats {
 				Integer.parseInt((String)key) :
 				(Integer)key;
 			if (iteratedNumber.equals(number)) {
-				return (Integer)extractionData.getValue();
+				return (N)extractionData.getValue();
 			}
 		}
 		return null;
@@ -247,12 +258,20 @@ public class SEStats {
 		return getStatFor(counterOfAbsencesFromCompetitions, number);
 	}
 
-	public Integer getCounterOfMaxAbsencesFromCompetitionsFor(Object number) {
-		return getStatFor(counterOfMaxAbsencesFromCompetitions, number);
+	public Integer getAbsenceRecordFromCompetitionsFor(Object number) {
+		return getStatFor(absencesRecordFromCompetitions, number);
 	}
 
 	public Integer getExtractedNumberCountersFromMostExtractedCoupleFor(Object number) {
 		return getStatFor(extractedNumberCountersFromMostExtractedCouple, number);
+	}
+
+	public Integer getDistanceFromAbsenceRecordFor(Object number) {
+		return getStatFor(distanceFromAbsenceRecord, number);
+	}
+
+	public Double getDistanceFromAbsenceRecordPercentageFor(Object number) {
+		return getStatFor(distanceFromAbsenceRecordPercentage, number);
 	}
 
 	public Map<Date, List<Integer>> getAllWinningCombos() {
@@ -421,7 +440,7 @@ public class SEStats {
 				sheet.setColumnWidth(0, 25 * 112);
 				sheet.setColumnWidth(1, 25 * 256);
 				template.createHeader(true, Arrays.asList("Numero", "Conteggio assenze massime"));
-				for (Map.Entry<String, Integer> extractionData : counterOfMaxAbsencesFromCompetitions) {
+				for (Map.Entry<String, Integer> extractionData : absencesRecordFromCompetitions) {
 					template.addRow();
 					template.addCell(Integer.parseInt(extractionData.getKey()), "0");
 					template.addCell(extractionData.getValue(), "0");
@@ -471,36 +490,50 @@ public class SEStats {
 			) {
 				CellStyle defaultNumberCellStyle = template.getOrCreateStyle(template.getWorkbook(), "0");
 				defaultNumberCellStyle.setAlignment(HorizontalAlignment.CENTER);
-				CellStyle altOne = template.getWorkbook().createCellStyle();
-				altOne.cloneStyleFrom(defaultNumberCellStyle);
-				altOne.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-				altOne.setFillForegroundColor(IndexedColors.YELLOW.getIndex());
-				CellStyle altTwo = template.getWorkbook().createCellStyle();
-				altTwo.cloneStyleFrom(defaultNumberCellStyle);
-				altTwo.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-				altTwo.setFillForegroundColor(IndexedColors.RED.getIndex());
+				CellStyle percentageNumberStyle = template.getWorkbook().createCellStyle();
+				percentageNumberStyle.cloneStyleFrom(defaultNumberCellStyle);
+				percentageNumberStyle.setDataFormat(template.getWorkbook().createDataFormat().getFormat("0.00%"));
+
+				CellStyle yellowBackground = template.getWorkbook().createCellStyle();
+				yellowBackground.cloneStyleFrom(defaultNumberCellStyle);
+				yellowBackground.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+				yellowBackground.setFillForegroundColor(IndexedColors.YELLOW.getIndex());
+				CellStyle redBackground = template.getWorkbook().createCellStyle();
+				redBackground.cloneStyleFrom(defaultNumberCellStyle);
+				redBackground.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+				redBackground.setFillForegroundColor(IndexedColors.RED.getIndex());
 
 				Sheet sheet = template.getOrCreateSheet("Statistiche per numero", true);
 				sheet.setColumnWidth(0, 25 * 112);
 				sheet.setColumnWidth(1, 25 * 192);
-				sheet.setColumnWidth(2, 25 * 176);
-				sheet.setColumnWidth(3, 25 * 256);
-				sheet.setColumnWidth(4, 25 * 392);
+				sheet.setColumnWidth(2, 25 * 392);
+				sheet.setColumnWidth(3, 25 * 192);
+				sheet.setColumnWidth(4, 25 * 192);
+				sheet.setColumnWidth(5, 25 * 264);
+				sheet.setColumnWidth(6, 25 * 392);
 				template.createHeader(
 					true,
 					Arrays.asList(
-						"Numero", "Conteggio estrazioni",
-						"Conteggio assenze", "Conteggio assenze massime",
-						"Conteggio presenze nelle coppie più estratte"
+						"Numero",
+						"Conteggio estrazioni",
+						"Conteggio presenze nelle coppie più estratte",
+						"Conteggio assenze",
+						"Record di assenze",
+						"Distanza dal record di assenze",
+						"Distanza dal record di assenze percentuale"
 					)
 				);
 				for (Map.Entry<String, Integer> extractionData : extractedNumberCounters) {
 					template.addRow();
 					template.addCell(Integer.parseInt(extractionData.getKey()), "0");
 					template.addCell(extractionData.getValue(), "0");
-					template.addCell(getCounterOfAbsencesFromCompetitionsFor(extractionData.getKey()), "0");
-					template.addCell(getCounterOfMaxAbsencesFromCompetitionsFor(extractionData.getKey()), "0");
 					template.addCell(getExtractedNumberCountersFromMostExtractedCoupleFor(extractionData.getKey()), "0");
+					template.addCell(getCounterOfAbsencesFromCompetitionsFor(extractionData.getKey()), "0");
+					template.addCell(getAbsenceRecordFromCompetitionsFor(extractionData.getKey()), "0");
+					template.addCell(getDistanceFromAbsenceRecordFor(extractionData.getKey()), "0");
+					template.addCell(
+						getDistanceFromAbsenceRecordPercentageFor(extractionData.getKey()) /100
+					).setCellStyle(percentageNumberStyle);
 				}
 				sheet = template.getOrCreateSheet("Coppie più estratte", true);
 				sheet.setColumnWidth(0, 25 * 112);
@@ -533,10 +566,10 @@ public class SEStats {
 					for (int i = 0; i < extractedNumers.size(); i++) {
 						Cell cell = template.addCell(extractedNumers.get(i), "0");
 						if (i == 6) {
-							cell.setCellStyle(altOne);
+							cell.setCellStyle(yellowBackground);
 						}
 						if (i == 7) {
-							cell.setCellStyle(altTwo);
+							cell.setCellStyle(redBackground);
 						}
 					}
 				}
