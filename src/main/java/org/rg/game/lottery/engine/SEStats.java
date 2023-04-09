@@ -72,8 +72,6 @@ public class SEStats {
 
 	private void init(String startDate) {
 		this.startDate = buildStartDate(startDate);
-		Map<String, Integer> extractedNumberPairCountersMap = buildExtractedNumberPairCountersMap();
-		Map<String, Integer> extractedNumberCountersMap = new LinkedHashMap<>();
 		allWinningCombos = new LinkedHashMap<>();
 		allWinningCombosWithJollyAndSuperstar = new LinkedHashMap<>();
 		try {
@@ -81,25 +79,14 @@ public class SEStats {
 				if (forceLoadingFromExcel) {
 					throw new RuntimeException();
 				}
-				loadRawDataFromInternet(
-					extractedNumberPairCountersMap,
-					extractedNumberCountersMap
-				);
+				loadRawDataFromInternet();
 			} catch (Throwable exc) {
 				if (!forceLoadingFromExcel) {
 					System.out.println("Unable to load data from Internet: " + exc.getMessage());
 				}
-				extractedNumberPairCountersMap = buildExtractedNumberPairCountersMap();
-				extractedNumberCountersMap = new LinkedHashMap<>();
-				loadRawDataFromExcel(
-					extractedNumberPairCountersMap,
-					extractedNumberCountersMap
-				);
+				loadRawDataFromExcel();
 			}
-			loadData(
-				extractedNumberPairCountersMap,
-				extractedNumberCountersMap
-			);
+			loadStats();
 		} catch (Throwable exc) {
 			throw new RuntimeException(exc);
 		}
@@ -134,10 +121,7 @@ public class SEStats {
 		return "[SE" + defaultDateFmtForFile.format(startDate) + "] - Archivio estrazioni.xlsx";
 	}
 
-	private void loadRawDataFromExcel(
-		Map<String, Integer> extractedNumberPairCountersMap,
-		Map<String, Integer> extractedNumberCountersMap
-	) throws IOException {
+	private void loadRawDataFromExcel() throws IOException {
 		try (InputStream inputStream = new FileInputStream(PersistentStorage.buildWorkingPath() + File.separator + getExcelFileName());
 			Workbook workbook = new XSSFWorkbook(inputStream);
 		) {
@@ -154,8 +138,6 @@ public class SEStats {
 					while (numberIterator.hasNext()) {
 						Integer number = (int)numberIterator.next().getNumericCellValue();
 						extractedCombo.add(number);
-						Integer counter = extractedNumberCountersMap.computeIfAbsent(number.toString(), key -> 0);
-						extractedNumberCountersMap.put(number.toString(), ++counter);
 						if (extractedCombo.size() == 6) {
 							break;
 						}
@@ -166,15 +148,6 @@ public class SEStats {
 					extractedComboWithJollyAndSuperstar.add((int)numberIterator.next().getNumericCellValue());
 					extractedComboWithJollyAndSuperstar.add((int)numberIterator.next().getNumericCellValue());
 					allWinningCombosWithJollyAndSuperstar.put(extractionDate, extractedComboWithJollyAndSuperstar);
-					ComboHandler comboHandler = new ComboHandler(extractedCombo, 2);
-					Collection<List<Integer>> allCouples = comboHandler.find(IntStream.range(0, comboHandler.getSize())
-						.boxed().collect(Collectors.toList()), true).values();
-					List<String> extractedCoupleCounters = allCouples.stream().map(couple ->
-						String.join("-", couple.stream().map(Object::toString).collect(Collectors.toList()))
-					).collect(Collectors.toList());
-					for (String couple : extractedCoupleCounters) {
-						extractedNumberPairCountersMap.put(couple, extractedNumberPairCountersMap.get(couple) + 1);
-					}
 				}
 			}
 		}
@@ -182,10 +155,25 @@ public class SEStats {
 	}
 
 
-	private void loadData(
-		Map<String, Integer> extractedNumberPairCountersMap,
-		Map<String, Integer> extractedNumberCountersMap
-	) {
+	private void loadStats() {
+		Map<String, Integer> extractedNumberPairCountersMap = buildExtractedNumberPairCountersMap();
+		Map<String, Integer> extractedNumberCountersMap = new LinkedHashMap<>();
+		new TreeMap<>(allWinningCombos).entrySet().forEach(dateAndExtractedCombo -> {
+			dateAndExtractedCombo.getValue().stream().forEach(number -> {
+				Integer counter = extractedNumberCountersMap.computeIfAbsent(number.toString(), key -> 0);
+				extractedNumberCountersMap.put(number.toString(), ++counter);
+			});
+			ComboHandler comboHandler = new ComboHandler(dateAndExtractedCombo.getValue(), 2);
+			Collection<List<Integer>> allCouples = comboHandler.find(IntStream.range(0, comboHandler.getSize())
+				.boxed().collect(Collectors.toList()), true).values();
+			List<String> extractedCoupleCounters = allCouples.stream().map(couple ->
+				String.join("-", couple.stream().map(Object::toString).collect(Collectors.toList()))
+			).collect(Collectors.toList());
+			for (String couple : extractedCoupleCounters) {
+				extractedNumberPairCountersMap.put(couple, extractedNumberPairCountersMap.get(couple) + 1);
+			}
+		});
+
 		Comparator<Map.Entry<?, Integer>> comparator = (c1, c2) -> c1.getValue().compareTo(c2.getValue());
 		extractedNumberPairCounters = extractedNumberPairCountersMap.entrySet().stream().sorted(comparator.reversed()).collect(Collectors.toList());
 		//extractedNumberPairCounters.stream().forEach(entry -> System.out.println(String.join("\t", Arrays.asList(entry.getKey().split("-"))) + "\t" + entry.getValue()));
@@ -229,10 +217,7 @@ public class SEStats {
 	}
 
 
-	private void loadRawDataFromInternet(
-		Map<String, Integer> extractedNumberPairCountersMap,
-		Map<String, Integer> extractedNumberCountersMap
-	) throws ParseException, IOException {
+	private void loadRawDataFromInternet() throws ParseException, IOException {
 		int startYear = 2009;
 		int endYear = Calendar.getInstance().get(Calendar.YEAR);
 		System.out.println();
@@ -253,8 +238,6 @@ public class SEStats {
 							String numberAsString = number.text();
 							Integer extractedNumber = Integer.parseInt(numberAsString);
 							extractedCombo.add(extractedNumber);
-							Integer counter = extractedNumberCountersMap.computeIfAbsent(numberAsString, key -> 0);
-							extractedNumberCountersMap.put(numberAsString, ++counter);
 							//System.out.print(extractedNumber + "\t");
 						}
 						Collections.sort(extractedCombo);
@@ -263,15 +246,6 @@ public class SEStats {
 						extractedComboWithJollyAndSuperstar.add(Integer.parseInt(tableRow.select("li[class=jolly]").first().text()));
 						extractedComboWithJollyAndSuperstar.add(Integer.parseInt(tableRow.select("li[class=superstar]").first().text()));
 						allWinningCombosWithJollyAndSuperstar.put(extractionDate, extractedComboWithJollyAndSuperstar);
-						ComboHandler comboHandler = new ComboHandler(extractedCombo, 2);
-						Collection<List<Integer>> allCouples = comboHandler.find(IntStream.range(0, comboHandler.getSize())
-							.boxed().collect(Collectors.toList()), true).values();
-						List<String> extractedCoupleCounters = allCouples.stream().map(couple ->
-							String.join("-", couple.stream().map(Object::toString).collect(Collectors.toList()))
-						).collect(Collectors.toList());
-						for (String couple : extractedCoupleCounters) {
-							extractedNumberPairCountersMap.put(couple, extractedNumberPairCountersMap.get(couple) + 1);
-						}
 					}
 				}
 			}
