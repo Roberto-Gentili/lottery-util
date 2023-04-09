@@ -3,7 +3,6 @@ package org.rg.game.lottery.engine;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -50,6 +49,7 @@ public class SEStats {
 	}
 
 	private Collection<DataLoader> dataLoaders;
+	private Collection<DataStorer> dataStorers;
 
 	private final DateFormat dateFmt = new SimpleDateFormat("yyyy dd MMMM", Locale.ITALY);
 	private final DateFormat defaultDateFmt = new SimpleDateFormat("dd/MM/yyyy");
@@ -77,6 +77,9 @@ public class SEStats {
 			new InternetDataLoader(),
 			new FromExcelDataLoader()
 		);
+		dataStorers = Arrays.asList(
+			new ToExcelDataStorer()
+		);
 		this.startDate = buildStartDate(startDate);
 		this.allWinningCombos = new LinkedHashMap<>();
 		this.allWinningCombosWithJollyAndSuperstar = new LinkedHashMap<>();
@@ -94,15 +97,19 @@ public class SEStats {
 			throw new RuntimeException("Unable to load data");
 		}
 
-		try {
-			loadStats();
-			storeToExcel(
-				PersistentStorage.buildWorkingPath()
-			);
-		} catch (IOException exc) {
-			throw new RuntimeException(exc);
-		}
+		loadStats();
 		System.out.println("\nAll extraction data have been succesfully loaded\n\n");
+		for (DataStorer dataStorer : dataStorers) {
+			try {
+				if (dataStorer.store()) {
+
+				} else {
+					System.out.println(dataStorer.getClass() + " stored no data");
+				}
+			} catch (Throwable exc) {
+				System.out.println(dataStorer.getClass() + " in unable to store extractions data: " + exc.getMessage());
+			}
+		}
 	}
 
 	private Date buildStartDate(String dateAsString) {
@@ -186,99 +193,6 @@ public class SEStats {
 			counterOfMaxAbsencesFromCompetitionsMap.entrySet().stream().sorted(doubleComparator).collect(Collectors.toList());
 	}
 
-
-	public void storeToExcel(String basePath) throws IOException {
-		try (FileOutputStream outputStream = new FileOutputStream(basePath + File.separator +  getExcelFileName());
-			SimpleWorkbookTemplate template = new SimpleWorkbookTemplate(true);
-		) {
-			Sheet sheet = template.getOrCreateSheet("Numeri più estratti", true);
-			sheet.setColumnWidth(0, 25 * 112);
-			sheet.setColumnWidth(1, 25 * 192);
-			template.createHeader(true, Arrays.asList("Numero", "Conteggio estrazioni"));
-			CellStyle defaultNumberCellStyle = template.getOrCreateStyle(template.getWorkbook(), "0");
-			defaultNumberCellStyle.setAlignment(HorizontalAlignment.CENTER);
-			CellStyle altOne = template.getWorkbook().createCellStyle();
-			altOne.cloneStyleFrom(defaultNumberCellStyle);
-			altOne.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-			altOne.setFillForegroundColor(IndexedColors.YELLOW.getIndex());
-			CellStyle altTwo = template.getWorkbook().createCellStyle();
-			altTwo.cloneStyleFrom(defaultNumberCellStyle);
-			altTwo.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-			altTwo.setFillForegroundColor(IndexedColors.RED.getIndex());
-			for (Map.Entry<String, Integer> extractionData : extractedNumberCounters) {
-				template.addRow();
-				template.addCell(Integer.parseInt(extractionData.getKey()), "0");
-				template.addCell(extractionData.getValue(), "0");
-			}
-			sheet = template.getOrCreateSheet("Numeri più estratti per coppia", true);
-			sheet.setColumnWidth(0, 25 * 112);
-			sheet.setColumnWidth(1, 25 * 192);
-			template.createHeader(true, Arrays.asList("Numero", "Conteggio presenze nelle coppie più estratte"));
-			for (Map.Entry<Integer, Integer> extractionData : extractedNumberCountersFromMostExtractedCouple) {
-				template.addRow();
-				template.addCell(extractionData.getKey(), "0");
-				template.addCell(extractionData.getValue(), "0");
-			}
-			sheet = template.getOrCreateSheet("Coppie più estratte", true);
-			sheet.setColumnWidth(0, 25 * 112);
-			sheet.setColumnWidth(1, 25 * 112);
-			sheet.setColumnWidth(2, 25 * 208);
-			template.createHeader(true, Arrays.asList("1° numero", "2° numero", "Conteggio estrazioni"));
-			for (Map.Entry<String, Integer> extractedNumberPairCounter : extractedNumberPairCounters) {
-				String[] numbers = extractedNumberPairCounter.getKey().split("-");
-				template.addRow();
-				template.addCell(Integer.parseInt(numbers[0]), "0");
-				template.addCell(Integer.parseInt(numbers[1]), "0");
-				template.addCell(extractedNumberPairCounter.getValue(), "0");
-			}
-			sheet = template.getOrCreateSheet("Numeri ritardatari", true);
-			sheet.setColumnWidth(0, 25 * 112);
-			sheet.setColumnWidth(1, 25 * 176);
-			template.createHeader(true, Arrays.asList("Numero", "Conteggio assenze"));
-			for (Map.Entry<String, Integer> extractionData : counterOfAbsencesFromCompetitions) {
-				template.addRow();
-				template.addCell(Integer.parseInt(extractionData.getKey()), "0");
-				template.addCell(extractionData.getValue(), "0");
-			}
-			sheet = template.getOrCreateSheet("Numeri per ritardo massimo", true);
-			sheet.setColumnWidth(0, 25 * 112);
-			sheet.setColumnWidth(1, 25 * 256);
-			template.createHeader(true, Arrays.asList("Numero", "Conteggio assenze massime"));
-			for (Map.Entry<String, Integer> extractionData : counterOfMaxAbsencesFromCompetitions) {
-				template.addRow();
-				template.addCell(Integer.parseInt(extractionData.getKey()), "0");
-				template.addCell(extractionData.getValue(), "0");
-			}
-			sheet = template.getOrCreateSheet("Storico estrazioni", true);
-			sheet.setColumnWidth(0, 25 * 112);
-			sheet.setColumnWidth(1, 25 * 112);
-			sheet.setColumnWidth(2, 25 * 112);
-			sheet.setColumnWidth(3, 25 * 112);
-			sheet.setColumnWidth(4, 25 * 112);
-			sheet.setColumnWidth(5, 25 * 112);
-			sheet.setColumnWidth(6, 25 * 112);
-			sheet.setColumnWidth(7, 25 * 112);
-			sheet.setColumnWidth(8, 25 * 112);
-			template.createHeader(true, Arrays.asList("Data", "1° numero", "2° numero", "3° numero", "4° numero", "5° numero", "6° numero", "Jolly", "Superstar"));
-			for (Map.Entry<Date, List<Integer>> extractionData : allWinningCombosWithJollyAndSuperstar.entrySet()) {
-				template.addRow();
-				template.addCell(extractionData.getKey()).getCellStyle().setAlignment(HorizontalAlignment.LEFT);
-				List<Integer> extractedNumers = extractionData.getValue();
-				for (int i = 0; i < extractedNumers.size(); i++) {
-					Cell cell = template.addCell(extractedNumers.get(i), "0");
-					if (i == 6) {
-						cell.setCellStyle(altOne);
-					}
-					if (i == 7) {
-						cell.setCellStyle(altTwo);
-					}
-				}
-			}
-			template.getWorkbook().write(outputStream);
-		}
-	}
-
-
 	public List<Integer> getExtractedNumberFromMostExtractedCoupleRank() {
 		return extractedNumberCountersFromMostExtractedCouple.stream().map(entry -> entry.getKey()).collect(Collectors.toList());
 	}
@@ -320,6 +234,12 @@ public class SEStats {
 	private static interface DataLoader {
 
 		public boolean load() throws Throwable;
+
+	}
+
+	private static interface DataStorer {
+
+		public boolean store() throws Throwable;
 
 	}
 
@@ -402,5 +322,102 @@ public class SEStats {
 			}
 			return true;
 		}
+	}
+
+	private class ToExcelDataStorer implements DataStorer {
+
+		@Override
+		public boolean store() throws Throwable {
+			try (FileOutputStream outputStream = new FileOutputStream(PersistentStorage.buildWorkingPath() + File.separator +  getExcelFileName());
+				SimpleWorkbookTemplate template = new SimpleWorkbookTemplate(true);
+			) {
+				Sheet sheet = template.getOrCreateSheet("Numeri più estratti", true);
+				sheet.setColumnWidth(0, 25 * 112);
+				sheet.setColumnWidth(1, 25 * 192);
+				template.createHeader(true, Arrays.asList("Numero", "Conteggio estrazioni"));
+				CellStyle defaultNumberCellStyle = template.getOrCreateStyle(template.getWorkbook(), "0");
+				defaultNumberCellStyle.setAlignment(HorizontalAlignment.CENTER);
+				CellStyle altOne = template.getWorkbook().createCellStyle();
+				altOne.cloneStyleFrom(defaultNumberCellStyle);
+				altOne.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+				altOne.setFillForegroundColor(IndexedColors.YELLOW.getIndex());
+				CellStyle altTwo = template.getWorkbook().createCellStyle();
+				altTwo.cloneStyleFrom(defaultNumberCellStyle);
+				altTwo.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+				altTwo.setFillForegroundColor(IndexedColors.RED.getIndex());
+				for (Map.Entry<String, Integer> extractionData : extractedNumberCounters) {
+					template.addRow();
+					template.addCell(Integer.parseInt(extractionData.getKey()), "0");
+					template.addCell(extractionData.getValue(), "0");
+				}
+				sheet = template.getOrCreateSheet("Numeri più estratti per coppia", true);
+				sheet.setColumnWidth(0, 25 * 112);
+				sheet.setColumnWidth(1, 25 * 192);
+				template.createHeader(true, Arrays.asList("Numero", "Conteggio presenze nelle coppie più estratte"));
+				for (Map.Entry<Integer, Integer> extractionData : extractedNumberCountersFromMostExtractedCouple) {
+					template.addRow();
+					template.addCell(extractionData.getKey(), "0");
+					template.addCell(extractionData.getValue(), "0");
+				}
+				sheet = template.getOrCreateSheet("Coppie più estratte", true);
+				sheet.setColumnWidth(0, 25 * 112);
+				sheet.setColumnWidth(1, 25 * 112);
+				sheet.setColumnWidth(2, 25 * 208);
+				template.createHeader(true, Arrays.asList("1° numero", "2° numero", "Conteggio estrazioni"));
+				for (Map.Entry<String, Integer> extractedNumberPairCounter : extractedNumberPairCounters) {
+					String[] numbers = extractedNumberPairCounter.getKey().split("-");
+					template.addRow();
+					template.addCell(Integer.parseInt(numbers[0]), "0");
+					template.addCell(Integer.parseInt(numbers[1]), "0");
+					template.addCell(extractedNumberPairCounter.getValue(), "0");
+				}
+				sheet = template.getOrCreateSheet("Numeri ritardatari", true);
+				sheet.setColumnWidth(0, 25 * 112);
+				sheet.setColumnWidth(1, 25 * 176);
+				template.createHeader(true, Arrays.asList("Numero", "Conteggio assenze"));
+				for (Map.Entry<String, Integer> extractionData : counterOfAbsencesFromCompetitions) {
+					template.addRow();
+					template.addCell(Integer.parseInt(extractionData.getKey()), "0");
+					template.addCell(extractionData.getValue(), "0");
+				}
+				sheet = template.getOrCreateSheet("Numeri per ritardo massimo", true);
+				sheet.setColumnWidth(0, 25 * 112);
+				sheet.setColumnWidth(1, 25 * 256);
+				template.createHeader(true, Arrays.asList("Numero", "Conteggio assenze massime"));
+				for (Map.Entry<String, Integer> extractionData : counterOfMaxAbsencesFromCompetitions) {
+					template.addRow();
+					template.addCell(Integer.parseInt(extractionData.getKey()), "0");
+					template.addCell(extractionData.getValue(), "0");
+				}
+				sheet = template.getOrCreateSheet("Storico estrazioni", true);
+				sheet.setColumnWidth(0, 25 * 112);
+				sheet.setColumnWidth(1, 25 * 112);
+				sheet.setColumnWidth(2, 25 * 112);
+				sheet.setColumnWidth(3, 25 * 112);
+				sheet.setColumnWidth(4, 25 * 112);
+				sheet.setColumnWidth(5, 25 * 112);
+				sheet.setColumnWidth(6, 25 * 112);
+				sheet.setColumnWidth(7, 25 * 112);
+				sheet.setColumnWidth(8, 25 * 112);
+				template.createHeader(true, Arrays.asList("Data", "1° numero", "2° numero", "3° numero", "4° numero", "5° numero", "6° numero", "Jolly", "Superstar"));
+				for (Map.Entry<Date, List<Integer>> extractionData : allWinningCombosWithJollyAndSuperstar.entrySet()) {
+					template.addRow();
+					template.addCell(extractionData.getKey()).getCellStyle().setAlignment(HorizontalAlignment.LEFT);
+					List<Integer> extractedNumers = extractionData.getValue();
+					for (int i = 0; i < extractedNumers.size(); i++) {
+						Cell cell = template.addCell(extractedNumers.get(i), "0");
+						if (i == 6) {
+							cell.setCellStyle(altOne);
+						}
+						if (i == 7) {
+							cell.setCellStyle(altTwo);
+						}
+					}
+				}
+				template.getWorkbook().write(outputStream);
+			}
+			return true;
+		}
+
 	}
 }
