@@ -78,7 +78,7 @@ public class SEStats {
 			new FromExcelDataLoader()
 		);
 		dataStorers = Arrays.asList(
-			new ToExcelDataStorer()
+			new ToExcelDataStorerV1()
 		);
 		this.startDate = buildStartDate(startDate);
 		this.allWinningCombos = new LinkedHashMap<>();
@@ -324,7 +324,7 @@ public class SEStats {
 		}
 	}
 
-	private class ToExcelDataStorer implements DataStorer {
+	private class ToExcelDataStorerV1 implements DataStorer {
 
 		@Override
 		public boolean store() throws Throwable {
