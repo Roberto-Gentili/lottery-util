@@ -540,13 +540,13 @@ public class SEStats {
 				);
 
 				Sheet sheet = template.getOrCreateSheet("Statistiche per numero", true);
-				sheet.setColumnWidth(0, 25 * 112);
-				sheet.setColumnWidth(1, 25 * 192);
-				sheet.setColumnWidth(2, 25 * 392);
-				sheet.setColumnWidth(3, 25 * 192);
-				sheet.setColumnWidth(4, 25 * 192);
-				sheet.setColumnWidth(5, 25 * 264);
-				sheet.setColumnWidth(6, 25 * 392);
+				sheet.setColumnWidth(0, 25 * 128);
+				sheet.setColumnWidth(1, 25 * 232);
+				sheet.setColumnWidth(2, 25 * 432);
+				sheet.setColumnWidth(3, 25 * 216);
+				sheet.setColumnWidth(4, 25 * 208);
+				sheet.setColumnWidth(5, 25 * 312);
+				sheet.setColumnWidth(6, 25 * 416);
 				template.createHeader(
 					true,
 					Arrays.asList(
