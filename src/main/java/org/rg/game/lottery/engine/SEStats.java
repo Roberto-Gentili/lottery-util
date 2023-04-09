@@ -212,7 +212,7 @@ public class SEStats {
 	}
 
 	public List<Integer> getExtractedNumberFromMostExtractedCoupleRankReversed() {
-		return toReversed(getExtractedNumberFromMostExtractedCoupleRankReversed());
+		return toReversed(getExtractedNumberFromMostExtractedCoupleRank());
 	}
 
 	public List<Integer> getMostAbsentNumbersRank() {
