@@ -33,6 +33,7 @@ import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -378,7 +379,7 @@ public class SEStats {
 	private class ToExcelDataStorerV1 implements DataStorer {
 
 		private String getFileName() {
-			return "[SE" + defaultDateFmtForFile.format(startDate) + "] - Archivio estrazioni v1.xlsx";
+			return "[SE" + defaultDateFmtForFile.format(startDate) + "] - Archivio estrazioni e statistiche v1.xlsx";
 		}
 
 		@Override
@@ -480,7 +481,7 @@ public class SEStats {
 	private class ToExcelDataStorerV2 implements DataStorer {
 
 		private String getFileName() {
-			return "[SE" + defaultDateFmtForFile.format(startDate) + "] - Archivio estrazioni v2.xlsx";
+			return "[SE" + defaultDateFmtForFile.format(startDate) + "] - Archivio estrazioni e statistiche v2.xlsx";
 		}
 
 		@Override
@@ -511,7 +512,7 @@ public class SEStats {
 				sheet.setColumnWidth(4, 25 * 192);
 				sheet.setColumnWidth(5, 25 * 264);
 				sheet.setColumnWidth(6, 25 * 392);
-				template.createHeader(
+				Row header = template.createHeader(
 					true,
 					Arrays.asList(
 						"Numero",
@@ -523,8 +524,10 @@ public class SEStats {
 						"Distanza dal record di assenze percentuale"
 					)
 				);
+				int lastRow = 0;
 				for (Map.Entry<String, Integer> extractionData : extractedNumberCounters) {
-					template.addRow();
+					Row row = template.addRow();
+					lastRow = row.getRowNum();
 					template.addCell(Integer.parseInt(extractionData.getKey()), "0");
 					template.addCell(extractionData.getValue(), "0");
 					template.addCell(getExtractedNumberCountersFromMostExtractedCoupleFor(extractionData.getKey()), "0");
@@ -534,6 +537,9 @@ public class SEStats {
 					template.addCell(
 						getDistanceFromAbsenceRecordPercentageFor(extractionData.getKey()) /100
 					).setCellStyle(percentageNumberStyle);
+				}
+				if (lastRow > 0) {
+					sheet.setAutoFilter(new CellRangeAddress(header.getRowNum(), lastRow, 0, header.getPhysicalNumberOfCells()-1));
 				}
 				sheet = template.getOrCreateSheet("Coppie più estratte", true);
 				sheet.setColumnWidth(0, 25 * 112);

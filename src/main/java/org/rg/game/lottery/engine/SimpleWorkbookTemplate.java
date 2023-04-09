@@ -189,7 +189,7 @@ public class SimpleWorkbookTemplate implements Closeable {
 		int columnIndex = 0;
 		for (String title : titles) {
 			createHeaderCell(sheetName, 0, columnIndex++, title);
-		};
+		}
 		headersSize.put(sheetName, titles.size());
 		if (blocked) {
 			getOrCreateSheet(sheetName).createFreezePane(0, 1);
