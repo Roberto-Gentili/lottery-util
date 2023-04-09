@@ -212,9 +212,7 @@ public class SEStats {
 	}
 
 	public List<Integer> getExtractedNumberFromMostExtractedCoupleRankReversed() {
-		List<Integer> reversed = getExtractedNumberFromMostExtractedCoupleRank();
-		Collections.reverse(reversed);
-		return reversed;
+		return toReversed(getExtractedNumberFromMostExtractedCoupleRankReversed());
 	}
 
 	public List<Integer> getMostAbsentNumbersRank() {
@@ -222,9 +220,7 @@ public class SEStats {
 	}
 
 	public List<Integer> getMostAbsentNumbersRankReversed() {
-		List<Integer> reversed = getMostAbsentNumbersRank();
-		Collections.reverse(reversed);
-		return reversed;
+		return toReversed(getMostAbsentNumbersRank());
 	}
 
 	public List<Integer> getExtractedNumberRank() {
@@ -232,26 +228,31 @@ public class SEStats {
 	}
 
 	public List<Integer> getExtractedNumberRankReversed() {
-		List<Integer> reversed = getExtractedNumberRank();
-		Collections.reverse(reversed);
-		return reversed;
+		return toReversed(getExtractedNumberRank());
 	}
 
-	private <N extends Number> N getStatFor(Collection<?> stats, Object numberObject) {
-		Integer number = numberObject instanceof String ?
-			Integer.parseInt((String)numberObject) :
-			(Integer)numberObject;
-		for (Object obj : stats) {
-			Map.Entry<?, Integer> extractionData = (Map.Entry<?, Integer>)obj;
-			Object key = extractionData.getKey();
-			Integer iteratedNumber = key instanceof String ?
-				Integer.parseInt((String)key) :
-				(Integer)key;
-			if (iteratedNumber.equals(number)) {
-				return (N)extractionData.getValue();
-			}
-		}
-		return null;
+	public List<Integer> getCounterOfAbsencesFromCompetitionsRank() {
+		return counterOfAbsencesFromCompetitions.stream().map(entry -> Integer.parseInt(entry.getKey())).collect(Collectors.toList());
+	}
+
+	public List<Integer> getCounterOfAbsencesFromCompetitionsRankReversed() {
+		return toReversed(getCounterOfAbsencesFromCompetitionsRank());
+	}
+
+	public List<Integer> getDistanceFromAbsenceRecordRank() {
+		return distanceFromAbsenceRecord.stream().map(entry -> Integer.parseInt(entry.getKey())).collect(Collectors.toList());
+	}
+
+	public List<Integer> getDistanceFromAbsenceRecordRankReversed() {
+		return toReversed(getDistanceFromAbsenceRecordRank());
+	}
+
+	public List<Integer> getDistanceFromAbsenceRecordPercentageRank() {
+		return distanceFromAbsenceRecordPercentage.stream().map(entry -> Integer.parseInt(entry.getKey())).collect(Collectors.toList());
+	}
+
+	public List<Integer> getDistanceFromAbsenceRecordPercentageRankReversed() {
+		return toReversed(getDistanceFromAbsenceRecordPercentageRank());
 	}
 
 	public Integer getCounterOfAbsencesFromCompetitionsFor(Object number) {
@@ -276,6 +277,29 @@ public class SEStats {
 
 	public Map<Date, List<Integer>> getAllWinningCombos() {
 		return allWinningCombos;
+	}
+
+	private <N extends Number> List<N> toReversed(List<N> source) {
+		List<N> reversed = new ArrayList<>(source);
+		Collections.reverse(reversed);
+		return reversed;
+	}
+
+	private <N extends Number> N getStatFor(Collection<?> stats, Object numberObject) {
+		Integer number = numberObject instanceof String ?
+			Integer.parseInt((String)numberObject) :
+			(Integer)numberObject;
+		for (Object obj : stats) {
+			Map.Entry<?, Integer> extractionData = (Map.Entry<?, Integer>)obj;
+			Object key = extractionData.getKey();
+			Integer iteratedNumber = key instanceof String ?
+				Integer.parseInt((String)key) :
+				(Integer)key;
+			if (iteratedNumber.equals(number)) {
+				return (N)extractionData.getValue();
+			}
+		}
+		return null;
 	}
 
 	public Map<Date, List<Integer>> getAllWinningCombosWithJollyAndSuperstar() {
