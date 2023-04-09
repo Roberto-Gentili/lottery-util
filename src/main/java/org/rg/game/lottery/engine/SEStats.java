@@ -334,7 +334,7 @@ public class SEStats {
 			}
 			sheet = template.getOrCreateSheet("Numeri per ritardo massimo", true);
 			sheet.setColumnWidth(0, 25 * 112);
-			sheet.setColumnWidth(1, 25 * 224);
+			sheet.setColumnWidth(1, 25 * 240);
 			template.createHeader(true, Arrays.asList("Numero", "Conteggio assenze massime"));
 			for (Map.Entry<String, Integer> extractionData : counterOfMaxAbsencesFromCompetitions) {
 				template.addRow();
