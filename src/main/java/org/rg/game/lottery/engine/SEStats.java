@@ -573,9 +573,9 @@ public class SEStats {
 				}
 				template.setAutoFilter();
 				sheet = template.getOrCreateSheet("Coppie più estratte", true);
-				sheet.setColumnWidth(0, 25 * 112);
-				sheet.setColumnWidth(1, 25 * 112);
-				sheet.setColumnWidth(2, 25 * 208);
+				sheet.setColumnWidth(0, 25 * 144);
+				sheet.setColumnWidth(1, 25 * 144);
+				sheet.setColumnWidth(2, 25 * 240);
 				template.createHeader(true, Arrays.asList("1° numero", "2° numero", "Conteggio estrazioni"));
 				for (Map.Entry<String, Integer> extractedNumberPairCounter : extractedNumberPairCounters) {
 					String[] numbers = extractedNumberPairCounter.getKey().split("-");
@@ -584,17 +584,17 @@ public class SEStats {
 					template.addCell(Integer.parseInt(numbers[1]), "0");
 					template.addCell(extractedNumberPairCounter.getValue(), "0");
 				}
-
+				template.setAutoFilter();
 				sheet = template.getOrCreateSheet("Storico estrazioni", true);
-				sheet.setColumnWidth(0, 25 * 112);
-				sheet.setColumnWidth(1, 25 * 112);
-				sheet.setColumnWidth(2, 25 * 112);
-				sheet.setColumnWidth(3, 25 * 112);
-				sheet.setColumnWidth(4, 25 * 112);
-				sheet.setColumnWidth(5, 25 * 112);
-				sheet.setColumnWidth(6, 25 * 112);
-				sheet.setColumnWidth(7, 25 * 112);
-				sheet.setColumnWidth(8, 25 * 112);
+				sheet.setColumnWidth(0, 25 * 144);
+				sheet.setColumnWidth(1, 25 * 144);
+				sheet.setColumnWidth(2, 25 * 144);
+				sheet.setColumnWidth(3, 25 * 144);
+				sheet.setColumnWidth(4, 25 * 144);
+				sheet.setColumnWidth(5, 25 * 144);
+				sheet.setColumnWidth(6, 25 * 144);
+				sheet.setColumnWidth(7, 25 * 144);
+				sheet.setColumnWidth(8, 25 * 144);
 				template.createHeader(true, Arrays.asList("Data", "1° numero", "2° numero", "3° numero", "4° numero", "5° numero", "6° numero", "Jolly", "Superstar"));
 				for (Map.Entry<Date, List<Integer>> extractionData : allWinningCombosWithJollyAndSuperstar.entrySet()) {
 					template.addRow();
@@ -610,6 +610,7 @@ public class SEStats {
 						}
 					}
 				}
+				template.setAutoFilter();
 				template.getWorkbook().write(outputStream);
 			}
 			return true;
