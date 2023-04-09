@@ -527,7 +527,7 @@ public class SEStats {
 				sheet.setColumnWidth(4, 25 * 192);
 				sheet.setColumnWidth(5, 25 * 264);
 				sheet.setColumnWidth(6, 25 * 392);
-				Row header = template.createHeader(
+				template.createHeader(
 					true,
 					Arrays.asList(
 						"Numero",
