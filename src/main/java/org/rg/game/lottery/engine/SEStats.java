@@ -49,6 +49,8 @@ public class SEStats {
 		INSTANCES = new ConcurrentHashMap<>();
 	}
 
+	private Collection<DataLoader> dataLoaders;
+
 	private final DateFormat dateFmt = new SimpleDateFormat("yyyy dd MMMM", Locale.ITALY);
 	private final DateFormat defaultDateFmt = new SimpleDateFormat("dd/MM/yyyy");
 	private final DateFormat defaultDateFmtForFile = new SimpleDateFormat("yyyyMMdd");
@@ -71,26 +73,29 @@ public class SEStats {
 	}
 
 	private void init(String startDate) {
+		dataLoaders = Arrays.asList(
+			new InternetDataLoader(),
+			new FromExcelDataLoader()
+		);
 		this.startDate = buildStartDate(startDate);
-		allWinningCombos = new LinkedHashMap<>();
-		allWinningCombosWithJollyAndSuperstar = new LinkedHashMap<>();
-		try {
+		this.allWinningCombos = new LinkedHashMap<>();
+		this.allWinningCombosWithJollyAndSuperstar = new LinkedHashMap<>();
+		boolean dataLoaded = false;
+		for (DataLoader dataLoader : dataLoaders) {
 			try {
-				if (forceLoadingFromExcel) {
-					throw new RuntimeException();
-				}
-				loadRawDataFromInternet();
+				if (dataLoaded = dataLoader.load());
 			} catch (Throwable exc) {
-				if (!forceLoadingFromExcel) {
-					System.out.println("Unable to load data from Internet: " + exc.getMessage());
-				}
-				loadRawDataFromExcel();
+				System.out.println(dataLoader.getClass() + " in unable to load extractions data: " + exc.getMessage());
+			} {
+				break;
 			}
-			loadStats();
-		} catch (Throwable exc) {
-			throw new RuntimeException(exc);
 		}
+		if (!dataLoaded) {
+			throw new RuntimeException("Unable to load data");
+		}
+
 		try {
+			loadStats();
 			storeToExcel(
 				PersistentStorage.buildWorkingPath()
 			);
@@ -120,40 +125,6 @@ public class SEStats {
 	private String getExcelFileName() {
 		return "[SE" + defaultDateFmtForFile.format(startDate) + "] - Archivio estrazioni.xlsx";
 	}
-
-	private void loadRawDataFromExcel() throws IOException {
-		try (InputStream inputStream = new FileInputStream(PersistentStorage.buildWorkingPath() + File.separator + getExcelFileName());
-			Workbook workbook = new XSSFWorkbook(inputStream);
-		) {
-			Sheet sheet = workbook.getSheet("Storico estrazioni");
-			Iterator<Row> rowIterator = sheet.rowIterator();
-			//Skipping header
-			rowIterator.next();
-			while (rowIterator.hasNext()) {
-				Row row = rowIterator.next();
-				Iterator<Cell> numberIterator = row.cellIterator();
-				Date extractionDate = numberIterator.next().getDateCellValue();
-				if (extractionDate.compareTo(startDate) >= 0) {
-					List<Integer> extractedCombo = new ArrayList<>();
-					while (numberIterator.hasNext()) {
-						Integer number = (int)numberIterator.next().getNumericCellValue();
-						extractedCombo.add(number);
-						if (extractedCombo.size() == 6) {
-							break;
-						}
-					}
-					Collections.sort(extractedCombo);
-					allWinningCombos.put(extractionDate, extractedCombo);
-					List<Integer> extractedComboWithJollyAndSuperstar = new ArrayList<>(extractedCombo);
-					extractedComboWithJollyAndSuperstar.add((int)numberIterator.next().getNumericCellValue());
-					extractedComboWithJollyAndSuperstar.add((int)numberIterator.next().getNumericCellValue());
-					allWinningCombosWithJollyAndSuperstar.put(extractionDate, extractedComboWithJollyAndSuperstar);
-				}
-			}
-		}
-
-	}
-
 
 	private void loadStats() {
 		Map<String, Integer> extractedNumberPairCountersMap = buildExtractedNumberPairCountersMap();
@@ -213,42 +184,6 @@ public class SEStats {
 			counterOfAbsencesFromCompetitionsMap.entrySet().stream().sorted(doubleComparator).collect(Collectors.toList());
 		counterOfMaxAbsencesFromCompetitions =
 			counterOfMaxAbsencesFromCompetitionsMap.entrySet().stream().sorted(doubleComparator).collect(Collectors.toList());
-	}
-
-
-	private void loadRawDataFromInternet() throws ParseException, IOException {
-		int startYear = 2009;
-		int endYear = Calendar.getInstance().get(Calendar.YEAR);
-		System.out.println();
-		for (int year : IntStream.range(startYear, (endYear + 1)).map(i -> (endYear + 1) - i + startYear - 1).toArray()) {
-			System.out.println("Loading all extraction data of " + year);
-			Document doc = Jsoup.connect("https://www.superenalotto.net/estrazioni/" + year).get();
-			Element table = doc.select("table[class=resultsTable table light]").first();
-			Iterator<Element> itr = table.select("tr").iterator();
-			while (itr.hasNext()) {
-				Element tableRow = itr.next();
-				Elements dateCell = tableRow.select("td[class=date m-w60 m-righty]");
-				if (!dateCell.isEmpty()) {
-					Date extractionDate = dateFmt.parse(year + dateCell.iterator().next().textNodes().get(0).text());
-					if (extractionDate.compareTo(startDate) >= 0) {
-						//System.out.print(defaultFmt.format(fmt.parse(year + dateCell.iterator().next().textNodes().get(0).text())) + "\t");
-						List<Integer> extractedCombo = new ArrayList<>();
-						for (Element number : tableRow.select("ul[class=balls]").first().children()) {
-							String numberAsString = number.text();
-							Integer extractedNumber = Integer.parseInt(numberAsString);
-							extractedCombo.add(extractedNumber);
-							//System.out.print(extractedNumber + "\t");
-						}
-						Collections.sort(extractedCombo);
-						allWinningCombos.put(extractionDate, extractedCombo);
-						List<Integer> extractedComboWithJollyAndSuperstar = new ArrayList<>(extractedCombo);
-						extractedComboWithJollyAndSuperstar.add(Integer.parseInt(tableRow.select("li[class=jolly]").first().text()));
-						extractedComboWithJollyAndSuperstar.add(Integer.parseInt(tableRow.select("li[class=superstar]").first().text()));
-						allWinningCombosWithJollyAndSuperstar.put(extractionDate, extractedComboWithJollyAndSuperstar);
-					}
-				}
-			}
-		}
 	}
 
 
@@ -382,4 +317,90 @@ public class SEStats {
 		return allWinningCombosWithJollyAndSuperstar;
 	}
 
+	private static interface DataLoader {
+
+		public boolean load() throws Throwable;
+
+	}
+
+	private class InternetDataLoader implements DataLoader {
+
+		@Override
+		public boolean load() throws Throwable {
+			if (forceLoadingFromExcel) {
+				return false;
+			}
+			int startYear = 2009;
+			int endYear = Calendar.getInstance().get(Calendar.YEAR);
+			System.out.println();
+			for (int year : IntStream.range(startYear, (endYear + 1)).map(i -> (endYear + 1) - i + startYear - 1).toArray()) {
+				System.out.println("Loading all extraction data of " + year);
+				Document doc = Jsoup.connect("https://www.superenalotto.net/estrazioni/" + year).get();
+				Element table = doc.select("table[class=resultsTable table light]").first();
+				Iterator<Element> itr = table.select("tr").iterator();
+				while (itr.hasNext()) {
+					Element tableRow = itr.next();
+					Elements dateCell = tableRow.select("td[class=date m-w60 m-righty]");
+					if (!dateCell.isEmpty()) {
+						Date extractionDate = dateFmt.parse(year + dateCell.iterator().next().textNodes().get(0).text());
+						if (extractionDate.compareTo(startDate) >= 0) {
+							//System.out.print(defaultFmt.format(fmt.parse(year + dateCell.iterator().next().textNodes().get(0).text())) + "\t");
+							List<Integer> extractedCombo = new ArrayList<>();
+							for (Element number : tableRow.select("ul[class=balls]").first().children()) {
+								String numberAsString = number.text();
+								Integer extractedNumber = Integer.parseInt(numberAsString);
+								extractedCombo.add(extractedNumber);
+								//System.out.print(extractedNumber + "\t");
+							}
+							Collections.sort(extractedCombo);
+							allWinningCombos.put(extractionDate, extractedCombo);
+							List<Integer> extractedComboWithJollyAndSuperstar = new ArrayList<>(extractedCombo);
+							extractedComboWithJollyAndSuperstar.add(Integer.parseInt(tableRow.select("li[class=jolly]").first().text()));
+							extractedComboWithJollyAndSuperstar.add(Integer.parseInt(tableRow.select("li[class=superstar]").first().text()));
+							allWinningCombosWithJollyAndSuperstar.put(extractionDate, extractedComboWithJollyAndSuperstar);
+						}
+					}
+				}
+			}
+			return true;
+		}
+
+	}
+
+	private class FromExcelDataLoader implements DataLoader {
+
+		@Override
+		public boolean load() throws Throwable {
+			try (InputStream inputStream = new FileInputStream(PersistentStorage.buildWorkingPath() + File.separator + getExcelFileName());
+				Workbook workbook = new XSSFWorkbook(inputStream);
+			) {
+				Sheet sheet = workbook.getSheet("Storico estrazioni");
+				Iterator<Row> rowIterator = sheet.rowIterator();
+				//Skipping header
+				rowIterator.next();
+				while (rowIterator.hasNext()) {
+					Row row = rowIterator.next();
+					Iterator<Cell> numberIterator = row.cellIterator();
+					Date extractionDate = numberIterator.next().getDateCellValue();
+					if (extractionDate.compareTo(startDate) >= 0) {
+						List<Integer> extractedCombo = new ArrayList<>();
+						while (numberIterator.hasNext()) {
+							Integer number = (int)numberIterator.next().getNumericCellValue();
+							extractedCombo.add(number);
+							if (extractedCombo.size() == 6) {
+								break;
+							}
+						}
+						Collections.sort(extractedCombo);
+						allWinningCombos.put(extractionDate, extractedCombo);
+						List<Integer> extractedComboWithJollyAndSuperstar = new ArrayList<>(extractedCombo);
+						extractedComboWithJollyAndSuperstar.add((int)numberIterator.next().getNumericCellValue());
+						extractedComboWithJollyAndSuperstar.add((int)numberIterator.next().getNumericCellValue());
+						allWinningCombosWithJollyAndSuperstar.put(extractionDate, extractedComboWithJollyAndSuperstar);
+					}
+				}
+			}
+			return true;
+		}
+	}
 }
