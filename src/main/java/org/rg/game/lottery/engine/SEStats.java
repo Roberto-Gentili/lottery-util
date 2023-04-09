@@ -83,11 +83,11 @@ public class SEStats {
 		boolean dataLoaded = false;
 		for (DataLoader dataLoader : dataLoaders) {
 			try {
-				if (dataLoaded = dataLoader.load());
+				if (dataLoaded = dataLoader.load()) {
+					break;
+				}
 			} catch (Throwable exc) {
 				System.out.println(dataLoader.getClass() + " in unable to load extractions data: " + exc.getMessage());
-			} {
-				break;
 			}
 		}
 		if (!dataLoaded) {
