@@ -58,6 +58,7 @@ public class SEStats {
 	private List<Map.Entry<Integer, Integer>> extractedNumberCountersFromMostExtractedCouple;
 	private List<Map.Entry<String, Integer>> extractedNumberCounters;
 	private List<Map.Entry<String, Integer>> counterOfAbsencesFromCompetitions;
+	private List<Map.Entry<String, Integer>> counterOfMaxAbsencesFromCompetitions;
 	private Map<Date, List<Integer>> allWinningCombos;
 	private Map<Date, List<Integer>> allWinningCombosWithJollyAndSuperstar;
 
@@ -200,21 +201,31 @@ public class SEStats {
 		extractedNumberCountersFromMostExtractedCouple =
 			extractedNumberFromMostExtractedCoupleMap.entrySet().stream().sorted(comparator.reversed()).collect(Collectors.toList());
 		Map<String, Integer> counterOfAbsencesFromCompetitionsMap = new LinkedHashMap<>();
+		Map<String, Integer> counterOfMaxAbsencesFromCompetitionsMap = new LinkedHashMap<>();
 		new TreeMap<>(allWinningCombos).values().stream().forEach(extractedCombo -> {
 			extractedCombo.stream().forEach(extractedNumber -> {
 				counterOfAbsencesFromCompetitionsMap.put(String.valueOf(extractedNumber), 0);
 			});
 			counterOfAbsencesFromCompetitionsMap.entrySet().stream()
 			.filter(entry -> !extractedCombo.contains(Integer.valueOf(entry.getKey())))
-			.forEach(entry -> entry.setValue(entry.getValue() + 1));
+			.forEach(entry -> {
+				Integer latestMaxCounter = entry.getValue() + 1;
+				entry.setValue(latestMaxCounter);
+				Integer maxCounter = counterOfMaxAbsencesFromCompetitionsMap.get(entry.getKey());
+				if (maxCounter == null || maxCounter < latestMaxCounter) {
+					counterOfMaxAbsencesFromCompetitionsMap.put(entry.getKey(), latestMaxCounter);
+				}
+			});
 		});
+		Comparator<Map.Entry<String, Integer>> doubleComparator = (itemOne, itemTwo) ->
+		(itemOne.getValue() < itemTwo.getValue()) ? 1 :
+			(itemOne.getValue() == itemTwo.getValue()) ?
+				Integer.valueOf(itemOne.getKey()).compareTo(Integer.valueOf(itemTwo.getKey())) :
+				-1;
 		counterOfAbsencesFromCompetitions =
-			counterOfAbsencesFromCompetitionsMap.entrySet().stream().sorted((itemOne, itemTwo) ->
-				(itemOne.getValue() < itemTwo.getValue()) ? 1 :
-					(itemOne.getValue() == itemTwo.getValue()) ?
-						Integer.valueOf(itemOne.getKey()).compareTo(Integer.valueOf(itemTwo.getKey())) :
-						-1
-			).collect(Collectors.toList());
+			counterOfAbsencesFromCompetitionsMap.entrySet().stream().sorted(doubleComparator).collect(Collectors.toList());
+		counterOfMaxAbsencesFromCompetitions =
+			counterOfMaxAbsencesFromCompetitionsMap.entrySet().stream().sorted(doubleComparator).collect(Collectors.toList());
 	}
 
 
@@ -321,6 +332,15 @@ public class SEStats {
 				template.addCell(Integer.parseInt(extractionData.getKey()), "0");
 				template.addCell(extractionData.getValue(), "0");
 			}
+			sheet = template.getOrCreateSheet("Numeri per ritardo massimo", true);
+			sheet.setColumnWidth(0, 25 * 112);
+			sheet.setColumnWidth(1, 25 * 224);
+			template.createHeader(true, Arrays.asList("Numero", "Conteggio assenze massime"));
+			for (Map.Entry<String, Integer> extractionData : counterOfMaxAbsencesFromCompetitions) {
+				template.addRow();
+				template.addCell(Integer.parseInt(extractionData.getKey()), "0");
+				template.addCell(extractionData.getValue(), "0");
+			}
 			sheet = template.getOrCreateSheet("Storico estrazioni", true);
 			sheet.setColumnWidth(0, 25 * 112);
 			sheet.setColumnWidth(1, 25 * 112);
@@ -364,7 +384,7 @@ public class SEStats {
 	public List<Integer> getMostAbsentNumbersRank() {
 		return counterOfAbsencesFromCompetitions.stream().map(entry -> Integer.parseInt(entry.getKey())).collect(Collectors.toList());
 	}
-	
+
 	public List<Integer> getMostAbsentNumbersRankReversed() {
 		List<Integer> reversed = getMostAbsentNumbersRank();
 		Collections.reverse(reversed);
