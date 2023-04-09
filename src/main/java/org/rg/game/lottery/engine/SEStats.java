@@ -390,10 +390,6 @@ public class SEStats {
 					HorizontalAlignment.CENTER,
 					"0"
 				);
-				CellStyle percentageNumberStyle = template.getOrCreateStyle(
-					defaultNumberCellStyle,
-					"0.00%"
-				);
 				CellStyle yellowBackground = template.getOrCreateStyle(
 					"yellowBackgroundStyle",
 					defaultNumberCellStyle,
