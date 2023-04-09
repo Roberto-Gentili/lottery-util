@@ -26,6 +26,7 @@ import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFFont;
@@ -118,27 +119,22 @@ public class SimpleWorkbookTemplate implements Closeable {
 
 	public CellStyle getOrCreateStyle(Object... objects) {
 		String name = null;
-		String patternTemp = null;
+		String pattern = null;
 		for (int i = 0; i < objects.length; i++) {
 			if ((i == 0 && objects[i] instanceof String) ||
 				i > 0 && name == null && objects[i] instanceof String) {
 				name = (String)objects[i];
 				if (i > 0) {
-					patternTemp = name;
+					pattern = name;
 				}
 			}
 		}
 		CellStyle style = formattedContentStyle.get(name);
-		String pattern = patternTemp;
 		if (style == null) {
 			style = createStyle(
 				workbook,
-				pattern != null ?
-					cellStyle -> fontStyle -> {
-						cellStyle.setDataFormat(dataFormat.getFormat(pattern));
-					} :
-					null
-				);
+				null
+			);
 			formattedContentStyle.put(name, style);
 		}
 		for (int i = 0; i < objects.length; i++) {
@@ -148,9 +144,12 @@ public class SimpleWorkbookTemplate implements Closeable {
 				style.setAlignment((HorizontalAlignment)objects[i]);
 			} else if (objects[i] instanceof FillPatternType) {
 				style.setFillPattern((FillPatternType) objects[i]);
-			}else if (objects[i] instanceof IndexedColors) {
+			} else if (objects[i] instanceof IndexedColors) {
 				style.setFillForegroundColor(((IndexedColors) objects[i]).getIndex());
 			}
+		}
+		if (pattern != null) {
+			style.setDataFormat(dataFormat.getFormat(pattern));
 		}
 		return style;
 	}
@@ -401,6 +400,14 @@ public class SimpleWorkbookTemplate implements Closeable {
 		if (workbook != null) {
 			workbook.close();
 		}
+	}
+
+	public void setAutoFilter() {
+		workbook.getSheet(currentSheet).setAutoFilter(
+			new CellRangeAddress(
+				0, currentRow.size() - 1, 0, headersSize.get(currentSheet) - 1
+			)
+		);
 	}
 
 }
