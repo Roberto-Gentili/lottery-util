@@ -422,7 +422,7 @@ public class SimpleWorkbookTemplate implements Closeable {
 		for (int i = 0; i < cellRangeAddress.length; i++) {
 			String columnLetter = getLetterAtIndex(columns[i]);
 			 cellRangeAddress[i] =
-				CellRangeAddress.valueOf(columnLetter + rowNumberToStart + ":" + columnLetter + (currentSheet.getLastRowNum() + rowNumberToStart));
+				CellRangeAddress.valueOf(columnLetter + rowNumberToStart + ":" + columnLetter + (currentSheet.getLastRowNum() + 1));
 		}
 
 		SheetConditionalFormatting sheetConditionalFormatting = currentSheet.getSheetConditionalFormatting();
