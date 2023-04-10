@@ -32,6 +32,7 @@ public class ExpireDateUpdater {
 	static DateTimeFormatter standardDatePattern = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
 	static List<Map.Entry<List<String>, Integer>> updateInfos = Arrays.asList(
+		//addUpdateInfo(computeIncrementationOfWeeks(4), "Pistella Maria Anna")
 		//addUpdateInfo(computeIncrementationOfWeeks(4), "Barella Roberta")
 		//addUpdateInfo(computeIncrementationOfWeeks(4), "Berni Valentina")
 		//addUpdateInfo(computeIncrementationOfDays(1), "all")
