@@ -16,15 +16,19 @@ import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.ConditionalFormattingRule;
 import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.ss.usermodel.DataFormat;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.FontFormatting;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.Hyperlink;
 import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.PatternFormatting;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.SheetConditionalFormatting;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -398,19 +402,64 @@ public class SimpleWorkbookTemplate implements Closeable {
 		return null;
 	}
 
-	@Override
-	public void close() throws IOException {
-		if (workbook != null) {
-			workbook.close();
-		}
-	}
-
 	public void setAutoFilter() {
 		workbook.getSheet(currentSheet).setAutoFilter(
 			new CellRangeAddress(
 				0, currentRow.size() - 1, 0, headersSize.get(currentSheet) - 1
 			)
 		);
+	}
+
+	public Sheet addSheetConditionalFormatting(int column, IndexedColors color, byte comparisonOperator, String... comparisonValue) {
+		return addSheetConditionalFormatting(new int[]{column}, color, comparisonOperator, comparisonValue);
+	}
+
+	public Sheet addSheetConditionalFormatting(int[] columns, IndexedColors color, byte comparisonOperator, String... comparisonValue) {
+		Sheet currentSheet = getOrCreateSheet(this.currentSheet);
+		int rowNumberToStart =
+			currentSheet.getPaneInformation() != null && currentSheet.getPaneInformation().isFreezePane() ? 2 : 1;
+		CellRangeAddress[] cellRangeAddress = new CellRangeAddress[columns.length];
+		for (int i = 0; i < cellRangeAddress.length; i++) {
+			String columnLetter = getLetterAtIndex(columns[i]);
+			 cellRangeAddress[i] =
+				CellRangeAddress.valueOf(columnLetter + rowNumberToStart + ":" + columnLetter + (currentSheet.getLastRowNum() + rowNumberToStart));
+		}
+
+		SheetConditionalFormatting sheetConditionalFormatting = currentSheet.getSheetConditionalFormatting();
+        ConditionalFormattingRule conditionalFormattingRule = comparisonValue.length > 1 ?
+    		sheetConditionalFormatting.createConditionalFormattingRule(
+				comparisonOperator,
+				comparisonValue[0], comparisonValue[1]
+			) :
+			sheetConditionalFormatting.createConditionalFormattingRule(
+				comparisonOperator,
+				comparisonValue[0]
+			);
+        FontFormatting fontFormatting =
+        		conditionalFormattingRule.createFontFormatting();
+        //fontFormatting.setFontColorIndex(IndexedColors.RED.getIndex());
+        fontFormatting.setFontStyle(false, true);
+
+        PatternFormatting patternFormatting =
+        		conditionalFormattingRule.createPatternFormatting();
+        patternFormatting.setFillBackgroundColor(color.index);
+
+        sheetConditionalFormatting.addConditionalFormatting(
+    		cellRangeAddress,
+    		conditionalFormattingRule
+		);
+        return currentSheet;
+	}
+
+	private String getLetterAtIndex(int index) {
+		return Character.valueOf("ABCDEFGHIJKLMNOPQRSTUVWXYZ".charAt(index)).toString();
+	}
+
+	@Override
+	public void close() throws IOException {
+		if (workbook != null) {
+			workbook.close();
+		}
 	}
 
 }

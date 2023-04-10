@@ -26,6 +26,7 @@ import java.util.stream.IntStream;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.ComparisonOperator;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.IndexedColors;
@@ -536,18 +537,6 @@ public class SEStats {
 					defaultNumberCellStyle,
 					"0.00%"
 				);
-				CellStyle yellowPercentageNumber = template.getOrCreateStyle(
-					"yellowPercentageNumber",
-					percentageNumberStyle,
-					FillPatternType.SOLID_FOREGROUND,
-					IndexedColors.YELLOW
-				);
-				CellStyle redPercentageNumber = template.getOrCreateStyle(
-					"redPercentageNumber",
-					yellowPercentageNumber,
-					IndexedColors.RED
-				);
-
 				CellStyle yellowBackground = template.getOrCreateStyle(
 					"yellowBackground",
 					defaultNumberCellStyle,
@@ -590,21 +579,12 @@ public class SEStats {
 					template.addCell(getAbsenceRecordFromCompetitionsFor(extractionData.getKey()), "0");
 					template.addCell(getDistanceFromAbsenceRecordFor(extractionData.getKey()), "0");
 					Double distanceFromAbsenceRecordPerc = getDistanceFromAbsenceRecordPercentageFor(extractionData.getKey());
-					Cell distanceFromAbsenceRecordPercentageCell = template.addCell(
+					template.addCell(
 							distanceFromAbsenceRecordPerc /100
-					);
-					if (distanceFromAbsenceRecordPerc <= -20) {
-						distanceFromAbsenceRecordPercentageCell.setCellStyle(percentageNumberStyle);
-					} else if (distanceFromAbsenceRecordPerc > -20 && distanceFromAbsenceRecordPerc < -10) {
-						distanceFromAbsenceRecordPercentageCell.setCellStyle(
-							yellowPercentageNumber
-						);
-					} else {
-						distanceFromAbsenceRecordPercentageCell.setCellStyle(
-							redPercentageNumber
-						);
-					}
+					).setCellStyle(percentageNumberStyle);
 				}
+				template.addSheetConditionalFormatting(6, IndexedColors.YELLOW, ComparisonOperator.BETWEEN, "-20%", "-10%");
+				template.addSheetConditionalFormatting(6, IndexedColors.RED, ComparisonOperator.GT, "-10%");
 				template.setAutoFilter();
 
 				sheet = template.getOrCreateSheet("Coppie più estratte", true);
