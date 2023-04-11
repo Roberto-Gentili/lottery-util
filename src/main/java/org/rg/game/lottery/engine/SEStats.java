@@ -361,6 +361,55 @@ public class SEStats {
 		return allWinningCombosWithJollyAndSuperstar;
 	}
 
+	public Map<Date, Map<Integer, List<List<Integer>>>> checkQuality(List<List<Integer>> system) {
+		Map<Date, Map<Integer, List<List<Integer>>>> winningsCombos = new LinkedHashMap<>();
+		List<Map.Entry<Date, List<Integer>>> allWinningCombosReversed = this.allWinningCombos.entrySet().stream().collect(Collectors.toList());
+		Collections.reverse(allWinningCombosReversed);
+		for (Map.Entry<Date, List<Integer>> winningComboInfo : allWinningCombosReversed) {
+			Map<Integer,List<List<Integer>>> winningCombosForExtraction = new TreeMap<>();
+			List<Integer> winningCombo = winningComboInfo.getValue();
+			for (List<Integer> currentCombo : system) {
+				long hit = currentCombo.stream().filter(winningCombo::contains).count();
+				if (hit > 1) {
+					winningCombosForExtraction.computeIfAbsent((int)hit, ht -> new ArrayList<>()).add(currentCombo);
+				}
+			}
+			if (!winningCombosForExtraction.isEmpty()) {
+				winningsCombos.put(winningComboInfo.getKey(), winningCombosForExtraction);
+			}
+		}
+		for (Map.Entry<Date, Map<Integer, List<List<Integer>>>> winningCombosInfo : winningsCombos.entrySet()) {
+			System.out.println(defaultDateFmt.format(winningCombosInfo.getKey()) + ":");
+			for (Map.Entry<Integer, List<List<Integer>>> winningCombos : winningCombosInfo.getValue().entrySet()) {
+				System.out.println("\t" + toLabel(winningCombos.getKey()) + ":\n");
+				for (List<Integer> combo : winningCombos.getValue()) {
+					System.out.println("\t\t" + ComboHandler.toString(combo));
+				}
+			}
+			System.out.println();
+		}
+		return winningsCombos;
+	}
+
+	private String toLabel(Integer hit) {
+		if (hit == 2) {
+			return "Ambo";
+		}
+		if (hit == 3) {
+			return "Terno";
+		}
+		if (hit == 4) {
+			return "Quaterna";
+		}
+		if (hit == 5) {
+			return "Cinquina";
+		}
+		if (hit == 6) {
+			return "Tombola";
+		}
+		throw new IllegalArgumentException();
+	}
+
 	private static interface DataLoader {
 
 		public boolean load() throws Throwable;
