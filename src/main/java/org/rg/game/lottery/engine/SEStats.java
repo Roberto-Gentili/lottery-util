@@ -372,7 +372,7 @@ public class SEStats {
 			systemItearator.next();
 			systemSize++;
 		}
-		Map<Date, Map<Integer, List<List<Integer>>>> winningsCombos = new LinkedHashMap<>();
+		Map<Date, Map<Integer, List<List<Integer>>>> winningsCombosData = new LinkedHashMap<>();
 		List<Map.Entry<Date, List<Integer>>> allWinningCombosReversed = this.allWinningCombos.entrySet().stream().collect(Collectors.toList());
 		Collections.reverse(allWinningCombosReversed);
 		for (Map.Entry<Date, List<Integer>> winningComboInfo : allWinningCombosReversed) {
@@ -387,20 +387,25 @@ public class SEStats {
 				}
 			}
 			if (!winningCombosForExtraction.isEmpty()) {
-				winningsCombos.put(winningComboInfo.getKey(), winningCombosForExtraction);
+				winningsCombosData.put(winningComboInfo.getKey(), winningCombosForExtraction);
 			}
 		}
 		Map<Integer, Integer> winningsCounter = new TreeMap<>();
 		StringBuffer reportDetail = new StringBuffer();
-		for (Map.Entry<Date, Map<Integer, List<List<Integer>>>> winningCombosInfo : winningsCombos.entrySet()) {
-			reportDetail.append(defaultDateFmt.format(winningCombosInfo.getKey()) + ":");
+		Iterator<Map.Entry<Date, Map<Integer, List<List<Integer>>>>> winningsCombosDataItr = winningsCombosData.entrySet().iterator();
+		while (winningsCombosDataItr.hasNext()) {
+			Map.Entry<Date, Map<Integer, List<List<Integer>>>> winningCombosInfo = winningsCombosDataItr.next();
+			reportDetail.append(defaultDateFmt.format(winningCombosInfo.getKey()) + ":\n");
 			for (Map.Entry<Integer, List<List<Integer>>> winningCombos : winningCombosInfo.getValue().entrySet()) {
-				reportDetail.append("\t" + toLabel(winningCombos.getKey()) + ":");
+				reportDetail.append("\t" + toLabel(winningCombos.getKey()) + ":\n");
 				for (List<Integer> combo : winningCombos.getValue()) {
 					Integer counter = winningsCounter.computeIfAbsent(winningCombos.getKey(), key -> 0);
 					winningsCounter.put(winningCombos.getKey(), ++counter);
-					reportDetail.append("\t\t" + ComboHandler.toString(combo));
+					reportDetail.append("\t\t" + ComboHandler.toString(combo) + "\n");
 				}
+			}
+			if (winningsCombosDataItr.hasNext()) {
+				reportDetail.append("\n");
 			}
 		}
 		StringBuffer report = new StringBuffer();
@@ -416,11 +421,11 @@ public class SEStats {
 							type == 5 ? 50000 * winningInfo.getValue() :
 								type == 6 ? 1000000 * winningInfo.getValue(): 0;
 
-			report.append("\t" + label + rightAlignedString(integerFormat.format(winningInfo.getValue()), 22 - label.length()));
+			report.append("\t" + label + rightAlignedString(integerFormat.format(winningInfo.getValue()), 22 - label.length()) + "\n");
 		}
-		report.append("\n\tCosto:" + rightAlignedString(integerFormat.format(allWinningCombosReversed.size() * systemSize), 15) + "€");
-		report.append("\tRitorno:" + rightAlignedString(integerFormat.format(returns), 13) + "€");
-		data.put("winningCombos", winningsCombos);
+		report.append("\n\tCosto:" + rightAlignedString(integerFormat.format(allWinningCombosReversed.size() * systemSize), 15) + "€\n");
+		report.append("\tRitorno:" + rightAlignedString(integerFormat.format(returns), 13) + "€\n");
+		data.put("winningCombos", winningsCombosData);
 		data.put("report", report.toString());
 		data.put("report.detail", reportDetail.toString());
 		return data;

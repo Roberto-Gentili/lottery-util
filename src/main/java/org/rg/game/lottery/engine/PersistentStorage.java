@@ -80,7 +80,11 @@ public class PersistentStorage implements Storage {
 					if (iterationIndex == idx) {
 						List<Integer> selectedCombo = new ArrayList<>();
 						for (String numberAsString : line.split("\\t")) {
-							selectedCombo.add(Integer.parseInt(numberAsString));
+							try {
+								selectedCombo.add(Integer.parseInt(numberAsString));
+							} catch (NumberFormatException exc) {
+								return null;
+							}
 						}
 						return selectedCombo;
 					}
