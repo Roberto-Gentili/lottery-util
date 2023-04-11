@@ -123,7 +123,9 @@ public class ComboHandler {
 	public static String toExpression(Collection<Integer> comboSums) {
 		String expression = "";
 		Integer previousNumber = null;
-		for (Integer sum : new TreeSet<>(comboSums)) {
+		List<Integer> comboSumList = new ArrayList<>(new TreeSet<>(comboSums));
+		for (int i = 0; i < comboSumList.size(); i++) {
+			Integer sum = comboSumList.get(i);
 			if (previousNumber == null) {
 				expression += sum;
 				previousNumber = sum;
@@ -131,7 +133,11 @@ public class ComboHandler {
 				if (!expression.endsWith("->")) {
 					expression += "->";
 				}
-				previousNumber = sum;
+				if (i < comboSumList.size() - 1) {
+					previousNumber = sum;
+				} else {
+					expression += sum;
+				}
 			} else if (expression.endsWith("->")) {
 				expression += previousNumber + "," + sum;
 				previousNumber = sum;
