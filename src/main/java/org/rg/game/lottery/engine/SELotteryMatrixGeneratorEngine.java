@@ -88,8 +88,8 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 
 	private Map<String, Object> getCompetitionInfo() {
 		Map<String, Object> data = new LinkedHashMap<>();
-		data.put("startSeed", 3539L);
-		data.put("startDate", LocalDate.parse("11/02/2023", simpleDateFormatter));
+		data.put("startSeed", 3540L);
+		data.put("startDate", LocalDate.parse("14/02/2023", simpleDateFormatter));
 		/*data.put("startSeed", 1L);
 		data.put("startDate", LocalDate.parse(getDefaultExtractionArchiveStartDate(), simpleDateFormatter));*/
 		return data;
