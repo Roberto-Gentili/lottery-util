@@ -63,7 +63,13 @@ public class LotteryMatrixGenerator {
 			}
 		}
 		for (Properties configuration : configurations) {
-			System.out.println("Processing file '" + configuration.getProperty("file.name") + "' located in '" + configuration.getProperty("file.parent.absolutePath") + "'");
+			System.out.println(
+				"Processing file '" + configuration.getProperty("file.name") + "' located in '" + configuration.getProperty("file.parent.absolutePath") + "'"
+			);
+			String info = configuration.getProperty("info");
+			if (info != null) {
+				System.out.println(info);
+			}
 			LotteryMatrixGeneratorAbstEngine engine = engineSupplier.get();
 			configuration.setProperty("nameSuffix", configuration.getProperty("file.name").replace("." + configuration.getProperty("file.extension"), ""));
 			engine.setup(configuration);
