@@ -40,6 +40,8 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	}
 
 	protected Random random;
+	protected boolean reportEnabled;
+	protected boolean reportDetailEnabled;
 
 	protected DecimalFormat decimalFormat = new DecimalFormat( "#,##0.##" );
 	protected DecimalFormat integerFormat = new DecimalFormat( "#,##0" );
@@ -157,6 +159,8 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 				(List<Integer>)basicData.get("numbersToBeDiscarded")
 			);
 		}
+		reportEnabled = Boolean.parseBoolean(config.getProperty("report.enabled", "true"));
+		reportDetailEnabled = Boolean.parseBoolean(config.getProperty("report.detail.enabled", "false"));
 		executor = () -> {
 			for (LocalDate extractionDate : extractionDates) {
 				generate(
@@ -440,7 +444,19 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 				}
 			}
 
-			checkQuality(storageRef);
+			if (reportEnabled) {
+				Map<String, Object> report = checkQuality(storageRef);
+				if (reportDetailEnabled) {
+					storage.addLine("\n");
+					storage.addLine(
+						(String)report.get("report.detail")
+					);
+				}
+				storage.addLine("\n");
+				storage.addLine(
+					(String)report.get("report.summary")
+				);
+			}
 
 			String text = "\nMr. Random suggerisce " + (shouldBePlayedAbsolutely? "assolutamente " : "") + "di " + (shouldBePlayed? "giocare" : "non giocare") + " il sistema per questo concorso";
 			storage.addLine(text);
@@ -457,7 +473,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		}
 	}
 
-	protected abstract void checkQuality(Storage storageRef);
+	protected abstract Map<String, Object> checkQuality(Storage storageRef);
 
 	private List<Integer> getNextRandomCombo(
 		AtomicReference<Iterator<List<Integer>>> randomCombosIteratorWrapper,

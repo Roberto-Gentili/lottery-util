@@ -335,17 +335,9 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	@Override
-	protected void checkQuality(Storage storage) {
-		storage.addLine("\n");
-		storage.addLine(
-			((String)SEStats.get(getExtractionArchiveStartDate())
-			.checkQuality(storage::iterator).get("report.detail"))
-		);
-		storage.addLine("\n");
-		storage.addLine(
-			((String)SEStats.get(getExtractionArchiveStartDate())
-			.checkQuality(storage::iterator).get("report.summary"))
-		);
+	protected Map<String, Object> checkQuality(Storage storage) {
+		return SEStats.get(getExtractionArchiveStartDate())
+			.checkQuality(storage::iterator);
 	}
 
 }

@@ -109,7 +109,7 @@ public class MDLotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	@Override
-	protected void checkQuality(Storage storage) {
-
+	protected Map<String, Object> checkQuality(Storage storage) {
+		throw new UnsupportedOperationException("Check quality");
 	}
 }

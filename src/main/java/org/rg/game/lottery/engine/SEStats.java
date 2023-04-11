@@ -392,7 +392,7 @@ public class SEStats {
 		}
 		data.put("winningCombos", winningsCombosData);
 		Map<Integer, Integer> winningsCounter = new TreeMap<>();
-		StringBuffer report = new StringBuffer("Risultati storici del sistema (" + systemSize +" combinazioni) dal " + defaultDateFmt.format(allWinningCombosReversed.get(0).getKey()) + ":\n\n");
+		StringBuffer report = new StringBuffer("Risultati storici dal " + defaultDateFmt.format(allWinningCombosReversed.get(0).getKey()) + ":\n\n");
 		Iterator<Map.Entry<Date, Map<Integer, List<List<Integer>>>>> winningsCombosDataItr = winningsCombosData.entrySet().iterator();
 		while (winningsCombosDataItr.hasNext()) {
 			Map.Entry<Date, Map<Integer, List<List<Integer>>>> winningCombosInfo = winningsCombosDataItr.next();
@@ -411,7 +411,7 @@ public class SEStats {
 		}
 		data.put("report.detail", report.toString());
 		report = new StringBuffer("");
-		report.append("Riepilogo risultati storici del sistema (" + systemSize +" combinazioni) dal " + defaultDateFmt.format(allWinningCombosReversed.get(0).getKey()) + ":\n\n");
+		report.append("Riepilogo risultati storici dal " + defaultDateFmt.format(allWinningCombosReversed.get(0).getKey()) + ":\n\n");
 		Integer returns = 0;
 		for (Map.Entry<Integer, Integer> winningInfo : winningsCounter.entrySet()) {
 			Integer type = winningInfo.getKey();
