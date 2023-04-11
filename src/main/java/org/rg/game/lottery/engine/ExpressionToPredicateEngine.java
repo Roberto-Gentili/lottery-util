@@ -21,7 +21,7 @@ public class ExpressionToPredicateEngine<I> {
 
 	public void addSimpleExpressionParser(
 		Predicate<String> simpleExpressionsParserPredicate,
-		 Function<String, Function<Object[], Predicate<I>>> parser
+		Function<String, Function<Object[], Predicate<I>>> parser
 	) {
 		simpleExpressionsParsers.put(simpleExpressionsParserPredicate, parser);
 	}
