@@ -6,22 +6,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.DoublePredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class CombinationFilterFactory {
 	public static final CombinationFilterFactory INSTANCE;
+	private ExpressionToPredicateEngine<List<Integer>> expressionEngine;
 
 	static {
 		INSTANCE = new CombinationFilterFactory();
@@ -31,7 +28,10 @@ public class CombinationFilterFactory {
 	protected DecimalFormat decimalFormat = new DecimalFormat( "#,##0.##" );
 	protected DecimalFormat integerFormat = new DecimalFormat( "#,##0" );
 
-	private CombinationFilterFactory() {}
+	private CombinationFilterFactory() {
+		expressionEngine = new ExpressionToPredicateEngine<>();
+		setupExpressionEngine();
+	}
 
 	public Predicate<List<Integer>> parse(String filterAsString) {
 		return parse(filterAsString, false);
@@ -41,112 +41,94 @@ public class CombinationFilterFactory {
 		if (filterAsString == null || filterAsString.isEmpty()) {
 			return numbers -> true;
 		}
-		Predicate<List<Integer>> filter = parseComplexExpression(filterAsString.replace("\t", " ").replace("\n", "").replace("\r", ""), logFalseResults);
+		Predicate<List<Integer>> filter = expressionEngine.parseComplexExpression(filterAsString.replace("\t", " ").replace("\n", "").replace("\r", ""), logFalseResults);
 		return combo -> {
 			Collections.sort(combo);
 			return filter.test(combo);
 		};
 	}
 
-	private Predicate<List<Integer>> parseComplexExpression(String expression, boolean logFalseResults) {
-		Map<String, Object> nestedExpressionsData = new LinkedHashMap<>();
-		expression = bracketAreasToPlaceholders(expression, nestedExpressionsData);
-		Matcher logicalOperatorSplitter = Pattern.compile("(.*?)(&|\\||\\/)").matcher(expression + "/");
-		Predicate<List<Integer>> predicate = null;
-		String logicalOperator = null;
-		while (logicalOperatorSplitter.find()) {
-			String originalePredicateUnitExpression = logicalOperatorSplitter.group(1);
-			String predicateUnitExpression = originalePredicateUnitExpression.startsWith("!") ?
-				originalePredicateUnitExpression.split("\\!")[1] :
-				originalePredicateUnitExpression;
-			String nestedPredicateExpression = (String)nestedExpressionsData.get(predicateUnitExpression);
-			Predicate<List<Integer>> predicateUnit = nestedPredicateExpression != null ?
-				parseComplexExpression(nestedPredicateExpression, logFalseResults) :
-				parseSimpleExpression(predicateUnitExpression, logFalseResults);
-			if (originalePredicateUnitExpression.startsWith("!")) {
-				predicateUnit = predicateUnit.negate();
-			}
-			if (predicate == null) {
-				predicate = predicateUnit;
-			} else if ("&".equals(logicalOperator)) {
-				predicate = predicate.and(predicateUnit);
-			} else if ("|".equals(logicalOperator)) {
-				predicate = predicate.or(predicateUnit);
-			}
-			logicalOperator = logicalOperatorSplitter.group(2);
-		}
-		return predicate;
+
+	private void setupExpressionEngine() {
+		expressionEngine.addSimpleExpressionParser(
+			expression ->
+				expression.contains("emainder"),
+			expression ->
+				paramters ->
+				buildPredicate(expression, this::buildRemainderFilter, (boolean)paramters[0])
+		);
+		expressionEngine.addSimpleExpressionParser(
+			expression ->
+				expression.contains("sameLastDigit"),
+			expression ->
+				paramters ->
+					buildPredicate(expression, this::buildSameLastDigitFilter, (boolean)paramters[0])
+		);
+		expressionEngine.addSimpleExpressionParser(
+			expression ->
+				expression.contains("consecutiveLastDigit"),
+			expression ->
+				paramters ->
+				buildPredicate(expression, this::buildConsecutiveLastDigitFilter, (boolean)paramters[0])
+		);
+		expressionEngine.addSimpleExpressionParser(
+			expression ->
+				expression.contains("consecutiveNumber"),
+			expression ->
+				paramters ->
+				buildPredicate(expression, this::buildConsecutiveNumberFilter, (boolean)paramters[0])
+		);
+		expressionEngine.addSimpleExpressionParser(
+			expression ->
+				expression.contains("radius"),
+			expression ->
+				paramters ->
+					buildPredicate(expression, this::buildRadiusFilter, (boolean)paramters[0])
+		);
+		expressionEngine.addSimpleExpressionParser(
+			expression ->
+				expression.contains("sumOfPower"),
+			expression ->
+				paramters ->
+					buildPredicate(expression, this::buildSumOfPowerFilter, (boolean)paramters[0])
+		);
+		expressionEngine.addSimpleExpressionParser(
+			expression ->
+				expression.contains("sum"),
+			expression ->
+				paramters ->
+					buildPredicate(expression, this::buildSumFilter, (boolean)paramters[0])
+		);
+		expressionEngine.addSimpleExpressionParser(
+			expression ->
+				expression.contains("in"),
+			expression ->
+				paramters ->
+					buildPredicate(expression, this::inFilter, (boolean)paramters[0])
+		);
+		expressionEngine.addSimpleExpressionParser(
+			expression ->
+				expression.contains("->"),
+			expression ->
+				paramters ->
+					buildPredicate(expression, this::buildNumberGroupFilter, (boolean)paramters[0])
+		);
+		expressionEngine.addSimpleExpressionParser(
+			expression ->
+				expression.contains("true"),
+			expression ->
+				paramters ->
+					buildPredicate(expression, exp -> combo -> true, (boolean)paramters[0])
+		);
+		expressionEngine.addSimpleExpressionParser(
+			expression ->
+				expression.contains("false"),
+			expression ->
+				paramters ->
+					buildPredicate(expression, exp -> combo -> false, (boolean)paramters[0])
+		);
 	}
 
-	private Predicate<List<Integer>> parseSimpleExpression(String expression, boolean logFalseResults) {
-		Predicate<List<Integer>> filter = null;
-		if (expression.contains("emainder")) {
-			filter = buildPredicate(expression, this::buildRemainderFilter, logFalseResults);
-		} else if (expression.contains("sameLastDigit")) {
-			filter = buildPredicate(expression, this::buildSameLastDigitFilter, logFalseResults);
-		} else if (expression.contains("consecutiveLastDigit")) {
-			filter = buildPredicate(expression, this::buildConsecutiveLastDigitFilter, logFalseResults);
-		} else if (expression.contains("consecutiveNumber")) {
-			filter = buildPredicate(expression, this::buildConsecutiveNumberFilter, logFalseResults);
-		} else if (expression.contains("radius")) {
-			filter = buildPredicate(expression, this::buildRadiusFilter, logFalseResults);
-		} else if (expression.contains("sumOfPower")) {
-			filter = buildPredicate(expression, this::buildSumOfPowerFilter, logFalseResults);
-		} else if (expression.contains("sum")) {
-			filter = buildPredicate(expression, this::buildSumFilter, logFalseResults);
-		} else if (expression.contains("in")) {
-			filter = buildPredicate(expression, this::inFilter, logFalseResults);
-		} else if (expression.contains("->")) {
-			filter = buildPredicate(expression, this::buildNumberGroupFilter, logFalseResults);
-		} else if (expression.equals("true")) {
-			filter = combo -> true;
-		} else if (expression.equals("false")) {
-			filter = combo -> false;
-		}
-		if (filter == null) {
-			throw new IllegalArgumentException("Unrecognized expression: " + expression);
-		}
-		return filter;
-	}
-
-	static String bracketAreasToPlaceholders(String expression, Map<String, Object> values) {
-		String replacedExpression = null;
-		while (!expression.equals(replacedExpression = findAndReplaceNextBracketArea(expression, values))) {
-			expression = replacedExpression;
-		}
-		return expression;
-	}
-
-	static String findAndReplaceNextBracketArea(String expression, Map<String, Object> values) {
-		values.computeIfAbsent("nestedIndex", key -> 0);
-		int firstLeftBracketIndex = expression.indexOf("(");
-		if (firstLeftBracketIndex > -1) {
-			int close = findClose(expression, firstLeftBracketIndex);  // find the  close parentheses
-            String bracketInnerArea = expression.substring(firstLeftBracketIndex + 1, close);
-            Integer nestedIndex = (Integer)values.get("nestedIndex");
-            String placeHolder = "__NESTED-"+ nestedIndex++ +"__";
-            expression = expression.substring(0, firstLeftBracketIndex) + placeHolder + expression.substring(close + 1, expression.length());
-            values.put("nestedIndex", nestedIndex);
-            values.put(placeHolder, bracketInnerArea);
-            return expression;
-		}
-		return expression;
-	}
-
-	static int findClose(String input, int start) {
-        java.util.Stack<Integer> stack = new java.util.Stack<>();
-        for (int index = start; index < input.length(); index++) {
-            if (input.charAt(index) == '(') {
-                stack.push(index);
-            } else if (input.charAt(index) == ')') {
-                stack.pop();
-                if (stack.isEmpty()) {
-                    return index;
-                }
-            }
-        }
-        throw new IllegalArgumentException("Unbalanced brackets in expression: " + input);
-    }
 
 	private Predicate<List<Integer>> inFilter(
 		String filterAsString
@@ -444,7 +426,9 @@ public class CombinationFilterFactory {
 	}
 
 	private Predicate<List<Integer>> buildPredicate(
-		String filterAsString, Function<String, Predicate<List<Integer>>> predicateBuilder, boolean logFalseResults
+		String filterAsString,
+		Function<String, Predicate<List<Integer>>> predicateBuilder,
+		boolean logFalseResults
 	) {
 		Predicate<List<Integer>> predicate = predicateBuilder.apply(filterAsString);
 		if (logFalseResults) {

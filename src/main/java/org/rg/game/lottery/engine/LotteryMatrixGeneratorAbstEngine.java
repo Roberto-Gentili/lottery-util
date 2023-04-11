@@ -30,8 +30,6 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public abstract class LotteryMatrixGeneratorAbstEngine {
@@ -53,9 +51,12 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	protected int engineIndex;
 	protected Integer avoidMode;
 	protected Predicate<List<Integer>> combinationFilter;
+	protected ExpressionToPredicateEngine<List<Integer>> combinationFilterPreProcessor;
 
 	LotteryMatrixGeneratorAbstEngine() {
 		engineIndex = getAllChosenNumbers().size();
+		combinationFilterPreProcessor = new ExpressionToPredicateEngine<>();
+		setupCombinationFilterPreProcessor();
 	}
 
 	public void setup(Properties config) {
@@ -106,7 +107,9 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		}
 		storageType = config.getProperty("storage", "memory").replaceAll("\\s+","");
 		String combinationFilterRaw = config.getProperty("combination.filter");
-		combinationFilter = CombinationFilterFactory.INSTANCE.parse(preprocess(combinationFilterRaw));
+		combinationFilter = CombinationFilterFactory.INSTANCE.parse(
+			preProcess(combinationFilterRaw)
+		);
 		Function<LocalDate, Map<String, Object>> basicDataSupplier = extractionDate -> {
 			Map<String, Object> data = adjustSeed(extractionDate);
 			String numbersOrdered = config.getProperty("numbers.ordered");
@@ -196,43 +199,25 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 
 	protected abstract String getDefaultNumberRange();
 
-	public String preprocess(String filterAsString) {
-		if (filterAsString == null) {
-			return filterAsString;
-		}
-		Map<String, Object> nestedExpressionsData = new LinkedHashMap<>();
-		filterAsString = CombinationFilterFactory.bracketAreasToPlaceholders(filterAsString, nestedExpressionsData);
-		Matcher logicalOperatorSplitter = Pattern.compile("(.*?)(&|\\||\\/)").matcher(filterAsString + "/");
-		while (logicalOperatorSplitter.find()) {
-			String originalPredicateUnitExpression = logicalOperatorSplitter.group(1);
-			String predicateUnitExpression = originalPredicateUnitExpression.startsWith("!") ?
-				logicalOperatorSplitter.group(1).split("\\!")[1] :
-				originalPredicateUnitExpression;
-			String nestedPredicateExpression = (String)nestedExpressionsData.get(predicateUnitExpression);
-			String newExpression = nestedPredicateExpression != null ? preprocess(nestedPredicateExpression) :
-				processSimpleExpression(predicateUnitExpression);
-			if (nestedPredicateExpression != null) {
-				filterAsString = filterAsString.replace(
-					originalPredicateUnitExpression,
-					((originalPredicateUnitExpression.startsWith("!") ? "!" : "") + "(" + newExpression + ")"
-				));
-			} else {
-				filterAsString = filterAsString.replace(
-					originalPredicateUnitExpression,
-					((originalPredicateUnitExpression.startsWith("!") ? "!" : "") + newExpression
-				));
-			}
-		}
-		return filterAsString;
+	public String preProcess(String filterAsString) {
+		return combinationFilterPreProcessor.preProcess(filterAsString);
 	}
 
-	protected String processSimpleExpression(String expression) {
-		if (expression.split("lessExtCouple|lessExt|mostExtCouple|mostExt").length > 1) {
-			return processStatsExpression(expression);
-		} else if (expression.contains("sum")) {
-			return processMathExpression(expression);
-		}
-		return expression;
+	protected void setupCombinationFilterPreProcessor() {
+		combinationFilterPreProcessor.addSimpleExpressionPreprocessor(
+			expression ->
+				expression.split("lessExtCouple|lessExt|mostExtCouple|mostExt").length > 1,
+			expression ->
+				parameters ->
+					processStatsExpression(expression)
+		);
+		combinationFilterPreProcessor.addSimpleExpressionPreprocessor(
+			expression ->
+				expression.contains("sum"),
+			expression ->
+				parameters ->
+					processMathExpression(expression)
+		);
 	}
 
 	protected String processMathExpression(String expression) {
