@@ -22,6 +22,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -363,14 +364,23 @@ public class SEStats {
 		return allWinningCombosWithJollyAndSuperstar;
 	}
 
-	public Map<Date, Map<Integer, List<List<Integer>>>> checkQuality(List<List<Integer>> system) {
+	public Map<String, Object> checkQuality(Supplier<Iterator<List<Integer>>> systemIteratorSupplier) {
+		Map<String, Object> data = new LinkedHashMap<>();
+		Iterator<List<Integer>> systemItearator = systemIteratorSupplier.get();
+		long systemSize = 0;
+		while (systemItearator.hasNext()) {
+			systemItearator.next();
+			systemSize++;
+		}
 		Map<Date, Map<Integer, List<List<Integer>>>> winningsCombos = new LinkedHashMap<>();
 		List<Map.Entry<Date, List<Integer>>> allWinningCombosReversed = this.allWinningCombos.entrySet().stream().collect(Collectors.toList());
 		Collections.reverse(allWinningCombosReversed);
 		for (Map.Entry<Date, List<Integer>> winningComboInfo : allWinningCombosReversed) {
 			Map<Integer,List<List<Integer>>> winningCombosForExtraction = new TreeMap<>();
 			List<Integer> winningCombo = winningComboInfo.getValue();
-			for (List<Integer> currentCombo : system) {
+			systemItearator = systemIteratorSupplier.get();
+			while (systemItearator.hasNext()) {
+				List<Integer> currentCombo = systemItearator.next();
 				long hit = currentCombo.stream().filter(winningCombo::contains).count();
 				if (hit > 1) {
 					winningCombosForExtraction.computeIfAbsent((int)hit, ht -> new ArrayList<>()).add(currentCombo);
@@ -381,19 +391,20 @@ public class SEStats {
 			}
 		}
 		Map<Integer, Integer> winningsCounter = new TreeMap<>();
+		StringBuffer reportDetail = new StringBuffer();
 		for (Map.Entry<Date, Map<Integer, List<List<Integer>>>> winningCombosInfo : winningsCombos.entrySet()) {
-			System.out.println(defaultDateFmt.format(winningCombosInfo.getKey()) + ":");
+			reportDetail.append(defaultDateFmt.format(winningCombosInfo.getKey()) + ":");
 			for (Map.Entry<Integer, List<List<Integer>>> winningCombos : winningCombosInfo.getValue().entrySet()) {
-				System.out.println("\t" + toLabel(winningCombos.getKey()) + ":");
+				reportDetail.append("\t" + toLabel(winningCombos.getKey()) + ":");
 				for (List<Integer> combo : winningCombos.getValue()) {
 					Integer counter = winningsCounter.computeIfAbsent(winningCombos.getKey(), key -> 0);
 					winningsCounter.put(winningCombos.getKey(), ++counter);
-					System.out.println("\t\t" + ComboHandler.toString(combo));
+					reportDetail.append("\t\t" + ComboHandler.toString(combo));
 				}
 			}
-			System.out.println();
 		}
-		System.out.println("\n\nRisultati del sistema (" + system.size() +" combinazioni) dal " + defaultDateFmt.format(allWinningCombosReversed.get(0).getKey()) + ":\n");
+		StringBuffer report = new StringBuffer();
+		report.append("Risultati del sistema (" + systemSize +" combinazioni) dal " + defaultDateFmt.format(allWinningCombosReversed.get(0).getKey()) + ":\n");
 		Integer returns = 0;
 		for (Map.Entry<Integer, Integer> winningInfo : winningsCounter.entrySet()) {
 			Integer type = winningInfo.getKey();
@@ -405,11 +416,14 @@ public class SEStats {
 							type == 5 ? 50000 * winningInfo.getValue() :
 								type == 6 ? 1000000 * winningInfo.getValue(): 0;
 
-			System.out.println("\t" + label + rightAlignedString(integerFormat.format(winningInfo.getValue()), 22 - label.length()));
+			report.append("\t" + label + rightAlignedString(integerFormat.format(winningInfo.getValue()), 22 - label.length()));
 		}
-		System.out.println("\n\tCosto:" + rightAlignedString(integerFormat.format(allWinningCombosReversed.size() * system.size()), 15) + "€");
-		System.out.println("\tRitorno:" + rightAlignedString(integerFormat.format(returns), 13) + "€");
-		return winningsCombos;
+		report.append("\n\tCosto:" + rightAlignedString(integerFormat.format(allWinningCombosReversed.size() * systemSize), 15) + "€");
+		report.append("\tRitorno:" + rightAlignedString(integerFormat.format(returns), 13) + "€");
+		data.put("winningCombos", winningsCombos);
+		data.put("report", report.toString());
+		data.put("report.detail", reportDetail.toString());
+		return data;
 	}
 
 	private String rightAlignedString(String value, int emptySpacesCount) {

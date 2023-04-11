@@ -1,5 +1,6 @@
 package org.rg.game.lottery.engine;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,6 +42,8 @@ public interface Storage extends AutoCloseable {
 	default void close() {
 
 	}
+
+	public Iterator<List<Integer>> iterator();
 
 	void delete();
 }

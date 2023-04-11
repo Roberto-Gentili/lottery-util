@@ -334,4 +334,12 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		return "1 -> 90";
 	}
 
+	@Override
+	protected void checkQuality(Storage storage) {
+		storage.addLine(
+			(String)SEStats.get(getExtractionArchiveStartDate())
+			.checkQuality(storage::iterator).get("report.detail")
+		);
+	}
+
 }

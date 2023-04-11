@@ -107,4 +107,9 @@ public class MDLotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	protected String getDefaultNumberRange() {
 		return "1 -> 55";
 	}
+
+	@Override
+	protected void checkQuality(Storage storage) {
+
+	}
 }

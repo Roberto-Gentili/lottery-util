@@ -55,7 +55,7 @@ public class QualityChecker {
 				}
 				system.add(currentCombo);
 			}
-			SEStats.get("02/07/2009").checkQuality(system);
+			SEStats.get("02/07/2009").checkQuality(system::iterator);
 		} catch (Throwable exc) {
 			exc.printStackTrace();
 		}

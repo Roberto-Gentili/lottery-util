@@ -1,6 +1,7 @@
 package org.rg.game.lottery.engine;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class MemoryStorage implements Storage {
@@ -70,6 +71,27 @@ public class MemoryStorage implements Storage {
 	public void delete() {
 		combos.clear();
 		output = "";
+	}
+
+	@Override
+	public Iterator<List<Integer>> iterator() {
+		return new Iterator<List<Integer>>() {
+			int currentIndex = 0;
+			@Override
+			public List<Integer> next() {
+				return combos.get(currentIndex++);
+			}
+
+			@Override
+			public boolean hasNext() {
+				try {
+					combos.get(currentIndex);
+					return true;
+				} catch (IndexOutOfBoundsException exc) {
+					return false;
+				}
+			}
+		};
 	}
 
 }

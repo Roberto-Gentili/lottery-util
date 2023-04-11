@@ -439,6 +439,9 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 					chooseRandom--;
 				}
 			}
+
+			checkQuality(storageRef);
+
 			String text = "\nMr. Random suggerisce " + (shouldBePlayedAbsolutely? "assolutamente " : "") + "di " + (shouldBePlayed? "giocare" : "non giocare") + " il sistema per questo concorso";
 			storage.addLine(text);
 			if (avoidMode == 1 || avoidMode == 2) {
@@ -453,6 +456,8 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 			}
 		}
 	}
+
+	protected abstract void checkQuality(Storage storageRef);
 
 	private List<Integer> getNextRandomCombo(
 		AtomicReference<Iterator<List<Integer>>> randomCombosIteratorWrapper,

@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class PersistentStorage implements Storage {
@@ -90,6 +91,22 @@ public class PersistentStorage implements Storage {
 			throw new RuntimeException(exc);
 		}
 		return null;
+	}
+
+	@Override
+	public Iterator<List<Integer>> iterator() {
+		return new Iterator<List<Integer>>() {
+			int currentIndex = 0;
+			@Override
+			public List<Integer> next() {
+				return getCombo(currentIndex++);
+			}
+
+			@Override
+			public boolean hasNext() {
+				return getCombo(currentIndex) != null;
+			}
+		};
 	}
 
 	@Override
