@@ -390,26 +390,28 @@ public class SEStats {
 				winningsCombosData.put(winningComboInfo.getKey(), winningCombosForExtraction);
 			}
 		}
+		data.put("winningCombos", winningsCombosData);
 		Map<Integer, Integer> winningsCounter = new TreeMap<>();
-		StringBuffer reportDetail = new StringBuffer();
+		StringBuffer report = new StringBuffer("Risultati storici del sistema (" + systemSize +" combinazioni) dal " + defaultDateFmt.format(allWinningCombosReversed.get(0).getKey()) + ":\n");
 		Iterator<Map.Entry<Date, Map<Integer, List<List<Integer>>>>> winningsCombosDataItr = winningsCombosData.entrySet().iterator();
 		while (winningsCombosDataItr.hasNext()) {
 			Map.Entry<Date, Map<Integer, List<List<Integer>>>> winningCombosInfo = winningsCombosDataItr.next();
-			reportDetail.append(defaultDateFmt.format(winningCombosInfo.getKey()) + ":\n");
+			report.append("\t" + defaultDateFmt.format(winningCombosInfo.getKey()) + ":\n");
 			for (Map.Entry<Integer, List<List<Integer>>> winningCombos : winningCombosInfo.getValue().entrySet()) {
-				reportDetail.append("\t" + toLabel(winningCombos.getKey()) + ":\n");
+				report.append("\t\t" + toLabel(winningCombos.getKey()) + ":\n");
 				for (List<Integer> combo : winningCombos.getValue()) {
 					Integer counter = winningsCounter.computeIfAbsent(winningCombos.getKey(), key -> 0);
 					winningsCounter.put(winningCombos.getKey(), ++counter);
-					reportDetail.append("\t\t" + ComboHandler.toString(combo) + "\n");
+					report.append("\t\t\t" + ComboHandler.toString(combo) + "\n");
 				}
 			}
 			if (winningsCombosDataItr.hasNext()) {
-				reportDetail.append("\n");
+				report.append("\n");
 			}
 		}
-		StringBuffer report = new StringBuffer();
-		report.append("Risultati del sistema (" + systemSize +" combinazioni) dal " + defaultDateFmt.format(allWinningCombosReversed.get(0).getKey()) + ":\n");
+		data.put("report.detail", report.toString());
+		report = new StringBuffer("");
+		report.append("Riepilogo risultati storici del sistema (" + systemSize +" combinazioni) dal " + defaultDateFmt.format(allWinningCombosReversed.get(0).getKey()) + ":\n");
 		Integer returns = 0;
 		for (Map.Entry<Integer, Integer> winningInfo : winningsCounter.entrySet()) {
 			Integer type = winningInfo.getKey();
@@ -425,9 +427,7 @@ public class SEStats {
 		}
 		report.append("\n\tCosto:" + rightAlignedString(integerFormat.format(allWinningCombosReversed.size() * systemSize), 15) + "€\n");
 		report.append("\tRitorno:" + rightAlignedString(integerFormat.format(returns), 13) + "€\n");
-		data.put("winningCombos", winningsCombosData);
-		data.put("report", report.toString());
-		data.put("report.detail", reportDetail.toString());
+		data.put("report.summary", report.toString());
 		return data;
 	}
 
