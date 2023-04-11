@@ -114,10 +114,14 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 				return new BoundedIterator(SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberRank(), leftBound, rightBound);
 			} else if (NumberProcessor.MOST_EXTRACTED_COUPLE_KEY.equals(generatorType)) {
 				return new BoundedIterator(SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberFromMostExtractedCoupleRank(), leftBound, rightBound);
+			} else if (NumberProcessor.MOST_EXTRACTED_TRIPLE_KEY.equals(generatorType)) {
+				return new BoundedIterator(SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberFromMostExtractedTripleRank(), leftBound, rightBound);
 			} else if (NumberProcessor.LESS_EXTRACTED_KEY.equals(generatorType)) {
 				return new BoundedIterator(SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberRankReversed(), leftBound, rightBound);
 			} else if (NumberProcessor.LESS_EXTRACTED_COUPLE_KEY.equals(generatorType)) {
 				return new BoundedIterator(SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberFromMostExtractedCoupleRankReversed(), leftBound, rightBound);
+			} else if (NumberProcessor.LESS_EXTRACTED_TRIPLE_KEY.equals(generatorType)) {
+				return new BoundedIterator(SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberFromMostExtractedTripleRankReversed(), leftBound, rightBound);
 			} else if (NumberProcessor.NEAREST_FROM_RECORD_ABSENCE_PERCENTAGE_KEY.equals(generatorType)) {
 				return new BoundedIterator(SEStats.get(getExtractionArchiveStartDate()).getDistanceFromAbsenceRecordPercentageRankReversed(), leftBound, rightBound);
 			}

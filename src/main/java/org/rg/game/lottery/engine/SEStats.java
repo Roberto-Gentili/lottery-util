@@ -258,6 +258,14 @@ public class SEStats {
 		return toReversed(getExtractedNumberFromMostExtractedCoupleRank());
 	}
 
+	public List<Integer> getExtractedNumberFromMostExtractedTripleRank() {
+		return extractedNumberCountersFromMostExtractedTriple.stream().map(entry -> entry.getKey()).collect(Collectors.toList());
+	}
+
+	public List<Integer> getExtractedNumberFromMostExtractedTripleRankReversed() {
+		return toReversed(getExtractedNumberFromMostExtractedTripleRank());
+	}
+
 	public List<Integer> getMostAbsentNumbersRank() {
 		return counterOfAbsencesFromCompetitions.stream().map(entry -> Integer.parseInt(entry.getKey())).collect(Collectors.toList());
 	}
