@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -52,6 +53,7 @@ public class SEStats {
 	private Collection<DataLoader> dataLoaders;
 	private Collection<DataStorer> dataStorers;
 
+	protected DecimalFormat integerFormat = new DecimalFormat( "#,##0" );
 	private final DateFormat dateFmt = new SimpleDateFormat("yyyy dd MMMM", Locale.ITALY);
 	private final DateFormat defaultDateFmt = new SimpleDateFormat("dd/MM/yyyy");
 	private final DateFormat defaultDateFmtForFile = new SimpleDateFormat("yyyyMMdd");
@@ -378,17 +380,40 @@ public class SEStats {
 				winningsCombos.put(winningComboInfo.getKey(), winningCombosForExtraction);
 			}
 		}
+		Map<Integer, Integer> winningsCounter = new TreeMap<>();
 		for (Map.Entry<Date, Map<Integer, List<List<Integer>>>> winningCombosInfo : winningsCombos.entrySet()) {
 			System.out.println(defaultDateFmt.format(winningCombosInfo.getKey()) + ":");
 			for (Map.Entry<Integer, List<List<Integer>>> winningCombos : winningCombosInfo.getValue().entrySet()) {
-				System.out.println("\t" + toLabel(winningCombos.getKey()) + ":\n");
+				System.out.println("\t" + toLabel(winningCombos.getKey()) + ":");
 				for (List<Integer> combo : winningCombos.getValue()) {
+					Integer counter = winningsCounter.computeIfAbsent(winningCombos.getKey(), key -> 0);
+					winningsCounter.put(winningCombos.getKey(), ++counter);
 					System.out.println("\t\t" + ComboHandler.toString(combo));
 				}
 			}
 			System.out.println();
 		}
+		System.out.println("\n\nRisultati del sistema (" + system.size() +" combinazioni) dal " + defaultDateFmt.format(allWinningCombosReversed.get(0).getKey()) + ":\n");
+		Integer returns = 0;
+		for (Map.Entry<Integer, Integer> winningInfo : winningsCounter.entrySet()) {
+			Integer type = winningInfo.getKey();
+			String label = toLabel(type);
+			returns +=
+				type == 2 ? 5 * winningInfo.getValue() :
+					type == 3 ? 20 * winningInfo.getValue() :
+						type == 4 ? 250 * winningInfo.getValue():
+							type == 5 ? 50000 * winningInfo.getValue() :
+								type == 6 ? 1000000 * winningInfo.getValue(): 0;
+
+			System.out.println("\t" + label + rightAlignedString(integerFormat.format(winningInfo.getValue()), 22 - label.length()));
+		}
+		System.out.println("\n\tCosto:" + rightAlignedString(integerFormat.format(allWinningCombosReversed.size() * system.size()), 15) + "€");
+		System.out.println("\tRitorno:" + rightAlignedString(integerFormat.format(returns), 13) + "€");
 		return winningsCombos;
+	}
+
+	private String rightAlignedString(String value, int emptySpacesCount) {
+		return String.format("%" + emptySpacesCount + "s", value);
 	}
 
 	private String toLabel(Integer hit) {
