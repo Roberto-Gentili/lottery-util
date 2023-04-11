@@ -58,7 +58,9 @@ public class SEStats {
 	private Date startDate;
 
 	private List<Map.Entry<String, Integer>> extractedNumberPairCounters;
+	private List<Map.Entry<String, Integer>> extractedNumberTripleCounters;
 	private List<Map.Entry<Integer, Integer>> extractedNumberCountersFromMostExtractedCouple;
+	private List<Map.Entry<Integer, Integer>> extractedNumberCountersFromMostExtractedTriple;
 	private List<Map.Entry<String, Integer>> extractedNumberCounters;
 	private List<Map.Entry<String, Integer>> counterOfAbsencesFromCompetitions;
 	private List<Map.Entry<String, Integer>> absencesRecordFromCompetitions;
@@ -134,8 +136,18 @@ public class SEStats {
 		return extractedNumberPairCountersMap;
 	}
 
+	private Map<String, Integer> buildExtractedNumberTripleCountersMap() {
+		ComboHandler comboHandler = new ComboHandler(IntStream.range(1, 91).boxed().collect(Collectors.toList()), 3);
+		Collection<List<Integer>> allTriples = comboHandler.find(IntStream.range(0, comboHandler.getSize()).boxed().collect(Collectors.toList()), true).values();
+		Map<String, Integer> extractedNumberPairCountersMap = allTriples.stream().map(couple ->
+			String.join("-", couple.stream().map(Object::toString).collect(Collectors.toList()))
+		).collect(Collectors.toMap(key -> key, value -> 0, (x, y) -> y, LinkedHashMap::new));
+		return extractedNumberPairCountersMap;
+	}
+
 	private void loadStats() {
 		Map<String, Integer> extractedNumberPairCountersMap = buildExtractedNumberPairCountersMap();
+		Map<String, Integer> extractedNumberTripleCountersMap = buildExtractedNumberTripleCountersMap();
 		Map<String, Integer> extractedNumberCountersMap = new LinkedHashMap<>();
 		Map<String, Integer> counterOfAbsencesFromCompetitionsMap = new LinkedHashMap<>();
 		Map<String, Integer> absencesRecordFromCompetitionsMap = new LinkedHashMap<>();
@@ -145,15 +157,8 @@ public class SEStats {
 				Integer counter = extractedNumberCountersMap.computeIfAbsent(number.toString(), key -> 0);
 				extractedNumberCountersMap.put(number.toString(), ++counter);
 			});
-			ComboHandler comboHandler = new ComboHandler(extractedCombo, 2);
-			Collection<List<Integer>> allCouples = comboHandler.find(IntStream.range(0, comboHandler.getSize())
-				.boxed().collect(Collectors.toList()), true).values();
-			List<String> extractedCoupleCounters = allCouples.stream().map(couple ->
-				String.join("-", couple.stream().map(Object::toString).collect(Collectors.toList()))
-			).collect(Collectors.toList());
-			for (String couple : extractedCoupleCounters) {
-				extractedNumberPairCountersMap.put(couple, extractedNumberPairCountersMap.get(couple) + 1);
-			}
+			analyzeMultipleNumber(extractedNumberPairCountersMap, extractedCombo, 2);
+			analyzeMultipleNumber(extractedNumberTripleCountersMap, extractedCombo, 3);
 			extractedCombo.stream().forEach(extractedNumber -> {
 				counterOfAbsencesFromCompetitionsMap.put(String.valueOf(extractedNumber), 0);
 			});
@@ -187,7 +192,7 @@ public class SEStats {
 					Integer.valueOf(itemOne.getKey()).compareTo(Integer.valueOf(itemTwo.getKey())) :
 					1;
 		};
-
+		extractedNumberTripleCounters = extractedNumberTripleCountersMap.entrySet().stream().sorted(integerComparator.reversed()).collect(Collectors.toList());
 		extractedNumberPairCounters = extractedNumberPairCountersMap.entrySet().stream().sorted(integerComparator.reversed()).collect(Collectors.toList());
 		//extractedNumberPairCounters.stream().forEach(entry -> System.out.println(String.join("\t", Arrays.asList(entry.getKey().split("-"))) + "\t" + entry.getValue()));
 		extractedNumberCounters = extractedNumberCountersMap.entrySet().stream().sorted(integerComparator.reversed()).collect(Collectors.toList());
@@ -201,6 +206,17 @@ public class SEStats {
 		});
 		extractedNumberCountersFromMostExtractedCouple =
 			extractedNumberFromMostExtractedCoupleMap.entrySet().stream().sorted(integerComparator.reversed()).collect(Collectors.toList());
+
+		Map<Integer, Integer> extractedNumberFromMostExtractedTripleMap = new LinkedHashMap<>();
+		extractedNumberTripleCounters.stream().forEach(entry -> {
+			for (Integer number : Arrays.stream(entry.getKey().split("-")).map(Integer::parseInt).collect(Collectors.toList())) {
+				Integer counter = extractedNumberFromMostExtractedTripleMap.computeIfAbsent(number, key -> 0);
+				extractedNumberFromMostExtractedTripleMap.put(number, counter + entry.getValue());
+			}
+		});
+		extractedNumberCountersFromMostExtractedTriple =
+				extractedNumberFromMostExtractedTripleMap.entrySet().stream().sorted(integerComparator.reversed()).collect(Collectors.toList());
+
 		counterOfAbsencesFromCompetitions =
 			counterOfAbsencesFromCompetitionsMap.entrySet().stream().sorted(doubleIntegerComparatorReversed).collect(Collectors.toList());
 		absencesRecordFromCompetitions =
@@ -216,6 +232,22 @@ public class SEStats {
 		distanceFromAbsenceRecord = distanceFromAbsenceRecordMap.entrySet().stream().sorted(integerComparator).collect(Collectors.toList());
 		distanceFromAbsenceRecordPercentage =
 			distanceFromAbsenceRecordPercentageMap.entrySet().stream().sorted(integerDoubleComparator).collect(Collectors.toList());
+	}
+
+	private void analyzeMultipleNumber(
+		Map<String, Integer> multipleNumbersCountersMap,
+		List<Integer> extractedCombo,
+		int size
+	) {
+		ComboHandler comboHandler = new ComboHandler(extractedCombo, size);
+		Collection<List<Integer>> allCouples = comboHandler.find(IntStream.range(0, comboHandler.getSize())
+			.boxed().collect(Collectors.toList()), true).values();
+		List<String> multiplceNumbersCounters = allCouples.stream().map(couple ->
+			String.join("-", couple.stream().map(Object::toString).collect(Collectors.toList()))
+		).collect(Collectors.toList());
+		for (String item : multiplceNumbersCounters) {
+			multipleNumbersCountersMap.put(item, multipleNumbersCountersMap.get(item) + 1);
+		}
 	}
 
 	public List<Integer> getExtractedNumberFromMostExtractedCoupleRank() {
@@ -276,6 +308,10 @@ public class SEStats {
 
 	public Integer getExtractedNumberCountersFromMostExtractedCoupleFor(Object number) {
 		return getStatFor(extractedNumberCountersFromMostExtractedCouple, number);
+	}
+
+	public Integer getExtractedNumberCountersFromMostExtractedTripleFor(Object number) {
+		return getStatFor(extractedNumberCountersFromMostExtractedTriple, number);
 	}
 
 	public Integer getDistanceFromAbsenceRecordFor(Object number) {
@@ -554,16 +590,18 @@ public class SEStats {
 				sheet.setColumnWidth(0, 2702);
 				sheet.setColumnWidth(1, 2929);
 				sheet.setColumnWidth(2, 3982);
-				sheet.setColumnWidth(3, 3697);
-				sheet.setColumnWidth(4, 3441);
-				sheet.setColumnWidth(5, 3953);
-				sheet.setColumnWidth(6, 4181);
+				sheet.setColumnWidth(3, 3982);
+				sheet.setColumnWidth(4, 3697);
+				sheet.setColumnWidth(5, 3441);
+				sheet.setColumnWidth(6, 3953);
+				sheet.setColumnWidth(7, 4181);
 				template.createHeader(
 					true,
 					Arrays.asList(
 						"Numero",
 						"Conteggio estrazioni",
 						"Conteggio presenze nelle coppie più estratte",
+						"Conteggio presenze nelle triplette più estratte",
 						"Conteggio assenze consecutive",
 						"Record di assenze consecutive",
 						"Distanza dal record di assenze consecutive",
@@ -575,6 +613,7 @@ public class SEStats {
 					template.addCell(Integer.parseInt(extractionData.getKey()), "0");
 					template.addCell(extractionData.getValue(), "0");
 					template.addCell(getExtractedNumberCountersFromMostExtractedCoupleFor(extractionData.getKey()), "0");
+					template.addCell(getExtractedNumberCountersFromMostExtractedTripleFor(extractionData.getKey()), "0");
 					template.addCell(getCounterOfAbsencesFromCompetitionsFor(extractionData.getKey()), "0");
 					template.addCell(getAbsenceRecordFromCompetitionsFor(extractionData.getKey()), "0");
 					template.addCell(getDistanceFromAbsenceRecordFor(extractionData.getKey()), "0");
@@ -583,8 +622,8 @@ public class SEStats {
 							distanceFromAbsenceRecordPerc /100
 					).setCellStyle(percentageNumberStyle);
 				}
-				template.addSheetConditionalFormatting(6, IndexedColors.YELLOW, ComparisonOperator.BETWEEN, "-20%", "-10%");
-				template.addSheetConditionalFormatting(6, IndexedColors.RED, ComparisonOperator.GT, "-10%");
+				template.addSheetConditionalFormatting(7, IndexedColors.YELLOW, ComparisonOperator.BETWEEN, "-20%", "-10%");
+				template.addSheetConditionalFormatting(7, IndexedColors.RED, ComparisonOperator.GT, "-10%");
 				template.setAutoFilter();
 
 				sheet = template.getOrCreateSheet("Coppie più estratte", true);
@@ -598,6 +637,21 @@ public class SEStats {
 					template.addCell(Integer.parseInt(numbers[0]), "0");
 					template.addCell(Integer.parseInt(numbers[1]), "0");
 					template.addCell(extractedNumberPairCounter.getValue(), "0");
+				}
+				template.setAutoFilter();
+				sheet = template.getOrCreateSheet("Triplette più estratte", true);
+				sheet.setColumnWidth(0, 3640);
+				sheet.setColumnWidth(1, 3640);
+				sheet.setColumnWidth(2, 3640);
+				sheet.setColumnWidth(3,	3584);
+				template.createHeader(true, Arrays.asList("1° numero", "2° numero", "3° numero", "Conteggio estrazioni")).setHeight((short)576);
+				for (Map.Entry<String, Integer> extractedNumberTripleCounter : extractedNumberTripleCounters) {
+					String[] numbers = extractedNumberTripleCounter.getKey().split("-");
+					template.addRow();
+					template.addCell(Integer.parseInt(numbers[0]), "0");
+					template.addCell(Integer.parseInt(numbers[1]), "0");
+					template.addCell(Integer.parseInt(numbers[2]), "0");
+					template.addCell(extractedNumberTripleCounter.getValue(), "0");
 				}
 				template.setAutoFilter();
 				sheet = template.getOrCreateSheet("Storico estrazioni", true);
