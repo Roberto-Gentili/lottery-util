@@ -35,7 +35,7 @@ public class ExpireDateUpdater {
 		//addUpdateInfo(computeIncrementationOfWeeks(4), "Pistella Maria Anna")
 		//addUpdateInfo(computeIncrementationOfWeeks(4), "Barella Roberta")
 		//addUpdateInfo(computeIncrementationOfWeeks(4), "Berni Valentina")
-		//addUpdateInfo(computeIncrementationOfDays(1), "all")
+		addUpdateInfo(computeIncrementationOfDays(1), "all")
 		//addUpdateInfo(computeIncrementationOfWeeks(4), "Carrazza Alessandro", "Liberati Claudio")
 		//addUpdateInfo(computeIncrementationOfWeeks(4), "Corinti Massimo")
 		//addUpdateInfo(computeIncrementationOfWeeks(4), "Oroni Paola")
@@ -85,33 +85,35 @@ public class ExpireDateUpdater {
 							}
 						}
 						Cell expiryCell = row.getCell(expiryColumnIndex);
-						Date expiryDate = expiryCell.getDateCellValue();
-						if (expiryDate != null) {
-							LocalDate expiryLocalDate = expiryDate.toInstant()
-							      .atZone(ZoneId.systemDefault())
-							      .toLocalDate();
-							LocalDate startExpiryDate = expiryLocalDate;
-							if (LocalDate.now().compareTo(expiryLocalDate) > 0) {
-								if (name.equalsIgnoreCase("all")) {
-									continue;
+						if (expiryCell != null) {
+							Date expiryDate = expiryCell.getDateCellValue();
+							if (expiryDate != null) {
+								LocalDate expiryLocalDate = expiryDate.toInstant()
+								      .atZone(ZoneId.systemDefault())
+								      .toLocalDate();
+								LocalDate startExpiryDate = expiryLocalDate;
+								if (LocalDate.now().compareTo(expiryLocalDate) > 0) {
+									if (name.equalsIgnoreCase("all")) {
+										continue;
+									}
+									expiryLocalDate = LocalDate.now();
 								}
-								expiryLocalDate = LocalDate.now();
+								if (updateInfo.getValue() > 0) {
+									for (int i = 0; i < updateInfo.getValue(); i++) {
+										expiryLocalDate = expiryLocalDate.plus(getIncrementDays(expiryLocalDate, true), ChronoUnit.DAYS);
+									}
+								} else {
+									for (int i = updateInfo.getValue(); i < 0; i++) {
+										expiryLocalDate = expiryLocalDate.minus(getIncrementDays(expiryLocalDate, false), ChronoUnit.DAYS);
+									}
+								}
+								boolean expireSoon = expiryLocalDate.minus(7, ChronoUnit.DAYS).compareTo(LocalDate.now()) <= 0;
+								System.out.println(
+									(expireSoon ? "*" : "") + row.getCell(nameColumnIndex).getStringCellValue() + (expireSoon ? "*" : "") +" da " + startExpiryDate.format(standardDatePattern) +
+									" a " + (expireSoon ? "*" : "") +expiryLocalDate.format(standardDatePattern) + (expireSoon ? "*" : "")
+								);
+								expiryCell.setCellValue(Date.from(expiryLocalDate.atStartOfDay().atZone(ZoneId.of("Europe/Rome")).toInstant()));
 							}
-							if (updateInfo.getValue() > 0) {
-								for (int i = 0; i < updateInfo.getValue(); i++) {
-									expiryLocalDate = expiryLocalDate.plus(getIncrementDays(expiryLocalDate, true), ChronoUnit.DAYS);
-								}
-							} else {
-								for (int i = updateInfo.getValue(); i < 0; i++) {
-									expiryLocalDate = expiryLocalDate.minus(getIncrementDays(expiryLocalDate, false), ChronoUnit.DAYS);
-								}
-							}
-							boolean expireSoon = expiryLocalDate.minus(7, ChronoUnit.DAYS).compareTo(LocalDate.now()) <= 0;
-							System.out.println(
-								(expireSoon ? "*" : "") + row.getCell(nameColumnIndex).getStringCellValue() + (expireSoon ? "*" : "") +" da " + startExpiryDate.format(standardDatePattern) +
-								" a " + (expireSoon ? "*" : "") +expiryLocalDate.format(standardDatePattern) + (expireSoon ? "*" : "")
-							);
-							expiryCell.setCellValue(Date.from(expiryLocalDate.atStartOfDay().atZone(ZoneId.of("Europe/Rome")).toInstant()));
 						}
 					}
 				}
