@@ -132,7 +132,7 @@ public class SEStats {
 
 	private Map<String, Integer> buildExtractedNumberPairCountersMap() {
 		ComboHandler comboHandler = new ComboHandler(IntStream.range(1, 91).boxed().collect(Collectors.toList()), 2);
-		Collection<List<Integer>> allCouples = comboHandler.find(IntStream.range(0, comboHandler.getSize()).boxed().collect(Collectors.toList()), true).values();
+		Collection<List<Integer>> allCouples = comboHandler.find(IntStream.range(0, comboHandler.getSizeAsInt()).boxed().collect(Collectors.toList()), true).values();
 		Map<String, Integer> extractedNumberPairCountersMap = allCouples.stream().map(couple ->
 			String.join("-", couple.stream().map(Object::toString).collect(Collectors.toList()))
 		).collect(Collectors.toMap(key -> key, value -> 0, (x, y) -> y, LinkedHashMap::new));
@@ -141,7 +141,7 @@ public class SEStats {
 
 	private Map<String, Integer> buildExtractedNumberTripleCountersMap() {
 		ComboHandler comboHandler = new ComboHandler(IntStream.range(1, 91).boxed().collect(Collectors.toList()), 3);
-		Collection<List<Integer>> allTriples = comboHandler.find(IntStream.range(0, comboHandler.getSize()).boxed().collect(Collectors.toList()), true).values();
+		Collection<List<Integer>> allTriples = comboHandler.find(IntStream.range(0, comboHandler.getSizeAsInt()).boxed().collect(Collectors.toList()), true).values();
 		Map<String, Integer> extractedNumberPairCountersMap = allTriples.stream().map(couple ->
 			String.join("-", couple.stream().map(Object::toString).collect(Collectors.toList()))
 		).collect(Collectors.toMap(key -> key, value -> 0, (x, y) -> y, LinkedHashMap::new));
@@ -243,7 +243,7 @@ public class SEStats {
 		int size
 	) {
 		ComboHandler comboHandler = new ComboHandler(extractedCombo, size);
-		Collection<List<Integer>> allCouples = comboHandler.find(IntStream.range(0, comboHandler.getSize())
+		Collection<List<Integer>> allCouples = comboHandler.find(IntStream.range(0, comboHandler.getSizeAsInt())
 			.boxed().collect(Collectors.toList()), true).values();
 		List<String> multiplceNumbersCounters = allCouples.stream().map(couple ->
 			String.join("-", couple.stream().map(Object::toString).collect(Collectors.toList()))

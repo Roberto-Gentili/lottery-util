@@ -1,5 +1,6 @@
 package org.rg.game.lottery.engine;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -15,52 +16,51 @@ import java.util.stream.Collectors;
 public class ComboHandler {
 
 	private List<Integer> numbers;
-	private int combinationCount;
-	private AtomicInteger combosSize;
+	private long combinationSize;
+	private Long size;
 
-	public ComboHandler(List<Integer> numbers, int combinationCount) {
+	public ComboHandler(List<Integer> numbers, long combinationSize) {
 		this.numbers = new ArrayList<>(numbers);
-		this.combinationCount = combinationCount;
+		this.combinationSize = combinationSize;
 	}
 
-	public int getSize() {
-		if (combosSize == null) {
-			combosSize = new AtomicInteger(0);
-			compute();
+	public Long getSize() {
+		if (size == null) {
+			size = sizeOfAsLong(numbers.size(), combinationSize);
 		}
-		return combosSize.get();
+		return size;
 	}
 
-	private int compute() {
-		compute(
-			numbers,
-			combosSize,
-			new int[combinationCount],
-			0,
-			numbers.size() - 1,
-			0
+	public static Long sizeOfAsLong(Number numbersCount, Number combinationCount) {
+		return sizeOf(BigInteger.valueOf(numbersCount.longValue()), BigInteger.valueOf(combinationCount.longValue())).longValue();
+	}
+
+	public static BigInteger sizeOf(BigInteger numbersCount, BigInteger combinationCount) {
+		return factorial(
+			numbersCount
+		).divide(
+			factorial(combinationCount)
+			.multiply(
+				factorial(numbersCount.subtract(combinationCount))
+			)
 		);
-		return combosSize.get();
 	}
 
-	private void compute(
-		List<Integer> numbers,
-		AtomicInteger combinationCounter,
-		int indexes[],
-		int start,
-		int end,
-		int index
-	) {
-	    if (index == indexes.length) {
-	    	combinationCounter.incrementAndGet();
-	    	/*if ((combinationCounter.get() % 1000000) == 0) {
-	    		System.out.println("Iterated " + combinationCounter.get() + " of combinations");
-    		}*/
-	    } else if (start <= end) {
-	        indexes[index] = start;
-	        compute(numbers, combinationCounter, indexes, start + 1, end, index + 1);
-	        compute(numbers, combinationCounter, indexes, start + 1, end, index);
-	    }
+	public static BigInteger factorial(BigInteger number) {
+		BigInteger factorial = BigInteger.ONE;
+		while (number.compareTo(BigInteger.ZERO) > 0) {
+			factorial = factorial.multiply(number);
+			number = number.subtract(BigInteger.ONE);
+		}
+		return factorial;
+	}
+
+	public int getSizeAsInt() {
+		return getSize().intValue();
+	}
+
+	public static BigInteger factorial(Number number) {
+		return factorial(BigInteger.valueOf(number.longValue()));
 	}
 
 	public Map<Integer, List<Integer>> find(Collection<Integer> indexes, boolean useSameCollectionInstance) {
@@ -72,7 +72,7 @@ public class ComboHandler {
 		find(
 			numbers,
 			new AtomicInteger(0),
-			new int[combinationCount],
+			new int[(int)combinationSize],
 			0,
 			numbers.size() - 1,
 			0,
@@ -120,10 +120,10 @@ public class ComboHandler {
 	    return collector;
 	}
 
-	public static String toExpression(Collection<Integer> comboSums) {
+	public static String toExpression(Collection<Integer> numbers) {
 		String expression = "";
 		Integer previousNumber = null;
-		List<Integer> comboSumList = new ArrayList<>(new TreeSet<>(comboSums));
+		List<Integer> comboSumList = new ArrayList<>(new TreeSet<>(numbers));
 		for (int i = 0; i < comboSumList.size(); i++) {
 			Integer sum = comboSumList.get(i);
 			if (previousNumber == null) {

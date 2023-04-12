@@ -296,7 +296,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 			storageRef = storage;
 			boolean equilibrate = equilibrateFlagSupplier.getAsBoolean();
 			AtomicReference<Iterator<List<Integer>>> randomCombosIteratorWrapper = new AtomicReference<>();
-			boolean[] alreadyComputed = new boolean[comboHandler.getSize()];
+			boolean[] alreadyComputed = new boolean[comboHandler.getSizeAsInt()];
 			AtomicLong randomCounter = new AtomicLong(0L);
 			AtomicInteger uniqueRandomCounter = new AtomicInteger(0);
 			Integer ratioAsInt = null;
@@ -409,7 +409,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 				"il sistema " + (equilibrate ? "bilanciato " + (remainder == 0 ? "perfetto " : "") +
 				"(occorrenza effettiva: " + decimalFormat.format((combinationComponents * storage.size()) / (double)numbers.size()) +
 				(numberOfCombosRequested == null ? ", richiesta: " + decimalFormat.format(occurrencesNumberRequested) : "") + ") " : "") +
-				"e' composto da " + integerFormat.format(storage.size()) + " combinazioni " + "scelte su " + integerFormat.format(comboHandler.getSize()) + " totali" +
+				"e' composto da " + integerFormat.format(storage.size()) + " combinazioni " + "scelte su " + integerFormat.format(comboHandler.getSizeAsInt()) + " totali" +
 					(discardedComboCounter.get() > 0 ? " (scartate: " + integerFormat.format(discardedComboCounter.get()) + ")": "")
 			);
 			boolean shouldBePlayed = random.nextBoolean();
@@ -509,7 +509,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		equilibrateFlagSupplier.getAsBoolean();
 		long browsedCombo = effectiveRandomCounter.get();
 		while (browsedCombo-- > 0) {
-			random.nextInt(comboHandler.getSize());
+			random.nextInt(comboHandler.getSizeAsInt());
 		}
 	}
 
@@ -527,7 +527,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	) {
 		List<Integer> effectiveRandomIndexes = new ArrayList<>();
 		Set<Integer> randomIndexesToBeProcessed = new HashSet<>();
-		Integer size = comboHandler.getSize();
+		Integer size = comboHandler.getSizeAsInt();
 		int randomCollSize = Math.min(size, 10_000_000);
 		while (effectiveRandomIndexes.size() < randomCollSize) {
 			Integer idx = random.nextInt(size);

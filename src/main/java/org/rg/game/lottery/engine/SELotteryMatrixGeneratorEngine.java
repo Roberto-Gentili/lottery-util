@@ -164,7 +164,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		int discardedFromIntegralSystem = 0;
 		int elaborationUnitSize = 25_000_000;
 		combinationFilter = CombinationFilterFactory.INSTANCE.parse(filterAsString);
-		for (int i = 0 ; i < comboHandler.getSize(); i++) {
+		for (int i = 0 ; i < comboHandler.getSizeAsInt(); i++) {
 			comboPartitionIndexes.add(i);
 			if (comboPartitionIndexes.size() == elaborationUnitSize) {
 				/*if (fineLog) {
@@ -186,8 +186,8 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 					discardedFromIntegralSystem++;
 				}
 			}
-			if (fineLog && comboHandler.getSize() >= elaborationUnitSize) {
-				System.out.println("Processed " + integerFormat.format(comboHandler.getSize()) + " of combo");
+			if (fineLog && comboHandler.getSizeAsInt() >= elaborationUnitSize) {
+				System.out.println("Processed " + integerFormat.format(comboHandler.getSizeAsInt()) + " of combo");
 			}
 		}
 		if (fineLog && discardedFromHistory > 0) {
@@ -196,10 +196,10 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		Map<String, Number> stats = new LinkedHashMap<>();
 		double discardedPercentageFromHistory = (discardedFromHistory * 100) / (double)allWinningCombos.size();
 		double maintainedPercentageFromHistory = 100d - discardedPercentageFromHistory;
-		double discardedFromIntegralSystemPercentage = (discardedFromIntegralSystem * 100) / (double)comboHandler.getSize();
-		double discardedFromHistoryEstimation = new BigDecimal(comboHandler.getSize()).multiply(new BigDecimal(discardedFromHistory))
+		double discardedFromIntegralSystemPercentage = (discardedFromIntegralSystem * 100) / (double)comboHandler.getSizeAsInt();
+		double discardedFromHistoryEstimation = new BigDecimal(comboHandler.getSizeAsInt()).multiply(new BigDecimal(discardedFromHistory))
 				.divide(new BigDecimal(allWinningCombos.size()), 2, RoundingMode.HALF_UP).doubleValue();
-		int maintainedFromHistoryEstimation = new BigDecimal(comboHandler.getSize()).multiply(new BigDecimal(allWinningCombos.size() - discardedFromHistory))
+		int maintainedFromHistoryEstimation = new BigDecimal(comboHandler.getSizeAsInt()).multiply(new BigDecimal(allWinningCombos.size() - discardedFromHistory))
 				.divide(new BigDecimal(allWinningCombos.size()), 2, RoundingMode.HALF_DOWN).intValue();
 		double effectiveness = (maintainedPercentageFromHistory + discardedFromIntegralSystemPercentage) / 2d;
 		/*double effectiveness = ((discardedFromIntegralSystem - discardedFromHistoryEstimation) * 100d) /
@@ -209,7 +209,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		System.out.println("Discarded winning combos percentage:" + rightAlignedString(decimalFormat.format(discardedPercentageFromHistory) + " %", 18));
 		System.out.println("Maintained winning combos percentage:" + rightAlignedString(decimalFormat.format(maintainedPercentageFromHistory) + " %", 17));
 		System.out.println("Estimated maintained winning combos:" + rightAlignedString(decimalFormat.format(maintainedFromHistoryEstimation), 16));
-		System.out.println("Integral system total combos:" + rightAlignedString(decimalFormat.format(comboHandler.getSize()), 23));
+		System.out.println("Integral system total combos:" + rightAlignedString(decimalFormat.format(comboHandler.getSizeAsInt()), 23));
 		System.out.println("Integral system discarded combos:" + rightAlignedString(decimalFormat.format(discardedFromIntegralSystem), 19));
 		System.out.println("Integral system discarded combos percentage:" + rightAlignedString(decimalFormat.format(discardedFromIntegralSystemPercentage) + " %", 10));
 		System.out.println("Effectiveness:" + rightAlignedString(decimalFormat.format(effectiveness) + " %", 40) +"\n\n");
@@ -218,7 +218,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		stats.put("discardedWinningCombosPercentage", discardedPercentageFromHistory);
 		stats.put("maintainedWinningCombosPercentage", maintainedPercentageFromHistory);
 		stats.put("estimatedMaintainedWinningCombos", maintainedFromHistoryEstimation);
-		stats.put("integralSystemTotalCombos", comboHandler.getSize());
+		stats.put("integralSystemTotalCombos", comboHandler.getSizeAsInt());
 		stats.put("integralSystemDiscardedCombos", discardedFromIntegralSystem);
 		stats.put("integralSystemDiscardedCombosPercentage", discardedFromIntegralSystemPercentage);
 		return stats;
