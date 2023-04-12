@@ -60,7 +60,6 @@ public class Verifier {
 				.stream().map(Integer::valueOf).collect(Collectors.toList());
 			connection.disconnect();
 		}
-		String sheetName = "Combinazioni " + competionName;
 		if (extractionDate == null) {
 			LocalDate startDate = LocalDate.now();
 			if (competionName.equals("Superenalotto")) {
@@ -76,10 +75,13 @@ public class Verifier {
 			}
 			extractionDate = formatter.format(startDate);
 		}
-		FileSystemItem mainFile = FileSystemItem.ofPath(PersistentStorage.buildWorkingPath() + File.separator + "Abbonamenti e altre informazioni.xlsx");
+		String extractionYear = extractionDate.split("\\/")[2];
+		String extractionMonth = extractionDate.split("\\/")[1];
+		String extractionDay = extractionDate.split("\\/")[0];
+		FileSystemItem mainFile = FileSystemItem.ofPath(PersistentStorage.buildWorkingPath() + File.separator + "["+ extractionYear +"] - Combinazioni " + competionName + ".xlsx");
 		try (InputStream srcFileInputStream = mainFile.toInputStream(); Workbook workbook = new XSSFWorkbook(srcFileInputStream);) {
-			Sheet sheet = workbook.getSheet(sheetName);
-			int offset = getCellIndex(sheet, standardDatePattern.parse(extractionDate));
+			Sheet sheet = workbook.getSheet(extractionMonth);
+			int offset = getCellIndex(sheet, extractionDay);
 			if (offset < 0) {
 				System.out.println("No combination to test for date " + extractionDate);
 				return;
@@ -178,6 +180,22 @@ public class Verifier {
 		while (cellIterator.hasNext()) {
 			Cell cell = cellIterator.next();
 			if (CellType.NUMERIC.equals(cell.getCellType()) && date.compareTo(cell.getDateCellValue()) == 0 ) {
+				return cell.getColumnIndex();
+			}
+		}
+		return -1;
+	}
+
+	private static int getCellIndex(Sheet sheet, String localDate) {
+		return getCellIndex(sheet, 0, localDate);
+	}
+
+	private static int getCellIndex(Sheet sheet, int headerIndex, String dayAsString) {
+		Row header = sheet.getRow(headerIndex);
+		Iterator<Cell> cellIterator = header.cellIterator();
+		while (cellIterator.hasNext()) {
+			Cell cell = cellIterator.next();
+			if (CellType.STRING.equals(cell.getCellType()) && dayAsString.equals(cell.getStringCellValue())) {
 				return cell.getColumnIndex();
 			}
 		}
