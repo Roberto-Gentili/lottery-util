@@ -59,7 +59,13 @@ public class NumberProcessor {
 		if (numbersAsString == null || numbersAsString.isEmpty()) {
 			return new ArrayList<>();
 		}
-		List<Integer> numbersToBeExcluded =  retrieveNumbersToBePlayed(context, numbersAsString, extractionDate, sorted);
+		List<Integer> numbersToBeExcluded = retrieveNumbers(
+			context,
+			numbersAsString, extractionDate, new ArrayList<>(),
+			numberToBeIncluded -> numberToBeExcluded -> number ->
+				(numberToBeIncluded.isEmpty() || numberToBeIncluded.contains(number)) && !numberToBeExcluded.contains(number) && numbersToBePlayed.contains(number),
+			sorted
+		);
 		for(Integer number : numbersToBeExcluded) {
 			numbersToBePlayed.remove(number);
 		}
