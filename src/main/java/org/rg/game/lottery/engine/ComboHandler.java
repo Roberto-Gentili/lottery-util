@@ -35,6 +35,13 @@ public class ComboHandler {
 		return sizeOf(BigInteger.valueOf(numbersCount.longValue()), BigInteger.valueOf(combinationCount.longValue())).longValue();
 	}
 
+	public static BigInteger sizeOf(Number numbersCount, Number combinationCount) {
+		return sizeOf(
+			BigInteger.valueOf(numbersCount.longValue()),
+			BigInteger.valueOf(combinationCount.longValue())
+		);
+	}
+
 	public static BigInteger sizeOf(BigInteger numbersCount, BigInteger combinationCount) {
 		return factorial(
 			numbersCount
