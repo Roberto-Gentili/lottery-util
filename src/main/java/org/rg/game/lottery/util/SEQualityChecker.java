@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.poi.ss.usermodel.Cell;
@@ -22,21 +23,24 @@ import org.burningwave.core.io.FileSystemItem;
 import org.rg.game.lottery.engine.PersistentStorage;
 import org.rg.game.lottery.engine.SEStats;
 
-public class QualityChecker {
+public class SEQualityChecker {
 
 	static SimpleDateFormat standardDatePattern = new SimpleDateFormat("dd/MM/yyyy");
 	static DateTimeFormatter formatter = DateTimeFormatter.ofPattern(standardDatePattern.toPattern());
 
 	public static void main(String[] args) throws IOException {
-		check("11/04/2023");
+		check("14/02/2023");
 	}
 
 	private static void check(String extractionDate) throws IOException {
-		FileSystemItem mainFile = FileSystemItem.ofPath(PersistentStorage.buildWorkingPath() + File.separator + "Abbonamenti e altre informazioni.xlsx");
+		String extractionYear = extractionDate.split("\\/")[2];
+		String extractionMonth = extractionDate.split("\\/")[1];
+		String extractionDay = extractionDate.split("\\/")[0];
+		FileSystemItem mainFile = FileSystemItem.ofPath(PersistentStorage.buildWorkingPath() + File.separator + "["+ extractionYear +"] - Combinazioni superenalotto.xlsx");
 		List<List<Integer>> system = new ArrayList<>();
 		try (InputStream srcFileInputStream = mainFile.toInputStream(); Workbook workbook = new XSSFWorkbook(srcFileInputStream);) {
-			Sheet sheet = workbook.getSheet("Combinazioni superenalotto");
-			int offset = getCellIndex(sheet, standardDatePattern.parse(extractionDate));
+			Sheet sheet = workbook.getSheet(extractionMonth);
+			int offset = getCellIndex(sheet, extractionDay);
 			if (offset < 0) {
 				System.out.println("No combination to test for date " + extractionDate);
 				return;
@@ -55,7 +59,9 @@ public class QualityChecker {
 				}
 				system.add(currentCombo);
 			}
-			SEStats.get("02/07/2009").checkQuality(system::iterator);
+			Map<String, Object> report = SEStats.get("02/07/2009").checkQuality(system::iterator);
+			System.out.println(report.get("report.detail"));
+			System.out.println(report.get("report.summary"));
 		} catch (Throwable exc) {
 			exc.printStackTrace();
 		}
@@ -111,6 +117,22 @@ public class QualityChecker {
 		while (cellIterator.hasNext()) {
 			Cell cell = cellIterator.next();
 			if (CellType.NUMERIC.equals(cell.getCellType()) && date.compareTo(cell.getDateCellValue()) == 0 ) {
+				return cell.getColumnIndex();
+			}
+		}
+		return -1;
+	}
+
+	private static int getCellIndex(Sheet sheet, String localDate) {
+		return getCellIndex(sheet, 0, localDate);
+	}
+
+	private static int getCellIndex(Sheet sheet, int headerIndex, String dayAsString) {
+		Row header = sheet.getRow(headerIndex);
+		Iterator<Cell> cellIterator = header.cellIterator();
+		while (cellIterator.hasNext()) {
+			Cell cell = cellIterator.next();
+			if (CellType.STRING.equals(cell.getCellType()) && dayAsString.equals(cell.getStringCellValue())) {
 				return cell.getColumnIndex();
 			}
 		}
