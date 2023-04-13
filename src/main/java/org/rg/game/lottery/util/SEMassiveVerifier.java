@@ -42,7 +42,7 @@ public class SEMassiveVerifier {
 
 	public static void main(String[] args) throws IOException {
 		check(
-			forDate("11/02/2023", "today", false)
+			forDate("14/02/2023", "today", false)
 		);
 	}
 
@@ -97,10 +97,18 @@ public class SEMassiveVerifier {
 						Row row = rowIterator.next();
 						List<Integer> currentCombo = new ArrayList<>();
 						for (int i = 0; i < 6; i++) {
-							Integer currentNumber = Integer.valueOf((int)row.getCell(offset + i).getNumericCellValue());
-							currentCombo.add(currentNumber);
+							Cell cell = row.getCell(offset + i);
+							try {
+								Integer currentNumber = Integer.valueOf((int)cell.getNumericCellValue());
+								currentCombo.add(currentNumber);
+							} catch (NullPointerException exc) {
+								if (cell == null) {
+									break;
+								}
+								throw exc;
+							}
 						}
-						if (currentCombo.get(0) == 0) {
+						if (currentCombo.isEmpty() || currentCombo.get(0) == 0) {
 							break;
 						}
 						system.add(currentCombo);
