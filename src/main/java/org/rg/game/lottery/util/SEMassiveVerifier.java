@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.format.TextStyle;
 import java.time.temporal.ChronoUnit;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -18,6 +19,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
@@ -72,6 +74,7 @@ public class SEMassiveVerifier {
 
 	private static void check(List<Map.Entry<LocalDate, Object>>... dateGroupsList) throws IOException {
 		Map<Integer,List<List<Integer>>> globalData = new LinkedHashMap<>();
+		Map<Integer,Map<String, Map<Integer, Integer>>> dataForTime = new LinkedHashMap<>();
 		for (List<Map.Entry<LocalDate, Object>> dateGroup: dateGroupsList) {
 			for (Map.Entry<LocalDate, Object> dateInfo : dateGroup) {
 				String extractionDate = formatter.format(dateInfo.getKey());
@@ -114,8 +117,12 @@ public class SEMassiveVerifier {
 						system.add(currentCombo);
 					}
 					System.out.println(
-						check(
-							globalData, extractionDate, system, SEStats.get("02/07/2009").getWinningComboOf(dateInfo.getKey())
+						checkCombo(
+							globalData,
+							dataForTime,
+							dateInfo.getKey(),
+							system,
+							SEStats.get("02/07/2009").getWinningComboOf(dateInfo.getKey())
 						)
 					);
 				} catch (Throwable exc) {
@@ -123,6 +130,17 @@ public class SEMassiveVerifier {
 				}
 			}
 		}
+		System.out.println("\nRisultati per tempo:");
+		dataForTime.forEach((year, dataForMonth) -> {
+			System.out.println("\t" + year + ":");
+			dataForMonth.forEach((month, winningInfo) -> {
+				System.out.println("\t\t" + month + ":");
+				winningInfo.forEach((type, counter) -> {
+					String label = SEStats.toLabel(type);
+					System.out.println("\t\t\t" + label + ":" + SEStats.rightAlignedString(integerFormat.format(counter), 21 - label.length()));
+				});
+			});
+		});
 		System.out.println("\nRisultati globali:");
 		globalData.forEach((key, combos) -> {
 			String label = SEStats.toLabel(key);
@@ -130,16 +148,18 @@ public class SEMassiveVerifier {
 		});
 	}
 
-	private static String check(
+	private static String checkCombo(
 		Map<Integer,List<List<Integer>>> globalData,
-		String extractionDate, List<List<Integer>> combosToBeChecked, List<Integer> winningCombo
+		Map<Integer, Map<String, Map<Integer, Integer>>> dataForTime,
+		LocalDate extractionDate,
+		List<List<Integer>> combosToBeChecked,
+		List<Integer> winningCombo
 	) {
 		Map<Integer,List<List<Integer>>> winningCombos = new TreeMap<>();
 		Collection<Integer> hitNumbers = new LinkedHashSet<>();
 		for (List<Integer> currentCombo : combosToBeChecked) {
 			Integer hit = 0;
 			for (Integer currentNumber : currentCombo) {
-
 				if (winningCombo.contains(currentNumber)) {
 					hitNumbers.add(currentNumber);
 					hit++;
@@ -147,6 +167,11 @@ public class SEMassiveVerifier {
 			}
 			if (hit > 1) {
 				winningCombos.computeIfAbsent(hit, ht -> new ArrayList<>()).add(currentCombo);
+				globalData.computeIfAbsent(hit, ht -> new ArrayList<>()).add(currentCombo);
+				Map<Integer, Integer> winningCounter = dataForTime.computeIfAbsent(extractionDate.getYear(), year -> new LinkedHashMap<>()).computeIfAbsent(
+					extractionDate.getMonth().getDisplayName(TextStyle.FULL, Locale.ITALY), monthLabel -> new LinkedHashMap<>()
+				);
+				winningCounter.put(hit, winningCounter.computeIfAbsent(hit, key -> Integer.valueOf(0)) + 1);
 				globalData.computeIfAbsent(hit, ht -> new ArrayList<>()).add(currentCombo);
 			}
 		}
