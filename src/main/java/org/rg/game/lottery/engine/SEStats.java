@@ -56,6 +56,7 @@ public class SEStats {
 	private Collection<DataLoader> dataLoaders;
 	private Collection<DataStorer> dataStorers;
 
+	protected DecimalFormat decimalFormat = new DecimalFormat( "#,##0.##" );
 	protected DecimalFormat integerFormat = new DecimalFormat( "#,##0" );
 	private final DateFormat dateFmt = new SimpleDateFormat("yyyy dd MMMM", Locale.ITALY);
 	private final DateFormat defaultDateFmt = new SimpleDateFormat("dd/MM/yyyy");
@@ -431,15 +432,16 @@ public class SEStats {
 			String label = toLabel(type);
 			returns +=
 				type == 2 ? 5 * winningInfo.getValue() :
-					type == 3 ? 20 * winningInfo.getValue() :
-						type == 4 ? 250 * winningInfo.getValue():
-							type == 5 ? 50000 * winningInfo.getValue() :
+					type == 3 ? 25 * winningInfo.getValue() :
+						type == 4 ? 300 * winningInfo.getValue():
+							type == 5 ? 32000 * winningInfo.getValue() :
 								type == 6 ? 1000000 * winningInfo.getValue(): 0;
 
 			report.append("\t" + label + ":" + rightAlignedString(integerFormat.format(winningInfo.getValue()), 21 - label.length()) + "\n");
 		}
-		report.append("\n\tCosto:" + rightAlignedString(integerFormat.format(allWinningCombosReversed.size() * systemSize), 15) + "€\n");
-		report.append("\tRitorno:" + rightAlignedString(integerFormat.format(returns), 13) + "€\n");
+		report.append("\n\tCosto:" + rightAlignedString(integerFormat.format(allWinningCombosReversed.size() * systemSize), 15) + "E\n");
+		report.append("\tRitorno:" + rightAlignedString(integerFormat.format(returns), 13) + "E\n");
+		report.append("\tRapporto:" + rightAlignedString(decimalFormat.format(((returns * 100d) / (allWinningCombosReversed.size() * systemSize)) - 100d), 12) + "%\n");
 		data.put("report.summary", report.toString());
 		return data;
 	}
