@@ -177,7 +177,7 @@ public class SEMassiveVerifier {
 		StringBuffer result = new StringBuffer();
 		if (!winningCombo.isEmpty()) {
 			if (!winningCombos.isEmpty()) {
-				result.append("Numeri estratti per il *superenalotto* del " + extractionDate +": " + toString(winningCombo, ", ", hitNumbers) + "\n");
+				result.append("Numeri estratti per il *superenalotto* del " + formatter.format(extractionDate) +": " + toString(winningCombo, ", ", hitNumbers) + "\n");
 				for (Map.Entry<Integer, List<List<Integer>>> combos: winningCombos.entrySet()) {
 					result.append("\t*Combinazioni con " + toLabel(combos.getKey()).toLowerCase() + "*:" + "\n");
 					for (List<Integer> combo : combos.getValue()) {
@@ -187,7 +187,7 @@ public class SEMassiveVerifier {
 					}
 				}
 			} else {
-				result.append("Nessuna vincita per il concorso del " + extractionDate + "\n");
+				result.append("Nessuna vincita per il concorso del " + formatter.format(extractionDate) + "\n");
 			}
 		}
 		return result.toString();
