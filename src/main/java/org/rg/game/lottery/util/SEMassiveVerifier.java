@@ -83,12 +83,12 @@ public class SEMassiveVerifier {
 				try (InputStream srcFileInputStream = mainFile.toInputStream(); Workbook workbook = new XSSFWorkbook(srcFileInputStream);) {
 					Sheet sheet = workbook.getSheet(extractionMonth);
 					if (sheet == null) {
-						System.out.println("No sheet to test for date " + extractionMonth);
+						System.out.println("Nessun foglio da verificare per il mese " + extractionMonth);
 						continue;
 					}
 					int offset = getCellIndex(sheet, extractionDay);
 					if (offset < 0) {
-						System.out.println("No combination to test for date " + extractionDate);
+						System.out.println("Nessuna combinazione da verificare per la data " + extractionDate + "\n");
 						continue;
 					}
 					Iterator<Row> rowIterator = sheet.rowIterator();
@@ -153,7 +153,7 @@ public class SEMassiveVerifier {
 		StringBuffer result = new StringBuffer();
 		if (!winningCombo.isEmpty()) {
 			if (!winningCombos.isEmpty()) {
-				result.append("\n\nNumeri estratti per il *superenalotto* del " + extractionDate +": " + toString(winningCombo, ", ", hitNumbers) + "\n");
+				result.append("Numeri estratti per il *superenalotto* del " + extractionDate +": " + toString(winningCombo, ", ", hitNumbers) + "\n");
 				for (Map.Entry<Integer, List<List<Integer>>> combos: winningCombos.entrySet()) {
 					result.append("\t*Combinazioni con " + toLabel(combos.getKey()).toLowerCase() + "*:" + "\n");
 					for (List<Integer> combo : combos.getValue()) {
@@ -163,7 +163,7 @@ public class SEMassiveVerifier {
 					}
 				}
 			} else {
-				result.append("Nessuna vincita per il superenalotto del " + extractionDate + "\n");
+				result.append("Nessuna vincita per il concorso del " + extractionDate + "\n");
 			}
 		}
 		return result.toString();
