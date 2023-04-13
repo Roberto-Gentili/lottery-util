@@ -8,6 +8,8 @@ import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -336,6 +338,17 @@ public class SEStats {
 	public Map<Date, List<Integer>> getAllWinningCombos() {
 		return allWinningCombos;
 	}
+
+	public List<Integer> getWinningComboOf(Date date) {
+		return allWinningCombos.entrySet().stream().filter(entry ->
+			defaultDateFmt.format(entry.getKey()).equals(defaultDateFmt.format(date))
+		).map(Map.Entry::getValue).findAny().orElseGet(() -> null);
+	}
+
+	public List<Integer> getWinningComboOf(LocalDate date) {
+		return getWinningComboOf(Date.from(date.atStartOfDay(ZoneId.of("Europe/Rome")).toInstant()));
+	}
+
 
 	private <N extends Number> List<N> toReversed(List<N> source) {
 		List<N> reversed = new ArrayList<>(source);
