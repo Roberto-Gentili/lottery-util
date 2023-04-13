@@ -448,7 +448,7 @@ public class SEStats {
 		return String.format("%" + emptySpacesCount + "s", value);
 	}
 
-	private String toLabel(Integer hit) {
+	public static String toLabel(Integer hit) {
 		if (hit == 2) {
 			return "Ambo";
 		}

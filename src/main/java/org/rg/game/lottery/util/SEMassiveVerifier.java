@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -68,6 +69,7 @@ public class SEMassiveVerifier {
 	}
 
 	private static void check(List<Map.Entry<LocalDate, Object>>... dateGroupsList) throws IOException {
+		Map<Integer,List<List<Integer>>> globalData = new LinkedHashMap<>();
 		for (List<Map.Entry<LocalDate, Object>> dateGroup: dateGroupsList) {
 			for (Map.Entry<LocalDate, Object> dateInfo : dateGroup) {
 				String extractionDate = formatter.format(dateInfo.getKey());
@@ -102,16 +104,25 @@ public class SEMassiveVerifier {
 						system.add(currentCombo);
 					}
 					System.out.println(
-						check(extractionDate, system, SEStats.get("02/07/2009").getWinningComboOf(dateInfo.getKey()))
+						check(
+							globalData, extractionDate, system, SEStats.get("02/07/2009").getWinningComboOf(dateInfo.getKey())
+						)
 					);
 				} catch (Throwable exc) {
 					exc.printStackTrace();
 				}
 			}
 		}
+		System.out.println("\nRisultati globali:");
+		globalData.forEach((key, combos) ->
+			System.out.println("\t" + SEStats.toLabel(key) + ":\t" + combos.size())
+		);
 	}
 
-	private static String check(String extractionDate, List<List<Integer>> combosToBeChecked, List<Integer> winningCombo) {
+	private static String check(
+		Map<Integer,List<List<Integer>>> globalData,
+		String extractionDate, List<List<Integer>> combosToBeChecked, List<Integer> winningCombo
+	) {
 		Map<Integer,List<List<Integer>>> winningCombos = new TreeMap<>();
 		Collection<Integer> hitNumbers = new LinkedHashSet<>();
 		for (List<Integer> currentCombo : combosToBeChecked) {
@@ -125,6 +136,7 @@ public class SEMassiveVerifier {
 			}
 			if (hit > 1) {
 				winningCombos.computeIfAbsent(hit, ht -> new ArrayList<>()).add(currentCombo);
+				globalData.computeIfAbsent(hit, ht -> new ArrayList<>()).add(currentCombo);
 			}
 		}
 		StringBuffer result = new StringBuffer();
