@@ -167,7 +167,6 @@ public class SEMassiveVerifier {
 			}
 			if (hit > 1) {
 				winningCombos.computeIfAbsent(hit, ht -> new ArrayList<>()).add(currentCombo);
-				globalData.computeIfAbsent(hit, ht -> new ArrayList<>()).add(currentCombo);
 				Map<Integer, Integer> winningCounter = dataForTime.computeIfAbsent(extractionDate.getYear(), year -> new LinkedHashMap<>()).computeIfAbsent(
 					extractionDate.getMonth().getDisplayName(TextStyle.FULL, Locale.ITALY), monthLabel -> new LinkedHashMap<>()
 				);
