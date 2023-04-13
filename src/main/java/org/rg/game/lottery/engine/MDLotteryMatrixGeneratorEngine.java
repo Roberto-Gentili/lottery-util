@@ -27,7 +27,7 @@ public class MDLotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	@Override
-	protected LocalDate computeNextExtractionDate(LocalDate startDate, boolean incrementIfExpired) {
+	public LocalDate computeNextExtractionDate(LocalDate startDate, boolean incrementIfExpired) {
 		if (incrementIfExpired) {
 			while (LocalDateTime.now(ZoneId.of("Europe/Rome")).compareTo(
 				LocalDateTime.now(ZoneId.of("Europe/Rome")).with(startDate).withHour(18).withMinute(45).withSecond(0).withNano(0)

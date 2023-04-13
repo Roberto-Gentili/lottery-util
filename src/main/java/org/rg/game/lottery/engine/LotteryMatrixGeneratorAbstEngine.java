@@ -598,7 +598,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 
 	protected abstract Map<String, Object> adjustSeed(LocalDate extractionDate);
 
-	protected abstract LocalDate computeNextExtractionDate(LocalDate startDate, boolean incrementIfExpired);
+	public abstract LocalDate computeNextExtractionDate(LocalDate startDate, boolean incrementIfExpired);
 
 	protected abstract int getIncrementDays(LocalDate startDate);
 
