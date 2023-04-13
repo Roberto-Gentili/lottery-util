@@ -439,8 +439,8 @@ public class SEStats {
 
 			report.append("\t" + label + ":" + rightAlignedString(integerFormat.format(winningInfo.getValue()), 21 - label.length()) + "\n");
 		}
-		report.append("\n\tCosto:" + rightAlignedString(integerFormat.format(allWinningCombosReversed.size() * systemSize), 15) + "E\n");
-		report.append("\tRitorno:" + rightAlignedString(integerFormat.format(returns), 13) + "E\n");
+		report.append("\n\tCosto:" + rightAlignedString(integerFormat.format(allWinningCombosReversed.size() * systemSize), 15) + "€\n");
+		report.append("\tRitorno:" + rightAlignedString(integerFormat.format(returns), 13) + "€\n");
 		report.append("\tRapporto:" + rightAlignedString(decimalFormat.format(((returns * 100d) / (allWinningCombosReversed.size() * systemSize)) - 100d), 12) + "%\n");
 		data.put("report.summary", report.toString());
 		return data;
