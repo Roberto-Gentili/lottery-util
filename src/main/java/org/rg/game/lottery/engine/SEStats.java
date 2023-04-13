@@ -436,7 +436,7 @@ public class SEStats {
 							type == 5 ? 50000 * winningInfo.getValue() :
 								type == 6 ? 1000000 * winningInfo.getValue(): 0;
 
-			report.append("\t" + label + rightAlignedString(integerFormat.format(winningInfo.getValue()), 22 - label.length()) + "\n");
+			report.append("\t" + label + ":" + rightAlignedString(integerFormat.format(winningInfo.getValue()), 21 - label.length()) + "\n");
 		}
 		report.append("\n\tCosto:" + rightAlignedString(integerFormat.format(allWinningCombosReversed.size() * systemSize), 15) + "€\n");
 		report.append("\tRitorno:" + rightAlignedString(integerFormat.format(returns), 13) + "€\n");
@@ -444,7 +444,7 @@ public class SEStats {
 		return data;
 	}
 
-	private String rightAlignedString(String value, int emptySpacesCount) {
+	public static String rightAlignedString(String value, int emptySpacesCount) {
 		return String.format("%" + emptySpacesCount + "s", value);
 	}
 

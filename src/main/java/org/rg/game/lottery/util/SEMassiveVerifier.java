@@ -3,6 +3,7 @@ package org.rg.game.lottery.util;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -35,6 +36,7 @@ import org.rg.game.lottery.engine.SEStats;
 
 public class SEMassiveVerifier {
 
+	protected static DecimalFormat integerFormat = new DecimalFormat( "#,##0" );
 	static SimpleDateFormat standardDatePattern = new SimpleDateFormat("dd/MM/yyyy");
 	static DateTimeFormatter formatter = DateTimeFormatter.ofPattern(standardDatePattern.toPattern());
 
@@ -114,9 +116,10 @@ public class SEMassiveVerifier {
 			}
 		}
 		System.out.println("\nRisultati globali:");
-		globalData.forEach((key, combos) ->
-			System.out.println("\t" + SEStats.toLabel(key) + ":\t" + combos.size())
-		);
+		globalData.forEach((key, combos) -> {
+			String label = SEStats.toLabel(key);
+			System.out.println("\t" + label + ":" + SEStats.rightAlignedString(integerFormat.format(combos.size()), 21 - label.length()));
+		});
 	}
 
 	private static String check(
