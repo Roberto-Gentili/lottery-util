@@ -41,7 +41,7 @@ public class SEQualityChecker {
 		);
 	}
 
-	private static List<Map.Entry<LocalDate, Object>> forDate(
+	static List<Map.Entry<LocalDate, Object>> forDate(
 		String startDateAsString,
 		String endDateAsString,
 		Boolean printReportDetail
@@ -58,7 +58,7 @@ public class SEQualityChecker {
 		return dates;
 	}
 
-	private static LocalDate convert(String dateAsString) {
+	static LocalDate convert(String dateAsString) {
 		if (dateAsString.equals("today")) {
 			return LocalDateTime.now(ZoneId.of("Europe/Rome")).toLocalDate();
 		}
