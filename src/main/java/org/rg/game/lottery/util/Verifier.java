@@ -96,12 +96,19 @@ public class Verifier {
 				Integer hit = 0;
 				List<Integer> currentCombo = new ArrayList<>();
 				for (int i = 0; i < winningCombo.size(); i++) {
-					Integer currentNumber = Integer.valueOf((int)row.getCell(offset + i).getNumericCellValue());
+					Cell cell = row.getCell(offset + i);
+					if (cell == null) {
+						break;
+					}
+					Integer currentNumber = Integer.valueOf((int)cell.getNumericCellValue());
 					currentCombo.add(currentNumber);
 					if (winningCombo.contains(currentNumber)) {
 						hitNumbers.add(currentNumber);
 						hit++;
 					}
+				}
+				if (currentCombo.isEmpty()) {
+					break;
 				}
 				if (hit > 1) {
 					winningCombos.computeIfAbsent(hit, ht -> new ArrayList<>()).add(currentCombo);
