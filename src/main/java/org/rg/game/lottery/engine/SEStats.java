@@ -89,7 +89,7 @@ public class SEStats {
 			new FromExcelDataLoader()
 		);
 		dataStorers = Arrays.asList(
-			new ToExcelDataStorerV1(),
+			//new ToExcelDataStorerV1(),
 			new ToExcelDataStorerV2()
 		);
 		this.startDate = buildStartDate(startDate);
