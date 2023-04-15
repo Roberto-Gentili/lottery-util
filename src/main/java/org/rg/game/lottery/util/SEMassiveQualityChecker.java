@@ -134,10 +134,9 @@ public class SEMassiveQualityChecker {
 						system.add(currentCombo);
 					}
 					rowIterator = sheet.rowIterator();
-					rowIterator.next();
+					sheet.setColumnWidth(offset + 6, 5700);
 					Cell cell = rowIterator.next().getCell(offset + 6);
 					XSSFRichTextString results = new XSSFRichTextString();
-					//results.append(extractionDay)
 					checkCombo(
 						globalData,
 						dataForTime,
