@@ -68,7 +68,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	@Override
-	protected Map<String, Object> adjustSeed(LocalDate extractionDate) {
+	public Map<String, Object> adjustSeed(LocalDate extractionDate) {
 		Map<String, Object> competiotionInfo = getCompetitionInfo();
 		long seed = (long)competiotionInfo.get("startSeed");
 		LocalDate seedStartDate = (LocalDate)competiotionInfo.get("startDate");

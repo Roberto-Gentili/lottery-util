@@ -39,7 +39,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		numberProcessor = new NumberProcessor();
 	}
 
-	protected Random random;
+	public Random random;
 	protected boolean reportEnabled;
 	protected boolean reportDetailEnabled;
 
@@ -596,7 +596,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 
 	protected abstract List<LocalDate> forWeekOf(LocalDate dayOfWeek);
 
-	protected abstract Map<String, Object> adjustSeed(LocalDate extractionDate);
+	public abstract Map<String, Object> adjustSeed(LocalDate extractionDate);
 
 	public abstract LocalDate computeNextExtractionDate(LocalDate startDate, boolean incrementIfExpired);
 
