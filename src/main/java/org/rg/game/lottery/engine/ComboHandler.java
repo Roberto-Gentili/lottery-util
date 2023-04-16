@@ -55,9 +55,16 @@ public class ComboHandler {
 
 	public static BigInteger factorial(BigInteger number) {
 		BigInteger factorial = BigInteger.ONE;
+		BigInteger divisor = BigInteger.valueOf(100_000);
+		BigInteger initialValue = number;
 		while (number.compareTo(BigInteger.ZERO) > 0) {
 			factorial = factorial.multiply(number);
 			number = number.subtract(BigInteger.ONE);
+			BigInteger processedNumbers = initialValue.subtract(number);
+			if (processedNumbers.mod(divisor).compareTo(BigInteger.ZERO) == 0) {
+				System.out.println("Processed " + processedNumbers
+					.toString() + " numbers - Factorial:" + factorial.toString());
+			}
 		}
 		return factorial;
 	}
