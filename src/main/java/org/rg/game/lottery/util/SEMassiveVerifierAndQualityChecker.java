@@ -151,6 +151,11 @@ public class SEMassiveVerifierAndQualityChecker {
 				}
 			}
 		}
+		writeAndPrintData(globalData, dataForTime);
+	}
+
+	private static void writeAndPrintData(Map<Integer, List<List<Integer>>> globalData,
+			Map<Integer, Map<String, Map<Integer, Integer>>> dataForTime) {
 		System.out.println("\nRisultati per tempo:");
 		for (Map.Entry<Integer, Map<String, Map<Integer, Integer>>> yearAndDataForMonth : dataForTime.entrySet()) {
 			int year = yearAndDataForMonth.getKey();
@@ -198,8 +203,8 @@ public class SEMassiveVerifierAndQualityChecker {
 				}
 				for (Map.Entry<String, Map<Integer, Integer>> monthWinningInfo : dataForMonth.entrySet()) {
 					String month = monthWinningInfo.getKey();
-					Map<Integer, Integer> winningInfo = monthWinningInfo.getValue();
 					System.out.println("\t\t" + month + ":");
+					Map<Integer, Integer> winningInfo = monthWinningInfo.getValue();
 					Row row = rowIterator.hasNext() ? rowIterator.next() : sheet.createRow(summaryRowIndex.getAndIncrement());
 					if (row.getCell(0) == null) {
 						Cell labelCell = row.createCell(0);
@@ -211,13 +216,13 @@ public class SEMassiveVerifierAndQualityChecker {
 						Integer type = typeAndCounter.getKey();
 						Integer counter = typeAndCounter.getValue();
 						String label = SEStats.toLabel(type);
+						System.out.println("\t\t\t" + label + ":" + SEStats.rightAlignedString(Shared.integerFormat.format(counter), 21 - label.length()));
 						Cell valueCell = row.getCell(Shared.getCellIndex(sheet, label));
 						if (valueCell == null) {
 							valueCell = row.createCell(Shared.getCellIndex(sheet, label));
 							valueCell.setCellStyle(valueStyle);
 						}
 						valueCell.setCellValue(counter);
-						System.out.println("\t\t\t" + label + ":" + SEStats.rightAlignedString(Shared.integerFormat.format(counter), 21 - label.length()));
 					};
 
 				};
