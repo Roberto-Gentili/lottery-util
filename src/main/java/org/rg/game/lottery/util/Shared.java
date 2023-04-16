@@ -163,4 +163,8 @@ class Shared {
 		);
 	}
 
+	static String getLetterAtIndex(int index) {
+		return Character.valueOf("ABCDEFGHIJKLMNOPQRSTUVWXYZ".charAt(index)).toString();
+	}
+
 }

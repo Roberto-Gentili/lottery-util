@@ -17,7 +17,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -29,6 +28,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.burningwave.core.io.FileSystemItem;
@@ -163,7 +163,6 @@ public class SEMassiveVerifierAndQualityChecker {
 			System.out.println("\t" + year + ":");
 			FileSystemItem mainFile = Shared.getSystemsFile(year);
 			mainFile.reset();
-			AtomicInteger summaryRowIndex = new AtomicInteger(0);
 			try (InputStream srcFileInputStream = mainFile.toInputStream();
 				OutputStream destFileOutputStream =	new FileOutputStream(mainFile.getAbsolutePath());
 				Workbook workbook = new XSSFWorkbook(srcFileInputStream);
@@ -173,6 +172,7 @@ public class SEMassiveVerifierAndQualityChecker {
 				Font normalFont = null;
 				Font boldFont = null;
 				CellStyle valueStyle = null;
+				int rowIndex = 0;
 				Row header;
 				if (rowIterator.hasNext()) {
 					header = rowIterator.next();
@@ -182,7 +182,7 @@ public class SEMassiveVerifierAndQualityChecker {
 					normalFont = workbook.createFont();
 					normalFont.setBold(false);
 					sheet.createFreezePane(0, 1);
-					header =  sheet.createRow(summaryRowIndex.getAndIncrement());
+					header =  sheet.createRow(rowIndex);
 					CellStyle headerStyle = workbook.createCellStyle();
 					headerStyle.setFont(boldFont);
 					headerStyle.setAlignment(HorizontalAlignment.CENTER);
@@ -201,11 +201,12 @@ public class SEMassiveVerifierAndQualityChecker {
 					valueStyle.setFont(normalFont);
 					valueStyle.setAlignment(HorizontalAlignment.RIGHT);
 				}
+				rowIndex++;
 				for (Map.Entry<String, Map<Integer, Integer>> monthWinningInfo : dataForMonth.entrySet()) {
 					String month = monthWinningInfo.getKey();
 					System.out.println("\t\t" + month + ":");
 					Map<Integer, Integer> winningInfo = monthWinningInfo.getValue();
-					Row row = rowIterator.hasNext() ? rowIterator.next() : sheet.createRow(summaryRowIndex.getAndIncrement());
+					Row row = rowIterator.hasNext() ? rowIterator.next() : sheet.createRow(rowIndex);
 					if (row.getCell(0) == null) {
 						Cell labelCell = row.createCell(0);
 						labelCell.getCellStyle().setFont(boldFont);
@@ -216,16 +217,35 @@ public class SEMassiveVerifierAndQualityChecker {
 						Integer type = typeAndCounter.getKey();
 						Integer counter = typeAndCounter.getValue();
 						String label = SEStats.toLabel(type);
+						int labelIndex = Shared.getCellIndex(sheet, label);
 						System.out.println("\t\t\t" + label + ":" + SEStats.rightAlignedString(Shared.integerFormat.format(counter), 21 - label.length()));
-						Cell valueCell = row.getCell(Shared.getCellIndex(sheet, label));
+						Cell valueCell = row.getCell(labelIndex);
 						if (valueCell == null) {
-							valueCell = row.createCell(Shared.getCellIndex(sheet, label));
+							valueCell = row.createCell(labelIndex);
 							valueCell.setCellStyle(valueStyle);
 						}
 						valueCell.setCellValue(counter);
-					};
-
-				};
+						if (rowIndex == dataForMonth.entrySet().size()) {
+							row = sheet.getRow(rowIndex + 1) != null ?
+								sheet.getRow(rowIndex + 1) : sheet.createRow(rowIndex + 1);
+							if (row.getCell(0) == null) {
+								Cell labelCell = row.createCell(0);
+								labelCell.getCellStyle().setFont(boldFont);
+								labelCell.getCellStyle().setAlignment(HorizontalAlignment.LEFT);
+								labelCell.setCellValue("Totale");
+							}
+							valueCell = row.getCell(labelIndex);
+							if (valueCell == null) {
+								valueCell = row.createCell(labelIndex);
+								valueCell.setCellStyle(valueStyle);
+							}
+							String columnName = Shared.getLetterAtIndex(labelIndex);
+							valueCell.setCellFormula("SUM(" + columnName + "2:"+ columnName + (rowIndex + 1) +")");
+						}
+					}
+					rowIndex++;
+				}
+				XSSFFormulaEvaluator.evaluateAllFormulaCells(workbook);
 				workbook.write(destFileOutputStream);
 			} catch (Throwable exc) {
 				System.err.println("Unable to process file: " + exc.getMessage());
