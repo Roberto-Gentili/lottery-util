@@ -36,7 +36,7 @@ import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.SEStats;
 
-public class SEMassiveQualityChecker {
+public class SEMassiveVerifierAndQualityChecker {
 
 	static DateTimeFormatter formatter = DateTimeFormatter.ofPattern(Shared.standardDatePattern.toPattern());
 
