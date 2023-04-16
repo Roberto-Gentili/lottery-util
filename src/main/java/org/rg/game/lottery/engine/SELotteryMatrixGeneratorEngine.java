@@ -80,6 +80,8 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 			seed++;
 		}
 		random = new Random(seed);
+		comboIndexSupplier = comboIndexSelectorType.equals("random") ?
+			random::nextInt : null;
 		Map<String, Object> seedData = new LinkedHashMap<>();
 		seedData.put("seed", seed);
 		seedData.put("seedStartDate", seedStartDate);
@@ -264,6 +266,20 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 			}
 		}
 		return "in " + String.join(",", numbers) + ": " + groupOptions[1];
+	}
+
+	@Override
+	protected String processInExpression(String expression) {
+		String[] options = expression.replaceAll("\\s+","").split("inallWinningCombos");
+		if (options.length > 1) {
+			String[] groupOptions = options[1].split(":");
+			List<String> inClauses = new ArrayList<>();
+			for (List<Integer> winningCombo :SEStats.get(getExtractionArchiveStartDate()).getAllWinningCombos().values()) {
+				inClauses.add("in " + ComboHandler.toString(winningCombo, ",") + ":" + groupOptions[1]);
+			}
+			return "(" + String.join("|", inClauses) + ")";
+		}
+		return expression;
 	}
 
 	@Override

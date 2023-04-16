@@ -76,6 +76,8 @@ public class MDLotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 			seed++;
 		}
 		random = new Random(seed);
+		comboIndexSupplier = comboIndexSelectorType.equals("random") ?
+				random::nextInt : null;
 		Map<String, Object> seedData = new LinkedHashMap<>();
 		seedData.put("seed", seed);
 		seedData.put("seedStartDate", seedStartDate);

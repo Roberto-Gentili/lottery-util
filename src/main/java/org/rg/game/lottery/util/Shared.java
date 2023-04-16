@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -22,6 +23,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.burningwave.core.io.FileSystemItem;
+import org.rg.game.lottery.engine.ComboHandler;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.PersistentStorage;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
@@ -179,7 +181,7 @@ class Shared {
 	}
 
 	public static void main(String[] args) {
-		/*System.out.println(ComboHandler.sizeOf(ComboHandler.sizeOf(46, 6), 34));
+		/*System.out.println(ComboHandler.sizeOf(ComboHandler.sizeOf(46, 6), 34));*/
 		List<Integer> ourNumbers = Arrays.asList(
 			1,2,3,4,5,7,8,9,
 			10,11,12,13,14,16,17,19,
@@ -190,9 +192,34 @@ class Shared {
 			64,68,69,
 			75,77,79,
 			80,83,84,85,86,88,90
-		);*/
-
-
+		);
+		int count = 0;
+		List<List<Integer>> system = new ArrayList<>();
+		int bound = 4;
+		for (List<Integer> winningCombo : getSEStats().getAllWinningCombos().values()) {
+			int hit = 0;
+			winningCombo = new ArrayList<>(winningCombo);
+			Iterator<Integer> winningComboItr = winningCombo.iterator();
+			while (winningComboItr.hasNext()) {
+				Integer winningNumber = winningComboItr.next();
+				if (ourNumbers.contains(winningNumber)) {
+					++hit;
+				} else {
+					winningComboItr.remove();
+				}
+			}
+			if (hit == bound) {
+				system.add(winningCombo);
+				System.out.println(toString(winningCombo, "\t"));
+			}
+		}
+		SELotteryMatrixGeneratorEngine engine = new SELotteryMatrixGeneratorEngine();
+		engine.adjustSeed(LocalDate.now());
+		List<String> inClauses = new ArrayList<>();
+		for (List<Integer> winningCombo : system) {
+			inClauses.add("in " + ComboHandler.toString(winningCombo, ",") + ":" + bound + "," + 6);
+		}
+		System.out.println("(" + String.join("|", inClauses) + ")");
 	}
 
 }

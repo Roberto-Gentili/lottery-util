@@ -42,6 +42,8 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	public Random random;
 	protected boolean reportEnabled;
 	protected boolean reportDetailEnabled;
+	protected Function<Integer, Integer> comboIndexSupplier;
+	protected String comboIndexSelectorType;
 
 	protected DecimalFormat decimalFormat = new DecimalFormat( "#,##0.##" );
 	protected DecimalFormat integerFormat = new DecimalFormat( "#,##0" );
@@ -64,6 +66,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	public void setup(Properties config) {
 		Collection<LocalDate> extractionDates = new LinkedHashSet<>();
 		extractionArchiveStartDate = config.getProperty("competition.archive.start-date");
+		comboIndexSelectorType = config.getProperty("combination.selector", "random");
 		String extractionDatesAsString = config.getProperty("competition");
 		if (extractionDatesAsString == null || extractionDatesAsString.isEmpty()) {
 			extractionDates.add(LocalDate.now());
@@ -222,6 +225,17 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 				parameters ->
 					processMathExpression(expression)
 		);
+		combinationFilterPreProcessor.addSimpleExpressionPreprocessor(
+			expression ->
+				expression.contains("in"),
+			expression ->
+				parameters ->
+					processInExpression(expression)
+		);
+	}
+
+	protected String processInExpression(String expression) {
+		throw new UnsupportedOperationException("Expression is not supported: " + expression);
 	}
 
 	protected String processMathExpression(String expression) {
@@ -297,8 +311,8 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 			boolean equilibrate = equilibrateFlagSupplier.getAsBoolean();
 			AtomicReference<Iterator<List<Integer>>> randomCombosIteratorWrapper = new AtomicReference<>();
 			boolean[] alreadyComputed = new boolean[comboHandler.getSizeAsInt()];
-			AtomicLong randomCounter = new AtomicLong(0L);
-			AtomicInteger uniqueRandomCounter = new AtomicInteger(0);
+			AtomicLong indexGeneratorCallsCounter = new AtomicLong(0L);
+			AtomicInteger uniqueIndexCounter = new AtomicInteger(0);
 			Integer ratioAsInt = null;
 			Integer remainder = null;
 			try {
@@ -320,12 +334,12 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 						List<Integer> selectedCombo;
 						if (underRatioNumbers.size() < combinationComponents) {
 							do {
-								selectedCombo = getNextRandomCombo(
+								selectedCombo = getNextCombo(
 									randomCombosIteratorWrapper,
 									comboHandler,
 									alreadyComputed,
-									randomCounter,
-									uniqueRandomCounter,
+									indexGeneratorCallsCounter,
+									uniqueIndexCounter,
 									effectiveRandomCounter,
 									discardedComboCounter
 								);
@@ -335,12 +349,12 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 							}
 						} else {
 							do {
-								selectedCombo = getNextRandomCombo(
+								selectedCombo = getNextCombo(
 									randomCombosIteratorWrapper,
 									comboHandler,
 									alreadyComputed,
-									randomCounter,
-									uniqueRandomCounter,
+									indexGeneratorCallsCounter,
+									uniqueIndexCounter,
 									effectiveRandomCounter,
 									discardedComboCounter
 								);
@@ -363,12 +377,12 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 					List<Integer> selectedCombo;
 					for (int i = 0; i < numberOfCombos; i++) {
 						do {
-							selectedCombo = getNextRandomCombo(
+							selectedCombo = getNextCombo(
 								randomCombosIteratorWrapper,
 								comboHandler,
 								alreadyComputed,
-								randomCounter,
-								uniqueRandomCounter,
+								indexGeneratorCallsCounter,
+								uniqueIndexCounter,
 								effectiveRandomCounter,
 								discardedComboCounter
 							);
@@ -382,12 +396,12 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 					}
 					while (!numbersCloned.isEmpty()) {
 						do {
-							selectedCombo = getNextRandomCombo(
+							selectedCombo = getNextCombo(
 								randomCombosIteratorWrapper,
 								comboHandler,
 								alreadyComputed,
-								randomCounter,
-								uniqueRandomCounter,
+								indexGeneratorCallsCounter,
+								uniqueIndexCounter,
 								effectiveRandomCounter,
 								discardedComboCounter
 							);
@@ -475,23 +489,28 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 
 	protected abstract Map<String, Object> checkQuality(Storage storageRef);
 
-	private List<Integer> getNextRandomCombo(
-		AtomicReference<Iterator<List<Integer>>> randomCombosIteratorWrapper,
+	private List<Integer> getNextCombo(
+		AtomicReference<Iterator<List<Integer>>> combosIteratorWrapper,
 		ComboHandler comboHandler,
 		boolean[] alreadyComputed,
-		AtomicLong randomCounter,
-		AtomicInteger uniqueRandomCounter,
+		AtomicLong indexGeneratorCallsCounter,
+		AtomicInteger uniqueIndexCounter,
 		AtomicInteger effectiveRandomCounter,
 		AtomicLong discardedComboCounter
 	) {
-		Iterator<List<Integer>> randomCombosIterator = randomCombosIteratorWrapper.get();
+		Iterator<List<Integer>> combosIterator = combosIteratorWrapper.get();
 		List<Integer> selectedCombo;
-		if (randomCombosIterator != null && randomCombosIterator.hasNext()) {
-			selectedCombo = randomCombosIterator.next();
+		if (combosIterator != null && combosIterator.hasNext()) {
+			selectedCombo = combosIterator.next();
 		} else {
-			randomCombosIterator = getNextRandomCombos(comboHandler, alreadyComputed, randomCounter, uniqueRandomCounter).iterator();
-			randomCombosIteratorWrapper.set(randomCombosIterator);
-			selectedCombo = randomCombosIterator.next();
+			combosIterator = getNextCombos(
+				comboHandler,
+				alreadyComputed,
+				indexGeneratorCallsCounter,
+				uniqueIndexCounter
+			).iterator();
+			combosIteratorWrapper.set(combosIterator);
+			selectedCombo = combosIterator.next();
 		}
 		effectiveRandomCounter.incrementAndGet();
 		if (selectedCombo != null) {
@@ -519,23 +538,23 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		return data;
 	}
 
-	private List<List<Integer>> getNextRandomCombos(
+	private List<List<Integer>> getNextCombos(
 		ComboHandler comboHandler,
 		boolean[] alreadyComputed,
-		AtomicLong randomCounter,
-		AtomicInteger uniqueRandomCounter
+		AtomicLong indexGeneratorCallsCounter,
+		AtomicInteger uniqueIndexCounter
 	) {
 		List<Integer> effectiveRandomIndexes = new ArrayList<>();
 		Set<Integer> randomIndexesToBeProcessed = new HashSet<>();
 		Integer size = comboHandler.getSizeAsInt();
 		int randomCollSize = Math.min(size, 10_000_000);
 		while (effectiveRandomIndexes.size() < randomCollSize) {
-			Integer idx = random.nextInt(size);
-			randomCounter.incrementAndGet();
+			Integer idx = comboIndexSupplier.apply(size);
+			indexGeneratorCallsCounter.incrementAndGet();
 			if (!alreadyComputed[idx]) {
 				effectiveRandomIndexes.add(idx);
 				randomIndexesToBeProcessed.add(idx);
-				uniqueRandomCounter.incrementAndGet();
+				uniqueIndexCounter.incrementAndGet();
 				alreadyComputed[idx] = true;
 			} else {
 				effectiveRandomIndexes.add(null);
@@ -543,11 +562,11 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		}
 		System.out.println(
 			formatter.format(LocalDateTime.now()) +
-			" - " + integerFormat.format(uniqueRandomCounter.get()) + " unique numbers generated on " +
-			integerFormat.format(randomCounter.get()) + " random calls. " +
+			" - " + integerFormat.format(uniqueIndexCounter.get()) + " unique indexes generated on " +
+			integerFormat.format(indexGeneratorCallsCounter.get()) + " calls. " +
 			integerFormat.format(randomIndexesToBeProcessed.size()) + " indexes will be processed in the current iteration."
 		);
-		if (size <= uniqueRandomCounter.get() && randomIndexesToBeProcessed.isEmpty()) {
+		if (size <= uniqueIndexCounter.get() && randomIndexesToBeProcessed.isEmpty()) {
 			throw new AllRandomNumbersHaveBeenGeneratedException();
 		}
 		Map<Integer, List<Integer>> indexForCombos = comboHandler.find(randomIndexesToBeProcessed, true);
