@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -153,7 +152,9 @@ public class SEMassiveQualityChecker {
 			}
 		}
 		System.out.println("\nRisultati per tempo:");
-		dataForTime.forEach((year, dataForMonth) -> {
+		for (Map.Entry<Integer, Map<String, Map<Integer, Integer>>> yearAndDataForMonth : dataForTime.entrySet()) {
+			int year = yearAndDataForMonth.getKey();
+			Map<String, Map<Integer, Integer>> dataForMonth = yearAndDataForMonth.getValue();
 			System.out.println("\t" + year + ":");
 			FileSystemItem mainFile = Shared.getSystemsFile(year);
 			mainFile.reset();
@@ -164,21 +165,21 @@ public class SEMassiveQualityChecker {
 			) {
 				Sheet sheet = Shared.getSummarySheet(workbook);
 				Iterator<Row> rowIterator = sheet.rowIterator();
-				AtomicReference<Font> normalFont = new AtomicReference<>();
-				AtomicReference<Font> boldFont = new AtomicReference<>();
-				AtomicReference<CellStyle> valueStyle = new AtomicReference<>();
+				Font normalFont = null;
+				Font boldFont = null;
+				CellStyle valueStyle = null;
 				Row header;
 				if (rowIterator.hasNext()) {
 					header = rowIterator.next();
 				} else {
-					boldFont.set(workbook.createFont());
-					boldFont.get().setBold(true);
-					normalFont.set(workbook.createFont());
-					normalFont.get().setBold(false);
+					boldFont = workbook.createFont();
+					boldFont.setBold(true);
+					normalFont = workbook.createFont();
+					normalFont.setBold(false);
 					sheet.createFreezePane(0, 1);
 					header =  sheet.createRow(summaryRowIndex.getAndIncrement());
 					CellStyle headerStyle = workbook.createCellStyle();
-					headerStyle.setFont(boldFont.get());
+					headerStyle.setFont(boldFont);
 					headerStyle.setAlignment(HorizontalAlignment.CENTER);
 					headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 					headerStyle.setFillForegroundColor(IndexedColors.YELLOW.getIndex());
@@ -191,36 +192,40 @@ public class SEMassiveQualityChecker {
 						headerCell.setCellStyle(headerStyle);
 						headerCell.setCellValue(premiumLabel);
 					}
-					valueStyle.set(workbook.createCellStyle());
-					valueStyle.get().setFont(normalFont.get());
-					valueStyle.get().setAlignment(HorizontalAlignment.RIGHT);
+					valueStyle = workbook.createCellStyle();
+					valueStyle.setFont(normalFont);
+					valueStyle.setAlignment(HorizontalAlignment.RIGHT);
 				}
-				dataForMonth.forEach((month, winningInfo) -> {
+				for (Map.Entry<String, Map<Integer, Integer>> monthWinningInfo : dataForMonth.entrySet()) {
+					String month = monthWinningInfo.getKey();
+					Map<Integer, Integer> winningInfo = monthWinningInfo.getValue();
 					System.out.println("\t\t" + month + ":");
 					Row row = rowIterator.hasNext() ? rowIterator.next() : sheet.createRow(summaryRowIndex.getAndIncrement());
 					if (row.getCell(0) == null) {
 						Cell labelCell = row.createCell(0);
-						labelCell.getCellStyle().setFont(boldFont.get());
+						labelCell.getCellStyle().setFont(boldFont);
 						labelCell.getCellStyle().setAlignment(HorizontalAlignment.LEFT);
 						labelCell.setCellValue(month);
 					}
-					winningInfo.forEach((type, counter) -> {
+					for (Map.Entry<Integer, Integer> typeAndCounter : winningInfo.entrySet()) {
+						Integer type = typeAndCounter.getKey();
+						Integer counter = typeAndCounter.getValue();
 						String label = SEStats.toLabel(type);
 						Cell valueCell = row.getCell(Shared.getCellIndex(sheet, label));
 						if (valueCell == null) {
 							valueCell = row.createCell(Shared.getCellIndex(sheet, label));
-							valueCell.setCellStyle(valueStyle.get());
+							valueCell.setCellStyle(valueStyle);
 						}
 						valueCell.setCellValue(counter);
 						System.out.println("\t\t\t" + label + ":" + SEStats.rightAlignedString(Shared.integerFormat.format(counter), 21 - label.length()));
-					});
+					};
 
-				});
+				};
 				workbook.write(destFileOutputStream);
 			} catch (Throwable exc) {
 				System.err.println("Unable to process file: " + exc.getMessage());
 			}
-		});
+		};
 
 		System.out.println("\nRisultati globali:");
 		globalData.forEach((key, combos) -> {
