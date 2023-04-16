@@ -45,7 +45,7 @@ public class SEMassiveVerifierAndQualityChecker {
 
 	public static void main(String[] args) throws IOException {
 		check(
-			forDate("14/02/2023", "today", false)
+			forDate("14/02/2023", "nextExtraction", false)
 		);
 	}
 
@@ -138,7 +138,9 @@ public class SEMassiveVerifierAndQualityChecker {
 							boldFont
 						)
 					);
-					results.append("\n");
+					if (results.getString() != null) {
+						results.append("\n");
+					}
 					checkInHistory(
 						historyData,
 						dateInfo.getKey(),
@@ -147,7 +149,9 @@ public class SEMassiveVerifierAndQualityChecker {
 						results,
 						boldFont
 					);
-					cell.setCellValue(results);
+					if (results.getString() != null) {
+						cell.setCellValue(results);
+					}
 					workbook.write(destFileOutputStream);
 				} catch (Throwable exc) {
 					exc.printStackTrace();
@@ -283,6 +287,9 @@ public class SEMassiveVerifierAndQualityChecker {
 		XSSFRichTextString results,
 		XSSFFont boldFont
 	) {
+		if (winningCombo == null) {
+			return "Nessuna estrazione per il concorso del " + Shared.formatter.format(extractionDate) + "\n";
+		}
 		Map<Integer,List<List<Integer>>> winningCombos = new TreeMap<>();
 		Collection<Integer> hitNumbers = new LinkedHashSet<>();
 		for (List<Integer> currentCombo : combosToBeChecked) {

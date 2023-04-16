@@ -22,6 +22,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.burningwave.core.io.FileSystemItem;
+import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.PersistentStorage;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 
@@ -41,6 +42,10 @@ class Shared {
 	static LocalDate convert(String dateAsString) {
 		if (dateAsString.equals("today")) {
 			return LocalDateTime.now(ZoneId.of("Europe/Rome")).toLocalDate();
+		}
+		if (dateAsString.equals("nextExtraction")) {
+			LotteryMatrixGeneratorAbstEngine engine = new SELotteryMatrixGeneratorEngine();
+			return engine.computeNextExtractionDate(LocalDateTime.now(ZoneId.of("Europe/Rome")).toLocalDate(), false);
 		}
 		return LocalDate.parse(dateAsString, Shared.formatter);
 	}
