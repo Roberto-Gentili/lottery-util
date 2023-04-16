@@ -1,16 +1,13 @@
 package org.rg.game.lottery.util;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,20 +21,15 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.burningwave.core.io.FileSystemItem;
-import org.rg.game.lottery.engine.PersistentStorage;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class Verifier {
-
-	static SimpleDateFormat standardDatePattern = new SimpleDateFormat("dd/MM/yyyy");
-	static DateTimeFormatter formatter = DateTimeFormatter.ofPattern(standardDatePattern.toPattern());
 
 	public static void main(String[] args) throws IOException {
 		List<Integer> winningNumbers =
@@ -55,7 +47,7 @@ public class Verifier {
 			connection.setRequestProperty("accept", "application/json");
 			InputStream responseStream = connection.getInputStream();
 			Map<String,Object> data = new ObjectMapper().readValue(responseStream, Map.class);
-			extractionDate = standardDatePattern.format(new Date((Long)data.get("dataEstrazione")));
+			extractionDate = Shared.standardDatePattern.format(new Date((Long)data.get("dataEstrazione")));
 			winningCombo = ((List<String>)((Map<String,Object>)data.get("combinazioneVincente")).get("estratti"))
 				.stream().map(Integer::valueOf).collect(Collectors.toList());
 			connection.disconnect();
@@ -73,16 +65,15 @@ public class Verifier {
 					startDate = startDate.minus(1, ChronoUnit.DAYS);
 				}
 			}
-			extractionDate = formatter.format(startDate);
+			extractionDate = Shared.formatter.format(startDate);
 		}
 		String extractionYear = extractionDate.split("\\/")[2];
-		String extractionMonth = extractionDate.split("\\/")[1];
+		String extractionMonth = Shared.getMonth(extractionDate);
 		String extractionDay = extractionDate.split("\\/")[0];
-		FileSystemItem mainFile = FileSystemItem.ofPath(PersistentStorage.buildWorkingPath() +
-			File.separator + "[SE]["+ extractionYear +"]- Sistemi " + competionName + ".xlsx");
+		FileSystemItem mainFile = Shared.getSystemsFile(extractionYear);
 		try (InputStream srcFileInputStream = mainFile.toInputStream(); Workbook workbook = new XSSFWorkbook(srcFileInputStream);) {
 			Sheet sheet = workbook.getSheet(extractionMonth);
-			int offset = getCellIndex(sheet, extractionDay);
+			int offset = Shared.getCellIndex(sheet, extractionDay);
 			if (offset < 0) {
 				System.out.println("No combination to test for date " + extractionDate);
 				return;
@@ -113,7 +104,7 @@ public class Verifier {
 				}
 				if (hit > 1) {
 					winningCombos.computeIfAbsent(hit, ht -> new ArrayList<>()).add(currentCombo);
-					System.out.println(comboCount + ") " + toString(currentCombo, "\t"));
+					System.out.println(comboCount + ") " + Shared.toString(currentCombo, "\t"));
 				}
 				comboCount++;
 			}
@@ -121,7 +112,7 @@ public class Verifier {
 				System.out.println("\n\nNumeri estratti per il *" + competionName + "* del " + extractionDate +": " + toString(winningCombo, ", ", hitNumbers));
 				if (!winningCombos.isEmpty()) {
 					for (Map.Entry<Integer, List<List<Integer>>> combos: winningCombos.entrySet()) {
-						System.out.println("\t*Combinazioni con " + toLabel(combos.getKey()).toLowerCase() + "*:");
+						System.out.println("\t*Combinazioni con " + Shared.toLabel(combos.getKey()).toLowerCase() + "*:");
 						for (List<Integer> combo : combos.getValue()) {
 							System.out.println("\t\t" +
 								toString(combo, "\t", winningCombo)
@@ -148,66 +139,6 @@ public class Verifier {
 		    })
 		    .collect(Collectors.toList())
 		);
-	}
-
-	private static String toString(Collection<Integer> combo, String separator) {
-		return String.join(
-			separator,
-			combo.stream()
-		    .map(Object::toString)
-		    .collect(Collectors.toList())
-		);
-	}
-
-	private static String toLabel(Integer hit) {
-		if (hit == 2) {
-			return "Ambo";
-		}
-		if (hit == 3) {
-			return "Terno";
-		}
-		if (hit == 4) {
-			return "Quaterna";
-		}
-		if (hit == 5) {
-			return "Cinquina";
-		}
-		if (hit == 6) {
-			return "Tombola";
-		}
-		throw new IllegalArgumentException();
-	}
-
-	private static int getCellIndex(Sheet sheet, Date localDate) {
-		return getCellIndex(sheet, 0, localDate);
-	}
-
-	private static int getCellIndex(Sheet sheet, int headerIndex, Date date) {
-		Row header = sheet.getRow(headerIndex);
-		Iterator<Cell> cellIterator = header.cellIterator();
-		while (cellIterator.hasNext()) {
-			Cell cell = cellIterator.next();
-			if (CellType.NUMERIC.equals(cell.getCellType()) && date.compareTo(cell.getDateCellValue()) == 0 ) {
-				return cell.getColumnIndex();
-			}
-		}
-		return -1;
-	}
-
-	private static int getCellIndex(Sheet sheet, String localDate) {
-		return getCellIndex(sheet, 0, localDate);
-	}
-
-	private static int getCellIndex(Sheet sheet, int headerIndex, String dayAsString) {
-		Row header = sheet.getRow(headerIndex);
-		Iterator<Cell> cellIterator = header.cellIterator();
-		while (cellIterator.hasNext()) {
-			Cell cell = cellIterator.next();
-			if (CellType.STRING.equals(cell.getCellType()) && dayAsString.equals(cell.getStringCellValue())) {
-				return cell.getColumnIndex();
-			}
-		}
-		return -1;
 	}
 
 }

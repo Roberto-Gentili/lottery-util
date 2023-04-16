@@ -130,7 +130,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	@Override
-	protected String getDefaultExtractionArchiveStartDate() {
+	public String getDefaultExtractionArchiveStartDate() {
 		return "02/07/2009";
 	}
 

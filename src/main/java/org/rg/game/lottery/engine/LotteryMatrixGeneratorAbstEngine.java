@@ -588,7 +588,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		return extractionArchiveStartDate != null ? extractionArchiveStartDate : getDefaultExtractionArchiveStartDate();
 	}
 
-	protected abstract String getDefaultExtractionArchiveStartDate();
+	public abstract String getDefaultExtractionArchiveStartDate();
 
 	protected abstract List<Map<String,List<Integer>>> getAllChosenNumbers();
 

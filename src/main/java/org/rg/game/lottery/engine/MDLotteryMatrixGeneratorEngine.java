@@ -99,7 +99,7 @@ public class MDLotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	@Override
-	protected String getDefaultExtractionArchiveStartDate() {
+	public String getDefaultExtractionArchiveStartDate() {
 		return null;
 	}
 
