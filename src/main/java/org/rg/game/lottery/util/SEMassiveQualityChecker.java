@@ -17,9 +17,16 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -147,14 +154,73 @@ public class SEMassiveQualityChecker {
 		System.out.println("\nRisultati per tempo:");
 		dataForTime.forEach((year, dataForMonth) -> {
 			System.out.println("\t" + year + ":");
-			dataForMonth.forEach((month, winningInfo) -> {
-				System.out.println("\t\t" + month + ":");
-				winningInfo.forEach((type, counter) -> {
-					String label = SEStats.toLabel(type);
-					System.out.println("\t\t\t" + label + ":" + SEStats.rightAlignedString(Shared.integerFormat.format(counter), 21 - label.length()));
+			FileSystemItem mainFile = Shared.getSystemsFile(year);
+			mainFile.reset();
+			AtomicInteger summaryRowIndex = new AtomicInteger(0);
+			try (InputStream srcFileInputStream = mainFile.toInputStream();
+				OutputStream destFileOutputStream =	new FileOutputStream(mainFile.getAbsolutePath());
+				Workbook workbook = new XSSFWorkbook(srcFileInputStream);
+			) {
+				Sheet sheet = Shared.getSummarySheet(workbook);
+				Iterator<Row> rowIterator = sheet.rowIterator();
+				AtomicReference<Font> normalFont = new AtomicReference<>();
+				AtomicReference<Font> boldFont = new AtomicReference<>();
+				AtomicReference<CellStyle> valueStyle = new AtomicReference<>();
+				Row header;
+				if (rowIterator.hasNext()) {
+					header = rowIterator.next();
+				} else {
+					boldFont.set(workbook.createFont());
+					boldFont.get().setBold(true);
+					normalFont.set(workbook.createFont());
+					normalFont.get().setBold(false);
+					sheet.createFreezePane(0, 1);
+					header =  sheet.createRow(summaryRowIndex.getAndIncrement());
+					CellStyle headerStyle = workbook.createCellStyle();
+					headerStyle.setFont(boldFont.get());
+					headerStyle.setAlignment(HorizontalAlignment.CENTER);
+					headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+					headerStyle.setFillForegroundColor(IndexedColors.YELLOW.getIndex());
+					Cell monthLabel = header.createCell(0);
+					monthLabel.setCellValue("Mese");
+					monthLabel.setCellStyle(headerStyle);
+					int columnIndex = 1;
+					for (String premiumLabel : Shared.allPremiumLabels()) {
+						Cell headerCell = header.createCell(columnIndex++);
+						headerCell.setCellStyle(headerStyle);
+						headerCell.setCellValue(premiumLabel);
+					}
+					valueStyle.set(workbook.createCellStyle());
+					valueStyle.get().setFont(normalFont.get());
+					valueStyle.get().setAlignment(HorizontalAlignment.RIGHT);
+				}
+				dataForMonth.forEach((month, winningInfo) -> {
+					System.out.println("\t\t" + month + ":");
+					Row row = rowIterator.hasNext() ? rowIterator.next() : sheet.createRow(summaryRowIndex.getAndIncrement());
+					if (row.getCell(0) == null) {
+						Cell labelCell = row.createCell(0);
+						labelCell.getCellStyle().setFont(boldFont.get());
+						labelCell.getCellStyle().setAlignment(HorizontalAlignment.LEFT);
+						labelCell.setCellValue(month);
+					}
+					winningInfo.forEach((type, counter) -> {
+						String label = SEStats.toLabel(type);
+						Cell valueCell = row.getCell(Shared.getCellIndex(sheet, label));
+						if (valueCell == null) {
+							valueCell = row.createCell(Shared.getCellIndex(sheet, label));
+							valueCell.setCellStyle(valueStyle.get());
+						}
+						valueCell.setCellValue(counter);
+						System.out.println("\t\t\t" + label + ":" + SEStats.rightAlignedString(Shared.integerFormat.format(counter), 21 - label.length()));
+					});
+
 				});
-			});
+				workbook.write(destFileOutputStream);
+			} catch (Throwable exc) {
+				System.err.println("Unable to process file: " + exc.getMessage());
+			}
 		});
+
 		System.out.println("\nRisultati globali:");
 		globalData.forEach((key, combos) -> {
 			String label = SEStats.toLabel(key);
@@ -196,7 +262,7 @@ public class SEMassiveQualityChecker {
 			if (!winningCombos.isEmpty()) {
 				results.append("\n");
 				for (Map.Entry<Integer, List<List<Integer>>> combos: winningCombos.entrySet()) {
-					results.append("  " + Shared.toLabel(combos.getKey()), boldFont);
+					results.append("  " + Shared.toPremiumLabel(combos.getKey()), boldFont);
 					results.append(":" + "\n");
 					for (List<Integer> combo : combos.getValue()) {
 						results.append("    " +

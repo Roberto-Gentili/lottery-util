@@ -8,9 +8,11 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
@@ -18,6 +20,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.burningwave.core.io.FileSystemItem;
 import org.rg.game.lottery.engine.PersistentStorage;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
@@ -92,7 +95,7 @@ class Shared {
 		);
 	}
 
-	static String toLabel(Integer hit) {
+	static String toPremiumLabel(Integer hit) {
 		if (hit == 2) {
 			return "Ambo";
 		}
@@ -111,9 +114,32 @@ class Shared {
 		throw new IllegalArgumentException();
 	}
 
+	static List<String> allPremiumLabels() {
+		return Arrays.asList(
+			"Ambo",
+			"Terno",
+			"Quaterna",
+			"Cinquina",
+			"Tombola"
+		);
+	}
+
+	static FileSystemItem getSystemsFile(Integer year) {
+		return getSystemsFile(year.toString());
+	}
+
 	static FileSystemItem getSystemsFile(String extractionYear) {
 		return FileSystemItem.ofPath(PersistentStorage.buildWorkingPath() +
 			File.separator + "[SE]["+ extractionYear +"] - Sistemi.xlsx");
+	}
+
+	static Sheet getSummarySheet(Workbook workbook) {
+		Sheet sheet = workbook.getSheet("Riepilogo");
+		if (sheet == null) {
+			sheet = workbook.createSheet("Riepilogo");
+			workbook.setSheetOrder("Riepilogo", 0);
+		}
+		return sheet;
 	}
 
 }

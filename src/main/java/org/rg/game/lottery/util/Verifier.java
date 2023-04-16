@@ -112,7 +112,7 @@ public class Verifier {
 				System.out.println("\n\nNumeri estratti per il *" + competionName + "* del " + extractionDate +": " + toString(winningCombo, ", ", hitNumbers));
 				if (!winningCombos.isEmpty()) {
 					for (Map.Entry<Integer, List<List<Integer>>> combos: winningCombos.entrySet()) {
-						System.out.println("\t*Combinazioni con " + Shared.toLabel(combos.getKey()).toLowerCase() + "*:");
+						System.out.println("\t*Combinazioni con " + Shared.toPremiumLabel(combos.getKey()).toLowerCase() + "*:");
 						for (List<Integer> combo : combos.getValue()) {
 							System.out.println("\t\t" +
 								toString(combo, "\t", winningCombo)

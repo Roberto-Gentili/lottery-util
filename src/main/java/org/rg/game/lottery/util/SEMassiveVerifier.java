@@ -157,7 +157,7 @@ public class SEMassiveVerifier {
 			if (!winningCombos.isEmpty()) {
 				result.append("Numeri estratti per il *superenalotto* del " + Shared.formatter.format(extractionDate) +": " + toString(winningCombo, ", ", hitNumbers) + "\n");
 				for (Map.Entry<Integer, List<List<Integer>>> combos: winningCombos.entrySet()) {
-					result.append("\t*Combinazioni con " + Shared.toLabel(combos.getKey()).toLowerCase() + "*:" + "\n");
+					result.append("\t*Combinazioni con " + Shared.toPremiumLabel(combos.getKey()).toLowerCase() + "*:" + "\n");
 					for (List<Integer> combo : combos.getValue()) {
 						result.append("\t\t" +
 							toString(combo, "\t", winningCombo) + "\n"
