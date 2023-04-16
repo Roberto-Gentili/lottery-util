@@ -546,34 +546,34 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		AtomicLong indexGeneratorCallsCounter,
 		AtomicInteger uniqueIndexCounter
 	) {
-		List<Integer> effectiveRandomIndexes = new ArrayList<>();
-		Set<Integer> randomIndexesToBeProcessed = new HashSet<>();
+		List<Integer> effectiveIndexes = new ArrayList<>();
+		Set<Integer> indexesToBeProcessed = new HashSet<>();
 		Integer size = comboHandler.getSizeAsInt();
 		int randomCollSize = Math.min(size, 10_000_000);
-		while (effectiveRandomIndexes.size() < randomCollSize) {
+		while (effectiveIndexes.size() < randomCollSize) {
 			Integer idx = comboIndexSupplier.apply(size);
 			indexGeneratorCallsCounter.incrementAndGet();
 			if (!alreadyComputed[idx]) {
-				effectiveRandomIndexes.add(idx);
-				randomIndexesToBeProcessed.add(idx);
+				effectiveIndexes.add(idx);
+				indexesToBeProcessed.add(idx);
 				uniqueIndexCounter.incrementAndGet();
 				alreadyComputed[idx] = true;
 			} else {
-				effectiveRandomIndexes.add(null);
+				effectiveIndexes.add(null);
 			}
 		}
 		System.out.println(
 			formatter.format(LocalDateTime.now()) +
 			" - " + integerFormat.format(uniqueIndexCounter.get()) + " unique indexes generated on " +
 			integerFormat.format(indexGeneratorCallsCounter.get()) + " calls. " +
-			integerFormat.format(randomIndexesToBeProcessed.size()) + " indexes will be processed in the current iteration."
+			integerFormat.format(indexesToBeProcessed.size()) + " indexes will be processed in the current iteration."
 		);
-		if (size <= uniqueIndexCounter.get() && randomIndexesToBeProcessed.isEmpty()) {
+		if (size <= uniqueIndexCounter.get() && indexesToBeProcessed.isEmpty()) {
 			throw new AllRandomNumbersHaveBeenGeneratedException();
 		}
-		Map<Integer, List<Integer>> indexForCombos = comboHandler.find(randomIndexesToBeProcessed, true);
+		Map<Integer, List<Integer>> indexForCombos = comboHandler.find(indexesToBeProcessed, true);
 		List<List<Integer>> combos = new ArrayList<>();
-		for (Integer index : effectiveRandomIndexes) {
+		for (Integer index : effectiveIndexes) {
 			List<Integer> combo = indexForCombos.get(index);
 			combos.add(combo);
 		}
