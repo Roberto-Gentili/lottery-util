@@ -306,7 +306,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		}
 		Storage storageRef = null;
 		AtomicInteger effectiveRandomCounter = new AtomicInteger(0);
-		AtomicLong discardedComboCounter = new AtomicLong(0);
+		AtomicLong fromFilterDiscardedComboCounter = new AtomicLong(0);
 		ComboHandler comboHandler = new ComboHandler(numbers, combinationComponents);
 		try (Storage storage = buildStorage(((LocalDate)data.get("seedStartDate")), combinationComponents, numberOfCombos, numbers, suffix);) {
 			storageRef = storage;
@@ -343,7 +343,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 									indexGeneratorCallsCounter,
 									uniqueIndexCounter,
 									effectiveRandomCounter,
-									discardedComboCounter
+									fromFilterDiscardedComboCounter
 								);
 							} while(selectedCombo == null || !selectedCombo.containsAll(underRatioNumbers) || containsOneOf(overRatioNumbers, selectedCombo));
 							if (storage.addCombo(selectedCombo)) {
@@ -358,7 +358,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 									indexGeneratorCallsCounter,
 									uniqueIndexCounter,
 									effectiveRandomCounter,
-									discardedComboCounter
+									fromFilterDiscardedComboCounter
 								);
 							} while(selectedCombo == null);
 							boolean canBeAdded = true;
@@ -386,7 +386,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 								indexGeneratorCallsCounter,
 								uniqueIndexCounter,
 								effectiveRandomCounter,
-								discardedComboCounter
+								fromFilterDiscardedComboCounter
 							);
 						} while(selectedCombo == null);
 						effectiveRandomCounter.incrementAndGet();
@@ -405,7 +405,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 								indexGeneratorCallsCounter,
 								uniqueIndexCounter,
 								effectiveRandomCounter,
-								discardedComboCounter
+								fromFilterDiscardedComboCounter
 							);
 						} while(selectedCombo == null);
 						effectiveRandomCounter.incrementAndGet();
@@ -426,7 +426,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 				"(occorrenza effettiva: " + decimalFormat.format((combinationComponents * storage.size()) / (double)numbers.size()) +
 				(numberOfCombosRequested == null ? ", richiesta: " + decimalFormat.format(occurrencesNumberRequested) : "") + ") " : "") +
 				"e' composto da " + integerFormat.format(storage.size()) + " combinazioni " + "scelte su " + integerFormat.format(comboHandler.getSizeAsInt()) + " totali" +
-					(discardedComboCounter.get() > 0 ? " (scartate: " + integerFormat.format(discardedComboCounter.get()) + ")": "")
+					(fromFilterDiscardedComboCounter.get() > 0 ? " (scartate dal filtro: " + integerFormat.format(fromFilterDiscardedComboCounter.get()) + ")": "")
 			);
 			boolean shouldBePlayed = random.nextBoolean();
 			boolean shouldBePlayedAbsolutely = random.nextBoolean() && shouldBePlayed;
@@ -498,7 +498,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		AtomicLong indexGeneratorCallsCounter,
 		AtomicInteger uniqueIndexCounter,
 		AtomicInteger effectiveRandomCounter,
-		AtomicLong discardedComboCounter
+		AtomicLong fromFilterDiscardedComboCounter
 	) {
 		Iterator<List<Integer>> combosIterator = combosIteratorWrapper.get();
 		List<Integer> selectedCombo;
@@ -519,7 +519,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 			if (combinationFilter.test(selectedCombo)) {
 				return selectedCombo;
 			} else {
-				discardedComboCounter.incrementAndGet();
+				fromFilterDiscardedComboCounter.incrementAndGet();
 			}
 		}
 		return null;
