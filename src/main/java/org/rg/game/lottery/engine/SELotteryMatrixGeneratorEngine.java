@@ -80,8 +80,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 			seed++;
 		}
 		random = new Random(seed);
-		comboIndexSupplier = comboIndexSelectorType.equals("random") ?
-			random::nextInt : null;
+		buildComboIndexSupplier();
 		Map<String, Object> seedData = new LinkedHashMap<>();
 		seedData.put("seed", seed);
 		seedData.put("seedStartDate", seedStartDate);
