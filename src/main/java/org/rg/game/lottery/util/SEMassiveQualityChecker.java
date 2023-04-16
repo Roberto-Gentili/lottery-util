@@ -136,6 +136,7 @@ public class SEMassiveQualityChecker {
 					}
 					rowIterator = sheet.rowIterator();
 					sheet.setColumnWidth(offset + 6, 5700);
+					rowIterator.next();
 					Cell cell = rowIterator.next().getCell(offset + 6);
 					XSSFRichTextString results = new XSSFRichTextString();
 					checkCombo(
