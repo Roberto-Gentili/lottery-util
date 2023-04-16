@@ -245,17 +245,17 @@ public class SEMassiveVerifierAndQualityChecker {
 						}
 						valueCell.setCellValue(counter);
 						if (rowIndex == dataForMonth.entrySet().size()) {
-							row = sheet.getRow(rowIndex + 1) != null ?
+							Row summaryRow = sheet.getRow(rowIndex + 1) != null ?
 								sheet.getRow(rowIndex + 1) : sheet.createRow(rowIndex + 1);
-							if (row.getCell(0) == null) {
-								Cell labelCell = row.createCell(0);
+							if (summaryRow.getCell(0) == null) {
+								Cell labelCell = summaryRow.createCell(0);
 								labelCell.getCellStyle().setFont(boldFont);
 								labelCell.getCellStyle().setAlignment(HorizontalAlignment.LEFT);
 								labelCell.setCellValue("Totale");
 							}
-							valueCell = row.getCell(labelIndex);
+							valueCell = summaryRow.getCell(labelIndex);
 							if (valueCell == null) {
-								valueCell = row.createCell(labelIndex);
+								valueCell = summaryRow.createCell(labelIndex);
 								valueCell.setCellStyle(valueStyle);
 							}
 							String columnName = Shared.getLetterAtIndex(labelIndex);
