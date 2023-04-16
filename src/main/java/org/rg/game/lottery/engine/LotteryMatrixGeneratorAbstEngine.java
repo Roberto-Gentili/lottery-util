@@ -44,6 +44,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	protected boolean reportDetailEnabled;
 	protected Function<Integer, Integer> comboIndexSupplier;
 	protected String comboIndexSelectorType;
+	protected AtomicInteger comboSequencedIndexSelectorCounter;
 
 	protected DecimalFormat decimalFormat = new DecimalFormat( "#,##0.##" );
 	protected DecimalFormat integerFormat = new DecimalFormat( "#,##0" );
@@ -65,6 +66,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 
 	public void setup(Properties config) {
 		Collection<LocalDate> extractionDates = new LinkedHashSet<>();
+		comboSequencedIndexSelectorCounter = new AtomicInteger(0);
 		extractionArchiveStartDate = config.getProperty("competition.archive.start-date");
 		comboIndexSelectorType = config.getProperty("combination.selector", "random");
 		String extractionDatesAsString = config.getProperty("competition");
@@ -610,7 +612,17 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 
 	void buildComboIndexSupplier() {
 		comboIndexSupplier = comboIndexSelectorType.equals("random") ?
-			random::nextInt : null;
+			random::nextInt :
+			this::nextSequencedIndex;
+	}
+
+	private Integer nextSequencedIndex(Integer size) {
+		Integer index = comboSequencedIndexSelectorCounter.getAndIncrement();
+		if (index >= size) {
+			comboSequencedIndexSelectorCounter = new AtomicInteger(0);
+			return nextSequencedIndex(size);
+		}
+		return index;
 	}
 
 	public abstract String getDefaultExtractionArchiveStartDate();
