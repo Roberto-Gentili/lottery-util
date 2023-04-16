@@ -60,7 +60,7 @@ public class SEStats {
 	protected DecimalFormat integerFormat = new DecimalFormat( "#,##0" );
 	private final DateFormat dateFmt = new SimpleDateFormat("yyyy dd MMMM", Locale.ITALY);
 	private final DateFormat defaultDateFmt = new SimpleDateFormat("dd/MM/yyyy");
-	private final DateFormat defaultDateFmtForFile = new SimpleDateFormat("yyyyMMdd");
+	private final DateFormat defaultDateFmtForFile = new SimpleDateFormat("[yyyy][MM][dd]");
 	private Date startDate;
 
 	private List<Map.Entry<String, Integer>> extractedNumberPairCounters;
@@ -565,7 +565,7 @@ public class SEStats {
 	private class ToExcelDataStorerV1 implements DataStorer {
 
 		private String getFileName() {
-			return "[SE" + defaultDateFmtForFile.format(startDate) + "] - Archivio estrazioni e statistiche v1.xlsx";
+			return "[SE]" + defaultDateFmtForFile.format(startDate) + " - Archivio estrazioni e statistiche v1.xlsx";
 		}
 
 		@Override
@@ -673,7 +673,7 @@ public class SEStats {
 	private class ToExcelDataStorerV2 implements DataStorer {
 
 		private String getFileName() {
-			return "[SE" + defaultDateFmtForFile.format(startDate) + "] - Archivio estrazioni e statistiche v2.xlsx";
+			return "[SE]" + defaultDateFmtForFile.format(startDate) + " - Archivio estrazioni e statistiche v2.xlsx";
 		}
 
 		@Override

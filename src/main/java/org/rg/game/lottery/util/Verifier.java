@@ -78,7 +78,8 @@ public class Verifier {
 		String extractionYear = extractionDate.split("\\/")[2];
 		String extractionMonth = extractionDate.split("\\/")[1];
 		String extractionDay = extractionDate.split("\\/")[0];
-		FileSystemItem mainFile = FileSystemItem.ofPath(PersistentStorage.buildWorkingPath() + File.separator + "["+ extractionYear +"] - Combinazioni " + competionName + ".xlsx");
+		FileSystemItem mainFile = FileSystemItem.ofPath(PersistentStorage.buildWorkingPath() +
+			File.separator + "[SE]["+ extractionYear +"]- Sistemi " + competionName + ".xlsx");
 		try (InputStream srcFileInputStream = mainFile.toInputStream(); Workbook workbook = new XSSFWorkbook(srcFileInputStream);) {
 			Sheet sheet = workbook.getSheet(extractionMonth);
 			int offset = getCellIndex(sheet, extractionDay);

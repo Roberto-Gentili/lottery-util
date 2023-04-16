@@ -81,7 +81,8 @@ public class SEMassiveVerifier {
 				String extractionYear = extractionDate.split("\\/")[2];
 				String extractionMonth = extractionDate.split("\\/")[1];
 				String extractionDay = extractionDate.split("\\/")[0];
-				FileSystemItem mainFile = FileSystemItem.ofPath(PersistentStorage.buildWorkingPath() + File.separator + "["+ extractionYear +"] - Combinazioni superenalotto.xlsx");
+				FileSystemItem mainFile = FileSystemItem.ofPath(PersistentStorage.buildWorkingPath() +
+					File.separator + "[SE]["+ extractionYear +"] - Sistemi.xlsx");
 				List<List<Integer>> system = new ArrayList<>();
 				try (InputStream srcFileInputStream = mainFile.toInputStream(); Workbook workbook = new XSSFWorkbook(srcFileInputStream);) {
 					Sheet sheet = workbook.getSheet(extractionMonth);
