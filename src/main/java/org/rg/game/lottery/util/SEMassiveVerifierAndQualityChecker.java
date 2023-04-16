@@ -133,7 +133,7 @@ public class SEMassiveVerifierAndQualityChecker {
 							dataForTime,
 							dateInfo.getKey(),
 							system,
-							SEStats.get(Shared.SEStatsDefaultDate).getWinningComboOf(dateInfo.getKey()),
+							Shared.getSEStats().getWinningComboOf(dateInfo.getKey()),
 							results,
 							boldFont
 						)
@@ -145,7 +145,7 @@ public class SEMassiveVerifierAndQualityChecker {
 						historyData,
 						dateInfo.getKey(),
 						system,
-						SEStats.get(Shared.SEStatsDefaultDate).getAllWinningCombos(),
+						Shared.getSEStats().getAllWinningCombos(),
 						results,
 						boldFont
 					);

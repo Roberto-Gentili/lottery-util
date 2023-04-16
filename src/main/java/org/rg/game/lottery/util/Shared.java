@@ -25,6 +25,7 @@ import org.burningwave.core.io.FileSystemItem;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.PersistentStorage;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
+import org.rg.game.lottery.engine.SEStats;
 
 class Shared {
 
@@ -171,6 +172,27 @@ class Shared {
 
 	static String getLetterAtIndex(int index) {
 		return Character.valueOf("ABCDEFGHIJKLMNOPQRSTUVWXYZ".charAt(index)).toString();
+	}
+
+	public static SEStats getSEStats() {
+		return SEStats.get(Shared.SEStatsDefaultDate);
+	}
+
+	public static void main(String[] args) {
+		/*System.out.println(ComboHandler.sizeOf(ComboHandler.sizeOf(46, 6), 34));
+		List<Integer> ourNumbers = Arrays.asList(
+			1,2,3,4,5,7,8,9,
+			10,11,12,13,14,16,17,19,
+			20,21,23,24,25,27,28,29,
+			32,33,35,
+			40,47,49,
+			51,52,55,
+			64,68,69,
+			75,77,79,
+			80,83,84,85,86,88,90
+		);*/
+
+
 	}
 
 }
