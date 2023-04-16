@@ -142,4 +142,25 @@ class Shared {
 		return sheet;
 	}
 
+	static String toWAString(Collection<Integer> combo, String separator, Collection<Integer> numbers) {
+		return String.join(
+			separator,
+			combo.stream()
+		    .map(val -> {
+		    	boolean hit = numbers.contains(val);
+		    	return (hit ? "*" : "") + val.toString() + (hit ? "*" : "");
+		    })
+		    .collect(Collectors.toList())
+		);
+	}
+
+	static String toString(Collection<Integer> combo, String separator, Collection<Integer> numbers) {
+		return String.join(
+			separator,
+			combo.stream()
+		    .map(Object::toString)
+		    .collect(Collectors.toList())
+		);
+	}
+
 }

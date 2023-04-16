@@ -13,7 +13,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.stream.Collectors;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -155,12 +154,12 @@ public class SEMassiveVerifier {
 		StringBuffer result = new StringBuffer();
 		if (!winningCombo.isEmpty()) {
 			if (!winningCombos.isEmpty()) {
-				result.append("Numeri estratti per il *superenalotto* del " + Shared.formatter.format(extractionDate) +": " + toString(winningCombo, ", ", hitNumbers) + "\n");
+				result.append("Numeri estratti per il *superenalotto* del " + Shared.formatter.format(extractionDate) +": " + Shared.toWAString(winningCombo, ", ", hitNumbers) + "\n");
 				for (Map.Entry<Integer, List<List<Integer>>> combos: winningCombos.entrySet()) {
 					result.append("\t*Combinazioni con " + Shared.toPremiumLabel(combos.getKey()).toLowerCase() + "*:" + "\n");
 					for (List<Integer> combo : combos.getValue()) {
 						result.append("\t\t" +
-							toString(combo, "\t", winningCombo) + "\n"
+							Shared.toWAString(combo, "\t", winningCombo) + "\n"
 						);
 					}
 				}
@@ -169,18 +168,6 @@ public class SEMassiveVerifier {
 			}
 		}
 		return result.toString();
-	}
-
-	private static String toString(Collection<Integer> combo, String separator, Collection<Integer> numbers) {
-		return String.join(
-			separator,
-			combo.stream()
-		    .map(val -> {
-		    	boolean hit = numbers.contains(val);
-		    	return (hit ? "*" : "") + val.toString() + (hit ? "*" : "");
-		    })
-		    .collect(Collectors.toList())
-		);
 	}
 
 }

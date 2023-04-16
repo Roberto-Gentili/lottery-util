@@ -6,11 +6,9 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -91,18 +89,6 @@ public class SEQualityChecker {
 				}
 			}
 		}
-	}
-
-	private static String toString(Collection<Integer> combo, String separator, Collection<Integer> numbers) {
-		return String.join(
-			separator,
-			combo.stream()
-		    .map(val -> {
-		    	boolean hit = numbers.contains(val);
-		    	return (hit ? "*" : "") + val.toString() + (hit ? "*" : "");
-		    })
-		    .collect(Collectors.toList())
-		);
 	}
 
 }

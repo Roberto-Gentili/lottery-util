@@ -19,7 +19,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -122,18 +121,20 @@ public class SEMassiveQualityChecker {
 						system.add(currentCombo);
 					}
 					rowIterator = sheet.rowIterator();
-					sheet.setColumnWidth(offset + 6, 5700);
+					sheet.setColumnWidth(offset + 6, 5800);
 					rowIterator.next();
 					Cell cell = rowIterator.next().getCell(offset + 6);
 					XSSFRichTextString results = new XSSFRichTextString();
-					checkCombo(
-						globalData,
-						dataForTime,
-						dateInfo.getKey(),
-						system,
-						SEStats.get(Shared.SEStatsDefaultDate).getWinningComboOf(dateInfo.getKey()),
-						results,
-						boldFont
+					System.out.println(
+						checkCombo(
+							globalData,
+							dataForTime,
+							dateInfo.getKey(),
+							system,
+							SEStats.get(Shared.SEStatsDefaultDate).getWinningComboOf(dateInfo.getKey()),
+							results,
+							boldFont
+						)
 					);
 					results.append("\n");
 					checkInHistory(
@@ -228,7 +229,7 @@ public class SEMassiveQualityChecker {
 		});
 	}
 
-	private static void checkCombo(
+	private static String checkCombo(
 		Map<Integer,List<List<Integer>>> globalData,
 		Map<Integer, Map<String, Map<Integer, Integer>>> dataForTime,
 		LocalDate extractionDate,
@@ -266,7 +267,7 @@ public class SEMassiveQualityChecker {
 					results.append(":" + "\n");
 					for (List<Integer> combo : combos.getValue()) {
 						results.append("    " +
-							toString(combo, ", ", winningCombo) + "\n"
+							Shared.toString(combo, ", ", winningCombo) + "\n"
 						);
 					}
 				}
@@ -274,6 +275,23 @@ public class SEMassiveQualityChecker {
 				results.append("nessuna vincita\n");
 			}
 		}
+		StringBuffer result = new StringBuffer();
+		if (!winningCombo.isEmpty()) {
+			if (!winningCombos.isEmpty()) {
+				result.append("Numeri estratti per il *superenalotto* del " + Shared.formatter.format(extractionDate) +": " + Shared.toWAString(winningCombo, ", ", hitNumbers) + "\n");
+				for (Map.Entry<Integer, List<List<Integer>>> combos: winningCombos.entrySet()) {
+					result.append("\t*Combinazioni con " + Shared.toPremiumLabel(combos.getKey()).toLowerCase() + "*:" + "\n");
+					for (List<Integer> combo : combos.getValue()) {
+						result.append("\t\t" +
+							Shared.toWAString(combo, "\t", winningCombo) + "\n"
+						);
+					}
+				}
+			} else {
+				result.append("Nessuna vincita per il concorso del " + Shared.formatter.format(extractionDate) + "\n");
+			}
+		}
+		return result.toString();
 	}
 
 	private static void checkInHistory(
@@ -313,17 +331,6 @@ public class SEMassiveQualityChecker {
 		} else {
 			results.append("nessuna vincita");
 		}
-	}
-
-	private static String toString(Collection<Integer> combo, String separator, Collection<Integer> numbers) {
-		return String.join(
-			separator,
-			combo.stream()
-		    .map(val -> {
-		    	return val.toString();
-		    })
-		    .collect(Collectors.toList())
-		);
 	}
 
 }

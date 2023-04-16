@@ -109,13 +109,13 @@ public class Verifier {
 				comboCount++;
 			}
 			if (!winningCombo.isEmpty()) {
-				System.out.println("\n\nNumeri estratti per il *" + competionName + "* del " + extractionDate +": " + toString(winningCombo, ", ", hitNumbers));
+				System.out.println("\n\nNumeri estratti per il *" + competionName + "* del " + extractionDate +": " + Shared.toWAString(winningCombo, ", ", hitNumbers));
 				if (!winningCombos.isEmpty()) {
 					for (Map.Entry<Integer, List<List<Integer>>> combos: winningCombos.entrySet()) {
 						System.out.println("\t*Combinazioni con " + Shared.toPremiumLabel(combos.getKey()).toLowerCase() + "*:");
 						for (List<Integer> combo : combos.getValue()) {
 							System.out.println("\t\t" +
-								toString(combo, "\t", winningCombo)
+								Shared.toWAString(combo, "\t", winningCombo)
 							);
 						}
 					}
@@ -127,18 +127,6 @@ public class Verifier {
 		} catch (Throwable exc) {
 			exc.printStackTrace();
 		}
-	}
-
-	private static String toString(Collection<Integer> combo, String separator, Collection<Integer> numbers) {
-		return String.join(
-			separator,
-			combo.stream()
-		    .map(val -> {
-		    	boolean hit = numbers.contains(val);
-		    	return (hit ? "*" : "") + val.toString() + (hit ? "*" : "");
-		    })
-		    .collect(Collectors.toList())
-		);
 	}
 
 }
