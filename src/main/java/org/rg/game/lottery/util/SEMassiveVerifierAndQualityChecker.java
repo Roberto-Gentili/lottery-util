@@ -200,6 +200,7 @@ public class SEMassiveVerifierAndQualityChecker {
 					valueStyle = workbook.createCellStyle();
 					valueStyle.setFont(normalFont);
 					valueStyle.setAlignment(HorizontalAlignment.RIGHT);
+					valueStyle.setDataFormat(workbook.createDataFormat().getFormat("#,##0"));
 				}
 				rowIndex++;
 				for (Map.Entry<String, Map<Integer, Integer>> monthWinningInfo : dataForMonth.entrySet()) {
