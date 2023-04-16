@@ -63,7 +63,7 @@ public class ComboHandler {
 			BigInteger processedNumbers = initialValue.subtract(number);
 			if (processedNumbers.mod(divisor).compareTo(BigInteger.ZERO) == 0) {
 				System.out.println("Processed " + processedNumbers
-					.toString() + " numbers - Factorial:" + factorial.toString());
+					.toString() + " numbers - Factorial: " + factorial.toString());
 			}
 		}
 		return factorial;
