@@ -1,10 +1,12 @@
 package org.rg.game.lottery.util;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.AbstractMap;
@@ -31,6 +33,7 @@ import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.io.FileSystemItem;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
@@ -155,13 +158,24 @@ public class SEMassiveVerifierAndQualityChecker {
 	}
 
 	private static void writeAndPrintData(Map<Integer, List<List<Integer>>> globalData,
-			Map<Integer, Map<String, Map<Integer, Integer>>> dataForTime) {
+			Map<Integer, Map<String, Map<Integer, Integer>>> dataForTime) throws IOException {
 		System.out.println("\nRisultati per tempo:");
+		LocalDateTime backupTime = LocalDateTime.now();
 		for (Map.Entry<Integer, Map<String, Map<Integer, Integer>>> yearAndDataForMonth : dataForTime.entrySet()) {
 			int year = yearAndDataForMonth.getKey();
 			Map<String, Map<Integer, Integer>> dataForMonth = yearAndDataForMonth.getValue();
 			System.out.println("\t" + year + ":");
 			FileSystemItem mainFile = Shared.getSystemsFile(year);
+			String backupFileName = mainFile.getName().replace("." +  mainFile.getExtension(), "") + " - [" + Shared.datePattern.format(backupTime) + "]." + mainFile.getExtension();
+			String backupFilePath = mainFile.getParent().getAbsolutePath() + "\\Backup sistemi\\" + backupFileName;
+			if (!new File(backupFilePath).exists()) {
+				try (OutputStream backupOutputStream = new FileOutputStream(backupFilePath)) {
+					StaticComponentContainer.Streams.copy(
+						mainFile.toInputStream(),
+						backupOutputStream
+					);
+				}
+			}
 			mainFile.reset();
 			try (InputStream srcFileInputStream = mainFile.toInputStream();
 				OutputStream destFileOutputStream =	new FileOutputStream(mainFile.getAbsolutePath());

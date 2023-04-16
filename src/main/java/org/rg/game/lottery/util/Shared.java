@@ -27,6 +27,7 @@ import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 
 class Shared {
 
+	static DateTimeFormatter datePattern = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
 	static DecimalFormat integerFormat = new DecimalFormat( "#,##0" );
 	static SimpleDateFormat standardDatePattern = new SimpleDateFormat("dd/MM/yyyy");
 	static DateTimeFormatter formatter = DateTimeFormatter.ofPattern(standardDatePattern.toPattern());
