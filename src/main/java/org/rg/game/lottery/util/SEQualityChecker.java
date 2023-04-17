@@ -24,7 +24,7 @@ public class SEQualityChecker {
 
 	public static void main(String[] args) throws IOException {
 		check(
-			forDate("11/02/2023", "nextExtraction", true)
+			forDate("14/02/2023", "nextExtraction", true)
 		);
 	}
 
@@ -52,7 +52,8 @@ public class SEQualityChecker {
 				String extractionYear = extractionDate.split("\\/")[2];
 				String extractionMonth = Shared.getMonth(extractionDate);
 				String extractionDay = extractionDate.split("\\/")[0];
-				FileSystemItem mainFile = Shared.getSystemsFile(extractionYear);
+				FileSystemItem mainFile =
+					Shared.getSystemsFile(extractionYear);
 				List<List<Integer>> system = new ArrayList<>();
 				try (InputStream srcFileInputStream = mainFile.toInputStream(); Workbook workbook = new XSSFWorkbook(srcFileInputStream);) {
 					Sheet sheet = workbook.getSheet(extractionMonth);

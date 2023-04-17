@@ -138,8 +138,11 @@ class Shared {
 	}
 
 	static FileSystemItem getSystemsFile(String extractionYear) {
-		return FileSystemItem.ofPath(PersistentStorage.buildWorkingPath() +
-			File.separator + "[SE]["+ extractionYear +"] - Sistemi.xlsx");
+		String suffix = System.getenv("file-to-be-processed-suffix");
+		FileSystemItem file = FileSystemItem.ofPath(PersistentStorage.buildWorkingPath() +
+			File.separator + "[SE]["+ extractionYear +"] - " + (suffix != null ? suffix : "Sistemi") +".xlsx");
+		System.out.println("Processing file " + file.getName());
+		return file;
 	}
 
 	static Sheet getSummarySheet(Workbook workbook) {
