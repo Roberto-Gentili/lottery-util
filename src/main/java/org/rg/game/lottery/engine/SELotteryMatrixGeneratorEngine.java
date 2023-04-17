@@ -112,19 +112,19 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 			if (NumberProcessor.RANDOM_KEY.equals(generatorType)) {
 				return random.ints(leftBound , rightBound + 1).iterator();
 			} else if (NumberProcessor.MOST_EXTRACTED_KEY.equals(generatorType)) {
-				return new BoundedIterator(SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberRank(), leftBound, rightBound);
+				return new BoundedIterator(getSEStats().getExtractedNumberRank(), leftBound, rightBound);
 			} else if (NumberProcessor.MOST_EXTRACTED_COUPLE_KEY.equals(generatorType)) {
-				return new BoundedIterator(SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberFromMostExtractedCoupleRank(), leftBound, rightBound);
+				return new BoundedIterator(getSEStats().getExtractedNumberFromMostExtractedCoupleRank(), leftBound, rightBound);
 			} else if (NumberProcessor.MOST_EXTRACTED_TRIPLE_KEY.equals(generatorType)) {
-				return new BoundedIterator(SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberFromMostExtractedTripleRank(), leftBound, rightBound);
+				return new BoundedIterator(getSEStats().getExtractedNumberFromMostExtractedTripleRank(), leftBound, rightBound);
 			} else if (NumberProcessor.LESS_EXTRACTED_KEY.equals(generatorType)) {
-				return new BoundedIterator(SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberRankReversed(), leftBound, rightBound);
+				return new BoundedIterator(getSEStats().getExtractedNumberRankReversed(), leftBound, rightBound);
 			} else if (NumberProcessor.LESS_EXTRACTED_COUPLE_KEY.equals(generatorType)) {
-				return new BoundedIterator(SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberFromMostExtractedCoupleRankReversed(), leftBound, rightBound);
+				return new BoundedIterator(getSEStats().getExtractedNumberFromMostExtractedCoupleRankReversed(), leftBound, rightBound);
 			} else if (NumberProcessor.LESS_EXTRACTED_TRIPLE_KEY.equals(generatorType)) {
-				return new BoundedIterator(SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberFromMostExtractedTripleRankReversed(), leftBound, rightBound);
+				return new BoundedIterator(getSEStats().getExtractedNumberFromMostExtractedTripleRankReversed(), leftBound, rightBound);
 			} else if (NumberProcessor.NEAREST_FROM_RECORD_ABSENCE_PERCENTAGE_KEY.equals(generatorType)) {
-				return new BoundedIterator(SEStats.get(getExtractionArchiveStartDate()).getDistanceFromAbsenceRecordPercentageRankReversed(), leftBound, rightBound);
+				return new BoundedIterator(getSEStats().getDistanceFromAbsenceRecordPercentageRankReversed(), leftBound, rightBound);
 			}
 			throw new IllegalArgumentException("Unvalid generator type");
 		};
@@ -139,7 +139,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	public Map<String, Number> testEffectiveness(String filterAsString, List<Integer> numbers, boolean fineLog) {
 		filterAsString = preProcess(filterAsString);
 		Predicate<List<Integer>> combinationFilter = CombinationFilterFactory.INSTANCE.parse(filterAsString, fineLog);
-		Set<Entry<Date, List<Integer>>> allWinningCombos = SEStats.get(getExtractionArchiveStartDate()).getAllWinningCombos().entrySet();
+		Set<Entry<Date, List<Integer>>> allWinningCombos = getSEStats().getAllWinningCombos().entrySet();
 		int discardedFromHistory = 0;
 		System.out.println("Starting filter analysis\n");
 		Collection<Integer> comboSums = new TreeSet<>();
@@ -235,16 +235,16 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		List<Integer> numbersToBeTested = null;
 		if (expression.contains("lessExtCouple")) {
 			numbersToBeTested =
-				SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberFromMostExtractedCoupleRankReversed();
+				getSEStats().getExtractedNumberFromMostExtractedCoupleRankReversed();
 		} else if (expression.contains("lessExt")) {
 			numbersToBeTested =
-				SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberRankReversed();
+				getSEStats().getExtractedNumberRankReversed();
 		} else if (expression.contains("mostExtCouple")) {
 			numbersToBeTested =
-				SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberFromMostExtractedCoupleRank();
+				getSEStats().getExtractedNumberFromMostExtractedCoupleRank();
 		} else if (expression.contains("mostExt")) {
 			numbersToBeTested =
-				SEStats.get(getExtractionArchiveStartDate()).getExtractedNumberRank();
+				getSEStats().getExtractedNumberRank();
 		}
 		String[] subRange = options[0].split("->");
 		if (subRange.length == 2) {
@@ -273,7 +273,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		if (options.length > 1) {
 			String[] groupOptions = options[1].split(":");
 			List<String> inClauses = new ArrayList<>();
-			for (List<Integer> winningCombo :SEStats.get(getExtractionArchiveStartDate()).getAllWinningCombos().values()) {
+			for (List<Integer> winningCombo :getSEStats().getAllWinningCombos().values()) {
 				inClauses.add("in " + ComboHandler.toString(winningCombo, ",") + ":" + groupOptions[1]);
 			}
 			return "(" + String.join("|", inClauses) + ")";
@@ -292,7 +292,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 				options[1], "sum", "rangeOfSum",
 				operationOptionValue -> {
 					Collection<Integer> sums = new TreeSet<>();
-					SEStats.get(getExtractionArchiveStartDate()).getAllWinningCombos().values().stream().forEach(combo ->
+					getSEStats().getAllWinningCombos().values().stream().forEach(combo ->
 						sums.add(ComboHandler.sumValues(combo))
 					);
 					return sums;
@@ -303,7 +303,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 				options[1], "sumOfPower", "rangeOfSumPower",
 				operationOptionValue -> {
 					Collection<Integer> sums = new TreeSet<>();
-					SEStats.get(getExtractionArchiveStartDate()).getAllWinningCombos().values().stream().forEach(combo -> {
+					getSEStats().getAllWinningCombos().values().stream().forEach(combo -> {
 						sums.add(ComboHandler.sumPowerOfValues(combo, operationOptionValue.get(0)));
 					});
 					return sums;
@@ -314,6 +314,10 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 			throw new UnsupportedOperationException("Expression is not supported: " + expression);
 		}
 		return expression;
+	}
+
+	protected SEStats getSEStats() {
+		return SEStats.get(getExtractionArchiveStartDate());
 	}
 
 	private String processMathManipulationExpression(
@@ -351,7 +355,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 
 	@Override
 	protected Map<String, Object> checkQuality(Storage storage) {
-		return SEStats.get(getExtractionArchiveStartDate())
+		return getSEStats()
 			.checkQuality(storage::iterator);
 	}
 
