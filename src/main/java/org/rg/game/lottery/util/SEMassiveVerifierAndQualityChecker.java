@@ -368,7 +368,7 @@ public class SEMassiveVerifierAndQualityChecker {
 					}
 				}
 				if (hit > 1) {
-					historyData.computeIfAbsent(extractionDateAsString, key -> new LinkedHashMap<>())
+					historyData.computeIfAbsent(extractionDateAsString, key -> new TreeMap<>())
 					.computeIfAbsent(hit, ht -> new ArrayList<>()).add(currentCombo);
 				}
 			}
