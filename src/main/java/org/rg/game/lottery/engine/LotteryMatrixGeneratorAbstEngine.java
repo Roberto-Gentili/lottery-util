@@ -191,7 +191,13 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 					Boolean.parseBoolean(config.getProperty("combination.magic.enabled", "true")) ?
 						Integer.valueOf(Optional.ofNullable(config.getProperty("combination.magic.max-number")).orElseGet(() -> "90"))
 						:null,
-					config.getProperty("nameSuffix")
+					config.getProperty("nameSuffix"),
+					Boolean.parseBoolean(
+						config.getProperty(
+							"combination.not-equilibrate.at-least-one-number-among-those-chosen",
+							String.valueOf(!"sequence".equals(comboIndexSelectorType))
+						)
+					)
 				);
 				System.out.println("\n\n");
 			}
@@ -288,7 +294,8 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		LocalDate extractionDate,
 		Integer magicCombinationMinNumber,
 		Integer magicCombinationMaxNumber,
-		String suffix
+		String suffix,
+		boolean notEquilibrateCombinationAtLeastOneNumberAmongThoseChosen
 	) {
 		Map<String, Object> data = basicDataSupplier.apply(extractionDate);
 		List<Integer> numbers = (List<Integer>)data.get("numbersToBePlayed");
@@ -396,7 +403,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 						    );
 						}
 					}
-					if (!"sequence".equals(comboIndexSelectorType)) {
+					if (notEquilibrateCombinationAtLeastOneNumberAmongThoseChosen) {
 						while (!numbersCloned.isEmpty()) {
 							do {
 								selectedCombo = getNextCombo(
