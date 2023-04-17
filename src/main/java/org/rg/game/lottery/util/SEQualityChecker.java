@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -23,7 +24,7 @@ public class SEQualityChecker {
 
 	public static void main(String[] args) throws IOException {
 		check(
-			forDate("11/02/2023", "today", false)
+			forDate("11/02/2023", "nextExtraction", true)
 		);
 	}
 
@@ -36,7 +37,7 @@ public class SEQualityChecker {
 		LocalDate startDate = Shared.convert(startDateAsString);
 		LocalDate endDate =  Shared.convert(endDateAsString);
 		List<Map.Entry<LocalDate, Object>> dates = new ArrayList<>();
-		while (startDate.compareTo(endDate) < 0) {
+		while (startDate.compareTo(endDate) <= 0) {
 			startDate = engine.computeNextExtractionDate(startDate, false);
 			dates.add(new AbstractMap.SimpleEntry<LocalDate, Object>(startDate, printReportDetail));
 			startDate =  engine.computeNextExtractionDate(startDate.plus(1, ChronoUnit.DAYS), false);
@@ -70,10 +71,14 @@ public class SEQualityChecker {
 						Row row = rowIterator.next();
 						List<Integer> currentCombo = new ArrayList<>();
 						for (int i = 0; i < 6; i++) {
-							Integer currentNumber = Integer.valueOf((int)row.getCell(offset + i).getNumericCellValue());
+							Cell cell = row.getCell(offset + i);
+							if (cell == null) {
+								break;
+							}
+							Integer currentNumber = Integer.valueOf((int)cell.getNumericCellValue());
 							currentCombo.add(currentNumber);
 						}
-						if (currentCombo.get(0) == 0) {
+						if (currentCombo.isEmpty() || currentCombo.get(0) == 0) {
 							break;
 						}
 						system.add(currentCombo);
