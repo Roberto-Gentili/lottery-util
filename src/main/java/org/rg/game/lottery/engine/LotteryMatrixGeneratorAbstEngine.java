@@ -607,7 +607,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		return executor;
 	}
 
-	protected String getExtractionArchiveStartDate() {
+	public String getExtractionArchiveStartDate() {
 		return extractionArchiveStartDate != null ? extractionArchiveStartDate : getDefaultExtractionArchiveStartDate();
 	}
 

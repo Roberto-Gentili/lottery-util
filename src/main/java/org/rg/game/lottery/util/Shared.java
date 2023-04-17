@@ -35,7 +35,7 @@ class Shared {
 	static DecimalFormat integerFormat = new DecimalFormat( "#,##0" );
 	static SimpleDateFormat standardDatePattern = new SimpleDateFormat("dd/MM/yyyy");
 	static DateTimeFormatter formatter = DateTimeFormatter.ofPattern(standardDatePattern.toPattern());
-	static String SEStatsDefaultDate = new SELotteryMatrixGeneratorEngine().getDefaultExtractionArchiveStartDate();
+	static String SEStatsDefaultDate = new SELotteryMatrixGeneratorEngine().getExtractionArchiveStartDate();
 
 	static String capitalizeFirstCharacter(String value) {
 		return Character.toString(value.charAt(0)).toUpperCase()
