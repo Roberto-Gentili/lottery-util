@@ -80,7 +80,6 @@ public class SEMassiveVerifierAndQualityChecker {
 				mainFile.reset();
 				List<List<Integer>> system = new ArrayList<>();
 				try (InputStream srcFileInputStream = mainFile.toInputStream();
-					OutputStream destFileOutputStream =	new FileOutputStream(mainFile.getAbsolutePath());
 					Workbook workbook = new XSSFWorkbook(srcFileInputStream);
 				) {
 					XSSFFont boldFont = (XSSFFont) workbook.createFont();
@@ -152,7 +151,9 @@ public class SEMassiveVerifierAndQualityChecker {
 					if (results.getString() != null) {
 						cell.setCellValue(results);
 					}
-					workbook.write(destFileOutputStream);
+					try (OutputStream destFileOutputStream = new FileOutputStream(mainFile.getAbsolutePath())){
+						workbook.write(destFileOutputStream);
+					}
 				} catch (Throwable exc) {
 					exc.printStackTrace();
 				}
@@ -182,7 +183,6 @@ public class SEMassiveVerifierAndQualityChecker {
 			}
 			mainFile.reset();
 			try (InputStream srcFileInputStream = mainFile.toInputStream();
-				OutputStream destFileOutputStream =	new FileOutputStream(mainFile.getAbsolutePath());
 				Workbook workbook = new XSSFWorkbook(srcFileInputStream);
 			) {
 				Sheet sheet = Shared.getSummarySheet(workbook);
@@ -265,7 +265,9 @@ public class SEMassiveVerifierAndQualityChecker {
 					rowIndex++;
 				}
 				XSSFFormulaEvaluator.evaluateAllFormulaCells(workbook);
-				workbook.write(destFileOutputStream);
+				try (OutputStream destFileOutputStream = new FileOutputStream(mainFile.getAbsolutePath())){
+					workbook.write(destFileOutputStream);
+				}
 			} catch (Throwable exc) {
 				System.err.println("Unable to process file: " + exc.getMessage());
 			}
@@ -350,7 +352,9 @@ public class SEMassiveVerifierAndQualityChecker {
 		Map<String, Map<Integer,List<List<Integer>>>> historyData,
 		LocalDate extractionDate,
 		List<List<Integer>> system,
-		Map<Date, List<Integer>> allWinningCombos, XSSFRichTextString results, XSSFFont boldFont
+		Map<Date, List<Integer>> allWinningCombos,
+		XSSFRichTextString results,
+		XSSFFont boldFont
 	) {
 		Collection<Integer> hitNumbers = new LinkedHashSet<>();
 		String extractionDateAsString = formatter.format(extractionDate);
