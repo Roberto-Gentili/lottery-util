@@ -324,6 +324,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 			AtomicInteger uniqueIndexCounter = new AtomicInteger(0);
 			Integer ratioAsInt = null;
 			Integer remainder = null;
+			List<Integer> excludedNumbers = new ArrayList<>();
 			try {
 				if (equilibrate) {
 					Map<Integer, AtomicInteger> occurrences = new LinkedHashMap<>();
@@ -424,6 +425,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 							}
 						}
 					}
+					excludedNumbers.addAll(numbersCloned);
 				}
 			} catch (AllRandomNumbersHaveBeenGeneratedException exc) {
 				System.out.println("\n" + exc.getMessage());
@@ -435,7 +437,8 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 				"(occorrenza effettiva: " + decimalFormat.format((combinationComponents * storage.size()) / (double)numbers.size()) +
 				(numberOfCombosRequested == null ? ", richiesta: " + decimalFormat.format(occurrencesNumberRequested) : "") + ") " : "") +
 				"e' composto da " + integerFormat.format(storage.size()) + " combinazioni " + "scelte su " + integerFormat.format(comboHandler.getSizeAsInt()) + " totali" +
-					(fromFilterDiscardedComboCounter.get() > 0 ? " (scartate dal filtro: " + integerFormat.format(fromFilterDiscardedComboCounter.get()) + ")": "")
+					(fromFilterDiscardedComboCounter.get() > 0 ? " (scartate dal filtro: " + integerFormat.format(fromFilterDiscardedComboCounter.get()) + ")": "") + "." +
+					(excludedNumbers.isEmpty() ? "" : "\nAttenzione: i seguenti numeri non sono stati inclusi nel sistema: " + storage.toSimpleString(excludedNumbers))
 			);
 			boolean shouldBePlayed = random.nextBoolean();
 			boolean shouldBePlayedAbsolutely = random.nextBoolean() && shouldBePlayed;
