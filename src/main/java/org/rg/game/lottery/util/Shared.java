@@ -181,7 +181,6 @@ class Shared {
 	}
 
 	public static void main(String[] args) {
-		/*System.out.println(ComboHandler.sizeOf(ComboHandler.sizeOf(46, 6), 34));*/
 		List<Integer> ourNumbers = Arrays.asList(
 			1,2,3,4,5,7,8,9,
 			10,11,12,13,14,16,17,19,
@@ -193,6 +192,7 @@ class Shared {
 			75,77,79,
 			80,83,84,85,86,88,90
 		);
+		//System.out.println(ComboHandler.sizeOf(ComboHandler.sizeOf(ourNumbers.size(), 6), 34));
 		int count = 0;
 		List<List<Integer>> system = new ArrayList<>();
 		int bound = 4;
