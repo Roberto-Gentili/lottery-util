@@ -141,7 +141,7 @@ class Shared {
 		String suffix = System.getenv("file-to-be-processed-suffix");
 		FileSystemItem file = FileSystemItem.ofPath(PersistentStorage.buildWorkingPath() +
 			File.separator + "[SE]["+ extractionYear +"] - " + (suffix != null ? suffix : "Sistemi") +".xlsx");
-		System.out.println("Processing file " + file.getName());
+		//System.out.println("Processing file " + file.getName());
 		return file;
 	}
 
