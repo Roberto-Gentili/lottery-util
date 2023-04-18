@@ -1,6 +1,9 @@
 package org.rg.game.lottery.util;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -22,6 +25,7 @@ import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.io.FileSystemItem;
 import org.rg.game.lottery.engine.ComboHandler;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
@@ -179,8 +183,25 @@ class Shared {
 		return Character.valueOf("ABCDEFGHIJKLMNOPQRSTUVWXYZ".charAt(index)).toString();
 	}
 
-	public static SEStats getSEStats() {
+	static SEStats getSEStats() {
 		return SEStats.get(Shared.SEStatsDefaultDate);
+	}
+
+	static FileSystemItem backup(
+		LocalDateTime backupTime, FileSystemItem mainFile
+	) throws IOException {
+		String backupFileName = mainFile.getName().replace("." +  mainFile.getExtension(), "") + " - [" + Shared.datePattern.format(backupTime) + "]." + mainFile.getExtension();
+		String backupFilePath = mainFile.getParent().getAbsolutePath() + "\\Backup sistemi\\" + backupFileName;
+		if (!new File(backupFilePath).exists()) {
+			try (OutputStream backupOutputStream = new FileOutputStream(backupFilePath)) {
+				StaticComponentContainer.Streams.copy(
+					mainFile.toInputStream(),
+					backupOutputStream
+				);
+			}
+			return FileSystemItem.of(new File(backupFilePath));
+		}
+		return null;
 	}
 
 	public static void main(String[] args) {

@@ -24,7 +24,7 @@ public class SEQualityChecker {
 
 	public static void main(String[] args) throws IOException {
 		check(
-			forDate("14/02/2023", "nextExtraction", true)
+			forDate("14/02/2023", "29/04/2023", true)
 		);
 	}
 
