@@ -24,7 +24,14 @@ public class SEQualityChecker {
 
 	public static void main(String[] args) throws IOException {
 		check(
-			forDate("14/02/2023", "29/04/2023", true)
+			forDate(
+				Shared.getSystemEnv(
+					"startDate", "14/02/2023"
+				), Shared.getSystemEnv(
+					"endDate", "nextExtraction"
+				),
+				true
+			)
 		);
 	}
 
