@@ -43,7 +43,14 @@ public class SEMassiveVerifierAndQualityChecker {
 
 	public static void main(String[] args) throws IOException {
 		check(
-			forDate("14/02/2023", "29/04/2023", false)
+			forDate(
+				Shared.getSystemEnv(
+					"startDate", "14/02/2023"
+				), Shared.getSystemEnv(
+					"endDate", "nextExtraction"
+				),
+				false
+			)
 		);
 	}
 

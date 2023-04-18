@@ -204,6 +204,14 @@ class Shared {
 		return null;
 	}
 
+	static String getSystemEnv(String key, String defaultValue) {
+		String value = System.getenv(key);
+		if (value == null) {
+			return defaultValue;
+		}
+		return value;
+	}
+
 	public static void main(String[] args) {
 		List<Integer> ourNumbers = Arrays.asList(
 			1,2,3,4,5,7,8,9,
