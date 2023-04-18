@@ -65,7 +65,7 @@ public class SEQualityChecker {
 				try (InputStream srcFileInputStream = mainFile.toInputStream(); Workbook workbook = new XSSFWorkbook(srcFileInputStream);) {
 					Sheet sheet = workbook.getSheet(extractionMonth);
 					if (sheet == null) {
-						System.out.println("No sheet to test for date " + extractionMonth);
+						System.out.println("No sheet named '" + extractionMonth + "' to test for date " + extractionDate);
 						continue;
 					}
 					int offset = Shared.getCellIndex(sheet, extractionDay);
