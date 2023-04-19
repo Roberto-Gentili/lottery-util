@@ -254,7 +254,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		throw new UnsupportedOperationException("Expression is not supported: " + expression);
 	}
 
-	protected abstract Map<String, Number> testEffectiveness(String combinationFilterRaw, List<Integer> numbers, boolean parseBoolean);
+	protected abstract Map<String, Object> testEffectiveness(String combinationFilterRaw, List<Integer> numbers, boolean parseBoolean);
 
 	private List<LocalDate> forThisWeek() {
 		return forWeekOf(LocalDate.now());
@@ -299,8 +299,9 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		Map<String, Object> data = basicDataSupplier.apply(extractionDate);
 		List<Integer> numbers = (List<Integer>)data.get("numbersToBePlayed");
 		List<Integer> notSelectedNumbersToBePlayed = new ArrayList<>(numbers);
+		Map<String, Object> effectivenessTestResults = null;
 		if (combinationFilterRaw != null && testFilter) {
-			testEffectiveness(combinationFilterRaw, numbers, testFilterFineInfo);
+			effectivenessTestResults = testEffectiveness(combinationFilterRaw, numbers, testFilterFineInfo);
 		}
 		Double ratio;
 		Double occurrencesNumber = occurrencesNumberRequested;

@@ -136,7 +136,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	@Override
-	public Map<String, Number> testEffectiveness(String filterAsString, List<Integer> numbers, boolean fineLog) {
+	public Map<String, Object> testEffectiveness(String filterAsString, List<Integer> numbers, boolean fineLog) {
 		filterAsString = preProcess(filterAsString);
 		Predicate<List<Integer>> combinationFilter = CombinationFilterFactory.INSTANCE.parse(filterAsString, fineLog);
 		Set<Entry<Date, List<Integer>>> allWinningCombos = getSEStats().getAllWinningCombos().entrySet();
@@ -194,7 +194,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		if (fineLog && discardedFromHistory > 0) {
 			System.out.println();
 		}
-		Map<String, Number> stats = new LinkedHashMap<>();
+		Map<String, Object> stats = new LinkedHashMap<>();
 		double discardedPercentageFromHistory = (discardedFromHistory * 100) / (double)allWinningCombos.size();
 		double maintainedPercentageFromHistory = 100d - discardedPercentageFromHistory;
 		double discardedFromIntegralSystemPercentage = (discardedFromIntegralSystem * 100) / (double)comboHandler.getSizeAsInt();
@@ -205,15 +205,18 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		double effectiveness = (maintainedPercentageFromHistory + discardedFromIntegralSystemPercentage) / 2d;
 		/*double effectiveness = ((discardedFromIntegralSystem - discardedFromHistoryEstimation) * 100d) /
 				comboHandler.getSize();*/
-		System.out.println("Total extractions analyzed:" + rightAlignedString(integerFormat.format(allWinningCombos.size()), 25));
-		System.out.println("Discarded winning combos:" + rightAlignedString(integerFormat.format(discardedFromHistory), 27));
-		System.out.println("Discarded winning combos percentage:" + rightAlignedString(decimalFormat.format(discardedPercentageFromHistory) + " %", 18));
-		System.out.println("Maintained winning combos percentage:" + rightAlignedString(decimalFormat.format(maintainedPercentageFromHistory) + " %", 17));
-		System.out.println("Estimated maintained winning combos:" + rightAlignedString(decimalFormat.format(maintainedFromHistoryEstimation), 16));
-		System.out.println("Integral system total combos:" + rightAlignedString(decimalFormat.format(comboHandler.getSizeAsInt()), 23));
-		System.out.println("Integral system discarded combos:" + rightAlignedString(decimalFormat.format(discardedFromIntegralSystem), 19));
-		System.out.println("Integral system discarded combos percentage:" + rightAlignedString(decimalFormat.format(discardedFromIntegralSystemPercentage) + " %", 10));
-		System.out.println("Effectiveness:" + rightAlignedString(decimalFormat.format(effectiveness) + " %", 40) +"\n\n");
+		StringBuffer report = new StringBuffer();
+		report.append("Total extractions analyzed:" + rightAlignedString(integerFormat.format(allWinningCombos.size()), 25) + "\n");
+		report.append("Discarded winning combos:" + rightAlignedString(integerFormat.format(discardedFromHistory), 27) + "\n");
+		report.append("Discarded winning combos percentage:" + rightAlignedString(decimalFormat.format(discardedPercentageFromHistory) + " %", 18) + "\n");
+		report.append("Maintained winning combos percentage:" + rightAlignedString(decimalFormat.format(maintainedPercentageFromHistory) + " %", 17) + "\n");
+		report.append("Estimated maintained winning combos:" + rightAlignedString(decimalFormat.format(maintainedFromHistoryEstimation), 16) + "\n");
+		report.append("Integral system total combos:" + rightAlignedString(decimalFormat.format(comboHandler.getSizeAsInt()), 23) + "\n");
+		report.append("Integral system discarded combos:" + rightAlignedString(decimalFormat.format(discardedFromIntegralSystem), 19) + "\n");
+		report.append("Integral system discarded combos percentage:" + rightAlignedString(decimalFormat.format(discardedFromIntegralSystemPercentage) + " %", 10) + "\n");
+		report.append("Effectiveness:" + rightAlignedString(decimalFormat.format(effectiveness) + " %", 40) +"\n");
+		System.out.println(report.toString() + "\n");
+
 		stats.put("totalExtractionsAnalyzed", allWinningCombos.size());
 		stats.put("discardedWinningCombos", discardedFromHistory);
 		stats.put("discardedWinningCombosPercentage", discardedPercentageFromHistory);
@@ -222,6 +225,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		stats.put("integralSystemTotalCombos", comboHandler.getSizeAsInt());
 		stats.put("integralSystemDiscardedCombos", discardedFromIntegralSystem);
 		stats.put("integralSystemDiscardedCombosPercentage", discardedFromIntegralSystemPercentage);
+		stats.put("report", report);
 		return stats;
 	}
 
