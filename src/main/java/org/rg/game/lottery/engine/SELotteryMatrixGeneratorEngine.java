@@ -215,7 +215,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		report.append("Integral system discarded combos:" + rightAlignedString(decimalFormat.format(discardedFromIntegralSystem), 19) + "\n");
 		report.append("Integral system discarded combos percentage:" + rightAlignedString(decimalFormat.format(discardedFromIntegralSystemPercentage) + " %", 10) + "\n");
 		report.append("Effectiveness:" + rightAlignedString(decimalFormat.format(effectiveness) + " %", 40) +"\n");
-		System.out.println(report.toString() + "\n");
+		System.out.println(report.toString() + "\nFilter analysis ended\n");
 
 		stats.put("totalExtractionsAnalyzed", allWinningCombos.size());
 		stats.put("discardedWinningCombos", discardedFromHistory);
