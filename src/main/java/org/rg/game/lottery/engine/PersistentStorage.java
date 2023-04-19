@@ -23,7 +23,6 @@ public class PersistentStorage implements Storage {
 		LocalDate extractionDate,
 		int combinationCount,
 		int numberOfCombos,
-		List<Integer> numbers,
 		String suffix
 	) {
 		buildWorkingPath();
@@ -37,8 +36,6 @@ public class PersistentStorage implements Storage {
 		}
 		try {
 			bufferedWriter = new BufferedWriter(new FileWriter(absolutePath, false));
-			bufferedWriter.write("Il sistema e' composto da " + numbers.size() + " numeri: " + toSimpleString(numbers) + "\n");
-			bufferedWriter.flush();
 		} catch (IOException exc) {
 			throw new RuntimeException(exc);
 		}
@@ -72,8 +69,7 @@ public class PersistentStorage implements Storage {
 	@Override
 	public List<Integer> getCombo(int idx) {
 		try (BufferedReader bufferedReader = new BufferedReader(new FileReader(absolutePath))){
-			String line = bufferedReader.readLine();
-			line = bufferedReader.readLine();
+			String line = null;
 			int iterationIndex = 0;
 			while ((line = bufferedReader.readLine()) != null) {
 				if (line.split("\\t").length > 0) {
@@ -117,7 +113,7 @@ public class PersistentStorage implements Storage {
 	public boolean addCombo(List<Integer> selectedCombo) {
 		if (!contains(selectedCombo)) {
 			try {
-				bufferedWriter.write("\n" + ComboHandler.toString(selectedCombo));
+				bufferedWriter.write(ComboHandler.toString(selectedCombo) + "\n");
 				bufferedWriter.flush();
 				++size;
 			} catch (IOException exc) {
@@ -140,8 +136,7 @@ public class PersistentStorage implements Storage {
 
 	public boolean contains(List<Integer> selectedCombo) {
 		try (BufferedReader bufferedReader = new BufferedReader(new FileReader(absolutePath))){
-			String line = bufferedReader.readLine();
-			line = bufferedReader.readLine();
+			String line = null;
 			while ((line = bufferedReader.readLine()) != null) {
 				for (String numberAsString : line.split("\\t")) {
 					if (!selectedCombo.contains(Integer.parseInt(numberAsString))) {

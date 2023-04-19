@@ -8,10 +8,8 @@ public class MemoryStorage implements Storage {
 
 	List<List<Integer>> combos = new ArrayList<>();
 	String output;
-	List<Integer> numbers;
-	MemoryStorage(List<Integer> numbers) {
+	MemoryStorage() {
 		combos = new ArrayList<>();
-		this.numbers = numbers;
 		output = "";
 	}
 
@@ -28,7 +26,7 @@ public class MemoryStorage implements Storage {
 	@Override
 	public boolean addCombo(List<Integer> selectedCombo) {
 		if (!contains(selectedCombo)) {
-			output += "\n" + ComboHandler.toString(selectedCombo);
+			output += ComboHandler.toString(selectedCombo) + "\n";
 			return combos.add(selectedCombo);
 		}
 		return false;
@@ -52,7 +50,7 @@ public class MemoryStorage implements Storage {
 
 	@Override
 	public void printAll() {
-		System.out.println("Il sistema e' composto da " + numbers.size() + " numeri: " + toSimpleString(numbers) + "\n" + output);
+		System.out.println(output);
 	}
 
 	@Override

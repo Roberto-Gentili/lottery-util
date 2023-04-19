@@ -272,13 +272,12 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		LocalDate extractionDate,
 		int combinationCount,
 		int numberOfCombos,
-		List<Integer> numbers,
 		String suffix
 	) {
 		if ("memory".equalsIgnoreCase(storageType)) {
-			return new MemoryStorage(numbers);
+			return new MemoryStorage();
 		}
-		return new PersistentStorage(extractionDate, combinationCount, numberOfCombos, numbers, suffix);
+		return new PersistentStorage(extractionDate, combinationCount, numberOfCombos, suffix);
 	}
 
 	public void generate(
@@ -316,7 +315,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		AtomicInteger discoveredComboCounter = new AtomicInteger(0);
 		AtomicLong fromFilterDiscardedComboCounter = new AtomicLong(0);
 		ComboHandler comboHandler = new ComboHandler(numbers, combinationComponents);
-		try (Storage storage = buildStorage(((LocalDate)data.get("seedStartDate")), combinationComponents, numberOfCombos, numbers, suffix);) {
+		try (Storage storage = buildStorage(((LocalDate)data.get("seedStartDate")), combinationComponents, numberOfCombos, suffix);) {
 			storageRef = storage;
 			boolean equilibrate = equilibrateFlagSupplier.getAsBoolean();
 			AtomicReference<Iterator<List<Integer>>> randomCombosIteratorWrapper = new AtomicReference<>();
@@ -431,16 +430,16 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 			} catch (AllRandomNumbersHaveBeenGeneratedException exc) {
 				System.out.println("\n" + exc.getMessage());
 			}
-			System.out.println(
-				"\n\n" +
+			String systemGeneralInfo =
 				"Per il concorso numero " + data.get("seed") + " del " + ((LocalDate)data.get("seedStartDate")).format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG)) + " " +
 				"il sistema " + (equilibrate ? "bilanciato " + (remainder == 0 ? "perfetto " : "") +
 				"(occorrenza effettiva: " + decimalFormat.format((combinationComponents * storage.size()) / (double)numbers.size()) +
 				(numberOfCombosRequested == null ? ", richiesta: " + decimalFormat.format(occurrencesNumberRequested) : "") + ") " : "") +
 				"e' composto da " + integerFormat.format(storage.size()) + " combinazioni " + "scelte su " + integerFormat.format(comboHandler.getSizeAsInt()) + " totali" +
 					(fromFilterDiscardedComboCounter.get() > 0 ? " (scartate dal filtro: " + integerFormat.format(fromFilterDiscardedComboCounter.get()) + ")": "") + "." +
-					(notSelectedNumbersToBePlayed.isEmpty() ? "" : "\nAttenzione: i seguenti numeri non sono stati inclusi nel sistema: " + storage.toSimpleString(notSelectedNumbersToBePlayed))
-			);
+				"\nIl sistema e' composto da " + numbers.size() + " numeri: " + storage.toSimpleString(numbers) +
+				(notSelectedNumbersToBePlayed.isEmpty() ? "" : "\nAttenzione: i seguenti numeri non sono stati inclusi nel sistema: " + storage.toSimpleString(notSelectedNumbersToBePlayed))
+			;
 			boolean shouldBePlayed = random.nextBoolean();
 			boolean shouldBePlayedAbsolutely = random.nextBoolean() && shouldBePlayed;
 			if (magicCombinationMinNumber != null && magicCombinationMaxNumber != null) {
@@ -472,7 +471,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 					chooseRandom--;
 				}
 			}
-
+			storage.addLine(systemGeneralInfo);
 			if (reportEnabled) {
 				Map<String, Object> report = checkQuality(storageRef);
 				if (reportDetailEnabled) {
