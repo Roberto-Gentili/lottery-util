@@ -28,7 +28,6 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.io.FileSystemItem;
 import org.rg.game.lottery.engine.ComboHandler;
-import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.PersistentStorage;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.SEStats;
@@ -50,11 +49,7 @@ class Shared {
 		if (dateAsString.equals("today")) {
 			return LocalDateTime.now(ZoneId.of("Europe/Rome")).toLocalDate();
 		}
-		if (dateAsString.equals("nextExtraction")) {
-			LotteryMatrixGeneratorAbstEngine engine = new SELotteryMatrixGeneratorEngine();
-			return engine.computeNextExtractionDate(LocalDateTime.now(ZoneId.of("Europe/Rome")).toLocalDate(), false);
-		}
-		return LocalDate.parse(dateAsString, Shared.formatter);
+		return new SELotteryMatrixGeneratorEngine().computeExtractionDates(dateAsString).iterator().next();
 	}
 
 	static String getMonth(String date) {

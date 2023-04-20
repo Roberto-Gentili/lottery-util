@@ -65,53 +65,11 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	}
 
 	public void setup(Properties config) {
-		Collection<LocalDate> extractionDates = new LinkedHashSet<>();
 		comboSequencedIndexSelectorCounter = new AtomicInteger(0);
 		extractionArchiveStartDate = config.getProperty("competition.archive.start-date");
 		comboIndexSelectorType = config.getProperty("combination.selector", "random");
 		String extractionDatesAsString = config.getProperty("competition");
-		if (extractionDatesAsString == null || extractionDatesAsString.isEmpty()) {
-			extractionDates.add(LocalDate.now());
-		} else {
-			DateTimeFormatter datePattern = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-			for(String date : extractionDatesAsString.replaceAll("\\s+","").split(",")) {
-				String[] dateWithOffset = date.split("\\+");
-				if ("thisWeek".equalsIgnoreCase(dateWithOffset[0])) {
-					if (dateWithOffset.length == 2) {
-						String[] range = dateWithOffset[1].split("\\*");
-						if (range.length == 2) {
-							for (int i = 0; i < Integer.parseInt(range[1]); i++) {
-								extractionDates.addAll(forNextWeek(Integer.parseInt(range[0])+i));
-							}
-						} else {
-							extractionDates.addAll(forNextWeek(Integer.valueOf(range[0])));
-						}
-					} else {
-						extractionDates.addAll(forThisWeek());
-					}
-				} else {
-					LocalDate extractionDate = "next".equalsIgnoreCase(dateWithOffset[0])?
-						computeNextExtractionDate(LocalDate.now(), true) :
-						computeNextExtractionDate(LocalDate.parse(dateWithOffset[0], datePattern), false);
-					if (dateWithOffset.length == 2) {
-						String[] range = dateWithOffset[1].split("\\*");
-						for (int i = 0; i < Integer.parseInt(range[0]); i++) {
-							extractionDate = extractionDate.plus(getIncrementDays(extractionDate), ChronoUnit.DAYS);
-						}
-						if (range.length == 2) {
-							for (int i = 0; i < Integer.parseInt(range[1]); i++) {
-								extractionDates.add(extractionDate);
-								extractionDate = extractionDate.plus(getIncrementDays(extractionDate), ChronoUnit.DAYS);
-							}
-						} else {
-							extractionDates.add(extractionDate);
-						}
-					} else {
-						extractionDates.add(extractionDate);
-					}
-				}
-			}
-		}
+		Collection<LocalDate> extractionDates = computeExtractionDates(extractionDatesAsString);
 		storageType = config.getProperty("storage", "memory").replaceAll("\\s+","");
 		String combinationFilterRaw = config.getProperty("combination.filter");
 		combinationFilter = CombinationFilterFactory.INSTANCE.parse(
@@ -210,6 +168,53 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		} else if (avoidModeConfigValue.equals("if not strongly suggested")) {
 			avoidMode = 2;
 		}
+	}
+
+	public Collection<LocalDate> computeExtractionDates(String extractionDatesAsString) {
+		Collection<LocalDate> extractionDates = new LinkedHashSet<>();
+		if (extractionDatesAsString == null || extractionDatesAsString.isEmpty()) {
+			extractionDates.add(LocalDate.now());
+		} else {
+			DateTimeFormatter datePattern = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+			for(String date : extractionDatesAsString.replaceAll("\\s+","").split(",")) {
+				String[] dateWithOffset = date.split("\\+");
+				if ("thisWeek".equalsIgnoreCase(dateWithOffset[0])) {
+					if (dateWithOffset.length == 2) {
+						String[] range = dateWithOffset[1].split("\\*");
+						if (range.length == 2) {
+							for (int i = 0; i < Integer.parseInt(range[1]); i++) {
+								extractionDates.addAll(forNextWeek(Integer.parseInt(range[0])+i));
+							}
+						} else {
+							extractionDates.addAll(forNextWeek(Integer.valueOf(range[0])));
+						}
+					} else {
+						extractionDates.addAll(forThisWeek());
+					}
+				} else {
+					LocalDate extractionDate = "next".equalsIgnoreCase(dateWithOffset[0])?
+						computeNextExtractionDate(LocalDate.now(), true) :
+						computeNextExtractionDate(LocalDate.parse(dateWithOffset[0], datePattern), false);
+					if (dateWithOffset.length == 2) {
+						String[] range = dateWithOffset[1].split("\\*");
+						for (int i = 0; i < Integer.parseInt(range[0]); i++) {
+							extractionDate = extractionDate.plus(getIncrementDays(extractionDate), ChronoUnit.DAYS);
+						}
+						if (range.length == 2) {
+							for (int i = 0; i < Integer.parseInt(range[1]); i++) {
+								extractionDates.add(extractionDate);
+								extractionDate = extractionDate.plus(getIncrementDays(extractionDate), ChronoUnit.DAYS);
+							}
+						} else {
+							extractionDates.add(extractionDate);
+						}
+					} else {
+						extractionDates.add(extractionDate);
+					}
+				}
+			}
+		}
+		return extractionDates;
 	}
 
 	protected abstract String getDefaultNumberRange();

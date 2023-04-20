@@ -47,7 +47,7 @@ public class SEMassiveVerifierAndQualityChecker {
 				Shared.getSystemEnv(
 					"startDate", "14/02/2023"
 				), Shared.getSystemEnv(
-					"endDate", "nextExtraction"
+					"endDate", "next+1"
 				),
 				false
 			)

@@ -28,7 +28,7 @@ public class SEQualityChecker {
 				Shared.getSystemEnv(
 					"startDate", "14/02/2023"
 				), Shared.getSystemEnv(
-					"endDate", "nextExtraction"
+					"endDate", "next+0"
 				),
 				true
 			)
