@@ -91,6 +91,13 @@ public class SEMassiveVerifierAndQualityChecker {
 				) {
 					XSSFFont boldFont = (XSSFFont) workbook.createFont();
 					boldFont.setBold(true);
+					CellStyle boldAndCeneteredCellStyle = workbook.createCellStyle();
+					boldAndCeneteredCellStyle.setFont(boldFont);
+					boldAndCeneteredCellStyle.setAlignment(HorizontalAlignment.CENTER);
+					boldAndCeneteredCellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+					boldAndCeneteredCellStyle.setFillForegroundColor(IndexedColors.ORANGE.getIndex());
+					CellStyle normalAndCeneteredCellStyle = workbook.createCellStyle();
+					normalAndCeneteredCellStyle.setAlignment(HorizontalAlignment.CENTER);
 					Sheet sheet = workbook.getSheet(extractionMonth);
 					if (sheet == null) {
 						System.out.println("Nessun foglio da verificare per il mese " + extractionMonth);
@@ -103,6 +110,7 @@ public class SEMassiveVerifierAndQualityChecker {
 					}
 					Iterator<Row> rowIterator = sheet.rowIterator();
 					rowIterator.next();
+					List<Integer> winningCombo = Shared.getSEStats().getWinningComboOf(dateInfo.getKey());
 					while (rowIterator.hasNext()) {
 						Row row = rowIterator.next();
 						List<Integer> currentCombo = new ArrayList<>();
@@ -111,6 +119,11 @@ public class SEMassiveVerifierAndQualityChecker {
 							try {
 								Integer currentNumber = Integer.valueOf((int)cell.getNumericCellValue());
 								currentCombo.add(currentNumber);
+								if (winningCombo != null && winningCombo.contains(currentNumber)) {
+									cell.setCellStyle(boldAndCeneteredCellStyle);
+								} else {
+									cell.setCellStyle(normalAndCeneteredCellStyle);
+								}
 							} catch (NullPointerException exc) {
 								if (cell == null) {
 									break;
@@ -129,7 +142,7 @@ public class SEMassiveVerifierAndQualityChecker {
 						system.add(currentCombo);
 					}
 					rowIterator = sheet.rowIterator();
-					sheet.setColumnWidth(offset + 6, 5800);
+					sheet.setColumnWidth(offset + 6, 6200);
 					rowIterator.next();
 					Cell cell = rowIterator.next().getCell(offset + 6);
 					XSSFRichTextString results = new XSSFRichTextString();
@@ -139,7 +152,7 @@ public class SEMassiveVerifierAndQualityChecker {
 							dataForTime,
 							dateInfo.getKey(),
 							system,
-							Shared.getSEStats().getWinningComboOf(dateInfo.getKey()),
+							winningCombo,
 							results,
 							boldFont
 						)
@@ -169,8 +182,10 @@ public class SEMassiveVerifierAndQualityChecker {
 		writeAndPrintData(globalData, dataForTime);
 	}
 
-	private static void writeAndPrintData(Map<Integer, List<List<Integer>>> globalData,
-			Map<Integer, Map<String, Map<Integer, Integer>>> dataForTime) throws IOException {
+	private static void writeAndPrintData(
+		Map<Integer, List<List<Integer>>> globalData,
+		Map<Integer, Map<String, Map<Integer, Integer>>> dataForTime
+	) throws IOException {
 		System.out.println("\nRisultati per tempo:");
 		for (Map.Entry<Integer, Map<String, Map<Integer, Integer>>> yearAndDataForMonth : dataForTime.entrySet()) {
 			int year = yearAndDataForMonth.getKey();
@@ -285,7 +300,7 @@ public class SEMassiveVerifierAndQualityChecker {
 		XSSFRichTextString results,
 		XSSFFont boldFont
 	) {
-		if (winningCombo == null) {
+		if (winningCombo == null || winningCombo.isEmpty()) {
 			return "Nessuna estrazione per il concorso del " + Shared.formatter.format(extractionDate) + "\n";
 		}
 		Map<Integer,List<List<Integer>>> winningCombos = new TreeMap<>();
@@ -307,24 +322,43 @@ public class SEMassiveVerifierAndQualityChecker {
 				globalData.computeIfAbsent(hit, ht -> new ArrayList<>()).add(currentCombo);
 			}
 		}
+		results.append("Vincente", boldFont);
+		results.append(": ");
+		results.append(
+			Shared.toString(winningCombo, ", ") + "\n\n"
+		);
 		results.append("Concorso", boldFont);
 		results.append(": ");
-		if (!winningCombo.isEmpty()) {
-			if (!winningCombos.isEmpty()) {
-				results.append("\n");
-				for (Map.Entry<Integer, List<List<Integer>>> combos: winningCombos.entrySet()) {
-					results.append("  " + Shared.toPremiumLabel(combos.getKey()), boldFont);
-					results.append(":" + "\n");
-					for (List<Integer> combo : combos.getValue()) {
-						results.append("    " +
-							Shared.toString(combo, ", ", winningCombo) + "\n"
-						);
+		if (!winningCombos.isEmpty()) {
+			results.append("\n");
+			for (Map.Entry<Integer, List<List<Integer>>> combos: winningCombos.entrySet()) {
+				results.append("  " + Shared.toPremiumLabel(combos.getKey()), boldFont);
+				results.append(":" + "\n");
+				Iterator<List<Integer>> combosIterator = combos.getValue().iterator();
+				while (combosIterator.hasNext()) {
+					List<Integer> currentCombo = combosIterator.next();
+					results.append("    ");
+					Iterator<Integer> winningComboIterator = currentCombo.iterator();
+					while (winningComboIterator.hasNext()) {
+						Integer number = winningComboIterator.next();
+						if (winningCombo.contains(number)) {
+							results.append(number.toString(), boldFont);
+						} else {
+							results.append(number.toString());
+						}
+						if (winningComboIterator.hasNext()) {
+							results.append(", ");
+						}
+					}
+					if (combosIterator.hasNext()) {
+						results.append("\n");
 					}
 				}
-			} else {
-				results.append("nessuna vincita\n");
 			}
+		} else {
+			results.append("nessuna vincita");
 		}
+		results.append("\n");
 		StringBuffer result = new StringBuffer();
 		if (!winningCombo.isEmpty()) {
 			if (!winningCombos.isEmpty()) {

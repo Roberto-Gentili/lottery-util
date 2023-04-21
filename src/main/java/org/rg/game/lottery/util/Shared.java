@@ -94,15 +94,6 @@ class Shared {
 		return -1;
 	}
 
-	static String toString(Collection<Integer> combo, String separator) {
-		return String.join(
-			separator,
-			combo.stream()
-		    .map(Object::toString)
-		    .collect(Collectors.toList())
-		);
-	}
-
 	static String toPremiumLabel(Integer hit) {
 		if (hit == 2) {
 			return "Ambo";
@@ -165,7 +156,7 @@ class Shared {
 		);
 	}
 
-	static String toString(Collection<Integer> combo, String separator, Collection<Integer> numbers) {
+	static String toString(Collection<Integer> combo, String separator) {
 		return String.join(
 			separator,
 			combo.stream()
