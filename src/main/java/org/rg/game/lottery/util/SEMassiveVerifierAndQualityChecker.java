@@ -142,7 +142,7 @@ public class SEMassiveVerifierAndQualityChecker {
 						system.add(currentCombo);
 					}
 					rowIterator = sheet.rowIterator();
-					sheet.setColumnWidth(offset + 6, 6200);
+					sheet.setColumnWidth(offset + 6, 6400);
 					rowIterator.next();
 					Cell cell = rowIterator.next().getCell(offset + 6);
 					XSSFRichTextString results = new XSSFRichTextString();
