@@ -398,7 +398,7 @@ public class SEMassiveVerifierAndQualityChecker {
 		while (winningAndCombosIterator.hasNext()) {
 			Map.Entry<Integer, List<List<Integer>>> combos = winningAndCombosIterator.next();
 			results.append("  " + Shared.toPremiumLabel(combos.getKey()), boldFont);
-			results.append(": " + combos.getValue().size() + "\n");
+			results.append(": " + combos.getValue().size());
 			if (winningAndCombosIterator.hasNext()) {
 				results.append("\n");
 			}
