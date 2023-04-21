@@ -332,28 +332,8 @@ public class SEMassiveVerifierAndQualityChecker {
 		if (!winningCombos.isEmpty()) {
 			results.append("\n");
 			for (Map.Entry<Integer, List<List<Integer>>> combos: winningCombos.entrySet()) {
-				results.append("  " + Shared.toPremiumLabel(combos.getKey()), boldFont);
-				results.append(":" + "\n");
-				Iterator<List<Integer>> combosIterator = combos.getValue().iterator();
-				while (combosIterator.hasNext()) {
-					List<Integer> currentCombo = combosIterator.next();
-					results.append("    ");
-					Iterator<Integer> winningComboIterator = currentCombo.iterator();
-					while (winningComboIterator.hasNext()) {
-						Integer number = winningComboIterator.next();
-						if (winningCombo.contains(number)) {
-							results.append(number.toString(), boldFont);
-						} else {
-							results.append(number.toString());
-						}
-						if (winningComboIterator.hasNext()) {
-							results.append(", ");
-						}
-					}
-					if (combosIterator.hasNext()) {
-						results.append("\n");
-					}
-				}
+				//printDetailedWinningInfo(winningCombo, results, boldFont, combos);
+				printSummaryWinningInfo(winningCombo, results, boldFont, combos);
 			}
 		} else {
 			results.append("nessuna vincita");
@@ -376,6 +356,44 @@ public class SEMassiveVerifierAndQualityChecker {
 			}
 		}
 		return result.toString();
+	}
+
+	private static void printDetailedWinningInfo(
+		List<Integer> winningCombo, XSSFRichTextString results,
+		XSSFFont boldFont, Map.Entry<Integer, List<List<Integer>>> combos
+	) {
+		results.append("  " + Shared.toPremiumLabel(combos.getKey()), boldFont);
+		results.append(":" + "\n");
+		Iterator<List<Integer>> combosIterator = combos.getValue().iterator();
+		while (combosIterator.hasNext()) {
+			List<Integer> currentCombo = combosIterator.next();
+			results.append("    ");
+			Iterator<Integer> winningComboIterator = currentCombo.iterator();
+			while (winningComboIterator.hasNext()) {
+				Integer number = winningComboIterator.next();
+				if (winningCombo.contains(number)) {
+					results.append(number.toString(), boldFont);
+				} else {
+					results.append(number.toString());
+				}
+				if (winningComboIterator.hasNext()) {
+					results.append(", ");
+				}
+			}
+			if (combosIterator.hasNext()) {
+				results.append("\n");
+			}
+		}
+	}
+
+	private static void printSummaryWinningInfo(
+		List<Integer> winningCombo,
+		XSSFRichTextString results,
+		XSSFFont boldFont,
+		Map.Entry<Integer, List<List<Integer>>> combos
+	) {
+		results.append("  " + Shared.toPremiumLabel(combos.getKey()), boldFont);
+		results.append(": " + combos.getValue().size() + "\n");
 	}
 
 	private static void checkInHistory(
