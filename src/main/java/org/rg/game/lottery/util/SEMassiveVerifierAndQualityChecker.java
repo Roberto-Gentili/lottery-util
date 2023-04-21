@@ -331,10 +331,8 @@ public class SEMassiveVerifierAndQualityChecker {
 		results.append(": ");
 		if (!winningCombos.isEmpty()) {
 			results.append("\n");
-			for (Map.Entry<Integer, List<List<Integer>>> combos: winningCombos.entrySet()) {
-				//printDetailedWinningInfo(winningCombo, results, boldFont, combos);
-				printSummaryWinningInfo(winningCombo, results, boldFont, combos);
-			}
+			printSummaryWinningInfo(winningCombo, results, boldFont, winningCombos);
+			//printDetailedWinningInfo(winningCombo, results, boldFont, winningCombos);
 		} else {
 			results.append("nessuna vincita");
 		}
@@ -359,29 +357,33 @@ public class SEMassiveVerifierAndQualityChecker {
 	}
 
 	private static void printDetailedWinningInfo(
-		List<Integer> winningCombo, XSSFRichTextString results,
-		XSSFFont boldFont, Map.Entry<Integer, List<List<Integer>>> combos
+		List<Integer> winningCombo,
+		XSSFRichTextString results,
+		XSSFFont boldFont,
+		Map<Integer, List<List<Integer>>> winningCombos
 	) {
-		results.append("  " + Shared.toPremiumLabel(combos.getKey()), boldFont);
-		results.append(":" + "\n");
-		Iterator<List<Integer>> combosIterator = combos.getValue().iterator();
-		while (combosIterator.hasNext()) {
-			List<Integer> currentCombo = combosIterator.next();
-			results.append("    ");
-			Iterator<Integer> winningComboIterator = currentCombo.iterator();
-			while (winningComboIterator.hasNext()) {
-				Integer number = winningComboIterator.next();
-				if (winningCombo.contains(number)) {
-					results.append(number.toString(), boldFont);
-				} else {
-					results.append(number.toString());
+		for (Map.Entry<Integer, List<List<Integer>>> combos: winningCombos.entrySet()) {
+			results.append("  " + Shared.toPremiumLabel(combos.getKey()), boldFont);
+			results.append(":" + "\n");
+			Iterator<List<Integer>> combosIterator = combos.getValue().iterator();
+			while (combosIterator.hasNext()) {
+				List<Integer> currentCombo = combosIterator.next();
+				results.append("    ");
+				Iterator<Integer> winningComboIterator = currentCombo.iterator();
+				while (winningComboIterator.hasNext()) {
+					Integer number = winningComboIterator.next();
+					if (winningCombo.contains(number)) {
+						results.append(number.toString(), boldFont);
+					} else {
+						results.append(number.toString());
+					}
+					if (winningComboIterator.hasNext()) {
+						results.append(", ");
+					}
 				}
-				if (winningComboIterator.hasNext()) {
-					results.append(", ");
+				if (combosIterator.hasNext()) {
+					results.append("\n");
 				}
-			}
-			if (combosIterator.hasNext()) {
-				results.append("\n");
 			}
 		}
 	}
@@ -390,10 +392,17 @@ public class SEMassiveVerifierAndQualityChecker {
 		List<Integer> winningCombo,
 		XSSFRichTextString results,
 		XSSFFont boldFont,
-		Map.Entry<Integer, List<List<Integer>>> combos
+		Map<Integer, List<List<Integer>>> winningCombos
 	) {
-		results.append("  " + Shared.toPremiumLabel(combos.getKey()), boldFont);
-		results.append(": " + combos.getValue().size() + "\n");
+		Iterator<Map.Entry<Integer, List<List<Integer>>>> winningAndCombosIterator = winningCombos.entrySet().iterator();
+		while (winningAndCombosIterator.hasNext()) {
+			Map.Entry<Integer, List<List<Integer>>> combos = winningAndCombosIterator.next();
+			results.append("  " + Shared.toPremiumLabel(combos.getKey()), boldFont);
+			results.append(": " + combos.getValue().size() + "\n");
+			if (winningAndCombosIterator.hasNext()) {
+				results.append("\n");
+			}
+		}
 	}
 
 	private static void checkInHistory(
