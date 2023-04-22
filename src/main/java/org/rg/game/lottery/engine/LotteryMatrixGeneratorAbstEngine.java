@@ -70,6 +70,12 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		comboIndexSelectorType = config.getProperty("combination.selector", "random");
 		String extractionDatesAsString = config.getProperty("competition");
 		Collection<LocalDate> extractionDates = computeExtractionDates(extractionDatesAsString);
+		System.out.println(
+			"Computing for the following extraction dates:\n\t"+
+			String.join(", ",
+				extractionDates.stream().map(simpleDateFormatter::format).collect(Collectors.toList())
+			)
+		);
 		storageType = config.getProperty("storage", "memory").replaceAll("\\s+","");
 		String combinationFilterRaw = config.getProperty("combination.filter");
 		combinationFilter = CombinationFilterFactory.INSTANCE.parse(
