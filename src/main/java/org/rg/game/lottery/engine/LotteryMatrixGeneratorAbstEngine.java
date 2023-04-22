@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -53,7 +54,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	protected String extractionArchiveStartDate;
 	protected String extractionArchiveForSeedStartDate;
 	protected String storageType;
-	protected Runnable executor;
+	protected Function<Predicate<LocalDate>,Function<Consumer<Storage>, List<Storage>>> executor;
 	protected int engineIndex;
 	protected Integer avoidMode;
 	protected Predicate<List<Integer>> combinationFilter;
@@ -133,9 +134,13 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		}
 		reportEnabled = Boolean.parseBoolean(config.getProperty("report.enabled", "true"));
 		reportDetailEnabled = Boolean.parseBoolean(config.getProperty("report.detail.enabled", "false"));
-		executor = () -> {
+		executor = extractionDatePredicate -> storageProcessor -> {
+			List<Storage> storages = new ArrayList<>();
 			for (LocalDate extractionDate : extractionDates) {
-				generate(
+				if (extractionDatePredicate != null && extractionDatePredicate.negate().test(extractionDate)) {
+					continue;
+				}
+				Storage storage = generate(
 					basicDataSupplier,
 					combinationFilterRaw,
 					Boolean.parseBoolean(config.getProperty("combination.filter.test", "true")),
@@ -166,8 +171,15 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 						)
 					)
 				);
+				if (storageProcessor != null) {
+					storageProcessor.accept(storage);
+				}
+				storages.add(
+					storage
+				);
 				System.out.println("\n\n");
 			}
+			return storages;
 		};
 		String avoidModeConfigValue = config.getProperty("avoid", "never");
 		if (avoidModeConfigValue.equals("never")) {
@@ -294,7 +306,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		return new PersistentStorage(extractionDate, combinationCount, numberOfCombos, suffix);
 	}
 
-	public void generate(
+	public Storage generate(
 		Function<LocalDate, Map<String, Object>> basicDataSupplier,
 		String combinationFilterRaw,
 		boolean testFilter,
@@ -514,6 +526,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 				storageRef.printAll();
 			}
 		}
+		return storageRef;
 	}
 
 	protected abstract Map<String, Object> checkQuality(Storage storageRef);
@@ -628,7 +641,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		);
 	}
 
-	public Runnable getExecutor() {
+	public Function<Predicate<LocalDate>, Function<Consumer<Storage>, List<Storage>>> getExecutor() {
 		return executor;
 	}
 

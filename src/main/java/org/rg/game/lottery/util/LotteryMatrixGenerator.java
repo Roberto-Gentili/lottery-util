@@ -74,9 +74,9 @@ public class LotteryMatrixGenerator {
 			configuration.setProperty("nameSuffix", configuration.getProperty("file.name").replace("." + configuration.getProperty("file.extension"), ""));
 			engine.setup(configuration);
 			if (Boolean.parseBoolean(configuration.getProperty("async", "false"))) {
-				futures.add(CompletableFuture.runAsync(() -> engine.getExecutor().run()));
+				futures.add(CompletableFuture.runAsync(() -> engine.getExecutor().apply(null).apply(null)));
 			} else {
-				engine.getExecutor().run();
+				engine.getExecutor().apply(null).apply(null);
 			}
 		}
 	}
