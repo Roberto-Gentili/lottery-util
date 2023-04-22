@@ -69,31 +69,13 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 
 	@Override
 	public Map<String, Object> adjustSeed(LocalDate extractionDate) {
-		Map<String, Object> competiotionInfo = getCompetitionInfo();
-		long seed = (long)competiotionInfo.get("startSeed");
-		LocalDate seedStartDate = (LocalDate)competiotionInfo.get("startDate");
-		if (seedStartDate.compareTo(extractionDate) >= 0) {
-			throw new IllegalArgumentException("Unvalid date: " + extractionDate);
-		}
-		while (seedStartDate.compareTo(extractionDate) < 0) {
-			seedStartDate = seedStartDate.plus(getIncrementDays(seedStartDate), ChronoUnit.DAYS);
-			seed++;
-		}
-		random = new Random(seed);
+		Map.Entry<LocalDate, Long> seedRecord = SEStats.get("03/12/1997").getSeedData(extractionDate);
+		random = new Random(seedRecord.getValue());
 		buildComboIndexSupplier();
 		Map<String, Object> seedData = new LinkedHashMap<>();
-		seedData.put("seed", seed);
-		seedData.put("seedStartDate", seedStartDate);
+		seedData.put("seed", seedRecord.getValue());
+		seedData.put("seedStartDate", seedRecord.getKey());
 		return seedData;
-	}
-
-	private Map<String, Object> getCompetitionInfo() {
-		Map<String, Object> data = new LinkedHashMap<>();
-		data.put("startSeed", 3540L);
-		data.put("startDate", LocalDate.parse("14/02/2023", simpleDateFormatter));
-		/*data.put("startSeed", 1L);
-		data.put("startDate", LocalDate.parse(getDefaultExtractionArchiveStartDate(), simpleDateFormatter));*/
-		return data;
 	}
 
 	@Override

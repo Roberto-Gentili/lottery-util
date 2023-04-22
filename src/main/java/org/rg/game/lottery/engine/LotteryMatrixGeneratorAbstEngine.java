@@ -633,7 +633,6 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		return extractionArchiveStartDate != null ? extractionArchiveStartDate : getDefaultExtractionArchiveStartDate();
 	}
 
-
 	void buildComboIndexSupplier() {
 		comboIndexSupplier = comboIndexSelectorType.equals("random") ?
 			random::nextInt :

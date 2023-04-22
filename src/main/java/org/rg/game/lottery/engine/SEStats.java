@@ -8,8 +8,12 @@ import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -22,6 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
@@ -44,6 +49,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 public class SEStats {
+	private static final String DEFAULT_TIME_ZONE = "Europe/Rome";
 	private static final Map<String, SEStats> INSTANCES;
 	public static boolean forceLoadingFromExcel;
 
@@ -60,6 +66,7 @@ public class SEStats {
 	protected DecimalFormat integerFormat = new DecimalFormat( "#,##0" );
 	private final DateFormat dateFmt = new SimpleDateFormat("yyyy dd MMMM", Locale.ITALY);
 	private final DateFormat defaultDateFmt = new SimpleDateFormat("dd/MM/yyyy");
+	protected DateTimeFormatter simpleDateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 	private final DateFormat defaultDateFmtForFile = new SimpleDateFormat("[yyyy][MM][dd]");
 	private Date startDate;
 
@@ -84,6 +91,7 @@ public class SEStats {
 	}
 
 	private void init(String startDate) {
+		this.startDate = buildStartDate(startDate);
 		dataLoaders = Arrays.asList(
 			new InternetDataLoader(),
 			new FromExcelDataLoader()
@@ -92,7 +100,6 @@ public class SEStats {
 			//new ToExcelDataStorerV1(),
 			new ToExcelDataStorerV2()
 		);
-		this.startDate = buildStartDate(startDate);
 		this.allWinningCombos = new LinkedHashMap<>();
 		this.allWinningCombosWithJollyAndSuperstar = new LinkedHashMap<>();
 		boolean dataLoaded = false;
@@ -347,7 +354,7 @@ public class SEStats {
 	}
 
 	public List<Integer> getWinningComboOf(LocalDate date) {
-		return getWinningComboOf(Date.from(date.atStartOfDay(ZoneId.of("Europe/Rome")).toInstant()));
+		return getWinningComboOf(Date.from(date.atStartOfDay(ZoneId.of(DEFAULT_TIME_ZONE)).toInstant()));
 	}
 
 
@@ -488,8 +495,12 @@ public class SEStats {
 			if (forceLoadingFromExcel) {
 				return false;
 			}
-			int startYear = 2009;
-			int endYear = Calendar.getInstance().get(Calendar.YEAR);
+			Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone(DEFAULT_TIME_ZONE));
+			Date currentDate = calendar.getTime();
+			calendar.setTime(startDate);
+			int startYear =  calendar.get(Calendar.YEAR);
+			calendar.setTime(currentDate);
+			int endYear = calendar.get(Calendar.YEAR);
 			System.out.println();
 			for (int year : IntStream.range(startYear, (endYear + 1)).map(i -> (endYear + 1) - i + startYear - 1).toArray()) {
 				System.out.println("Loading all extraction data of " + year);
@@ -514,7 +525,10 @@ public class SEStats {
 							allWinningCombos.put(extractionDate, extractedCombo);
 							List<Integer> extractedComboWithJollyAndSuperstar = new ArrayList<>(extractedCombo);
 							extractedComboWithJollyAndSuperstar.add(Integer.parseInt(tableRow.select("li[class=jolly]").first().text()));
-							extractedComboWithJollyAndSuperstar.add(Integer.parseInt(tableRow.select("li[class=superstar]").first().text()));
+							Element superStarData = tableRow.select("li[class=superstar]").first();
+							if (superStarData != null) {
+								extractedComboWithJollyAndSuperstar.add(Integer.parseInt(superStarData.text()));
+							}
 							allWinningCombosWithJollyAndSuperstar.put(extractionDate, extractedComboWithJollyAndSuperstar);
 						}
 					}
@@ -804,6 +818,33 @@ public class SEStats {
 			return true;
 		}
 
+	}
+
+	public Map.Entry<LocalDate, Long> getSeedData(LocalDate extractionDate) {
+		int size = allWinningCombos.size();
+		long counter = 0;
+		LocalDate seedStartDate = null;
+		for (Map.Entry<Date, List<Integer>> extractionData : allWinningCombos.entrySet()) {
+			seedStartDate = extractionData.getKey().toInstant().atZone(ZoneId.of(DEFAULT_TIME_ZONE)).toLocalDate();
+			if (seedStartDate.compareTo(extractionDate) <= 0) {
+				break;
+			}
+			counter++;
+		}
+		if (counter > 0) {
+			return new AbstractMap.SimpleEntry<>(seedStartDate, size - counter);
+		} else {
+			counter = size;
+			while (seedStartDate.compareTo(extractionDate) < 0) {
+				seedStartDate = seedStartDate.plus(getIncrementDays(seedStartDate), ChronoUnit.DAYS);
+				counter++;
+			}
+		}
+		return new AbstractMap.SimpleEntry<>(seedStartDate, counter);
+	}
+
+	protected int getIncrementDays(LocalDate startDate) {
+		return startDate.getDayOfWeek().getValue() == DayOfWeek.SATURDAY.getValue() ? 3 : 2;
 	}
 
 }
