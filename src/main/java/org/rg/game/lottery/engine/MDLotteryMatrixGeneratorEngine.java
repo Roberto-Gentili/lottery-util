@@ -100,11 +100,6 @@ public class MDLotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	@Override
-	public String getDefaultExtractionArchiveStartDate() {
-		return null;
-	}
-
-	@Override
 	protected String getDefaultNumberRange() {
 		return "1 -> 55";
 	}
@@ -112,5 +107,16 @@ public class MDLotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	@Override
 	protected Map<String, Object> checkQuality(Storage storage) {
 		throw new UnsupportedOperationException("Check quality");
+	}
+
+
+	@Override
+	public String getDefaultExtractionArchiveStartDate() {
+		return "07/02/2018";
+	}
+
+	@Override
+	public String getDefaultExtractionArchiveForSeedStartDate() {
+		return "07/02/2018";
 	}
 }

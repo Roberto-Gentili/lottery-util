@@ -78,6 +78,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		return seedData;
 	}
 
+
 	@Override
 	protected List<Map<String,List<Integer>>> getAllChosenNumbers() {
 		return allChosenNumbers;
@@ -115,6 +116,11 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	@Override
 	public String getDefaultExtractionArchiveStartDate() {
 		return "02/07/2009";
+	}
+
+	@Override
+	public String getDefaultExtractionArchiveForSeedStartDate() {
+		return "03/12/1997";
 	}
 
 	@Override

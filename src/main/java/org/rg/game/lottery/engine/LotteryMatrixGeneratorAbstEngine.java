@@ -51,12 +51,14 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	protected DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 	protected DateTimeFormatter simpleDateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 	protected String extractionArchiveStartDate;
+	protected String extractionArchiveForSeedStartDate;
 	protected String storageType;
 	protected Runnable executor;
 	protected int engineIndex;
 	protected Integer avoidMode;
 	protected Predicate<List<Integer>> combinationFilter;
 	protected ExpressionToPredicateEngine<List<Integer>> combinationFilterPreProcessor;
+
 
 	LotteryMatrixGeneratorAbstEngine() {
 		engineIndex = getAllChosenNumbers().size();
@@ -67,6 +69,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	public void setup(Properties config) {
 		comboSequencedIndexSelectorCounter = new AtomicInteger(0);
 		extractionArchiveStartDate = config.getProperty("competition.archive.start-date");
+		extractionArchiveForSeedStartDate = config.getProperty("seed-data.start-date");
 		comboIndexSelectorType = config.getProperty("combination.selector", "random");
 		String extractionDatesAsString = config.getProperty("competition");
 		Collection<LocalDate> extractionDates = computeExtractionDates(extractionDatesAsString);
@@ -633,6 +636,10 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		return extractionArchiveStartDate != null ? extractionArchiveStartDate : getDefaultExtractionArchiveStartDate();
 	}
 
+	public String getExtractionArchiveForSeedStartDate() {
+		return extractionArchiveForSeedStartDate != null ? extractionArchiveForSeedStartDate : getDefaultExtractionArchiveForSeedStartDate();
+	}
+
 	void buildComboIndexSupplier() {
 		comboIndexSupplier = comboIndexSelectorType.equals("random") ?
 			random::nextInt :
@@ -665,6 +672,8 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	protected abstract int getIncrementDays(LocalDate startDate);
 
 	protected abstract Function<String, Function<Integer, Function<Integer, Iterator<Integer>>>> getNumberGeneratorFactory();
+
+	public abstract String getDefaultExtractionArchiveForSeedStartDate();
 
 }
 
