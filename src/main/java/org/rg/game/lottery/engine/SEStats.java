@@ -86,7 +86,7 @@ public class SEStats {
 		init(startDate, endDate);
 	}
 
-	public final static SEStats get(String startDate, String endDate) {
+	public static final SEStats get(String startDate, String endDate) {
 		String key = startDate+"->"+endDate;
 		SEStats sEStats = INSTANCES.get(key);
 		if (sEStats == null) {
