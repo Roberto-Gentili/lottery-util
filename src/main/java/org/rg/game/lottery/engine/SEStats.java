@@ -51,6 +51,8 @@ import org.jsoup.select.Elements;
 public class SEStats {
 	private static final Map<String, SEStats> INSTANCES;
 	public static boolean forceLoadingFromExcel;
+	protected static DateFormat defaultDateFmt = new SimpleDateFormat("dd/MM/yyyy");
+	protected static DateTimeFormatter simpleDateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
 	static {
 		SEStats.forceLoadingFromExcel =
@@ -64,8 +66,6 @@ public class SEStats {
 	protected DecimalFormat decimalFormat = new DecimalFormat( "#,##0.##" );
 	protected DecimalFormat integerFormat = new DecimalFormat( "#,##0" );
 	protected DateFormat dateFmt = new SimpleDateFormat("yyyy dd MMMM", Locale.ITALY);
-	protected DateFormat defaultDateFmt = new SimpleDateFormat("dd/MM/yyyy");
-	protected DateTimeFormatter simpleDateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 	protected DateFormat defaultDateFmtForFile = new SimpleDateFormat("[yyyy][MM][dd]");
 	protected Date startDate;
 	protected Date endDate;
@@ -87,6 +87,9 @@ public class SEStats {
 	}
 
 	public static final SEStats get(String startDate, String endDate) {
+		if (LocalDate.parse(endDate, simpleDateFormatter).compareTo(LocalDate.now()) > 0) {
+			endDate = simpleDateFormatter.format(LocalDate.now());
+		}
 		String key = startDate+"->"+endDate;
 		SEStats sEStats = INSTANCES.get(key);
 		if (sEStats == null) {

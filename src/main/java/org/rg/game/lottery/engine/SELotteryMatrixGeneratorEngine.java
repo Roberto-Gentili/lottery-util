@@ -352,7 +352,12 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 			Date latestExtractionDate = sEStats.getLatestExtractionDate();
 			if (latestExtractionDate != null && latestExtractionDate.toInstant()
 				.atZone(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE))
-			    .toLocalDate().compareTo(extractionDate) == 0
+			    .toLocalDate().compareTo(extractionDate) == 0 &&
+			    !(extractionDate.compareTo(LocalDate.now()) > 0 ||
+				    (extractionDate.compareTo(LocalDate.now()) == 0 && LocalDateTime.now(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE)).compareTo(
+						LocalDateTime.now(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE)).with(extractionDate).withHour(21).withMinute(0).withSecond(0).withNano(0)
+					) < 0)
+			    )
 			) {
 				latestExtractionDate = sEStats.getLatestExtractionDate(2);
 				if (latestExtractionDate != null) {
