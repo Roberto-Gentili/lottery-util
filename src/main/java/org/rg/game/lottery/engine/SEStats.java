@@ -63,10 +63,10 @@ public class SEStats {
 
 	protected DecimalFormat decimalFormat = new DecimalFormat( "#,##0.##" );
 	protected DecimalFormat integerFormat = new DecimalFormat( "#,##0" );
-	protected final DateFormat dateFmt = new SimpleDateFormat("yyyy dd MMMM", Locale.ITALY);
-	protected final DateFormat defaultDateFmt = new SimpleDateFormat("dd/MM/yyyy");
+	protected DateFormat dateFmt = new SimpleDateFormat("yyyy dd MMMM", Locale.ITALY);
+	protected DateFormat defaultDateFmt = new SimpleDateFormat("dd/MM/yyyy");
 	protected DateTimeFormatter simpleDateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-	protected final DateFormat defaultDateFmtForFile = new SimpleDateFormat("[yyyy][MM][dd]");
+	protected DateFormat defaultDateFmtForFile = new SimpleDateFormat("[yyyy][MM][dd]");
 	protected Date startDate;
 	protected Date endDate;
 
