@@ -5,7 +5,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -37,8 +36,6 @@ class Shared {
 
 	static DateTimeFormatter datePattern = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
 	static DecimalFormat integerFormat = new DecimalFormat( "#,##0" );
-	static SimpleDateFormat standardDatePattern = new SimpleDateFormat("dd/MM/yyyy");
-	static DateTimeFormatter formatter = DateTimeFormatter.ofPattern(standardDatePattern.toPattern());
 	static String sEStatsDefaultDate = System.getenv("competition.archive.start-date") != null ?
 		System.getenv("competition.archive.start-date"):
 		new SELotteryMatrixGeneratorEngine().getExtractionArchiveStartDate();
@@ -56,7 +53,7 @@ class Shared {
 	}
 
 	static String getMonth(String date) {
-		return getMonth(LocalDate.parse(date, formatter));
+		return getMonth(LocalDate.parse(date, TimeUtils.defaultLocalDateFormatter));
 	}
 
 	static String getMonth(LocalDate date) {
@@ -173,7 +170,7 @@ class Shared {
 	}
 
 	static SEStats getSEStats() {
-		return SEStats.get(Shared.sEStatsDefaultDate, standardDatePattern.format(new Date()));
+		return SEStats.get(Shared.sEStatsDefaultDate, TimeUtils.defaultDateFormat.format(new Date()));
 	}
 
 	static FileSystemItem backup(

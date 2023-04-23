@@ -18,6 +18,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.burningwave.core.io.FileSystemItem;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
+import org.rg.game.lottery.engine.TimeUtils;
 
 public class SEQualityChecker {
 
@@ -54,7 +55,7 @@ public class SEQualityChecker {
 	private static void check(List<Map.Entry<LocalDate, Object>>... dateGroupsList) throws IOException {
 		for (List<Map.Entry<LocalDate, Object>> dateGroup: dateGroupsList) {
 			for (Map.Entry<LocalDate, Object> dateInfo : dateGroup) {
-				String extractionDate = Shared.formatter.format(dateInfo.getKey());
+				String extractionDate = TimeUtils.defaultDateFormat.format(dateInfo.getKey());
 				String extractionYear = extractionDate.split("\\/")[2];
 				String extractionMonth = Shared.getMonth(extractionDate);
 				String extractionDay = extractionDate.split("\\/")[0];

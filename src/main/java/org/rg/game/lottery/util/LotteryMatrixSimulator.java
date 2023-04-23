@@ -34,6 +34,7 @@ import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.SEStats;
 import org.rg.game.lottery.engine.SimpleWorkbookTemplate;
 import org.rg.game.lottery.engine.Storage;
+import org.rg.game.lottery.engine.TimeUtils;
 
 
 
@@ -51,8 +52,8 @@ public class LotteryMatrixSimulator {
 		Collection<CompletableFuture<Void>> futures
 	) throws IOException {
 		SEStats.forceLoadingFromExcel = false;
-		SEStats.get("03/12/1997", Shared.standardDatePattern.format(new Date()));
-		SEStats.get("02/07/2009", Shared.standardDatePattern.format(new Date()));
+		SEStats.get("03/12/1997", TimeUtils.defaultDateFormat.format(new Date()));
+		SEStats.get("02/07/2009", TimeUtils.defaultDateFormat.format(new Date()));
 		SEStats.forceLoadingFromExcel = true;
 		Supplier<LotteryMatrixGeneratorAbstEngine> engineSupplier = SELotteryMatrixGeneratorEngine::new;
 		Collection<FileSystemItem> configurationFiles = new TreeSet<>((fISOne, fISTwo) -> {
@@ -120,7 +121,7 @@ public class LotteryMatrixSimulator {
 		return extractionDate -> storage -> {
 			Map<String, Integer> results = Shared.getSEStats().check(extractionDate, storage::iterator);
 			workBookTemplate.addRow();
-			workBookTemplate.addCell(Shared.formatter.format(extractionDate));
+			workBookTemplate.addCell(TimeUtils.defaultDateFormat.format(extractionDate));
 			List<String> allPremiumLabels = Shared.allPremiumLabels();
 			for (int i = 0; i < allPremiumLabels.size();i++) {
 				Integer result = results.get(allPremiumLabels.get(i));
@@ -139,7 +140,7 @@ public class LotteryMatrixSimulator {
 			while (rowIterator.hasNext()) {
 				Row row = rowIterator.next();
 				Cell data = row.getCell(0);
-				if (data != null && Shared.formatter.format(extractionDate).equals(data.getStringCellValue())) {
+				if (data != null && TimeUtils.defaultDateFormat.format(extractionDate).equals(data.getStringCellValue())) {
 					return false;
 				}
 			}

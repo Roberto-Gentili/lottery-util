@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -36,10 +35,9 @@ import org.burningwave.core.io.FileSystemItem;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.SEStats;
+import org.rg.game.lottery.engine.TimeUtils;
 
 public class SEMassiveVerifierAndQualityChecker {
-
-	static DateTimeFormatter formatter = DateTimeFormatter.ofPattern(Shared.standardDatePattern.toPattern());
 
 	public static void main(String[] args) throws IOException {
 		check(
@@ -78,7 +76,7 @@ public class SEMassiveVerifierAndQualityChecker {
 		LocalDateTime backupTime = LocalDateTime.now();
 		for (List<Map.Entry<LocalDate, Object>> dateGroup: dateGroupsList) {
 			for (Map.Entry<LocalDate, Object> dateInfo : dateGroup) {
-				String extractionDate = formatter.format(dateInfo.getKey());
+				String extractionDate = TimeUtils.defaultDateFormat.format(dateInfo.getKey());
 				String extractionYear = extractionDate.split("\\/")[2];
 				String extractionMonth = Shared.getMonth(extractionDate);
 				String extractionDay = extractionDate.split("\\/")[0];
@@ -301,7 +299,7 @@ public class SEMassiveVerifierAndQualityChecker {
 		XSSFFont boldFont
 	) {
 		if (winningCombo == null || winningCombo.isEmpty()) {
-			return "Nessuna estrazione per il concorso del " + Shared.formatter.format(extractionDate) + "\n";
+			return "Nessuna estrazione per il concorso del " + TimeUtils.defaultDateFormat.format(extractionDate) + "\n";
 		}
 		Map<Integer,List<List<Integer>>> winningCombos = new TreeMap<>();
 		Collection<Integer> hitNumbers = new LinkedHashSet<>();
@@ -340,7 +338,7 @@ public class SEMassiveVerifierAndQualityChecker {
 		StringBuffer result = new StringBuffer();
 		if (!winningCombo.isEmpty()) {
 			if (!winningCombos.isEmpty()) {
-				result.append("Numeri estratti per il *superenalotto* del " + Shared.formatter.format(extractionDate) +": " + Shared.toWAString(winningCombo, ", ", hitNumbers) + "\n");
+				result.append("Numeri estratti per il *superenalotto* del " + TimeUtils.defaultDateFormat.format(extractionDate) +": " + Shared.toWAString(winningCombo, ", ", hitNumbers) + "\n");
 				for (Map.Entry<Integer, List<List<Integer>>> combos: winningCombos.entrySet()) {
 					result.append("\t*Combinazioni con " + Shared.toPremiumLabel(combos.getKey()).toLowerCase() + "*:" + "\n");
 					for (List<Integer> combo : combos.getValue()) {
@@ -350,7 +348,7 @@ public class SEMassiveVerifierAndQualityChecker {
 					}
 				}
 			} else {
-				result.append("Nessuna vincita per il concorso del " + Shared.formatter.format(extractionDate) + "\n");
+				result.append("Nessuna vincita per il concorso del " + TimeUtils.defaultDateFormat.format(extractionDate) + "\n");
 			}
 		}
 		return result.toString();
@@ -414,7 +412,7 @@ public class SEMassiveVerifierAndQualityChecker {
 		XSSFFont boldFont
 	) {
 		Collection<Integer> hitNumbers = new LinkedHashSet<>();
-		String extractionDateAsString = formatter.format(extractionDate);
+		String extractionDateAsString = TimeUtils.defaultDateFormat.format(extractionDate);
 		for (List<Integer> winningCombo : allWinningCombos.values()) {
 			for (List<Integer> currentCombo : system) {
 				Integer hit = 0;

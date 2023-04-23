@@ -50,7 +50,6 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	protected DecimalFormat decimalFormat = new DecimalFormat( "#,##0.##" );
 	protected DecimalFormat integerFormat = new DecimalFormat( "#,##0" );
 	protected DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-	protected DateTimeFormatter simpleDateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 	protected String extractionArchiveStartDate;
 	protected String extractionArchiveForSeedStartDate;
 	protected String storageType;
@@ -78,7 +77,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		System.out.println(
 			"Computing for the following extraction dates:\n\t"+
 			String.join(", ",
-				extractionDates.stream().map(simpleDateFormatter::format).collect(Collectors.toList())
+				extractionDates.stream().map(TimeUtils.defaultLocalDateFormatter::format).collect(Collectors.toList())
 			)
 		);
 		storageType = config.getProperty("storage", "memory").replaceAll("\\s+","");
@@ -128,11 +127,11 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 			}
 			Map<String, Object> basicData = basicDataSupplier.apply(extractionDate);
 			numbersToBePlayedForData.put(
-				simpleDateFormatter.format(extractionDate),
+				TimeUtils.defaultLocalDateFormatter.format(extractionDate),
 				(List<Integer>)basicData.get("chosenNumbers")
 			);
 			numbersToBeExludedForData.put(
-				simpleDateFormatter.format(extractionDate),
+				TimeUtils.defaultLocalDateFormatter.format(extractionDate),
 				(List<Integer>)basicData.get("numbersToBeDiscarded")
 			);
 		}
@@ -200,7 +199,6 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		if (extractionDatesAsString == null || extractionDatesAsString.isEmpty()) {
 			extractionDates.add(LocalDate.now());
 		} else {
-			DateTimeFormatter datePattern = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 			for(String date : extractionDatesAsString.replaceAll("\\s+","").split(",")) {
 				String[] dateWithOffset = date.split("\\+");
 				if ("thisWeek".equalsIgnoreCase(dateWithOffset[0])) {
@@ -219,7 +217,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 				} else {
 					LocalDate extractionDate = "next".equalsIgnoreCase(dateWithOffset[0])?
 						computeNextExtractionDate(LocalDate.now(), true) :
-						computeNextExtractionDate(LocalDate.parse(dateWithOffset[0], datePattern), false);
+						computeNextExtractionDate(LocalDate.parse(dateWithOffset[0],  TimeUtils.defaultLocalDateFormatter), false);
 					if (dateWithOffset.length == 2) {
 						String[] range = dateWithOffset[1].split("\\*");
 						for (int i = 0; i < Integer.parseInt(range[0]); i++) {

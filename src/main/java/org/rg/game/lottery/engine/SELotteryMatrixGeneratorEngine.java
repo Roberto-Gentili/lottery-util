@@ -168,7 +168,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 				discardedFromHistory++;
 				if (fineLog) {
 					comboSums.add(comboForDate.getValue().stream().mapToInt(Integer::intValue).sum());
-					System.out.println("  Filter discarded winning combo of " + CombinationFilterFactory.INSTANCE.simpleDateFormatter.format(comboForDate.getKey()) + ":  " +
+					System.out.println("  Filter discarded winning combo of " + TimeUtils.defaultDateFormat.format(comboForDate.getKey()) + ":  " +
 						ComboHandler.toString(comboForDate.getValue()));
 				}
 			}
@@ -347,7 +347,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	protected SEStats getSEStats() {
-		SEStats sEStats = SEStats.get(getExtractionArchiveStartDate(), simpleDateFormatter.format(extractionDate));
+		SEStats sEStats = SEStats.get(getExtractionArchiveStartDate(), TimeUtils.defaultLocalDateFormatter.format(extractionDate));
 		if (LocalDate.now().compareTo(extractionDate) >= 0) {
 			Date latestExtractionDate = sEStats.getLatestExtractionDate();
 			if (latestExtractionDate != null && latestExtractionDate.toInstant()
@@ -361,13 +361,13 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 			) {
 				latestExtractionDate = sEStats.getLatestExtractionDate(2);
 				if (latestExtractionDate != null) {
-					sEStats = SEStats.get(getExtractionArchiveStartDate(), sEStats.defaultDateFmt.format(latestExtractionDate));
+					sEStats = SEStats.get(getExtractionArchiveStartDate(), TimeUtils.defaultDateFormat.format(latestExtractionDate));
 				} else {
 					sEStats = SEStats.get(
 						getExtractionArchiveStartDate(),
 						LocalDate.parse(
-							getExtractionArchiveStartDate(), simpleDateFormatter
-						).minus(1, ChronoUnit.DAYS).format(simpleDateFormatter)
+							getExtractionArchiveStartDate(),  TimeUtils.defaultLocalDateFormatter
+						).minus(1, ChronoUnit.DAYS).format( TimeUtils.defaultLocalDateFormatter)
 					);
 				}
 			}
@@ -376,7 +376,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	private SEStats getSEStatsForSeed() {
-		return SEStats.get(getDefaultExtractionArchiveForSeedStartDate(), simpleDateFormatter.format(LocalDate.now()));
+		return SEStats.get(getDefaultExtractionArchiveForSeedStartDate(),  TimeUtils.defaultLocalDateFormatter.format(LocalDate.now()));
 	}
 
 	private String processMathManipulationExpression(

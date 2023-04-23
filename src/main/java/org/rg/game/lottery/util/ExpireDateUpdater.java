@@ -30,7 +30,6 @@ import org.rg.game.lottery.engine.TimeUtils;
 
 public class ExpireDateUpdater {
 	static DateTimeFormatter datePattern = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
-	static DateTimeFormatter standardDatePattern = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
 	static List<Map.Entry<List<String>, Integer>> updateInfos = Arrays.asList(
 		//addUpdateInfo(computeIncrementationOfWeeks(4), "Fusi Francesco")
@@ -112,8 +111,8 @@ public class ExpireDateUpdater {
 								}
 								boolean expireSoon = expiryLocalDate.minus(7, ChronoUnit.DAYS).compareTo(LocalDate.now()) <= 0;
 								System.out.println(
-									(expireSoon ? "*" : "") + row.getCell(nameColumnIndex).getStringCellValue() + (expireSoon ? "*" : "") +" da " + startExpiryDate.format(standardDatePattern) +
-									" a " + (expireSoon ? "*" : "") +expiryLocalDate.format(standardDatePattern) + (expireSoon ? "*" : "")
+									(expireSoon ? "*" : "") + row.getCell(nameColumnIndex).getStringCellValue() + (expireSoon ? "*" : "") +" da " + startExpiryDate.format(TimeUtils.defaultLocalDateFormatter) +
+									" a " + (expireSoon ? "*" : "") +expiryLocalDate.format(TimeUtils.defaultLocalDateFormatter) + (expireSoon ? "*" : "")
 								);
 								expiryCell.setCellValue(Date.from(expiryLocalDate.atStartOfDay().atZone(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE)).toInstant()));
 							}

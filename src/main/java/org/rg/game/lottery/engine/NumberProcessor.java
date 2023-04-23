@@ -1,7 +1,6 @@
 package org.rg.game.lottery.engine;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -30,9 +29,6 @@ public class NumberProcessor {
 	public static final String NUMERICAL_SET_REG_EX =
 		RANDOM_KEY + "|" + MOST_EXTRACTED_COUPLE_KEY + "|" + MOST_EXTRACTED_TRIPLE_KEY + "|" + MOST_EXTRACTED_KEY + "|" + LESS_EXTRACTED_COUPLE_KEY + "|" +
 		LESS_EXTRACTED_TRIPLE_KEY + "|" + LESS_EXTRACTED_KEY + "|" + NEAREST_FROM_RECORD_ABSENCE_PERCENTAGE_KEY;
-
-
-	protected DateTimeFormatter simpleDateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
 	public List<Integer> retrieveNumbersToBePlayed(
 		Context context,
@@ -265,22 +261,22 @@ public class NumberProcessor {
 
 	private List<Integer> getAllChosenNumbers(Context context, String[] numbersAsString, LocalDate extractionDate) {
 		if (numbersAsString.length == 1) {
-			return context.allChosenNumbers.get(context.elaborationIndex - 1).get(simpleDateFormatter.format(extractionDate));
+			return context.allChosenNumbers.get(context.elaborationIndex - 1).get(TimeUtils.defaultLocalDateFormatter.format(extractionDate));
 		}
 		List<Integer> chosenNumbers = new ArrayList<>();
 		for (int i = 1; i < numbersAsString.length; i++) {
-			chosenNumbers.addAll(context.allChosenNumbers.get(context.elaborationIndex - Integer.valueOf(numbersAsString[i])).get(simpleDateFormatter.format(extractionDate)));
+			chosenNumbers.addAll(context.allChosenNumbers.get(context.elaborationIndex - Integer.valueOf(numbersAsString[i])).get(TimeUtils.defaultLocalDateFormatter.format(extractionDate)));
 		}
 		return chosenNumbers;
 	}
 
 	private List<Integer> getAllExcludedNumbers(Context context, String[] numbersAsString, LocalDate extractionDate) {
 		if (numbersAsString.length == 1) {
-			return context.allDiscardedNumbers.get(context.elaborationIndex - 1).get(simpleDateFormatter.format(extractionDate));
+			return context.allDiscardedNumbers.get(context.elaborationIndex - 1).get(TimeUtils.defaultLocalDateFormatter.format(extractionDate));
 		}
 		List<Integer> chosenNumbers = new ArrayList<>();
 		for (int i = 1; i < numbersAsString.length; i++) {
-			chosenNumbers.addAll(context.allDiscardedNumbers.get(context.elaborationIndex - Integer.valueOf(numbersAsString[i])).get(simpleDateFormatter.format(extractionDate)));
+			chosenNumbers.addAll(context.allDiscardedNumbers.get(context.elaborationIndex - Integer.valueOf(numbersAsString[i])).get(TimeUtils.defaultLocalDateFormatter.format(extractionDate)));
 		}
 		return chosenNumbers;
 	}

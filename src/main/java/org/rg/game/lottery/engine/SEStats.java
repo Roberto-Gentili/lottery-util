@@ -11,7 +11,6 @@ import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -51,9 +50,6 @@ import org.jsoup.select.Elements;
 public class SEStats {
 	private static final Map<String, SEStats> INSTANCES;
 	public static boolean forceLoadingFromExcel;
-	protected static DateFormat defaultDateFmt = new SimpleDateFormat("dd/MM/yyyy");
-	protected static DateTimeFormatter simpleDateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
 	static {
 		SEStats.forceLoadingFromExcel =
 				Boolean.parseBoolean(System.getenv().getOrDefault("se-stats.force-loading-from excel", "false"));
@@ -87,8 +83,8 @@ public class SEStats {
 	}
 
 	public static final SEStats get(String startDate, String endDate) {
-		if (LocalDate.parse(endDate, simpleDateFormatter).compareTo(LocalDate.now()) > 0) {
-			endDate = simpleDateFormatter.format(LocalDate.now());
+		if (LocalDate.parse(endDate, TimeUtils.defaultLocalDateFormatter).compareTo(LocalDate.now()) > 0) {
+			endDate = TimeUtils.defaultLocalDateFormatter.format(LocalDate.now());
 		}
 		String key = startDate+"->"+endDate;
 		SEStats sEStats = INSTANCES.get(key);
@@ -111,7 +107,7 @@ public class SEStats {
 			new FromExcelDataLoader()
 		);
 		dataStorers = new ArrayList<>();
-		if ((startDate.equals("03/12/1997") || startDate.equals("02/07/2009")) && defaultDateFmt.format(new Date()).equals(endDate)) {
+		if ((startDate.equals("03/12/1997") || startDate.equals("02/07/2009")) && TimeUtils.defaultDateFormat.format(new Date()).equals(endDate)) {
 			/*dataStorers.add(
 				new ToExcelDataStorerV1()
 			);*/
@@ -153,7 +149,7 @@ public class SEStats {
 
 	private Date buildDate(String dateAsString) {
 		try {
-			return defaultDateFmt.parse(dateAsString);
+			return TimeUtils.defaultDateFormat.parse(dateAsString);
 		} catch (ParseException exc) {
 			throw new RuntimeException(exc);
 		}
@@ -406,7 +402,7 @@ public class SEStats {
 
 	public List<Integer> getWinningComboOf(Date date) {
 		return allWinningCombos.entrySet().stream().filter(entry ->
-			defaultDateFmt.format(entry.getKey()).equals(defaultDateFmt.format(date))
+			TimeUtils.defaultDateFormat.format(entry.getKey()).equals(TimeUtils.defaultDateFormat.format(date))
 		).map(Map.Entry::getValue).findAny().orElseGet(() -> null);
 	}
 
@@ -494,13 +490,13 @@ public class SEStats {
 		data.put("winningCombos", winningsCombosData);
 		Map<Integer, Integer> winningsCounter = new TreeMap<>();
 
-		StringBuffer report = new StringBuffer("Risultati storici dal " +  defaultDateFmt.format(
+		StringBuffer report = new StringBuffer("Risultati storici dal " +  TimeUtils.defaultDateFormat.format(
 			allWinningCombosReversed.size() > 0? allWinningCombosReversed.get(0).getKey() : startDate
 		) + ":\n\n");
 		Iterator<Map.Entry<Date, Map<Integer, List<List<Integer>>>>> winningsCombosDataItr = winningsCombosData.entrySet().iterator();
 		while (winningsCombosDataItr.hasNext()) {
 			Map.Entry<Date, Map<Integer, List<List<Integer>>>> winningCombosInfo = winningsCombosDataItr.next();
-			report.append("\t" + defaultDateFmt.format(winningCombosInfo.getKey()) + ":\n");
+			report.append("\t" + TimeUtils.defaultDateFormat.format(winningCombosInfo.getKey()) + ":\n");
 			for (Map.Entry<Integer, List<List<Integer>>> winningCombos : winningCombosInfo.getValue().entrySet()) {
 				report.append("\t\t" + toLabel(winningCombos.getKey()) + ":\n");
 				for (List<Integer> combo : winningCombos.getValue()) {
@@ -515,8 +511,8 @@ public class SEStats {
 		}
 		data.put("report.detail", report.toString());
 		report = new StringBuffer("");
-		report.append("Riepilogo risultati storici dal " + defaultDateFmt.format(allWinningCombosReversed.size() > 0 ? allWinningCombosReversed.get(0).getKey() : startDate) +
-			" al " + defaultDateFmt.format(allWinningCombos.size() > 0 ? this.allWinningCombos.entrySet().stream().collect(Collectors.toList()).get(0).getKey() : endDate) + ":\n\n"
+		report.append("Riepilogo risultati storici dal " + TimeUtils.defaultDateFormat.format(allWinningCombosReversed.size() > 0 ? allWinningCombosReversed.get(0).getKey() : startDate) +
+			" al " + TimeUtils.defaultDateFormat.format(allWinningCombos.size() > 0 ? this.allWinningCombos.entrySet().stream().collect(Collectors.toList()).get(0).getKey() : endDate) + ":\n\n"
 		);
 		Integer returns = 0;
 		for (Map.Entry<Integer, Integer> winningInfo : winningsCounter.entrySet()) {
