@@ -140,7 +140,7 @@ public class LotteryMatrixSimulator {
 				Row row = rowIterator.next();
 				Cell data = row.getCell(0);
 				try {
-					if (data != null && Shared.formatter.format(extractionDate).equals(data)) {
+					if (data != null && Shared.formatter.format(extractionDate).equals(data.getStringCellValue())) {
 						return false;
 					}
 				} catch (Throwable exc) {
@@ -179,6 +179,7 @@ public class LotteryMatrixSimulator {
 				labels,
 				summaryFormulas
 			));
+			workBookTemplate.addRow();
 			processor.accept(workBookTemplate);
 		} finally {
 			try (OutputStream destFileOutputStream = new FileOutputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileAbsolutePath)){
