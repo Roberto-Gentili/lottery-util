@@ -2,6 +2,7 @@ package org.rg.game.lottery.util;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -9,6 +10,8 @@ import java.util.List;
 import java.util.Properties;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.burningwave.core.assembler.ComponentContainer;
@@ -17,6 +20,7 @@ import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.PersistentStorage;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.SEStats;
+import org.rg.game.lottery.engine.Storage;
 
 
 
@@ -65,6 +69,12 @@ public class LotteryMatrixSimulator {
 				}
 			}
 		}
+		Predicate<LocalDate> extractionDateChecker = extractionDate -> {
+			return true;
+		};
+		Consumer<Storage> systemProcessor = storage -> {
+
+		};
 		for (Properties configuration : configurations) {
 			System.out.println(
 				"Processing file '" + configuration.getProperty("file.name") + "' located in '" + configuration.getProperty("file.parent.absolutePath") + "'"
@@ -78,9 +88,13 @@ public class LotteryMatrixSimulator {
 				.replace("." + configuration.getProperty("file.extension"), ""));
 			engine.setup(configuration);
 			if (Boolean.parseBoolean(configuration.getProperty("async", "false"))) {
-				futures.add(CompletableFuture.runAsync(() -> engine.getExecutor().apply(null).apply(null)));
+				futures.add(
+					CompletableFuture.runAsync(
+						() -> engine.getExecutor().apply(extractionDateChecker).apply(systemProcessor)
+					)
+				);
 			} else {
-				engine.getExecutor().apply(null).apply(null);
+				engine.getExecutor().apply(extractionDateChecker).apply(systemProcessor);
 			}
 		}
 	}
