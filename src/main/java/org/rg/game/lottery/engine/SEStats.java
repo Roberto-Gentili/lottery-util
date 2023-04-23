@@ -489,7 +489,7 @@ public class SEStats {
 		data.put("report.detail", report.toString());
 		report = new StringBuffer("");
 		report.append("Riepilogo risultati storici dal " + defaultDateFmt.format(allWinningCombosReversed.size() > 0 ? allWinningCombosReversed.get(0).getKey() : startDate) +
-			" al " + defaultDateFmt.format(this.allWinningCombos.entrySet().stream().collect(Collectors.toList()).get(0).getKey()) + ":\n\n"
+			" al " + defaultDateFmt.format(allWinningCombos.size() > 0 ? this.allWinningCombos.entrySet().stream().collect(Collectors.toList()).get(0).getKey() : endDate) + ":\n\n"
 		);
 		Integer returns = 0;
 		for (Map.Entry<Integer, Integer> winningInfo : winningsCounter.entrySet()) {
