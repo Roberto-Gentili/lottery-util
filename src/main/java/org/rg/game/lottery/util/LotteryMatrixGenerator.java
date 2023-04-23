@@ -40,12 +40,12 @@ public class LotteryMatrixGenerator {
 		});
 		configurationFiles.addAll(FileSystemItem.ofPath(
 			PersistentStorage.buildWorkingPath()).findInChildren(
-				FileSystemItem.Criteria.forAllFileThat(file -> file.getName().contains("-matrix-generator"))
+				FileSystemItem.Criteria.forAllFileThat(file -> file.getName().contains("-matrix-generator") && file.getExtension().equals("properties"))
 			)
 		);
 		configurationFiles.addAll(
 			ComponentContainer.getInstance().getPathHelper().findResources(absolutePath -> {
-				return absolutePath.contains(configFilePrefix + "-matrix-generator");
+				return absolutePath.contains(configFilePrefix + "-matrix-generator") && absolutePath.endsWith("properties");
 			})
 		);
 		List<Properties> configurations = new ArrayList<>();
