@@ -574,7 +574,9 @@ public class SEStats {
 						allWinningCombos.put(extractionDate, extractedCombo);
 						List<Integer> extractedComboWithJollyAndSuperstar = new ArrayList<>(extractedCombo);
 						extractedComboWithJollyAndSuperstar.add((int)numberIterator.next().getNumericCellValue());
-						extractedComboWithJollyAndSuperstar.add((int)numberIterator.next().getNumericCellValue());
+						if (numberIterator.hasNext()) {
+							extractedComboWithJollyAndSuperstar.add((int)numberIterator.next().getNumericCellValue());
+						}
 						allWinningCombosWithJollyAndSuperstar.put(extractionDate, extractedComboWithJollyAndSuperstar);
 					}
 				}

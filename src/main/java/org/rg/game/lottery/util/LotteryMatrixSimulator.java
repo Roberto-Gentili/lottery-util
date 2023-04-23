@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.TreeSet;
@@ -13,13 +14,13 @@ import java.util.function.Supplier;
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.io.FileSystemItem;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
-import org.rg.game.lottery.engine.MDLotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.PersistentStorage;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
+import org.rg.game.lottery.engine.SEStats;
 
 
 
-public class LotteryMatrixGenerator {
+public class LotteryMatrixSimulator {
 
 	public static void main(String[] args) throws IOException {
 		Collection<CompletableFuture<Void>> futures = new ArrayList<>();
@@ -32,9 +33,11 @@ public class LotteryMatrixGenerator {
 		String configFilePrefix,
 		Collection<CompletableFuture<Void>> futures
 	) throws IOException {
-		Supplier<LotteryMatrixGeneratorAbstEngine> engineSupplier =
-			configFilePrefix.equals("se") ? SELotteryMatrixGeneratorEngine::new :
-				configFilePrefix.equals("md") ? MDLotteryMatrixGeneratorEngine::new : null;
+		SEStats.forceLoadingFromExcel = false;
+		SEStats.get("03/12/1997", Shared.standardDatePattern.format(new Date()));
+		SEStats.get("02/07/2009", Shared.standardDatePattern.format(new Date()));
+		SEStats.forceLoadingFromExcel = true;
+		Supplier<LotteryMatrixGeneratorAbstEngine> engineSupplier = SELotteryMatrixGeneratorEngine::new;
 		Collection<FileSystemItem> configurationFiles = new TreeSet<>((fISOne, fISTwo) -> {
 			return fISOne.getName().compareTo(fISTwo.getName());
 		});
