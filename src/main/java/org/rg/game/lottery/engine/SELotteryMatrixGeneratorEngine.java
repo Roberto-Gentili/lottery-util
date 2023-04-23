@@ -38,16 +38,31 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	@Override
 	public LocalDate computeNextExtractionDate(LocalDate startDate, boolean incrementIfExpired) {
 		if (incrementIfExpired) {
-			while (LocalDateTime.now(ZoneId.of(SEStats.DEFAULT_TIME_ZONE)).compareTo(
-				LocalDateTime.now(ZoneId.of(SEStats.DEFAULT_TIME_ZONE)).with(startDate).withHour(19).withMinute(0).withSecond(0).withNano(0)
+			while (LocalDateTime.now(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE)).compareTo(
+				LocalDateTime.now(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE)).with(startDate).withHour(19).withMinute(0).withSecond(0).withNano(0)
 			) > 0) {
 				startDate = startDate.plus(1, ChronoUnit.DAYS);
 			}
 		}
-		while (!(startDate.getDayOfWeek().getValue() == DayOfWeek.SATURDAY.getValue() ||
-			startDate.getDayOfWeek().getValue() == DayOfWeek.TUESDAY.getValue() ||
-			startDate.getDayOfWeek().getValue() == DayOfWeek.THURSDAY.getValue())) {
-			startDate = startDate.plus(1, ChronoUnit.DAYS);
+		SEStats sEStats = getGlobalSEStats();
+		int comparisonResult = TimeUtils.toDate(startDate).compareTo(sEStats.getLatestExtractionDate());
+		if (comparisonResult >= 0) {
+			if (comparisonResult == 0) {
+				return startDate;
+			}
+			while (!(startDate.getDayOfWeek().getValue() == DayOfWeek.SATURDAY.getValue() ||
+				startDate.getDayOfWeek().getValue() == DayOfWeek.TUESDAY.getValue() ||
+				startDate.getDayOfWeek().getValue() == DayOfWeek.THURSDAY.getValue())) {
+				startDate = startDate.plus(1, ChronoUnit.DAYS);
+			}
+		} else {
+			List<Date> dates = new ArrayList<>(sEStats.getAllWinningCombosReversed().keySet());
+			for (int i = 1; i < dates.size(); i++) {
+				LocalDate extractionDate = TimeUtils.toLocalDate(dates.get(i));
+				if (extractionDate.compareTo(startDate) >= 0) {
+					return extractionDate;
+				}
+			}
 		}
 		return startDate;
 	}
@@ -69,7 +84,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 
 	@Override
 	public Map<String, Object> adjustSeed() {
-		Map.Entry<LocalDate, Long> seedRecord = SEStats.get("03/12/1997", simpleDateFormatter.format(extractionDate)).getSeedData(extractionDate);
+		Map.Entry<LocalDate, Long> seedRecord = getGlobalSEStats().getSeedData(extractionDate);
 		random = new Random(seedRecord.getValue());
 		buildComboIndexSupplier();
 		Map<String, Object> seedData = new LinkedHashMap<>();
@@ -319,7 +334,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		if (LocalDate.now().compareTo(extractionDate) >= 0) {
 			Date latestExtractionDate = sEStats.getLatestExtractionDate();
 			if (latestExtractionDate != null && latestExtractionDate.toInstant()
-				.atZone(ZoneId.of(SEStats.DEFAULT_TIME_ZONE))
+				.atZone(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE))
 			    .toLocalDate().compareTo(extractionDate) == 0
 			) {
 				latestExtractionDate = sEStats.getLatestExtractionDate(2);
@@ -336,6 +351,10 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 			}
 		}
 		return sEStats;
+	}
+
+	private SEStats getGlobalSEStats() {
+		return SEStats.get(getDefaultExtractionArchiveForSeedStartDate(), simpleDateFormatter.format(LocalDate.now()));
 	}
 
 	private String processMathManipulationExpression(

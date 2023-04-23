@@ -31,6 +31,7 @@ import org.rg.game.lottery.engine.ComboHandler;
 import org.rg.game.lottery.engine.PersistentStorage;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.SEStats;
+import org.rg.game.lottery.engine.TimeUtils;
 
 class Shared {
 
@@ -49,7 +50,7 @@ class Shared {
 
 	static LocalDate convert(String dateAsString) {
 		if (dateAsString.equals("today")) {
-			return LocalDateTime.now(ZoneId.of(SEStats.DEFAULT_TIME_ZONE)).toLocalDate();
+			return LocalDateTime.now(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE)).toLocalDate();
 		}
 		return new SELotteryMatrixGeneratorEngine().computeExtractionDates(dateAsString).iterator().next();
 	}

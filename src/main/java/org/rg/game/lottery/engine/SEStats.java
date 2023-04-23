@@ -50,7 +50,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 public class SEStats {
-	public static final String DEFAULT_TIME_ZONE = "Europe/Rome";
 	private static final Map<String, SEStats> INSTANCES;
 	public static boolean forceLoadingFromExcel;
 
@@ -89,7 +88,17 @@ public class SEStats {
 	}
 
 	public final static SEStats get(String startDate, String endDate) {
-		return INSTANCES.computeIfAbsent(startDate+"->"+endDate, key -> new SEStats(startDate, endDate));
+		String key = startDate+"->"+endDate;
+		SEStats sEStats = INSTANCES.get(key);
+		if (sEStats == null) {
+			synchronized(INSTANCES) {
+				sEStats = INSTANCES.get(key);
+				if (sEStats == null) {
+					INSTANCES.put(key, sEStats = new SEStats(startDate, endDate));
+				}
+			}
+		}
+		return sEStats;
 	}
 
 	private void init(String startDate, String endDate) {
@@ -377,6 +386,22 @@ public class SEStats {
 		return allWinningCombos;
 	}
 
+	public Map<Date, List<Integer>> getAllWinningCombosReversed() {
+		List<Map.Entry<Date, List<Integer>>> allWinningCombosReversed = this.allWinningCombos.entrySet().stream().collect(Collectors.toList());
+		Collections.reverse(allWinningCombosReversed);
+		return allWinningCombosReversed.stream().collect(
+			Collectors.toMap(
+				Map.Entry::getKey,
+				Map.Entry::getValue,
+				(x, y) -> y,
+				LinkedHashMap::new
+			)
+		);
+	}
+
+
+
+
 	public List<Integer> getWinningComboOf(Date date) {
 		return allWinningCombos.entrySet().stream().filter(entry ->
 			defaultDateFmt.format(entry.getKey()).equals(defaultDateFmt.format(date))
@@ -384,7 +409,7 @@ public class SEStats {
 	}
 
 	public List<Integer> getWinningComboOf(LocalDate date) {
-		return getWinningComboOf(Date.from(date.atStartOfDay(ZoneId.of(DEFAULT_TIME_ZONE)).toInstant()));
+		return getWinningComboOf(Date.from(date.atStartOfDay(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE)).toInstant()));
 	}
 
 
@@ -553,7 +578,7 @@ public class SEStats {
 			if (forceLoadingFromExcel) {
 				return false;
 			}
-			Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone(DEFAULT_TIME_ZONE));
+			Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone(TimeUtils.DEFAULT_TIME_ZONE));
 			Date currentDate = calendar.getTime();
 			calendar.setTime(startDate);
 			int startYear =  calendar.get(Calendar.YEAR);
@@ -885,7 +910,7 @@ public class SEStats {
 		long counter = 0;
 		LocalDate seedStartDate = null;
 		for (Map.Entry<Date, List<Integer>> extractionData : allWinningCombos.entrySet()) {
-			seedStartDate = extractionData.getKey().toInstant().atZone(ZoneId.of(DEFAULT_TIME_ZONE)).toLocalDate();
+			seedStartDate = extractionData.getKey().toInstant().atZone(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE)).toLocalDate();
 			if (seedStartDate.compareTo(extractionDate) <= 0) {
 				break;
 			}
