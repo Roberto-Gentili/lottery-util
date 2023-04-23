@@ -125,7 +125,7 @@ public class SEStats {
 		}
 
 		loadStats();
-		System.out.println("\nAll extraction data have been succesfully loaded\n\n");
+		System.out.println("\nAll extraction data have been succesfully loaded for period " + startDate + "->" + endDate + "\n\n");
 		for (DataStorer dataStorer : dataStorers) {
 			try {
 				if (dataStorer.store()) {
@@ -466,7 +466,10 @@ public class SEStats {
 		}
 		data.put("winningCombos", winningsCombosData);
 		Map<Integer, Integer> winningsCounter = new TreeMap<>();
-		StringBuffer report = new StringBuffer("Risultati storici dal " + defaultDateFmt.format(allWinningCombosReversed.get(0).getKey()) + ":\n\n");
+
+		StringBuffer report = new StringBuffer("Risultati storici dal " +  defaultDateFmt.format(
+			allWinningCombosReversed.size() > 0? allWinningCombosReversed.get(0).getKey() : startDate
+		) + ":\n\n");
 		Iterator<Map.Entry<Date, Map<Integer, List<List<Integer>>>>> winningsCombosDataItr = winningsCombosData.entrySet().iterator();
 		while (winningsCombosDataItr.hasNext()) {
 			Map.Entry<Date, Map<Integer, List<List<Integer>>>> winningCombosInfo = winningsCombosDataItr.next();
