@@ -129,6 +129,7 @@ public class LotteryMatrixSimulator {
 				}
 				workBookTemplate.addCell(result, "#,##0");
 			}
+			storage.delete();
 		};
 	}
 
