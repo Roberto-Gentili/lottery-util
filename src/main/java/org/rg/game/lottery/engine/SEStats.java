@@ -125,7 +125,7 @@ public class SEStats {
 		}
 
 		loadStats();
-		System.out.println("\nAll extraction data have been succesfully loaded for period " + startDate + "->" + endDate + "\n\n");
+		System.out.println("\nAll extraction data have been succesfully loaded for period " + startDate + " -> " + endDate + "\n\n");
 		for (DataStorer dataStorer : dataStorers) {
 			try {
 				if (dataStorer.store()) {
@@ -488,7 +488,7 @@ public class SEStats {
 		}
 		data.put("report.detail", report.toString());
 		report = new StringBuffer("");
-		report.append("Riepilogo risultati storici dal " + defaultDateFmt.format(allWinningCombosReversed.get(0).getKey()) +
+		report.append("Riepilogo risultati storici dal " + defaultDateFmt.format(allWinningCombosReversed.size() > 0 ? allWinningCombosReversed.get(0).getKey() : startDate) +
 			" al " + defaultDateFmt.format(this.allWinningCombos.entrySet().stream().collect(Collectors.toList()).get(0).getKey()) + ":\n\n"
 		);
 		Integer returns = 0;
