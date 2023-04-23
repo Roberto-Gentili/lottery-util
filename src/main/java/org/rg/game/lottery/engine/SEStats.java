@@ -209,18 +209,18 @@ public class SEStats {
 		Comparator<Map.Entry<?, Integer>> integerComparator = (c1, c2) -> c1.getValue().compareTo(c2.getValue());
 		Comparator<Map.Entry<String, Integer>> doubleIntegerComparator = (itemOne, itemTwo) ->
 		(itemOne.getValue() < itemTwo.getValue()) ? -1 :
-			(itemOne.getValue() == itemTwo.getValue()) ?
+			(itemOne.getValue().compareTo(itemTwo.getValue()) == 0) ?
 				Integer.valueOf(itemOne.getKey()).compareTo(Integer.valueOf(itemTwo.getKey())) :
 				1;
 		Comparator<Map.Entry<String, Integer>> doubleIntegerComparatorReversed = (itemOne, itemTwo) ->
 		(itemOne.getValue() < itemTwo.getValue()) ? 1 :
-			(itemOne.getValue() == itemTwo.getValue()) ?
+			(itemOne.getValue().compareTo(itemTwo.getValue()) == 0) ?
 				Integer.valueOf(itemOne.getKey()).compareTo(Integer.valueOf(itemTwo.getKey())) :
 				-1;
 
 		Comparator<Map.Entry<String, Double>> integerDoubleComparator= (itemOne, itemTwo) -> {
 			return (itemOne.getValue() < itemTwo.getValue()) ? -1 :
-				(itemOne.getValue() == itemTwo.getValue()) ?
+				(itemOne.getValue().compareTo(itemTwo.getValue()) == 0) ?
 					Integer.valueOf(itemOne.getKey()).compareTo(Integer.valueOf(itemTwo.getKey())) :
 					1;
 		};
