@@ -186,10 +186,16 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		double discardedPercentageFromHistory = (discardedFromHistory * 100) / (double)allWinningCombos.size();
 		double maintainedPercentageFromHistory = 100d - discardedPercentageFromHistory;
 		double discardedFromIntegralSystemPercentage = (discardedFromIntegralSystem * 100) / (double)comboHandler.getSizeAsInt();
-		double discardedFromHistoryEstimation = new BigDecimal(comboHandler.getSizeAsInt()).multiply(new BigDecimal(discardedFromHistory))
-				.divide(new BigDecimal(allWinningCombos.size()), 2, RoundingMode.HALF_UP).doubleValue();
-		int maintainedFromHistoryEstimation = new BigDecimal(comboHandler.getSizeAsInt()).multiply(new BigDecimal(allWinningCombos.size() - discardedFromHistory))
-				.divide(new BigDecimal(allWinningCombos.size()), 2, RoundingMode.HALF_DOWN).intValue();
+		Double discardedFromHistoryEstimation =
+			allWinningCombos.size() > 0 ?
+				new BigDecimal(comboHandler.getSizeAsInt()).multiply(new BigDecimal(discardedFromHistory))
+					.divide(new BigDecimal(allWinningCombos.size()), 2, RoundingMode.HALF_UP).doubleValue():
+				Double.POSITIVE_INFINITY;
+		Double maintainedFromHistoryEstimation =
+			allWinningCombos.size() > 0 ?
+				new BigDecimal(comboHandler.getSizeAsInt()).multiply(new BigDecimal(allWinningCombos.size() - discardedFromHistory))
+					.divide(new BigDecimal(allWinningCombos.size()), 2, RoundingMode.HALF_DOWN).intValue():
+				Double.POSITIVE_INFINITY;
 		double effectiveness = (maintainedPercentageFromHistory + discardedFromIntegralSystemPercentage) / 2d;
 		/*double effectiveness = ((discardedFromIntegralSystem - discardedFromHistoryEstimation) * 100d) /
 				comboHandler.getSize();*/
