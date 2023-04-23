@@ -139,12 +139,8 @@ public class LotteryMatrixSimulator {
 			while (rowIterator.hasNext()) {
 				Row row = rowIterator.next();
 				Cell data = row.getCell(0);
-				try {
-					if (data != null && Shared.formatter.format(extractionDate).equals(data.getStringCellValue())) {
-						return false;
-					}
-				} catch (Throwable exc) {
-					exc.printStackTrace();
+				if (data != null && Shared.formatter.format(extractionDate).equals(data.getStringCellValue())) {
+					return false;
 				}
 			}
 			return true;

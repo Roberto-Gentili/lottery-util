@@ -5,6 +5,7 @@ import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -44,7 +45,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 				startDate = startDate.plus(1, ChronoUnit.DAYS);
 			}
 		}
-		SEStats sEStats = getGlobalSEStats();
+		SEStats sEStats = getSEStatsForSeed();
 		int comparisonResult = TimeUtils.toDate(startDate).compareTo(sEStats.getLatestExtractionDate());
 		if (comparisonResult >= 0) {
 			if (comparisonResult == 0) {
@@ -69,6 +70,22 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 
 	@Override
 	protected int getIncrementDays(LocalDate startDate) {
+		SEStats sEStats = getSEStatsForSeed();
+		int comparisonResult = TimeUtils.toDate(startDate).compareTo(sEStats.getLatestExtractionDate());
+		if (comparisonResult >= 0) {
+			if (comparisonResult == 0) {
+				return 0;
+			}
+			return startDate.getDayOfWeek().getValue() == DayOfWeek.SATURDAY.getValue() ? 3 : 2;
+		} else {
+			List<Date> dates = new ArrayList<>(sEStats.getAllWinningCombosReversed().keySet());
+			for (int i = 1; i < dates.size(); i++) {
+				LocalDate extractionDate = TimeUtils.toLocalDate(dates.get(i));
+				if (extractionDate.compareTo(startDate) > 0) {
+					return Period.between(startDate, extractionDate).getDays();
+				}
+			}
+		}
 		return startDate.getDayOfWeek().getValue() == DayOfWeek.SATURDAY.getValue() ? 3 : 2;
 	}
 
@@ -84,7 +101,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 
 	@Override
 	public Map<String, Object> adjustSeed() {
-		Map.Entry<LocalDate, Long> seedRecord = getGlobalSEStats().getSeedData(extractionDate);
+		Map.Entry<LocalDate, Long> seedRecord = getSEStatsForSeed().getSeedData(extractionDate);
 		random = new Random(seedRecord.getValue());
 		buildComboIndexSupplier();
 		Map<String, Object> seedData = new LinkedHashMap<>();
@@ -353,7 +370,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		return sEStats;
 	}
 
-	private SEStats getGlobalSEStats() {
+	private SEStats getSEStatsForSeed() {
 		return SEStats.get(getDefaultExtractionArchiveForSeedStartDate(), simpleDateFormatter.format(LocalDate.now()));
 	}
 
