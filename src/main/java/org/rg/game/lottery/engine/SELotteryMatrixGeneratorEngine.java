@@ -320,7 +320,12 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 				if (latestExtractionDate != null) {
 					sEStats = SEStats.get(getExtractionArchiveStartDate(), sEStats.defaultDateFmt.format(latestExtractionDate));
 				} else {
-					sEStats = SEStats.get(getExtractionArchiveStartDate(), getExtractionArchiveStartDate());
+					sEStats = SEStats.get(
+						getExtractionArchiveStartDate(),
+						LocalDate.parse(
+							getExtractionArchiveStartDate(), simpleDateFormatter
+						).minus(1, ChronoUnit.DAYS).format(simpleDateFormatter)
+					);
 				}
 			}
 		}
@@ -343,13 +348,15 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 				operationOptionValues.addAll(Arrays.stream(operationOptions[1].replaceAll("\\s+","").split(",")).map(Integer::parseInt).collect(Collectors.toList()));
 			}
 			Collection<Integer> sums = processor.apply(operationOptionValues);
-			if (mathExpressionType.contains(expressionNameToMatch)) {
-				if (!sums.isEmpty()) {
-					return expressionNameToMatch + ComboHandler.toString(operationOptionValues, ",") + ": " + String.join(",", sums.stream().map(Object::toString).collect(Collectors.toList()));
-				}
+			if (sums.isEmpty()) {
 				return "true";
+			}
+			if (mathExpressionType.contains(expressionNameToMatch)) {
+				return expressionNameToMatch + ComboHandler.toString(operationOptionValues, ",") + ": " + String.join(",", sums.stream().map(Object::toString).collect(Collectors.toList()));
 			} else if (mathExpressionType.contains(rangedExpressionNameToMatch)) {
-				return expressionNameToMatch + ComboHandler.toString(operationOptionValues, ",") + ": " + sums.iterator().next() + " -> " + sums.stream().reduce((prev, next) -> next).orElse(null);
+				return expressionNameToMatch + ComboHandler.toString(
+					operationOptionValues, ","
+				) + ": " + sums.iterator().next() + " -> " + sums.stream().reduce((prev, next) -> next).orElse(null);
 			}
 		}
 		return null;

@@ -174,6 +174,7 @@ public class SEStats {
 		Map<String, Integer> absencesRecordFromCompetitionsMap = new LinkedHashMap<>();
 		IntStream.range(1, 91).boxed().forEach(number -> {
 			counterOfAbsencesFromCompetitionsMap.put(number.toString(), 0);
+			absencesRecordFromCompetitionsMap.put(number.toString(), 0);
 		});
 		new TreeMap<>(allWinningCombos).entrySet().forEach(dateAndExtractedCombo -> {
 			List<Integer> extractedCombo = dateAndExtractedCombo.getValue();
