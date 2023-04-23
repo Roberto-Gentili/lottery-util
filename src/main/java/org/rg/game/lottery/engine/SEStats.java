@@ -398,6 +398,9 @@ public class SEStats {
 	public Map<String, Integer> check(LocalDate extractionDate, Supplier<Iterator<List<Integer>>> systemIteratorSupplier) {
 		List<Integer> winningCombo = getWinningComboOf(extractionDate);
 		Map<String, Integer> results = new TreeMap<>();
+		if (winningCombo == null) {
+			return results;
+		}
 		Iterator<List<Integer>> systemIterator = systemIteratorSupplier.get();
 		while (systemIterator.hasNext()) {
 			List<Integer> currentCombo = systemIterator.next();
