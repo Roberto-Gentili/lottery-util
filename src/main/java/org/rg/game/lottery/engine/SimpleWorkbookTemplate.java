@@ -3,6 +3,7 @@ package org.rg.game.lottery.engine;
 import java.io.Closeable;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -53,17 +54,21 @@ public class SimpleWorkbookTemplate implements Closeable {
 		this(false);
 	}
 
-	public SimpleWorkbookTemplate(boolean largeContent) {
-		this.workbook = largeContent ? new SXSSFWorkbook() : new HSSFWorkbook();
-		autosizeColumnFeatureEnabled = !largeContent;
-		dataFormat =  workbook.createDataFormat();
+	public SimpleWorkbookTemplate(Workbook workbook) {
+		this.workbook = workbook;
+		autosizeColumnFeatureEnabled = workbook instanceof HSSFWorkbook;
+		dataFormat =  this.workbook.createDataFormat();
 		headersSize = new HashMap<>();
-		headerStyle = createHeaderStyle(workbook);
-		contentStyle = createContentStyle(workbook);
-		hyperLinkStyle = createHyperLinkStyle(workbook);
+		headerStyle = createHeaderStyle(this.workbook);
+		contentStyle = createContentStyle(this.workbook);
+		hyperLinkStyle = createHyperLinkStyle(this.workbook);
 		formattedContentStyle = new HashMap<>();
 		currentRow = new HashMap<>();
 		currentCol = new HashMap<>();
+	}
+
+	public SimpleWorkbookTemplate(boolean largeContent) {
+		this(largeContent ? new SXSSFWorkbook() : new HSSFWorkbook());
 	}
 
 	private int get(String sheetName, Map<String, Integer> map) {
@@ -223,23 +228,29 @@ public class SimpleWorkbookTemplate implements Closeable {
 	}
 
 	public Row createHeader(boolean blocked, String... titles) {
-		return createHeader(currentSheet, blocked, Arrays.asList(titles));
+		return createHeader(blocked, Arrays.asList(titles));
 	}
 
 	public Row createHeader(boolean blocked, List<String> titles) {
-		return createHeader(currentSheet, blocked, titles);
+		List<List<String>> titlesList = new ArrayList<>();
+		titlesList.add(titles);
+		return createHeader(currentSheet, blocked, titlesList);
 	}
 
-	public Row createHeader(String sheetName, boolean blocked, List<String> titles) {
-		int columnIndex = 0;
-		for (String title : titles) {
-			createHeaderCell(sheetName, 0, columnIndex++, title);
+	public Row createHeader(String sheetName, boolean blocked, List<List<String>> titles) {
+		int maxLenght = 0;
+		for (int i = 0; i < titles.size(); i++) {
+			int columnIndex = 0;
+			for (String title : titles.get(i)) {
+				createHeaderCell(sheetName, i, columnIndex++, title);
+			}
+			maxLenght = Math.max(maxLenght, titles.get(i).size());
 		}
-		headersSize.put(sheetName, titles.size());
+		headersSize.put(sheetName, maxLenght);
 		if (blocked) {
-			getOrCreateSheet(sheetName).createFreezePane(0, 1);
+			getOrCreateSheet(sheetName).createFreezePane(0, titles.size());
 		}
-		return getOrCreateRow(sheetName, 0);
+		return getOrCreateRow(sheetName, titles.size() - 1);
 	}
 
 	public void addCell(String... value) {
@@ -355,7 +366,11 @@ public class SimpleWorkbookTemplate implements Closeable {
 	public Cell createHeaderCell(String sheetName, int rowIdx, int colIdx, String value) {
 		Row row = getOrCreateRow(sheetName, rowIdx);
 		Cell cell = row.createCell(colIdx);
-		cell.setCellValue(value);
+		if (!value.startsWith("FORMULA_")) {
+			cell.setCellValue(value);
+		} else {
+			cell.setCellFormula(value.replace("FORMULA_", ""));
+		}
 		cell.setCellStyle(headerStyle);
 		return cell;
 	}
