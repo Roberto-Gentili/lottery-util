@@ -2,7 +2,6 @@ package org.rg.game.lottery.util;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.TreeSet;
@@ -20,6 +20,8 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.burningwave.core.assembler.ComponentContainer;
@@ -87,46 +89,66 @@ public class LotteryMatrixSimulator {
 				System.out.println(info);
 			}
 			String excelFileName = configuration.getProperty("file.name").replace("." + configuration.getProperty("file.extension"), "") + "-sim.xlsx";
-			process(
-				excelFileName,
-				workbook -> {
-					LotteryMatrixGeneratorAbstEngine engine = engineSupplier.get();
-					configuration.setProperty("nameSuffix", configuration.getProperty("file.name")
-						.replace("." + configuration.getProperty("file.extension"), ""));
-					engine.setup(configuration);
-					if (Boolean.parseBoolean(configuration.getProperty("async", "false"))) {
-						futures.add(
-							CompletableFuture.runAsync(
-								() -> engine.getExecutor().apply(buildExtractionDatePredicate(workbook)).apply(buildSystemProcessor(workbook))
-							)
-						);
-					} else {
+			LotteryMatrixGeneratorAbstEngine engine = engineSupplier.get();
+			configuration.setProperty("nameSuffix", configuration.getProperty("file.name")
+				.replace("." + configuration.getProperty("file.extension"), ""));
+			engine.setup(configuration);
+			if (Boolean.parseBoolean(configuration.getProperty("async", "false"))) {
+				futures.add(
+					CompletableFuture.runAsync(
+						() ->
+						process(
+							excelFileName,
+							workbook -> {
+								engine.getExecutor().apply(buildExtractionDatePredicate(workbook)).apply(buildSystemProcessor(workbook));
+							}
+						)
+					)
+				);
+			} else {
+				process(
+					excelFileName,
+					workbook -> {
 						engine.getExecutor().apply(buildExtractionDatePredicate(workbook)).apply(buildSystemProcessor(workbook));
 					}
-				}
-			);
+				);
+			}
+
+
 		}
 	}
 
-	private static Consumer<Storage> buildSystemProcessor(SimpleWorkbookTemplate workBook) {
+	private static Consumer<Storage> buildSystemProcessor(SimpleWorkbookTemplate workBookTemplate) {
 		return storage -> {
 
 		};
 	}
 
-	private static Predicate<LocalDate> buildExtractionDatePredicate(SimpleWorkbookTemplate workBook) {
+	private static Predicate<LocalDate> buildExtractionDatePredicate(SimpleWorkbookTemplate workBookTemplate) {
 		return extractionDate -> {
+			Iterator<Row> rowIterator = workBookTemplate.getWorkbook().getSheet("Risultati").rowIterator();
+			while (rowIterator.hasNext()) {
+				Row row = rowIterator.next();
+				Cell data = row.getCell(0);
+				try {
+					if (data != null && Shared.formatter.format(extractionDate).equals(data)) {
+						return false;
+					}
+				} catch (Throwable exc) {
+					exc.printStackTrace();
+				}
+			}
 			return true;
 		};
 	}
 
-	private static void process(String excelFileAbsolutePath, Consumer<SimpleWorkbookTemplate> processor) throws IOException {
+	private static void process(String excelFileAbsolutePath, Consumer<SimpleWorkbookTemplate> processor) {
 		Workbook workBook = null;
 		try (InputStream inputStream = new FileInputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileAbsolutePath);) {
 			workBook = new XSSFWorkbook(inputStream);
 			SimpleWorkbookTemplate workBookTemplate = new SimpleWorkbookTemplate(workBook);
 			processor.accept(workBookTemplate);
-		} catch (FileNotFoundException exc) {
+		} catch (IOException exc) {
 			workBook = new XSSFWorkbook();
 			SimpleWorkbookTemplate workBookTemplate = new SimpleWorkbookTemplate(workBook);
 			workBookTemplate.getOrCreateSheet("Risultati", true);
@@ -149,8 +171,10 @@ public class LotteryMatrixSimulator {
 		} finally {
 			try (OutputStream destFileOutputStream = new FileOutputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileAbsolutePath)){
 				workBook.write(destFileOutputStream);
+				workBook.close();
+			} catch (IOException exc) {
+				throw new RuntimeException(exc);
 			}
-			workBook.close();
 		}
 	}
 

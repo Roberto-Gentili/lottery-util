@@ -33,5 +33,6 @@ module testing {
 	requires org.apache.poi.ooxml;
 	requires com.fasterxml.jackson.databind;
 	requires org.jsoup;
+	requires org.apache.poi.poi;
 
 }
