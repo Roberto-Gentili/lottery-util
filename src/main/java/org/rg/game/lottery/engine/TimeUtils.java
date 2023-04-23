@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 
 public class TimeUtils {
@@ -18,6 +19,14 @@ public class TimeUtils {
 
 	public static LocalDate toLocalDate(Date date) {
 		return date.toInstant().atZone(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE)).toLocalDate();
+	}
+
+	public static long differenceInDays(Date startDate, Date endDate) {
+		return ChronoUnit.DAYS.between(toLocalDate(startDate), toLocalDate(endDate));
+	}
+
+	public static long differenceInDays(LocalDate startDate, LocalDate endDate) {
+		return ChronoUnit.DAYS.between(startDate, endDate);
 	}
 
 }

@@ -5,7 +5,6 @@ import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.Period;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -82,7 +81,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 			for (int i = 1; i < dates.size(); i++) {
 				LocalDate extractionDate = TimeUtils.toLocalDate(dates.get(i));
 				if (extractionDate.compareTo(startDate) > 0) {
-					return Period.between(startDate, extractionDate).getDays();
+					return (int)TimeUtils.differenceInDays(startDate, extractionDate);
 				}
 			}
 		}
