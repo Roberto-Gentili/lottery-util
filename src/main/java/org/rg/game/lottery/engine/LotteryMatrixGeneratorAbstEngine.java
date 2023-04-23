@@ -59,6 +59,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	protected Integer avoidMode;
 	protected Predicate<List<Integer>> combinationFilter;
 	protected ExpressionToPredicateEngine<List<Integer>> combinationFilterPreProcessor;
+	public LocalDate extractionDate;
 
 
 	LotteryMatrixGeneratorAbstEngine() {
@@ -82,11 +83,14 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		);
 		storageType = config.getProperty("storage", "memory").replaceAll("\\s+","");
 		String combinationFilterRaw = config.getProperty("combination.filter");
-		combinationFilter = CombinationFilterFactory.INSTANCE.parse(
-			preProcess(combinationFilterRaw)
-		);
 		Function<LocalDate, Map<String, Object>> basicDataSupplier = extractionDate -> {
-			Map<String, Object> data = adjustSeed(extractionDate);
+			this.extractionDate = extractionDate;
+			if (combinationFilter == null) {
+				combinationFilter = CombinationFilterFactory.INSTANCE.parse(
+					preProcess(combinationFilterRaw)
+				);
+			}
+			Map<String, Object> data = adjustSeed();
 			String numbersOrdered = config.getProperty("numbers.ordered");
 			NumberProcessor.Context numberProcessorContext = new NumberProcessor.Context(
 				getNumberGeneratorFactory(), engineIndex, getAllChosenNumbers(), getAllDiscardedNumbers()
@@ -574,8 +578,8 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		}
 	}
 
-	private Map<String, Object> resetRandomizer(Supplier<List<Integer>> numberSupplier, LocalDate extractionDate) {
-		Map<String, Object> data = adjustSeed(extractionDate);
+	private Map<String, Object> resetRandomizer(Supplier<List<Integer>> numberSupplier) {
+		Map<String, Object> data = adjustSeed();
 		data.put("numbersToBePlayed", numberSupplier.get());
 		return data;
 	}
@@ -678,7 +682,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 
 	protected abstract List<LocalDate> forWeekOf(LocalDate dayOfWeek);
 
-	public abstract Map<String, Object> adjustSeed(LocalDate extractionDate);
+	public abstract Map<String, Object> adjustSeed();
 
 	public abstract LocalDate computeNextExtractionDate(LocalDate startDate, boolean incrementIfExpired);
 

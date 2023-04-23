@@ -18,7 +18,6 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.burningwave.core.io.FileSystemItem;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
-import org.rg.game.lottery.engine.SEStats;
 
 public class SEQualityChecker {
 
@@ -92,7 +91,7 @@ public class SEQualityChecker {
 						system.add(currentCombo);
 					}
 					System.out.println("\nAnalisi del sistema del " + extractionDate + ":" );
-					Map<String, Object> report = SEStats.get(Shared.SEStatsDefaultDate).checkQuality(system::iterator);
+					Map<String, Object> report = Shared.getSEStats().checkQuality(system::iterator);
 					if ((boolean)dateInfo.getValue()) {
 						System.out.println("\t" + ((String)report.get("report.detail")).replace("\n", "\n\t"));
 					}

@@ -170,7 +170,7 @@ class Shared {
 	}
 
 	static SEStats getSEStats() {
-		return SEStats.get(Shared.SEStatsDefaultDate);
+		return SEStats.get(Shared.SEStatsDefaultDate, standardDatePattern.format(new Date()));
 	}
 
 	static FileSystemItem backup(
@@ -232,7 +232,8 @@ class Shared {
 			}
 		}
 		SELotteryMatrixGeneratorEngine engine = new SELotteryMatrixGeneratorEngine();
-		engine.adjustSeed(LocalDate.now());
+		engine.extractionDate = LocalDate.now();
+		engine.adjustSeed();
 		List<String> inClauses = new ArrayList<>();
 		for (List<Integer> winningCombo : system) {
 			inClauses.add("in " + ComboHandler.toString(winningCombo, ",") + ":" + bound + "," + 6);

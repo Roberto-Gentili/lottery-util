@@ -65,7 +65,7 @@ public class MDLotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	@Override
-	public Map<String, Object> adjustSeed(LocalDate extractionDate) {
+	public Map<String, Object> adjustSeed() {
 		long seed = 1L;
 		LocalDate seedStartDate = LocalDate.parse("2018-02-17");
 		if (seedStartDate.compareTo(extractionDate) >= 0) {

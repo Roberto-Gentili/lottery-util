@@ -69,6 +69,7 @@ public class SEStats {
 	protected DateTimeFormatter simpleDateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 	private final DateFormat defaultDateFmtForFile = new SimpleDateFormat("[yyyy][MM][dd]");
 	private Date startDate;
+	private Date endDate;
 
 	private List<Map.Entry<String, Integer>> extractedNumberPairCounters;
 	private List<Map.Entry<String, Integer>> extractedNumberTripleCounters;
@@ -82,24 +83,30 @@ public class SEStats {
 	private Map<Date, List<Integer>> allWinningCombos;
 	private Map<Date, List<Integer>> allWinningCombosWithJollyAndSuperstar;
 
-	private SEStats(String startDate) {
-		init(startDate);
+	private SEStats(String startDate, String endDate) {
+		init(startDate, endDate);
 	}
 
-	public final static SEStats get(String startDate) {
-		return INSTANCES.computeIfAbsent(startDate, key -> new SEStats(startDate));
+	public final static SEStats get(String startDate, String endDate) {
+		return INSTANCES.computeIfAbsent(startDate+"->"+endDate, key -> new SEStats(startDate, endDate));
 	}
 
-	private void init(String startDate) {
-		this.startDate = buildStartDate(startDate);
+	private void init(String startDate, String endDate) {
+		this.startDate = buildDate(startDate);
+		this.endDate = buildDate(endDate);
 		dataLoaders = Arrays.asList(
 			new InternetDataLoader(),
 			new FromExcelDataLoader()
 		);
-		dataStorers = Arrays.asList(
-			//new ToExcelDataStorerV1(),
-			new ToExcelDataStorerV2()
-		);
+		dataStorers = new ArrayList<>();
+		if ((startDate.equals("03/12/1997") || startDate.equals("02/07/2009")) && defaultDateFmt.format(new Date()).equals(endDate)) {
+			/*dataStorers.add(
+				new ToExcelDataStorerV1()
+			);*/
+			dataStorers.add(
+				new ToExcelDataStorerV2()
+			);
+		}
 		this.allWinningCombos = new LinkedHashMap<>();
 		this.allWinningCombosWithJollyAndSuperstar = new LinkedHashMap<>();
 		boolean dataLoaded = false;
@@ -132,7 +139,7 @@ public class SEStats {
 		}
 	}
 
-	private Date buildStartDate(String dateAsString) {
+	private Date buildDate(String dateAsString) {
 		try {
 			return defaultDateFmt.parse(dateAsString);
 		} catch (ParseException exc) {
@@ -512,7 +519,7 @@ public class SEStats {
 					Elements dateCell = tableRow.select("td[class=date m-w60 m-righty]");
 					if (!dateCell.isEmpty()) {
 						Date extractionDate = dateFmt.parse(year + dateCell.iterator().next().textNodes().get(0).text());
-						if (extractionDate.compareTo(startDate) >= 0) {
+						if (extractionDate.compareTo(startDate) >= 0 && extractionDate.compareTo(endDate) <= 0) {
 							//System.out.print(defaultFmt.format(fmt.parse(year + dateCell.iterator().next().textNodes().get(0).text())) + "\t");
 							List<Integer> extractedCombo = new ArrayList<>();
 							for (Element number : tableRow.select("ul[class=balls]").first().children()) {
@@ -554,7 +561,7 @@ public class SEStats {
 					Row row = rowIterator.next();
 					Iterator<Cell> numberIterator = row.cellIterator();
 					Date extractionDate = numberIterator.next().getDateCellValue();
-					if (extractionDate.compareTo(startDate) >= 0) {
+					if (extractionDate.compareTo(startDate) >= 0 && extractionDate.compareTo(endDate) <= 0) {
 						List<Integer> extractedCombo = new ArrayList<>();
 						while (numberIterator.hasNext()) {
 							Integer number = (int)numberIterator.next().getNumericCellValue();

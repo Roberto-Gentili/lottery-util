@@ -68,8 +68,8 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	@Override
-	public Map<String, Object> adjustSeed(LocalDate extractionDate) {
-		Map.Entry<LocalDate, Long> seedRecord = SEStats.get("03/12/1997").getSeedData(extractionDate);
+	public Map<String, Object> adjustSeed() {
+		Map.Entry<LocalDate, Long> seedRecord = SEStats.get("03/12/1997", simpleDateFormatter.format(extractionDate)).getSeedData(extractionDate);
 		random = new Random(seedRecord.getValue());
 		buildComboIndexSupplier();
 		Map<String, Object> seedData = new LinkedHashMap<>();
@@ -309,7 +309,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	protected SEStats getSEStats() {
-		return SEStats.get(getExtractionArchiveStartDate());
+		return SEStats.get(getExtractionArchiveStartDate(), simpleDateFormatter.format(extractionDate));
 	}
 
 	private String processMathManipulationExpression(
