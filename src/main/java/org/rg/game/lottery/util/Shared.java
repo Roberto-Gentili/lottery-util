@@ -49,7 +49,7 @@ class Shared {
 
 	static LocalDate convert(String dateAsString) {
 		if (dateAsString.equals("today")) {
-			return LocalDateTime.now(ZoneId.of("Europe/Rome")).toLocalDate();
+			return LocalDateTime.now(ZoneId.of(SEStats.DEFAULT_TIME_ZONE)).toLocalDate();
 		}
 		return new SELotteryMatrixGeneratorEngine().computeExtractionDates(dateAsString).iterator().next();
 	}

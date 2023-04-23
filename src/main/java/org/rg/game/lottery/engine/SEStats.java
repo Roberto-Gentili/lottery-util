@@ -26,6 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -49,7 +50,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 public class SEStats {
-	private static final String DEFAULT_TIME_ZONE = "Europe/Rome";
+	public static final String DEFAULT_TIME_ZONE = "Europe/Rome";
 	private static final Map<String, SEStats> INSTANCES;
 	public static boolean forceLoadingFromExcel;
 
@@ -64,12 +65,12 @@ public class SEStats {
 
 	protected DecimalFormat decimalFormat = new DecimalFormat( "#,##0.##" );
 	protected DecimalFormat integerFormat = new DecimalFormat( "#,##0" );
-	private final DateFormat dateFmt = new SimpleDateFormat("yyyy dd MMMM", Locale.ITALY);
-	private final DateFormat defaultDateFmt = new SimpleDateFormat("dd/MM/yyyy");
+	protected final DateFormat dateFmt = new SimpleDateFormat("yyyy dd MMMM", Locale.ITALY);
+	protected final DateFormat defaultDateFmt = new SimpleDateFormat("dd/MM/yyyy");
 	protected DateTimeFormatter simpleDateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-	private final DateFormat defaultDateFmtForFile = new SimpleDateFormat("[yyyy][MM][dd]");
-	private Date startDate;
-	private Date endDate;
+	protected final DateFormat defaultDateFmtForFile = new SimpleDateFormat("[yyyy][MM][dd]");
+	protected Date startDate;
+	protected Date endDate;
 
 	private List<Map.Entry<String, Integer>> extractedNumberPairCounters;
 	private List<Map.Entry<String, Integer>> extractedNumberTripleCounters;
@@ -271,6 +272,24 @@ public class SEStats {
 		for (String item : multiplceNumbersCounters) {
 			multipleNumbersCountersMap.put(item, multipleNumbersCountersMap.get(item) + 1);
 		}
+	}
+
+	public Date getLatestExtractionDate() {
+		return getLatestExtractionDate(1);
+	}
+
+	public Date getLatestExtractionDate(int level) {
+		try {
+			Iterator<Date> itr = allWinningCombos.keySet().iterator();
+			Date latestDate = null;
+			while (level-- > 0) {
+				latestDate = itr.next();
+			}
+			return latestDate;
+		} catch (NoSuchElementException exc) {
+
+		}
+		return null;
 	}
 
 	public List<Integer> getExtractedNumberFromMostExtractedCoupleRank() {

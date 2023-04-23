@@ -26,6 +26,7 @@ import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.burningwave.core.io.FileSystemItem;
 import org.rg.game.lottery.engine.PersistentStorage;
+import org.rg.game.lottery.engine.SEStats;
 
 public class ExpireDateUpdater {
 	static DateTimeFormatter datePattern = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
@@ -114,7 +115,7 @@ public class ExpireDateUpdater {
 									(expireSoon ? "*" : "") + row.getCell(nameColumnIndex).getStringCellValue() + (expireSoon ? "*" : "") +" da " + startExpiryDate.format(standardDatePattern) +
 									" a " + (expireSoon ? "*" : "") +expiryLocalDate.format(standardDatePattern) + (expireSoon ? "*" : "")
 								);
-								expiryCell.setCellValue(Date.from(expiryLocalDate.atStartOfDay().atZone(ZoneId.of("Europe/Rome")).toInstant()));
+								expiryCell.setCellValue(Date.from(expiryLocalDate.atStartOfDay().atZone(ZoneId.of(SEStats.DEFAULT_TIME_ZONE)).toInstant()));
 							}
 						}
 					}

@@ -38,8 +38,8 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	@Override
 	public LocalDate computeNextExtractionDate(LocalDate startDate, boolean incrementIfExpired) {
 		if (incrementIfExpired) {
-			while (LocalDateTime.now(ZoneId.of("Europe/Rome")).compareTo(
-				LocalDateTime.now(ZoneId.of("Europe/Rome")).with(startDate).withHour(19).withMinute(0).withSecond(0).withNano(0)
+			while (LocalDateTime.now(ZoneId.of(SEStats.DEFAULT_TIME_ZONE)).compareTo(
+				LocalDateTime.now(ZoneId.of(SEStats.DEFAULT_TIME_ZONE)).with(startDate).withHour(19).withMinute(0).withSecond(0).withNano(0)
 			) > 0) {
 				startDate = startDate.plus(1, ChronoUnit.DAYS);
 			}
@@ -309,7 +309,22 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	protected SEStats getSEStats() {
-		return SEStats.get(getExtractionArchiveStartDate(), simpleDateFormatter.format(extractionDate));
+		SEStats sEStats = SEStats.get(getExtractionArchiveStartDate(), simpleDateFormatter.format(extractionDate));
+		if (LocalDate.now().compareTo(extractionDate) >= 0) {
+			Date latestExtractionDate = sEStats.getLatestExtractionDate();
+			if (latestExtractionDate != null && latestExtractionDate.toInstant()
+				.atZone(ZoneId.of(SEStats.DEFAULT_TIME_ZONE))
+			    .toLocalDate().compareTo(extractionDate) == 0
+			) {
+				latestExtractionDate = sEStats.getLatestExtractionDate(2);
+				if (latestExtractionDate != null) {
+					sEStats = SEStats.get(getExtractionArchiveStartDate(), sEStats.defaultDateFmt.format(latestExtractionDate));
+				} else {
+					sEStats = SEStats.get(getExtractionArchiveStartDate(), getExtractionArchiveStartDate());
+				}
+			}
+		}
+		return sEStats;
 	}
 
 	private String processMathManipulationExpression(
