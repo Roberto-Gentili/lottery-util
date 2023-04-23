@@ -156,7 +156,7 @@ public class LotteryMatrixSimulator {
 		try (InputStream inputStream = new FileInputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileAbsolutePath);) {
 			workBook = new XSSFWorkbook(inputStream);
 			SimpleWorkbookTemplate workBookTemplate = new SimpleWorkbookTemplate(workBook);
-			for (int i = 0; i < workBookTemplate.getOrCreateSheet("Risultati", true).getPhysicalNumberOfRows(); i++) {
+			for (int i = 0; i < workBookTemplate.getOrCreateSheet("Risultati", true).getPhysicalNumberOfRows() -1; i++) {
 				workBookTemplate.addRow();
 			}
 			processor.accept(workBookTemplate);
