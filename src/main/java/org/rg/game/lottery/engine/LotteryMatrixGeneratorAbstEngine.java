@@ -54,7 +54,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	protected String extractionArchiveStartDate;
 	protected String extractionArchiveForSeedStartDate;
 	protected String storageType;
-	protected Function<Predicate<LocalDate>, Function<Consumer<Storage>, List<Storage>>> executor;
+	protected Function<Predicate<LocalDate>, Function<Function<LocalDate, Consumer<Storage>>, List<Storage>>> executor;
 	protected int engineIndex;
 	protected Integer avoidMode;
 	protected Predicate<List<Integer>> combinationFilter;
@@ -176,7 +176,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 					)
 				);
 				if (storageProcessor != null) {
-					storageProcessor.accept(storage);
+					storageProcessor.apply(extractionDate).accept(storage);
 				}
 				storages.add(
 					storage
@@ -645,7 +645,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		);
 	}
 
-	public Function<Predicate<LocalDate>, Function<Consumer<Storage>, List<Storage>>> getExecutor() {
+	public Function<Predicate<LocalDate>, Function<Function<LocalDate, Consumer<Storage>>, List<Storage>>> getExecutor() {
 		return executor;
 	}
 

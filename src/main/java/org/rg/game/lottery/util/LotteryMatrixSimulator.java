@@ -17,6 +17,7 @@ import java.util.Properties;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -118,8 +119,8 @@ public class LotteryMatrixSimulator {
 		}
 	}
 
-	private static Consumer<Storage> buildSystemProcessor(SimpleWorkbookTemplate workBookTemplate) {
-		return storage -> {
+	private static Function<LocalDate, Consumer<Storage>> buildSystemProcessor(SimpleWorkbookTemplate workBookTemplate) {
+		return extractionDate -> storage -> {
 
 		};
 	}
