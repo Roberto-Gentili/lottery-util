@@ -171,6 +171,9 @@ public class SEStats {
 		Map<String, Integer> extractedNumberCountersMap = new LinkedHashMap<>();
 		Map<String, Integer> counterOfAbsencesFromCompetitionsMap = new LinkedHashMap<>();
 		Map<String, Integer> absencesRecordFromCompetitionsMap = new LinkedHashMap<>();
+		IntStream.range(1, 91).boxed().forEach(number -> {
+			counterOfAbsencesFromCompetitionsMap.put(number.toString(), 0);
+		});
 		new TreeMap<>(allWinningCombos).entrySet().forEach(dateAndExtractedCombo -> {
 			List<Integer> extractedCombo = dateAndExtractedCombo.getValue();
 			extractedCombo.stream().forEach(number -> {
@@ -390,6 +393,26 @@ public class SEStats {
 
 	public Map<Date, List<Integer>> getAllWinningCombosWithJollyAndSuperstar() {
 		return allWinningCombosWithJollyAndSuperstar;
+	}
+
+	public Map<String, Integer> check(LocalDate extractionDate, Supplier<Iterator<List<Integer>>> systemIteratorSupplier) {
+		List<Integer> winningCombo = getWinningComboOf(extractionDate);
+		Map<String, Integer> results = new TreeMap<>();
+		Iterator<List<Integer>> systemIterator = systemIteratorSupplier.get();
+		while (systemIterator.hasNext()) {
+			List<Integer> currentCombo = systemIterator.next();
+			Integer hit = 0;
+			for (Integer currentNumber : currentCombo) {
+				if (winningCombo.contains(currentNumber)) {
+					hit++;
+				}
+			}
+			if (hit > 1) {
+				String premiumLabel = toLabel(hit);
+				results.put(premiumLabel, results.computeIfAbsent(premiumLabel, label -> 1));
+			}
+		}
+		return results;
 	}
 
 	public Map<String, Object> checkQuality(Supplier<Iterator<List<Integer>>> systemIteratorSupplier) {

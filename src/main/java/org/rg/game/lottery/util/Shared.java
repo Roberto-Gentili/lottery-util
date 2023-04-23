@@ -38,7 +38,9 @@ class Shared {
 	static DecimalFormat integerFormat = new DecimalFormat( "#,##0" );
 	static SimpleDateFormat standardDatePattern = new SimpleDateFormat("dd/MM/yyyy");
 	static DateTimeFormatter formatter = DateTimeFormatter.ofPattern(standardDatePattern.toPattern());
-	static String SEStatsDefaultDate = new SELotteryMatrixGeneratorEngine().getExtractionArchiveStartDate();
+	static String sEStatsDefaultDate = System.getenv("competition.archive.start-date") != null ?
+		System.getenv("competition.archive.start-date"):
+		new SELotteryMatrixGeneratorEngine().getExtractionArchiveStartDate();
 
 	static String capitalizeFirstCharacter(String value) {
 		return Character.toString(value.charAt(0)).toUpperCase()
@@ -82,12 +84,12 @@ class Shared {
 		return getCellIndex(sheet, 0, localDate);
 	}
 
-	static int getCellIndex(Sheet sheet, int headerIndex, String dayAsString) {
+	static int getCellIndex(Sheet sheet, int headerIndex, String value) {
 		Row header = sheet.getRow(headerIndex);
 		Iterator<Cell> cellIterator = header.cellIterator();
 		while (cellIterator.hasNext()) {
 			Cell cell = cellIterator.next();
-			if (CellType.STRING.equals(cell.getCellType()) && dayAsString.equals(cell.getStringCellValue())) {
+			if (CellType.STRING.equals(cell.getCellType()) && value.equals(cell.getStringCellValue())) {
 				return cell.getColumnIndex();
 			}
 		}
@@ -170,7 +172,7 @@ class Shared {
 	}
 
 	static SEStats getSEStats() {
-		return SEStats.get(Shared.SEStatsDefaultDate, standardDatePattern.format(new Date()));
+		return SEStats.get(Shared.sEStatsDefaultDate, standardDatePattern.format(new Date()));
 	}
 
 	static FileSystemItem backup(

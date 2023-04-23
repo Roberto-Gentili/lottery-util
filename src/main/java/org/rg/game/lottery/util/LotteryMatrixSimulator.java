@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
@@ -100,9 +101,8 @@ public class LotteryMatrixSimulator {
 						() ->
 						process(
 							excelFileName,
-							workbook -> {
-								engine.getExecutor().apply(buildExtractionDatePredicate(workbook)).apply(buildSystemProcessor(workbook));
-							}
+							workbook ->
+								engine.getExecutor().apply(buildExtractionDatePredicate(workbook)).apply(buildSystemProcessor(workbook))
 						)
 					)
 				);
@@ -111,17 +111,24 @@ public class LotteryMatrixSimulator {
 					excelFileName,
 					workbook ->
 						engine.getExecutor().apply(buildExtractionDatePredicate(workbook)).apply(buildSystemProcessor(workbook))
-
 				);
 			}
-
-
 		}
 	}
 
 	private static Function<LocalDate, Consumer<Storage>> buildSystemProcessor(SimpleWorkbookTemplate workBookTemplate) {
 		return extractionDate -> storage -> {
-
+			Map<String, Integer> results = Shared.getSEStats().check(extractionDate, storage::iterator);
+			workBookTemplate.addRow();
+			workBookTemplate.addCell(Shared.formatter.format(extractionDate));
+			List<String> allPremiumLabels = Shared.allPremiumLabels();
+			for (int i = 0; i < allPremiumLabels.size();i++) {
+				Integer result = results.get(allPremiumLabels.get(i));
+				if (result == null) {
+					result = 0;
+				}
+				workBookTemplate.addCell(result, "#,##0");
+			}
 		};
 	}
 
@@ -148,6 +155,9 @@ public class LotteryMatrixSimulator {
 		try (InputStream inputStream = new FileInputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileAbsolutePath);) {
 			workBook = new XSSFWorkbook(inputStream);
 			SimpleWorkbookTemplate workBookTemplate = new SimpleWorkbookTemplate(workBook);
+			for (int i = 0; i < workBookTemplate.getOrCreateSheet("Risultati", true).getPhysicalNumberOfRows(); i++) {
+				workBookTemplate.addRow();
+			}
 			processor.accept(workBookTemplate);
 		} catch (IOException exc) {
 			workBook = new XSSFWorkbook();

@@ -415,11 +415,11 @@ public class SEMassiveVerifierAndQualityChecker {
 	) {
 		Collection<Integer> hitNumbers = new LinkedHashSet<>();
 		String extractionDateAsString = formatter.format(extractionDate);
-		for (List<Integer> winnginCombo : allWinningCombos.values()) {
+		for (List<Integer> winningCombo : allWinningCombos.values()) {
 			for (List<Integer> currentCombo : system) {
 				Integer hit = 0;
 				for (Integer currentNumber : currentCombo) {
-					if (winnginCombo.contains(currentNumber)) {
+					if (winningCombo.contains(currentNumber)) {
 						hitNumbers.add(currentNumber);
 						hit++;
 					}
