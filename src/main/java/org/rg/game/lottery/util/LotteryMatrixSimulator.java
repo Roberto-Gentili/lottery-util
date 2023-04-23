@@ -108,9 +108,9 @@ public class LotteryMatrixSimulator {
 			} else {
 				process(
 					excelFileName,
-					workbook -> {
-						engine.getExecutor().apply(buildExtractionDatePredicate(workbook)).apply(buildSystemProcessor(workbook));
-					}
+					workbook ->
+						engine.getExecutor().apply(buildExtractionDatePredicate(workbook)).apply(buildSystemProcessor(workbook))
+
 				);
 			}
 

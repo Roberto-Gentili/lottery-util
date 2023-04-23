@@ -54,7 +54,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	protected String extractionArchiveStartDate;
 	protected String extractionArchiveForSeedStartDate;
 	protected String storageType;
-	protected Function<Predicate<LocalDate>,Function<Consumer<Storage>, List<Storage>>> executor;
+	protected Function<Predicate<LocalDate>, Function<Consumer<Storage>, List<Storage>>> executor;
 	protected int engineIndex;
 	protected Integer avoidMode;
 	protected Predicate<List<Integer>> combinationFilter;
