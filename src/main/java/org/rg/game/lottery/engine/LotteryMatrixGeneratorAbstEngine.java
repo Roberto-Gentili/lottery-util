@@ -100,6 +100,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 				extractionDate,
 				numbersOrdered != null && Boolean.parseBoolean(numbersOrdered)
 			);
+			SEStats.clear();
 			data.put("chosenNumbers", chosenNumbers);
 			List<Integer> numbersToBePlayed = new ArrayList<>(chosenNumbers);
 			data.put(
