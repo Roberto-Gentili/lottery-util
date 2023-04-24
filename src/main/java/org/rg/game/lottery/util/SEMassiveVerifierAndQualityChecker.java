@@ -348,7 +348,7 @@ public class SEMassiveVerifierAndQualityChecker {
 					}
 				}
 			} else {
-				result.append("Nessuna vincita per il concorso del " + TimeUtils.defaultDateFormat.format(extractionDate) + "\n");
+				result.append("Nessuna vincita per il concorso del " + TimeUtils.defaultLocalDateFormatter.format(extractionDate) + "\n");
 			}
 		}
 		return result.toString();
