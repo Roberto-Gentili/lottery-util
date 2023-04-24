@@ -305,6 +305,9 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 			for (List<Integer> winningCombo :getSEStats().getAllWinningCombos().values()) {
 				inClauses.add("in " + ComboHandler.toString(winningCombo, ",") + ":" + groupOptions[1]);
 			}
+			if (inClauses.isEmpty()) {//Storico non disponibile: probabilmente la data di inizio e fine sono la stessa. In questo caso controllare il file di configurazione
+				return "";
+			}
 			return "(" + String.join("|", inClauses) + ")";
 		}
 		return expression;
