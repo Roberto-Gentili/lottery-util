@@ -128,7 +128,7 @@ public class LotteryMatrixSimulator {
 				} else {
 					engine.getExecutor().apply(buildExtractionDatePredicate(excelFileName)).apply(buildSystemProcessor(excelFileName));
 				}
-				if (!(futures.size() < 10)) {
+				if (futures.size() >= 10) {
 					Iterator<CompletableFuture<Void>> futuresIterator = futures.iterator();
 					while(futuresIterator.hasNext()) {
 						futuresIterator.next().join();
