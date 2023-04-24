@@ -179,7 +179,7 @@ public class LotteryMatrixSimulator {
 
 	private static void addRowData(SimpleWorkbookTemplate workBookTemplate, LocalDate extractionDate, Storage storage) {
 		Map<String, Integer> results = Shared.getSEStats().check(extractionDate, storage::iterator);
-		workBookTemplate.addCell(TimeUtils.defaultLocalDateFormatter.format(extractionDate));
+		workBookTemplate.addCell(TimeUtils.toDate(extractionDate));
 		List<String> allPremiumLabels = Shared.allPremiumLabels();
 		for (int i = 0; i < allPremiumLabels.size();i++) {
 			Integer result = results.get(allPremiumLabels.get(i));
@@ -201,7 +201,7 @@ public class LotteryMatrixSimulator {
 				while (rowIterator.hasNext()) {
 					Row row = rowIterator.next();
 					Cell data = row.getCell(0);
-					if (data != null && TimeUtils.defaultLocalDateFormatter.format(extractionDate).equals(data.getStringCellValue())) {
+					if (data != null && extractionDate.compareTo(TimeUtils.toLocalDate(data.getDateCellValue())) == 0) {
 						return false;
 					}
 				}
