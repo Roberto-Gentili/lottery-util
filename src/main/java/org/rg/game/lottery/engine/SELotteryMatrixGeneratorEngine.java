@@ -100,7 +100,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 
 	@Override
 	public Map<String, Object> adjustSeed() {
-		Map.Entry<LocalDate, Long> seedRecord = getSEStatsForSeed().getSeedData(extractionDate);
+		Map.Entry<LocalDate, Long> seedRecord = getSEStatsForSeed().getSeedData(extractionDate.get());
 		random = new Random(seedRecord.getValue());
 		buildComboIndexSupplier();
 		Map<String, Object> seedData = new LinkedHashMap<>();
@@ -346,15 +346,15 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	protected SEStats getSEStats() {
-		SEStats sEStats = SEStats.get(getExtractionArchiveStartDate(), TimeUtils.defaultLocalDateFormatter.format(extractionDate));
-		if (LocalDate.now().compareTo(extractionDate) >= 0) {
+		SEStats sEStats = SEStats.get(getExtractionArchiveStartDate(), TimeUtils.defaultLocalDateFormatter.format(extractionDate.get()));
+		if (LocalDate.now().compareTo(extractionDate.get()) >= 0) {
 			Date latestExtractionDate = sEStats.getLatestExtractionDate();
 			if (latestExtractionDate != null && latestExtractionDate.toInstant()
 				.atZone(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE))
-			    .toLocalDate().compareTo(extractionDate) == 0 &&
-			    !(extractionDate.compareTo(LocalDate.now()) > 0 ||
-				    (extractionDate.compareTo(LocalDate.now()) == 0 && LocalDateTime.now(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE)).compareTo(
-						LocalDateTime.now(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE)).with(extractionDate).withHour(21).withMinute(0).withSecond(0).withNano(0)
+			    .toLocalDate().compareTo(extractionDate.get()) == 0 &&
+			    !(extractionDate.get().compareTo(LocalDate.now()) > 0 ||
+				    (extractionDate.get().compareTo(LocalDate.now()) == 0 && LocalDateTime.now(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE)).compareTo(
+						LocalDateTime.now(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE)).with(extractionDate.get()).withHour(21).withMinute(0).withSecond(0).withNano(0)
 					) < 0)
 			    )
 			) {

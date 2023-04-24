@@ -232,7 +232,7 @@ class Shared {
 			}
 		}
 		SELotteryMatrixGeneratorEngine engine = new SELotteryMatrixGeneratorEngine();
-		engine.extractionDate = LocalDate.now();
+		engine.extractionDate.set(LocalDate.now());
 		engine.adjustSeed();
 		List<String> inClauses = new ArrayList<>();
 		for (List<Integer> winningCombo : system) {

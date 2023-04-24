@@ -99,19 +99,21 @@ public class LotteryMatrixSimulator {
 			}
 			String excelFileName = configuration.getProperty("file.name").replace("." + configuration.getProperty("file.extension"), "") + "-sim.xlsx";
 			LotteryMatrixGeneratorAbstEngine engine = engineSupplier.get();
-			Collection<LocalDate> datesToBeProcessed = engine.computeExtractionDates(configuration.getProperty("competition"));
 			configuration.setProperty("nameSuffix", configuration.getProperty("file.name")
-				.replace("." + configuration.getProperty("file.extension"), ""));
-			engine.setup(configuration);
-			if (Boolean.parseBoolean(configuration.getProperty("async", "false"))) {
-				futures.add(
-					CompletableFuture.runAsync(
-						() ->
-							engine.getExecutor().apply(buildExtractionDatePredicate(excelFileName)).apply(buildSystemProcessor(excelFileName))
-					)
-				);
-			} else {
-				engine.getExecutor().apply(buildExtractionDatePredicate(excelFileName)).apply(buildSystemProcessor(excelFileName));
+					.replace("." + configuration.getProperty("file.extension"), ""));
+			for (LocalDate dateToBeProcessed : engine.computeExtractionDates(configuration.getProperty("competition"))) {
+				configuration.setProperty("competition", TimeUtils.defaultLocalDateFormatter.format(dateToBeProcessed));
+				engine.setup(configuration);
+				if (Boolean.parseBoolean(configuration.getProperty("async", "false"))) {
+					futures.add(
+						CompletableFuture.runAsync(
+							() ->
+								engine.getExecutor().apply(buildExtractionDatePredicate(excelFileName)).apply(buildSystemProcessor(excelFileName))
+						)
+					);
+				} else {
+					engine.getExecutor().apply(buildExtractionDatePredicate(excelFileName)).apply(buildSystemProcessor(excelFileName));
+				}
 			}
 		}
 	}
