@@ -55,7 +55,7 @@ public class SEQualityChecker {
 	private static void check(List<Map.Entry<LocalDate, Object>>... dateGroupsList) throws IOException {
 		for (List<Map.Entry<LocalDate, Object>> dateGroup: dateGroupsList) {
 			for (Map.Entry<LocalDate, Object> dateInfo : dateGroup) {
-				String extractionDate = TimeUtils.defaultDateFormat.format(dateInfo.getKey());
+				String extractionDate = TimeUtils.defaultLocalDateFormatter.format(dateInfo.getKey());
 				String extractionYear = extractionDate.split("\\/")[2];
 				String extractionMonth = Shared.getMonth(extractionDate);
 				String extractionDay = extractionDate.split("\\/")[0];

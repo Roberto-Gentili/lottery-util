@@ -58,6 +58,7 @@ public class SEStats {
 
 	private Collection<DataLoader> dataLoaders;
 	private Collection<DataStorer> dataStorers;
+	private boolean global;
 
 	protected DecimalFormat decimalFormat = new DecimalFormat( "#,##0.##" );
 	protected DecimalFormat integerFormat = new DecimalFormat( "#,##0" );
@@ -83,8 +84,10 @@ public class SEStats {
 	}
 
 	public static final SEStats get(String startDate, String endDate) {
-		if (LocalDate.parse(endDate, TimeUtils.defaultLocalDateFormatter).compareTo(LocalDate.now()) > 0) {
+		boolean isGlobal = false;
+		if (LocalDate.parse(endDate, TimeUtils.defaultLocalDateFormatter).compareTo(LocalDate.now()) >= 0) {
 			endDate = TimeUtils.defaultLocalDateFormatter.format(LocalDate.now());
+			isGlobal = startDate.equals("03/12/1997") || startDate.equals("02/07/2009");
 		}
 		String key = startDate+"->"+endDate;
 		SEStats sEStats = INSTANCES.get(key);
@@ -92,11 +95,27 @@ public class SEStats {
 			synchronized(INSTANCES) {
 				sEStats = INSTANCES.get(key);
 				if (sEStats == null) {
-					INSTANCES.put(key, sEStats = new SEStats(startDate, endDate));
+					sEStats = new SEStats(startDate, endDate);
+					sEStats.global = isGlobal;
+					INSTANCES.put(key, sEStats);
 				}
 			}
 		}
 		return sEStats;
+	}
+
+	public static void hardClear() {
+		INSTANCES.clear();
+	}
+
+	public static void clear() {
+		Iterator<Map.Entry<String, SEStats>> sEStatsIterator = INSTANCES.entrySet().iterator();
+		while (sEStatsIterator.hasNext()) {
+			Map.Entry<String, SEStats> sEStatsData = sEStatsIterator.next();
+			if (!sEStatsData.getValue().global) {
+				sEStatsIterator.remove();
+			}
+		}
 	}
 
 	private void init(String startDate, String endDate) {

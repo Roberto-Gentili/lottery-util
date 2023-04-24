@@ -76,7 +76,7 @@ public class SEMassiveVerifierAndQualityChecker {
 		LocalDateTime backupTime = LocalDateTime.now();
 		for (List<Map.Entry<LocalDate, Object>> dateGroup: dateGroupsList) {
 			for (Map.Entry<LocalDate, Object> dateInfo : dateGroup) {
-				String extractionDate = TimeUtils.defaultDateFormat.format(dateInfo.getKey());
+				String extractionDate = TimeUtils.defaultLocalDateFormatter.format(dateInfo.getKey());
 				String extractionYear = extractionDate.split("\\/")[2];
 				String extractionMonth = Shared.getMonth(extractionDate);
 				String extractionDay = extractionDate.split("\\/")[0];
@@ -299,7 +299,7 @@ public class SEMassiveVerifierAndQualityChecker {
 		XSSFFont boldFont
 	) {
 		if (winningCombo == null || winningCombo.isEmpty()) {
-			return "Nessuna estrazione per il concorso del " + TimeUtils.defaultDateFormat.format(extractionDate) + "\n";
+			return "Nessuna estrazione per il concorso del " + TimeUtils.defaultLocalDateFormatter.format(extractionDate) + "\n";
 		}
 		Map<Integer,List<List<Integer>>> winningCombos = new TreeMap<>();
 		Collection<Integer> hitNumbers = new LinkedHashSet<>();
@@ -412,7 +412,7 @@ public class SEMassiveVerifierAndQualityChecker {
 		XSSFFont boldFont
 	) {
 		Collection<Integer> hitNumbers = new LinkedHashSet<>();
-		String extractionDateAsString = TimeUtils.defaultDateFormat.format(extractionDate);
+		String extractionDateAsString = TimeUtils.defaultLocalDateFormatter.format(extractionDate);
 		for (List<Integer> winningCombo : allWinningCombos.values()) {
 			for (List<Integer> currentCombo : system) {
 				Integer hit = 0;
