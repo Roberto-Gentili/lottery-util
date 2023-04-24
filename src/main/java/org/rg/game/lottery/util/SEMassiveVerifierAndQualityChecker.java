@@ -338,7 +338,7 @@ public class SEMassiveVerifierAndQualityChecker {
 		StringBuffer result = new StringBuffer();
 		if (!winningCombo.isEmpty()) {
 			if (!winningCombos.isEmpty()) {
-				result.append("Numeri estratti per il *superenalotto* del " + TimeUtils.defaultDateFormat.format(extractionDate) +": " + Shared.toWAString(winningCombo, ", ", hitNumbers) + "\n");
+				result.append("Numeri estratti per il *superenalotto* del " + TimeUtils.defaultLocalDateFormatter.format(extractionDate) +": " + Shared.toWAString(winningCombo, ", ", hitNumbers) + "\n");
 				for (Map.Entry<Integer, List<List<Integer>>> combos: winningCombos.entrySet()) {
 					result.append("\t*Combinazioni con " + Shared.toPremiumLabel(combos.getKey()).toLowerCase() + "*:" + "\n");
 					for (List<Integer> combo : combos.getValue()) {
