@@ -22,6 +22,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
@@ -31,6 +32,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.io.FileSystemItem;
+import org.rg.game.lottery.engine.CollectionUtils;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.PersistentStorage;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
@@ -101,8 +103,20 @@ public class LotteryMatrixSimulator {
 			LotteryMatrixGeneratorAbstEngine engine = engineSupplier.get();
 			configuration.setProperty("nameSuffix", configuration.getProperty("file.name")
 					.replace("." + configuration.getProperty("file.extension"), ""));
-			for (LocalDate dateToBeProcessed : engine.computeExtractionDates(configuration.getProperty("competition"))) {
-				configuration.setProperty("competition", TimeUtils.defaultLocalDateFormatter.format(dateToBeProcessed));
+			int processingUnitSize = 10;
+			for (
+				List<LocalDate> datesToBeProcessed :
+				CollectionUtils.toSubLists(
+					new ArrayList<>(engine.computeExtractionDates(configuration.getProperty("competition"))),
+					processingUnitSize
+				)
+			) {
+				configuration.setProperty("competition",
+					String.join(
+						",",
+						datesToBeProcessed.stream().map(TimeUtils.defaultLocalDateFormatter::format).collect(Collectors.toList())
+					)
+				);
 				engine.setup(configuration);
 				if (Boolean.parseBoolean(configuration.getProperty("async", "false"))) {
 					futures.add(
@@ -113,6 +127,13 @@ public class LotteryMatrixSimulator {
 					);
 				} else {
 					engine.getExecutor().apply(buildExtractionDatePredicate(excelFileName)).apply(buildSystemProcessor(excelFileName));
+				}
+				if (!(futures.size() < 10)) {
+					Iterator<CompletableFuture<Void>> futuresIterator = futures.iterator();
+					while(futuresIterator.hasNext()) {
+						futuresIterator.next().join();
+						futuresIterator.remove();
+					}
 				}
 			}
 		}
