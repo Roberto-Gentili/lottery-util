@@ -66,6 +66,7 @@ public class SEMassiveVerifierAndQualityChecker {
 			dates.add(new AbstractMap.SimpleEntry<LocalDate, Object>(startDate, printReportDetail));
 			startDate =  engine.computeNextExtractionDate(startDate.plus(1, ChronoUnit.DAYS), false);
 		}
+		//dates.add(new AbstractMap.SimpleEntry(LocalDate.parse("2023-04-24"), false));
 		return dates;
 	}
 
