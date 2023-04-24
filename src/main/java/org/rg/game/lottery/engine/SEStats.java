@@ -474,7 +474,7 @@ public class SEStats {
 			}
 			if (hit > 1) {
 				String premiumLabel = toLabel(hit);
-				results.put(premiumLabel, results.computeIfAbsent(premiumLabel, label -> 1));
+				results.put(premiumLabel, results.computeIfAbsent(premiumLabel, label -> 0) + 1);
 			}
 		}
 		return results;
