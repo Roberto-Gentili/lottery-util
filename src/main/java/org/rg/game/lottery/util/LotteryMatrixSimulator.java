@@ -7,6 +7,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,6 +26,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -167,7 +170,9 @@ public class LotteryMatrixSimulator {
 			} catch (IOException exc) {
 				throw new RuntimeException(exc);
 			} finally {
-				storage.delete();
+				if (!(storage instanceof PersistentStorage)) {
+					storage.delete();
+				}
 			}
 			try (OutputStream destFileOutputStream = new FileOutputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileName)){
 				SEStats.clear();
@@ -179,9 +184,9 @@ public class LotteryMatrixSimulator {
 		};
 	}
 
-	private static void addRowData(SimpleWorkbookTemplate workBookTemplate, LocalDate extractionDate, Storage storage) {
+	private static void addRowData(SimpleWorkbookTemplate workBookTemplate, LocalDate extractionDate, Storage storage) throws UnsupportedEncodingException {
 		Map<String, Integer> results = Shared.getSEStats().check(extractionDate, storage::iterator);
-		workBookTemplate.addCell(TimeUtils.toDate(extractionDate));
+		workBookTemplate.addCell(TimeUtils.toDate(extractionDate)).getCellStyle().setAlignment(HorizontalAlignment.CENTER);
 		List<String> allPremiumLabels = Shared.allPremiumLabels();
 		for (int i = 0; i < allPremiumLabels.size();i++) {
 			Integer result = results.get(allPremiumLabels.get(i));
@@ -190,12 +195,20 @@ public class LotteryMatrixSimulator {
 			}
 			workBookTemplate.addCell(result, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.CENTER);
 		}
+		if (storage instanceof PersistentStorage) {
+			PersistentStorage persistentStorage = (PersistentStorage)storage;
+			workBookTemplate.setLinkForCell(
+				HyperlinkType.FILE,
+				workBookTemplate.addCell(persistentStorage.getFileName()).get(0),
+				URLEncoder.encode(persistentStorage.getFileName(), "UTF-8")
+			);
+		}
 	}
 
-	private static Predicate<LocalDate> buildExtractionDatePredicate(String excelFileAbsolutePath) {
+	private static Predicate<LocalDate> buildExtractionDatePredicate(String excelFileName) {
 		return extractionDate -> {
 			Workbook workBook = null;
-			try (InputStream inputStream = new FileInputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileAbsolutePath)) {
+			try (InputStream inputStream = new FileInputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileName)) {
 				workBook = new XSSFWorkbook(inputStream);
 				Iterator<Row> rowIterator = workBook.getSheet("Risultati").rowIterator();
 				rowIterator.next();
@@ -228,7 +241,7 @@ public class LotteryMatrixSimulator {
 					summaryFormulas
 				));
 				sheet.setColumnWidth(0, 3800);
-				try (OutputStream destFileOutputStream = new FileOutputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileAbsolutePath)){
+				try (OutputStream destFileOutputStream = new FileOutputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileName)){
 					workBook.write(destFileOutputStream);
 					workBook.close();
 				} catch (IOException e) {

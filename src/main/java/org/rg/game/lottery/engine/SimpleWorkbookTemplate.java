@@ -36,6 +36,7 @@ import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class SimpleWorkbookTemplate implements Closeable {
 	Workbook workbook;
@@ -257,13 +258,15 @@ public class SimpleWorkbookTemplate implements Closeable {
 		return getOrCreateRow(sheetName, titles.size() - 1);
 	}
 
-	public void addCell(String... value) {
+	public List<Cell> addCell(String... value) {
 		if (value == null) {
 			value = new String[0];
 		}
+		List<Cell> cells = new ArrayList<>();
 		for (int i = 0; i < value.length; i++) {
-			createCell(currentSheet, get(currentSheet, currentRow), getAndIncrement(currentSheet, currentCol), value[i]);
+			cells.add(createCell(currentSheet, get(currentSheet, currentRow), getAndIncrement(currentSheet, currentCol), value[i]));
 		}
+		return cells;
 	}
 
 	public void addCellOrEmptyCell(String... value) {
@@ -417,6 +420,8 @@ public class SimpleWorkbookTemplate implements Closeable {
 			return ((SXSSFWorkbook)workbook).getCreationHelper();
 		} else if (workbook instanceof HSSFWorkbook) {
 			return ((HSSFWorkbook)workbook).getCreationHelper();
+		} else if (workbook instanceof XSSFWorkbook) {
+			return ((XSSFWorkbook)workbook).getCreationHelper();
 		}
 		return null;
 	}
