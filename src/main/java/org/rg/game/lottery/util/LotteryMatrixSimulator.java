@@ -24,6 +24,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
@@ -47,6 +48,7 @@ import org.rg.game.lottery.engine.TimeUtils;
 public class LotteryMatrixSimulator {
 
 	public static void main(String[] args) throws IOException {
+		ZipSecureFile.setMinInflateRatio(0);
 		Collection<CompletableFuture<Void>> futures = new ArrayList<>();
 		execute("se", futures);
 		execute("md", futures);
