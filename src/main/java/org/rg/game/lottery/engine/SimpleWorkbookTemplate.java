@@ -214,6 +214,10 @@ public class SimpleWorkbookTemplate implements Closeable {
 		return row;
 	}
 
+	public Row getCurrentRow() {
+		return getOrCreateSheet(currentSheet).getRow(currentRow.computeIfAbsent(currentSheet, key -> 0));
+	}
+
 	private Row getOrCreateRow(String sheetName, int rowIdx) {
 		Sheet sheet = getOrCreateSheet(sheetName);
 		Row row = sheet.getRow(rowIdx);

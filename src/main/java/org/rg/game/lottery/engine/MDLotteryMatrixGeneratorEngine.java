@@ -68,10 +68,10 @@ public class MDLotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	public Map<String, Object> adjustSeed() {
 		long seed = 1L;
 		LocalDate seedStartDate = LocalDate.parse("2018-02-17");
-		if (seedStartDate.compareTo(extractionDate.get()) >= 0) {
+		if (seedStartDate.compareTo(extractionDate) >= 0) {
 			throw new IllegalArgumentException("Unvalid date: " + extractionDate);
 		}
-		while (seedStartDate.compareTo(extractionDate.get()) < 0) {
+		while (seedStartDate.compareTo(extractionDate) < 0) {
 			seedStartDate = seedStartDate.plus(getIncrementDays(seedStartDate), ChronoUnit.DAYS);
 			seed++;
 		}

@@ -58,14 +58,13 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	protected Integer avoidMode;
 	protected Predicate<List<Integer>> combinationFilter;
 	protected ExpressionToPredicateEngine<List<Integer>> combinationFilterPreProcessor;
-	public ThreadLocal<LocalDate> extractionDate;
+	public LocalDate extractionDate;
 
 
 	LotteryMatrixGeneratorAbstEngine() {
 		engineIndex = getAllChosenNumbers().size();
 		combinationFilterPreProcessor = new ExpressionToPredicateEngine<>();
 		setupCombinationFilterPreProcessor();
-		extractionDate = new ThreadLocal<>();
 	}
 
 	public void setup(Properties config) {
@@ -84,7 +83,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		storageType = config.getProperty("storage", "memory").replaceAll("\\s+","");
 		String combinationFilterRaw = config.getProperty("combination.filter");
 		Function<LocalDate, Map<String, Object>> basicDataSupplier = extractionDate -> {
-			this.extractionDate.set(extractionDate);
+			this.extractionDate = extractionDate;
 			if (combinationFilter == null) {
 				combinationFilter = CombinationFilterFactory.INSTANCE.parse(
 					preProcess(combinationFilterRaw)

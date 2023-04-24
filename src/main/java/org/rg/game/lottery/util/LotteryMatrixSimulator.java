@@ -25,6 +25,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -103,39 +104,45 @@ public class LotteryMatrixSimulator {
 			LotteryMatrixGeneratorAbstEngine engine = engineSupplier.get();
 			configuration.setProperty("nameSuffix", configuration.getProperty("file.name")
 					.replace("." + configuration.getProperty("file.extension"), ""));
-			int processingUnitSize = 10;
-			for (
-				List<LocalDate> datesToBeProcessed :
+			List<List<LocalDate>> competitionDates =
 				CollectionUtils.toSubLists(
 					new ArrayList<>(engine.computeExtractionDates(configuration.getProperty("competition"))),
-					processingUnitSize
-				)
-			) {
-				configuration.setProperty("competition",
-					String.join(
-						",",
-						datesToBeProcessed.stream().map(TimeUtils.defaultLocalDateFormatter::format).collect(Collectors.toList())
+					10
+				);
+			if (Boolean.parseBoolean(configuration.getProperty("async", "false"))) {
+				futures.add(
+					CompletableFuture.runAsync(
+						() -> {
+							process(configuration, excelFileName, engine, competitionDates);
+						}
 					)
 				);
-				engine.setup(configuration);
-				if (Boolean.parseBoolean(configuration.getProperty("async", "false"))) {
-					futures.add(
-						CompletableFuture.runAsync(
-							() ->
-								engine.getExecutor().apply(buildExtractionDatePredicate(excelFileName)).apply(buildSystemProcessor(excelFileName))
-						)
-					);
-				} else {
-					engine.getExecutor().apply(buildExtractionDatePredicate(excelFileName)).apply(buildSystemProcessor(excelFileName));
-				}
-				if (futures.size() >= 10) {
-					Iterator<CompletableFuture<Void>> futuresIterator = futures.iterator();
-					while(futuresIterator.hasNext()) {
-						futuresIterator.next().join();
-						futuresIterator.remove();
-					}
+			} else {
+				process(configuration, excelFileName, engine, competitionDates);
+			}
+			if (futures.size() >= 5) {
+				Iterator<CompletableFuture<Void>> futuresIterator = futures.iterator();
+				while(futuresIterator.hasNext()) {
+					futuresIterator.next().join();
+					futuresIterator.remove();
 				}
 			}
+		}
+	}
+
+	private static void process(Properties configuration, String excelFileName,
+			LotteryMatrixGeneratorAbstEngine engine, List<List<LocalDate>> competitionDates) {
+		for (
+			List<LocalDate> datesToBeProcessed :
+			competitionDates
+		) {
+			configuration.setProperty("competition",
+				String.join(",",
+					datesToBeProcessed.stream().map(TimeUtils.defaultLocalDateFormatter::format).collect(Collectors.toList())
+				)
+			);
+			engine.setup(configuration);
+			engine.getExecutor().apply(buildExtractionDatePredicate(excelFileName)).apply(buildSystemProcessor(excelFileName));
 		}
 	}
 
@@ -145,27 +152,33 @@ public class LotteryMatrixSimulator {
 			try (InputStream inputStream = new FileInputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileName);) {
 				workBook = new XSSFWorkbook(inputStream);
 				SimpleWorkbookTemplate workBookTemplate = new SimpleWorkbookTemplate(workBook);
-				for (int i = 0; i < workBookTemplate.getOrCreateSheet("Risultati", true).getPhysicalNumberOfRows() -1; i++) {
-					workBookTemplate.addRow();
+				workBookTemplate.getOrCreateSheet("Risultati", true);
+				while (true) {
+					Row row = workBookTemplate.getCurrentRow();
+					if (row == null || row.getCell(0) == null || row.getCell(0).getCellType() == CellType.BLANK) {
+						addRowData(workBookTemplate, extractionDate, storage);
+						break;
+					} else {
+						workBookTemplate.addRow();
+					}
 				}
-				addRowData(workBookTemplate, extractionDate, storage);
 			} catch (IOException exc) {
 				throw new RuntimeException(exc);
 			} finally {
-				try (OutputStream destFileOutputStream = new FileOutputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileName)){
-					SEStats.clear();
-					workBook.write(destFileOutputStream);
-					workBook.close();
-				} catch (IOException exc) {
-					throw new RuntimeException(exc);
-				}
+				storage.delete();
+			}
+			try (OutputStream destFileOutputStream = new FileOutputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileName)){
+				SEStats.clear();
+				workBook.write(destFileOutputStream);
+				workBook.close();
+			} catch (IOException exc) {
+				throw new RuntimeException(exc);
 			}
 		};
 	}
 
 	private static void addRowData(SimpleWorkbookTemplate workBookTemplate, LocalDate extractionDate, Storage storage) {
 		Map<String, Integer> results = Shared.getSEStats().check(extractionDate, storage::iterator);
-		workBookTemplate.addRow();
 		workBookTemplate.addCell(TimeUtils.defaultLocalDateFormatter.format(extractionDate));
 		List<String> allPremiumLabels = Shared.allPremiumLabels();
 		for (int i = 0; i < allPremiumLabels.size();i++) {
@@ -175,7 +188,6 @@ public class LotteryMatrixSimulator {
 			}
 			workBookTemplate.addCell(result, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.CENTER);
 		}
-		storage.delete();
 	}
 
 	private static Predicate<LocalDate> buildExtractionDatePredicate(String excelFileAbsolutePath) {
@@ -201,9 +213,10 @@ public class LotteryMatrixSimulator {
 				labels.add("Data");
 				labels.addAll(Shared.allPremiumLabels());
 				List<String> summaryFormulas = new ArrayList<>();
-				summaryFormulas.add("");
+				String columnName = Shared.getLetterAtIndex(0);
+				summaryFormulas.add("FORMULA_COUNTA(" + columnName + "3:"+ columnName + Shared.getSEStats().getAllWinningCombos().size() * 2 +")");
 				for (int i = 1; i < labels.size(); i++) {
-					String columnName = Shared.getLetterAtIndex(i);
+					columnName = Shared.getLetterAtIndex(i);
 					summaryFormulas.add(
 						"FORMULA_SUM(" + columnName + "3:"+ columnName + Shared.getSEStats().getAllWinningCombos().size() * 2 +")"
 					);
