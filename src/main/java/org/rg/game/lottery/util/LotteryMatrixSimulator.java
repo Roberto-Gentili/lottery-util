@@ -2,12 +2,14 @@ package org.rg.game.lottery.util;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
@@ -22,7 +24,9 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.burningwave.core.assembler.ComponentContainer;
@@ -73,12 +77,15 @@ public class LotteryMatrixSimulator {
 			try (InputStream configIS = fIS.toInputStream()) {
 				Properties config = new Properties();
 				config.load(configIS);
+				config.setProperty("file.name", fIS.getName());
+				config.setProperty("file.parent.absolutePath", fIS.getParent().getAbsolutePath());
+				config.setProperty("file.extension", fIS.getExtension());
+				String simulationDates = config.getProperty("simulation.dates");
+				if (simulationDates != null) {
+					config.setProperty("competition", simulationDates);
+				}
 				if (Boolean.parseBoolean(config.getProperty("enabled", "false"))) {
-					config.setProperty("file.name", fIS.getName());
-					config.setProperty("file.parent.absolutePath", fIS.getParent().getAbsolutePath());
-					config.setProperty("file.extension", fIS.getExtension());
 					configurations.add(config);
-
 				}
 			}
 		}
@@ -92,6 +99,7 @@ public class LotteryMatrixSimulator {
 			}
 			String excelFileName = configuration.getProperty("file.name").replace("." + configuration.getProperty("file.extension"), "") + "-sim.xlsx";
 			LotteryMatrixGeneratorAbstEngine engine = engineSupplier.get();
+			Collection<LocalDate> datesToBeProcessed = engine.computeExtractionDates(configuration.getProperty("competition"));
 			configuration.setProperty("nameSuffix", configuration.getProperty("file.name")
 				.replace("." + configuration.getProperty("file.extension"), ""));
 			engine.setup(configuration);
@@ -142,15 +150,16 @@ public class LotteryMatrixSimulator {
 			if (result == null) {
 				result = 0;
 			}
-			workBookTemplate.addCell(result, "#,##0");
+			workBookTemplate.addCell(result, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.CENTER);
 		}
 		storage.delete();
 	}
 
 	private static Predicate<LocalDate> buildExtractionDatePredicate(String excelFileAbsolutePath) {
 		return extractionDate -> {
-			try (InputStream inputStream = new FileInputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileAbsolutePath);
-				Workbook workBook = new XSSFWorkbook(inputStream)) {
+			Workbook workBook = null;
+			try (InputStream inputStream = new FileInputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileAbsolutePath)) {
+				workBook = new XSSFWorkbook(inputStream);
 				Iterator<Row> rowIterator = workBook.getSheet("Risultati").rowIterator();
 				rowIterator.next();
 				rowIterator.next();
@@ -161,10 +170,10 @@ public class LotteryMatrixSimulator {
 						return false;
 					}
 				}
-			} catch (IOException exc) {
-				Workbook workBook = new XSSFWorkbook();
+			} catch (FileNotFoundException exc) {
+				workBook = new XSSFWorkbook();
 				SimpleWorkbookTemplate workBookTemplate = new SimpleWorkbookTemplate(workBook);
-				workBookTemplate.getOrCreateSheet("Risultati", true);
+				Sheet sheet = workBookTemplate.getOrCreateSheet("Risultati", true);
 				List<String> labels = new ArrayList<>();
 				labels.add("Data");
 				labels.addAll(Shared.allPremiumLabels());
@@ -176,12 +185,19 @@ public class LotteryMatrixSimulator {
 						"FORMULA_SUM(" + columnName + "3:"+ columnName + Shared.getSEStats().getAllWinningCombos().size() * 2 +")"
 					);
 				}
+				workBookTemplate.createHeader("Risultati", true, Arrays.asList(
+					labels,
+					summaryFormulas
+				));
+				sheet.setColumnWidth(0, 3800);
 				try (OutputStream destFileOutputStream = new FileOutputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileAbsolutePath)){
 					workBook.write(destFileOutputStream);
 					workBook.close();
 				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}
+			} catch (IOException exc) {
+				throw new RuntimeException(exc);
 			}
 			return true;
 		};
