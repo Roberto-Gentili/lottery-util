@@ -105,15 +105,19 @@ public class SEStats {
 	}
 
 	public static void hardClear() {
-		INSTANCES.clear();
+		synchronized(INSTANCES) {
+			INSTANCES.clear();
+		}
 	}
 
 	public static void clear() {
-		Iterator<Map.Entry<String, SEStats>> sEStatsIterator = INSTANCES.entrySet().iterator();
-		while (sEStatsIterator.hasNext()) {
-			Map.Entry<String, SEStats> sEStatsData = sEStatsIterator.next();
-			if (!sEStatsData.getValue().global) {
-				sEStatsIterator.remove();
+		synchronized(INSTANCES) {
+			Iterator<Map.Entry<String, SEStats>> sEStatsIterator = INSTANCES.entrySet().iterator();
+			while (sEStatsIterator.hasNext()) {
+				Map.Entry<String, SEStats> sEStatsData = sEStatsIterator.next();
+				if (!sEStatsData.getValue().global) {
+					sEStatsIterator.remove();
+				}
 			}
 		}
 	}

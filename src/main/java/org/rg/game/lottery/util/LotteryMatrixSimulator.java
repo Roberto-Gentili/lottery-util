@@ -17,6 +17,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
@@ -95,6 +96,10 @@ public class LotteryMatrixSimulator {
 				if (Boolean.parseBoolean(config.getProperty("enabled", "false"))) {
 					configurations.add(config);
 				}
+				String simulationGroup = config.getProperty("simulation.group");
+				if (simulationGroup != null) {
+					config.setProperty("group", simulationGroup);
+				}
 			}
 		}
 		for (Properties configuration : configurations) {
@@ -105,7 +110,11 @@ public class LotteryMatrixSimulator {
 			if (info != null) {
 				System.out.println(info);
 			}
-			String excelFileName = configuration.getProperty("file.name").replace("." + configuration.getProperty("file.extension"), "") + "-sim.xlsx";
+			String excelFileName =
+				Optional.ofNullable(configuration.getProperty("simulation.group")).map(groupName -> {
+					PersistentStorage.buildWorkingPath(groupName);
+					return groupName + File.separator + "report.xlsx";
+				}).orElseGet(() -> configuration.getProperty("file.name").replace("." + configuration.getProperty("file.extension"), "") + "-sim.xlsx");
 			LotteryMatrixGeneratorAbstEngine engine = engineSupplier.get();
 			configuration.setProperty("nameSuffix", configuration.getProperty("file.name")
 					.replace("." + configuration.getProperty("file.extension"), ""));

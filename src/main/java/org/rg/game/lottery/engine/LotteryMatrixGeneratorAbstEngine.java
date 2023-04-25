@@ -167,6 +167,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 					Boolean.parseBoolean(config.getProperty("combination.magic.enabled", "true")) ?
 						Integer.valueOf(Optional.ofNullable(config.getProperty("combination.magic.max-number")).orElseGet(() -> "90"))
 						:null,
+					config.getProperty("group"),
 					config.getProperty("nameSuffix"),
 					Boolean.parseBoolean(
 						config.getProperty(
@@ -301,12 +302,13 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		LocalDate extractionDate,
 		int combinationCount,
 		int numberOfCombos,
+		String group,
 		String suffix
 	) {
 		if ("memory".equalsIgnoreCase(storageType)) {
 			return new MemoryStorage();
 		}
-		return new PersistentStorage(extractionDate, combinationCount, numberOfCombos, suffix);
+		return new PersistentStorage(extractionDate, combinationCount, numberOfCombos, group, suffix);
 	}
 
 	public Storage generate(
@@ -322,6 +324,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		LocalDate extractionDate,
 		Integer magicCombinationMinNumber,
 		Integer magicCombinationMaxNumber,
+		String group,
 		String suffix,
 		boolean notEquilibrateCombinationAtLeastOneNumberAmongThoseChosen
 	) {
@@ -345,7 +348,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		AtomicInteger discoveredComboCounter = new AtomicInteger(0);
 		AtomicLong fromFilterDiscardedComboCounter = new AtomicLong(0);
 		ComboHandler comboHandler = new ComboHandler(numbers, combinationComponents);
-		try (Storage storage = buildStorage(((LocalDate)data.get("seedStartDate")), combinationComponents, numberOfCombos, suffix);) {
+		try (Storage storage = buildStorage(((LocalDate)data.get("seedStartDate")), combinationComponents, numberOfCombos, group, suffix);) {
 			storageRef = storage;
 			boolean equilibrate = equilibrateFlagSupplier.getAsBoolean();
 			AtomicReference<Iterator<List<Integer>>> randomCombosIteratorWrapper = new AtomicReference<>();

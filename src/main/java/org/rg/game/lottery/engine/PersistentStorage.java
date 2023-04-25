@@ -24,10 +24,10 @@ public class PersistentStorage implements Storage {
 		LocalDate extractionDate,
 		int combinationCount,
 		int numberOfCombos,
+		String group,
 		String suffix
 	) {
-		buildWorkingPath();
-		absolutePath = buildWorkingPath() + File.separator +
+		absolutePath = buildWorkingPath(group) + File.separator +
 			(fileName = "[" + extractionDate.toString() + "]"+"[" + combinationCount +"]" +
 			"[" + numberOfCombos + "]" + /*"[" + toRawString(numbers) + "]" +*/ suffix + ".txt");
 		try (FileChannel outChan = new FileOutputStream(absolutePath, true).getChannel()) {
@@ -43,6 +43,10 @@ public class PersistentStorage implements Storage {
 	}
 
 	public static String buildWorkingPath() {
+		return buildWorkingPath(null);
+	}
+
+	public static String buildWorkingPath(String subFolder) {
 		if (workingPath == null) {
 			synchronized (PersistentStorage.class) {
 				if (workingPath == null) {
@@ -57,9 +61,10 @@ public class PersistentStorage implements Storage {
 				}
 			}
 		}
-		File workingFolder = new File(workingPath);
+		String absolutePath = workingPath + (subFolder != null? File.separator + subFolder : "");
+		File workingFolder = new File(absolutePath);
 		workingFolder.mkdirs();
-		return workingPath;
+		return absolutePath;
 	}
 
 	public String getAbsolutePath() {
