@@ -109,9 +109,11 @@ public class LotteryMatrixSimulator {
 			LotteryMatrixGeneratorAbstEngine engine = engineSupplier.get();
 			configuration.setProperty("nameSuffix", configuration.getProperty("file.name")
 					.replace("." + configuration.getProperty("file.extension"), ""));
+			Collection<LocalDate> competitionDatesFlat = engine.computeExtractionDates(configuration.getProperty("competition"));
+			cleanup(excelFileName, competitionDatesFlat);
 			List<List<LocalDate>> competitionDates =
 				CollectionUtils.toSubLists(
-					new ArrayList<>(engine.computeExtractionDates(configuration.getProperty("competition"))),
+					new ArrayList<>(competitionDatesFlat),
 					10
 				);
 			if (Boolean.parseBoolean(configuration.getProperty("async", "false"))) {
@@ -134,6 +136,35 @@ public class LotteryMatrixSimulator {
 			}
 		}
 	}
+
+	private static void cleanup(String excelFileName, Collection<LocalDate> competitionDates) {
+		Workbook workBook = null;
+		try (InputStream inputStream = new FileInputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileName)) {
+			workBook = new XSSFWorkbook(inputStream);
+			Iterator<Row> rowIterator = workBook.getSheet("Risultati").rowIterator();
+			rowIterator.next();
+			rowIterator.next();
+			int initialSize = competitionDates.size();
+			while (rowIterator.hasNext()) {
+				Iterator<LocalDate> competitionDatesItr = competitionDates.iterator();
+				Row row = rowIterator.next();
+				Cell date = row.getCell(0);
+				while (competitionDatesItr.hasNext()) {
+					LocalDate competitionDate = competitionDatesItr.next();
+					if (date != null && competitionDate.compareTo(TimeUtils.toLocalDate(date.getDateCellValue())) == 0) {
+						competitionDatesItr.remove();
+					}
+				}
+			}
+			System.out.println(competitionDates.size() + " dates will be processed, " + (initialSize - competitionDates.size()) + " already processed");
+		} catch (FileNotFoundException e) {
+
+		} catch (IOException exc) {
+			throw new RuntimeException(exc);
+		}
+
+	}
+
 
 	private static void process(Properties configuration, String excelFileName,
 			LotteryMatrixGeneratorAbstEngine engine, List<List<LocalDate>> competitionDates) {
@@ -244,6 +275,7 @@ public class LotteryMatrixSimulator {
 				try (OutputStream destFileOutputStream = new FileOutputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileName)){
 					workBook.write(destFileOutputStream);
 					workBook.close();
+					System.out.println(PersistentStorage.buildWorkingPath() + File.separator + excelFileName + " succesfully created");
 				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}
