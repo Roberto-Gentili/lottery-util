@@ -2,6 +2,8 @@ package org.rg.game.lottery.engine;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -138,6 +140,14 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		}
 		reportEnabled = Boolean.parseBoolean(config.getProperty("report.enabled", "true"));
 		reportDetailEnabled = Boolean.parseBoolean(config.getProperty("report.detail.enabled", "false"));
+		String group;
+		try {
+			group = config.getProperty("group") != null ?
+				config.getProperty("group").replace("${localhost.name}", InetAddress.getLocalHost().getHostName()):
+				null;
+		} catch (UnknownHostException exc) {
+			throw new RuntimeException(exc);
+		}
 		executor = extractionDatePredicate -> storageProcessor -> {
 			List<Storage> storages = new ArrayList<>();
 			for (LocalDate extractionDate : extractionDates) {
@@ -167,7 +177,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 					Boolean.parseBoolean(config.getProperty("combination.magic.enabled", "true")) ?
 						Integer.valueOf(Optional.ofNullable(config.getProperty("combination.magic.max-number")).orElseGet(() -> "90"))
 						:null,
-					config.getProperty("group"),
+					group,
 					config.getProperty("nameSuffix"),
 					Boolean.parseBoolean(
 						config.getProperty(

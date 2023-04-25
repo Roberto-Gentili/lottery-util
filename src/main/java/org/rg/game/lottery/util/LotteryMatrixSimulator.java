@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.InetAddress;
 import java.net.URLEncoder;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -98,7 +99,12 @@ public class LotteryMatrixSimulator {
 				}
 				String simulationGroup = config.getProperty("simulation.group");
 				if (simulationGroup != null) {
-					config.setProperty("group", simulationGroup);
+					simulationGroup = simulationGroup.replace("${localhost.name}", InetAddress.getLocalHost().getHostName());
+					config.setProperty("simulation.group", simulationGroup);
+					config.setProperty(
+						"group",
+						simulationGroup
+					);					
 				}
 			}
 		}
