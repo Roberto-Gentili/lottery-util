@@ -32,16 +32,17 @@ public class ExpireDateUpdater {
 	static DateTimeFormatter datePattern = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
 
 	static List<Map.Entry<List<String>, Integer>> updateInfos = Arrays.asList(
+		//addUpdateInfo(computeIncrementationOfDays(1), "all")
+		//addUpdateInfo(computeIncrementationOfWeeks(4), "Barella Roberta")
+		//addUpdateInfo(computeIncrementationOfWeeks(4), "Bellacanzone Emanuele")
+		//addUpdateInfo(computeIncrementationOfWeeks(4), "Berni Valentina")
+		//addUpdateInfo(computeIncrementationOfWeeks(4), "Corinti Massimo")
 		//addUpdateInfo(computeIncrementationOfWeeks(4), "Fusi Francesco")
 		//addUpdateInfo(computeIncrementationOfWeeks(4), "Pistella Maria Anna")
-		//addUpdateInfo(computeIncrementationOfWeeks(4), "Barella Roberta")
-		//addUpdateInfo(computeIncrementationOfWeeks(4), "Berni Valentina")
-		//addUpdateInfo(computeIncrementationOfWeeks(4), "Bellacanzone Emanuele")
-		//addUpdateInfo(computeIncrementationOfDays(1), "all")
 		//addUpdateInfo(computeIncrementationOfWeeks(4), "Carrazza Alessandro", "Liberati Claudio")
-		//addUpdateInfo(computeIncrementationOfWeeks(4), "Corinti Massimo")
 		//addUpdateInfo(computeIncrementationOfWeeks(4), "Oroni Paola")
 		//addUpdateInfo(computeIncrementationOfWeeks(60), "Porta Danilo")
+		//addUpdateInfo(computeIncrementationOfWeeks(20), "Tondini Andrea")
 		/*addUpdateInfo(computeIncrementationOfWeeks(-1),
 			"Berni Valentina",
 			"Carrazza Alessandro",
