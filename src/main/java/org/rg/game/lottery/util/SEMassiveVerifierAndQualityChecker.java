@@ -245,7 +245,7 @@ public class SEMassiveVerifierAndQualityChecker {
 					for (Map.Entry<Integer, Integer> typeAndCounter : winningInfo.entrySet()) {
 						Integer type = typeAndCounter.getKey();
 						Integer counter = typeAndCounter.getValue();
-						String label = SEStats.toLabel(type);
+						String label = SEStats.toPremiumLabel(type);
 						int labelIndex = Shared.getCellIndex(sheet, label);
 						System.out.println("\t\t\t" + label + ":" + SEStats.rightAlignedString(Shared.integerFormat.format(counter), 21 - label.length()));
 						Cell valueCell = row.getCell(labelIndex);
@@ -285,7 +285,7 @@ public class SEMassiveVerifierAndQualityChecker {
 
 		System.out.println("\nRisultati globali:");
 		globalData.forEach((key, combos) -> {
-			String label = SEStats.toLabel(key);
+			String label = SEStats.toPremiumLabel(key);
 			System.out.println("\t" + label + ":" + SEStats.rightAlignedString(Shared.integerFormat.format(combos.size()), 21 - label.length()));
 		});
 	}
@@ -341,7 +341,7 @@ public class SEMassiveVerifierAndQualityChecker {
 			if (!winningCombos.isEmpty()) {
 				result.append("Numeri estratti per il *superenalotto* del " + TimeUtils.defaultLocalDateFormatter.format(extractionDate) +": " + Shared.toWAString(winningCombo, ", ", hitNumbers) + "\n");
 				for (Map.Entry<Integer, List<List<Integer>>> combos: winningCombos.entrySet()) {
-					result.append("\t*Combinazioni con " + Shared.toPremiumLabel(combos.getKey()).toLowerCase() + "*:" + "\n");
+					result.append("\t*Combinazioni con " + SEStats.toPremiumLabel(combos.getKey()).toLowerCase() + "*:" + "\n");
 					for (List<Integer> combo : combos.getValue()) {
 						result.append("\t\t" +
 							Shared.toWAString(combo, "\t", winningCombo) + "\n"
@@ -362,7 +362,7 @@ public class SEMassiveVerifierAndQualityChecker {
 		Map<Integer, List<List<Integer>>> winningCombos
 	) {
 		for (Map.Entry<Integer, List<List<Integer>>> combos: winningCombos.entrySet()) {
-			results.append("  " + Shared.toPremiumLabel(combos.getKey()), boldFont);
+			results.append("  " + SEStats.toPremiumLabel(combos.getKey()), boldFont);
 			results.append(":" + "\n");
 			Iterator<List<Integer>> combosIterator = combos.getValue().iterator();
 			while (combosIterator.hasNext()) {
@@ -396,7 +396,7 @@ public class SEMassiveVerifierAndQualityChecker {
 		Iterator<Map.Entry<Integer, List<List<Integer>>>> winningAndCombosIterator = winningCombos.entrySet().iterator();
 		while (winningAndCombosIterator.hasNext()) {
 			Map.Entry<Integer, List<List<Integer>>> combos = winningAndCombosIterator.next();
-			results.append("  " + Shared.toPremiumLabel(combos.getKey()), boldFont);
+			results.append("  " + SEStats.toPremiumLabel(combos.getKey()), boldFont);
 			results.append(": " + combos.getValue().size());
 			if (winningAndCombosIterator.hasNext()) {
 				results.append("\n");
@@ -435,7 +435,7 @@ public class SEMassiveVerifierAndQualityChecker {
 		if (systemResultsInHistory != null) {
 			results.append("\n");
 			for (Map.Entry<Integer, List<List<Integer>>> singleHistoryResult : systemResultsInHistory.entrySet()) {
-				String label = SEStats.toLabel(singleHistoryResult.getKey());
+				String label = SEStats.toPremiumLabel(singleHistoryResult.getKey());
 				results.append("  ");
 				results.append(label, boldFont);
 				results.append(": " + Shared.integerFormat.format(singleHistoryResult.getValue().size()) + "\n");

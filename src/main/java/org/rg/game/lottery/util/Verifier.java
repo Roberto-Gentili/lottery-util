@@ -26,6 +26,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.burningwave.core.io.FileSystemItem;
+import org.rg.game.lottery.engine.SEStats;
 import org.rg.game.lottery.engine.TimeUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -113,7 +114,7 @@ public class Verifier {
 				System.out.println("\n\nNumeri estratti per il *" + competionName + "* del " + extractionDate +": " + Shared.toWAString(winningCombo, ", ", hitNumbers));
 				if (!winningCombos.isEmpty()) {
 					for (Map.Entry<Integer, List<List<Integer>>> combos: winningCombos.entrySet()) {
-						System.out.println("\t*Combinazioni con " + Shared.toPremiumLabel(combos.getKey()).toLowerCase() + "*:");
+						System.out.println("\t*Combinazioni con " + SEStats.toPremiumLabel(combos.getKey()).toLowerCase() + "*:");
 						for (List<Integer> combo : combos.getValue()) {
 							System.out.println("\t\t" +
 								Shared.toWAString(combo, "\t", winningCombo)

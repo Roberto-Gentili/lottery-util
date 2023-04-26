@@ -94,25 +94,6 @@ class Shared {
 		return -1;
 	}
 
-	static String toPremiumLabel(Integer hit) {
-		if (hit == 2) {
-			return "Ambo";
-		}
-		if (hit == 3) {
-			return "Terno";
-		}
-		if (hit == 4) {
-			return "Quaterna";
-		}
-		if (hit == 5) {
-			return "Cinquina";
-		}
-		if (hit == 6) {
-			return "Tombola";
-		}
-		throw new IllegalArgumentException();
-	}
-
 	static List<String> allPremiumLabels() {
 		return Arrays.asList(
 			"Ambo",

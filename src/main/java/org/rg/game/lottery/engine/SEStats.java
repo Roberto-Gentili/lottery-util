@@ -481,7 +481,7 @@ public class SEStats {
 				}
 			}
 			if (hit > 1) {
-				String premiumLabel = toLabel(hit);
+				String premiumLabel = toPremiumLabel(hit);
 				results.put(premiumLabel, results.computeIfAbsent(premiumLabel, label -> 0) + 1);
 			}
 		}
@@ -525,7 +525,7 @@ public class SEStats {
 			Map.Entry<Date, Map<Integer, List<List<Integer>>>> winningCombosInfo = winningsCombosDataItr.next();
 			report.append("\t" + TimeUtils.defaultDateFormat.format(winningCombosInfo.getKey()) + ":\n");
 			for (Map.Entry<Integer, List<List<Integer>>> winningCombos : winningCombosInfo.getValue().entrySet()) {
-				report.append("\t\t" + toLabel(winningCombos.getKey()) + ":\n");
+				report.append("\t\t" + toPremiumLabel(winningCombos.getKey()) + ":\n");
 				for (List<Integer> combo : winningCombos.getValue()) {
 					Integer counter = winningsCounter.computeIfAbsent(winningCombos.getKey(), key -> 0);
 					winningsCounter.put(winningCombos.getKey(), ++counter);
@@ -544,7 +544,7 @@ public class SEStats {
 		Integer returns = 0;
 		for (Map.Entry<Integer, Integer> winningInfo : winningsCounter.entrySet()) {
 			Integer type = winningInfo.getKey();
-			String label = toLabel(type);
+			String label = toPremiumLabel(type);
 			returns +=
 				type == 2 ? 5 * winningInfo.getValue() :
 					type == 3 ? 25 * winningInfo.getValue() :
@@ -565,7 +565,7 @@ public class SEStats {
 		return String.format("%" + emptySpacesCount + "s", value);
 	}
 
-	public static String toLabel(Integer hit) {
+	public static String toPremiumLabel(Integer hit) {
 		if (hit == 2) {
 			return "Ambo";
 		}
