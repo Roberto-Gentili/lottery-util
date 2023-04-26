@@ -42,7 +42,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		numberProcessor = new NumberProcessor();
 	}
 
-	public Random random;
+	Random random;
 	protected boolean reportEnabled;
 	protected boolean reportDetailEnabled;
 	protected Function<Integer, Integer> comboIndexSupplier;
