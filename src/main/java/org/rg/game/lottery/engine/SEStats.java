@@ -1002,6 +1002,15 @@ public class SEStats {
 	}
 
 	protected int getIncrementDays(LocalDate startDate) {
+		if (startDate.getDayOfWeek().getValue() == DayOfWeek.MONDAY.getValue() ||
+			startDate.getDayOfWeek().getValue() == DayOfWeek.WEDNESDAY.getValue()
+		) {
+			System.out.println("Attenzione: il concorso eseguito in data " + TimeUtils.defaultLocalDateWithDayNameFormatter.format(startDate) + " risulta essere anticipato");
+			return 3;
+		} else if (startDate.getDayOfWeek().getValue() == DayOfWeek.FRIDAY.getValue()) {
+			System.out.println("Attenzione: il concorso eseguito in data " + TimeUtils.defaultLocalDateWithDayNameFormatter.format(startDate) + " risulta essere anticipato");
+			return 4;
+		}
 		return startDate.getDayOfWeek().getValue() == DayOfWeek.SATURDAY.getValue() ? 3 : 2;
 	}
 
