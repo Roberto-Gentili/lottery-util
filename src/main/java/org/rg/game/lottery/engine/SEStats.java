@@ -3,7 +3,10 @@ package org.rg.game.lottery.engine;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -47,6 +50,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 public class SEStats {
 	private static final Map<String, SEStats> INSTANCES;
 	public static boolean forceLoadingFromExcel;
@@ -62,7 +67,6 @@ public class SEStats {
 
 	protected DecimalFormat decimalFormat = new DecimalFormat( "#,##0.##" );
 	protected DecimalFormat integerFormat = new DecimalFormat( "#,##0" );
-	protected DateFormat dateFmt = new SimpleDateFormat("yyyy dd MMMM", Locale.ITALY);
 	protected DateFormat defaultDateFmtForFile = new SimpleDateFormat("[yyyy][MM][dd]");
 	protected Date startDate;
 	protected Date endDate;
@@ -125,8 +129,10 @@ public class SEStats {
 	private void init(String startDate, String endDate) {
 		this.startDate = buildDate(startDate);
 		this.endDate = buildDate(endDate);
+		this.allWinningCombos = new TreeMap<>(TimeUtils.reversedDateComparator);
+		this.allWinningCombosWithJollyAndSuperstar = new TreeMap<>(TimeUtils.reversedDateComparator);
 		dataLoaders = Arrays.asList(
-			new InternetDataLoader(),
+			new InternetDataLoader(this.startDate, this.endDate, allWinningCombos, allWinningCombosWithJollyAndSuperstar),
 			new FromExcelDataLoader()
 		);
 		dataStorers = new ArrayList<>();
@@ -138,8 +144,6 @@ public class SEStats {
 				new ToExcelDataStorerV2()
 			);
 		}
-		this.allWinningCombos = new LinkedHashMap<>();
-		this.allWinningCombosWithJollyAndSuperstar = new LinkedHashMap<>();
 		boolean dataLoaded = false;
 		for (DataLoader dataLoader : dataLoaders) {
 			try {
@@ -592,7 +596,50 @@ public class SEStats {
 
 	}
 
-	private class InternetDataLoader implements DataLoader {
+	public static class InternetDataLoader implements DataLoader {
+
+		protected Date startDate;
+		protected Date endDate;
+		private Map<Date, List<Integer>> allWinningCombos;
+		private Map<Date, List<Integer>> allWinningCombosWithJollyAndSuperstar;
+		protected DateFormat dateFmt;
+
+		public InternetDataLoader(Date startDate,
+				Date endDate) {
+			this(startDate, endDate, new TreeMap<>(TimeUtils.reversedDateComparator), new TreeMap<>(TimeUtils.reversedDateComparator));
+		}
+
+		public InternetDataLoader(
+			Date startDate,
+			Date endDate,
+			Map<Date, List<Integer>> allWinningCombos,
+			Map<Date, List<Integer>> allWinningCombosWithJollyAndSuperstar) {
+			this.startDate = startDate;
+			this.endDate = endDate;
+			this.allWinningCombos = allWinningCombos;
+			this.allWinningCombosWithJollyAndSuperstar = allWinningCombosWithJollyAndSuperstar;
+			this.dateFmt = new SimpleDateFormat("yyyy dd MMMM", Locale.ITALY);
+		}
+
+		public static Map.Entry<Date, List<Integer>> getLatestWinningCombo() {
+			try {
+				URL url = new URL("https://www.gntn-pgd.it/gntn-info-web/rest/gioco/superenalotto/estrazioni/ultimoconcorso");
+				HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+				connection.setRequestProperty("accept", "application/json");
+				InputStream responseStream = connection.getInputStream();
+				Map<String,Object> data = new ObjectMapper().readValue(responseStream, Map.class);
+				connection.disconnect();
+				Date extractionDate = new Date((Long)data.get("dataEstrazione"));
+				Map<String,Object> winningComboData = (Map<String,Object>)data.get("combinazioneVincente");
+				List<Integer> winningCombo = ((List<String>)winningComboData.get("estratti"))
+					.stream().map(Integer::valueOf).collect(Collectors.toList());
+				winningCombo.add(Integer.valueOf((String)winningComboData.get("numeroJolly")));
+				winningCombo.add(Integer.valueOf((String)winningComboData.get("superstar")));
+				return new AbstractMap.SimpleEntry(extractionDate, winningCombo);
+			} catch (IOException exc) {
+				throw new RuntimeException(exc);
+			}
+		}
 
 		@Override
 		public boolean load() throws Throwable {
@@ -606,6 +653,11 @@ public class SEStats {
 			calendar.setTime(currentDate);
 			int endYear = calendar.get(Calendar.YEAR);
 			System.out.println();
+			Map.Entry<Date, List<Integer>> latestWinningCombo = getLatestWinningCombo();
+			if (TimeUtils.isBetween(latestWinningCombo.getKey(), startDate, endDate)) {
+				allWinningCombos.put(latestWinningCombo.getKey(), latestWinningCombo.getValue().subList(0, 6));
+				allWinningCombosWithJollyAndSuperstar.put(latestWinningCombo.getKey(), latestWinningCombo.getValue());
+			}
 			for (int year : IntStream.range(startYear, (endYear + 1)).map(i -> (endYear + 1) - i + startYear - 1).toArray()) {
 				System.out.println("Loading all extraction data of " + year);
 				Document doc = Jsoup.connect("https://www.superenalotto.net/estrazioni/" + year).get();
