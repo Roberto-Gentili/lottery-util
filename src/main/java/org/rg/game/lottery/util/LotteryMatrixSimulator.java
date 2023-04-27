@@ -36,6 +36,7 @@ import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.io.FileSystemItem;
@@ -104,7 +105,7 @@ public class LotteryMatrixSimulator {
 					config.setProperty(
 						"group",
 						simulationGroup
-					);					
+					);
 				}
 			}
 		}
@@ -221,6 +222,7 @@ public class LotteryMatrixSimulator {
 				}
 			}
 			try (OutputStream destFileOutputStream = new FileOutputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileName)){
+				XSSFFormulaEvaluator.evaluateAllFormulaCells(workBook);
 				SEStats.clear();
 				workBook.write(destFileOutputStream);
 				workBook.close();
