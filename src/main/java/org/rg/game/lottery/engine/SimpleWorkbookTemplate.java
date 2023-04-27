@@ -427,9 +427,13 @@ public class SimpleWorkbookTemplate implements Closeable {
 	}
 
 	public void setAutoFilter() {
+		setAutoFilter(0, currentRow.size() - 1, 0, headersSize.get(currentSheet) - 1);
+	}
+
+	public void setAutoFilter(int firstRow, int lastRow, int firstCol, int lastCol) {
 		workbook.getSheet(currentSheet).setAutoFilter(
 			new CellRangeAddress(
-				0, currentRow.size() - 1, 0, headersSize.get(currentSheet) - 1
+				firstRow, lastRow, firstCol, lastCol
 			)
 		);
 	}

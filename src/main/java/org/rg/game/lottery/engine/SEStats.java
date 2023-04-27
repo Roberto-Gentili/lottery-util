@@ -545,13 +545,7 @@ public class SEStats {
 		for (Map.Entry<Integer, Integer> winningInfo : winningsCounter.entrySet()) {
 			Integer type = winningInfo.getKey();
 			String label = toPremiumLabel(type);
-			returns +=
-				type == 2 ? 5 * winningInfo.getValue() :
-					type == 3 ? 25 * winningInfo.getValue() :
-						type == 4 ? 300 * winningInfo.getValue():
-							type == 5 ? 32000 * winningInfo.getValue() :
-								type == 6 ? 1000000 * winningInfo.getValue(): 0;
-
+			returns += premiumPrice(type) * winningInfo.getValue();
 			report.append("\t" + label + ":" + rightAlignedString(integerFormat.format(winningInfo.getValue()), 21 - label.length()) + "\n");
 		}
 		report.append("\n\tCosto:" + rightAlignedString(integerFormat.format(allWinningCombosReversed.size() * systemSize), 15) + "€\n");
@@ -559,6 +553,14 @@ public class SEStats {
 		report.append("\tRapporto:" + rightAlignedString(decimalFormat.format(((returns * 100d) / (allWinningCombosReversed.size() * systemSize)) - 100d), 12) + "%\n");
 		data.put("report.summary", report.toString());
 		return data;
+	}
+
+	public static int premiumPrice(int type) {
+		return type == 2 ? 5 :
+			type == 3 ? 25 :
+				type == 4 ? 300:
+					type == 5 ? 32000:
+						type == 6 ? 10000000: 0;
 	}
 
 	public static String rightAlignedString(String value, int emptySpacesCount) {

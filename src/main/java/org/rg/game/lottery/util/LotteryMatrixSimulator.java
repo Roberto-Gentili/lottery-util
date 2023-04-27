@@ -30,13 +30,14 @@ import java.util.stream.Collectors;
 
 import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.openxml4j.util.ZipSecureFile;
+import org.apache.poi.ss.formula.BaseFormulaEvaluator;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.io.FileSystemItem;
@@ -182,8 +183,10 @@ public class LotteryMatrixSimulator {
 	}
 
 
-	private static void process(Properties configuration, String excelFileName,
-			LotteryMatrixGeneratorAbstEngine engine, List<List<LocalDate>> competitionDates) {
+	private static void process(
+		Properties configuration,
+		String excelFileName,
+		LotteryMatrixGeneratorAbstEngine engine, List<List<LocalDate>> competitionDates) {
 		for (
 			List<LocalDate> datesToBeProcessed :
 			competitionDates
@@ -194,7 +197,7 @@ public class LotteryMatrixSimulator {
 				)
 			);
 			engine.setup(configuration);
-			engine.getExecutor().apply(buildExtractionDatePredicate(excelFileName)).apply(buildSystemProcessor(excelFileName));
+			engine.getExecutor().apply(buildExtractionDatePredicate(excelFileName, configuration.getProperty("storage").equals("filesystem"))).apply(buildSystemProcessor(excelFileName));
 		}
 	}
 
@@ -222,7 +225,7 @@ public class LotteryMatrixSimulator {
 				}
 			}
 			try (OutputStream destFileOutputStream = new FileOutputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileName)){
-				XSSFFormulaEvaluator.evaluateAllFormulaCells(workBook);
+				BaseFormulaEvaluator.evaluateAllFormulaCells(workBook);
 				SEStats.clear();
 				workBook.write(destFileOutputStream);
 				workBook.close();
@@ -243,6 +246,15 @@ public class LotteryMatrixSimulator {
 			}
 			workBookTemplate.addCell(result, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.CENTER);
 		}
+		Cell cell = workBookTemplate.addCell(storage.size(), "#,##0");
+		cell.getCellStyle().setAlignment(HorizontalAlignment.CENTER);
+		int currentRowNum = cell.getRow().getRowNum()+1;
+		String formula = "(B" + currentRowNum + "*" + SEStats.premiumPrice(2) + ")+" + "(C" + currentRowNum + "*" + SEStats.premiumPrice(3) + ")+"
+			 + "(D" + currentRowNum + "*" + SEStats.premiumPrice(4) + ")+" + "(E" + currentRowNum + "*" + SEStats.premiumPrice(5) + ")+"
+			 + "(F" + currentRowNum + "*" + SEStats.premiumPrice(6) + ")";
+		workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
+		formula = "(H"  + currentRowNum + ")-(G" + currentRowNum + ")";
+		workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
 		if (storage instanceof PersistentStorage) {
 			PersistentStorage persistentStorage = (PersistentStorage)storage;
 			workBookTemplate.setLinkForCell(
@@ -253,7 +265,7 @@ public class LotteryMatrixSimulator {
 		}
 	}
 
-	private static Predicate<LocalDate> buildExtractionDatePredicate(String excelFileName) {
+	private static Predicate<LocalDate> buildExtractionDatePredicate(String excelFileName, boolean isFileSystemBasedStorage) {
 		return extractionDate -> {
 			Workbook workBook = null;
 			try (InputStream inputStream = new FileInputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileName)) {
@@ -275,6 +287,9 @@ public class LotteryMatrixSimulator {
 				List<String> labels = new ArrayList<>();
 				labels.add("Data");
 				labels.addAll(Shared.allPremiumLabels());
+				labels.add("Costo");
+				labels.add("Ritorno");
+				labels.add("Saldo");
 				List<String> summaryFormulas = new ArrayList<>();
 				String columnName = Shared.getLetterAtIndex(0);
 				summaryFormulas.add("FORMULA_COUNTA(" + columnName + "3:"+ columnName + Shared.getSEStats().getAllWinningCombos().size() * 2 +")");
@@ -284,12 +299,32 @@ public class LotteryMatrixSimulator {
 						"FORMULA_SUM(" + columnName + "3:"+ columnName + Shared.getSEStats().getAllWinningCombos().size() * 2 +")"
 					);
 				}
-				workBookTemplate.createHeader("Risultati", true, Arrays.asList(
-					labels,
-					summaryFormulas
-				));
+				if (isFileSystemBasedStorage) {
+					labels.add("File");
+					summaryFormulas.add("");
+				}
+				workBookTemplate.createHeader(
+					"Risultati",
+					true,
+					Arrays.asList(
+						labels,
+						summaryFormulas
+					)
+				);
+				CellStyle headerNumberStyle = workBook.createCellStyle();
+				headerNumberStyle.cloneStyleFrom(sheet.getRow(1).getCell(labels.size()-4).getCellStyle());
+				headerNumberStyle.setDataFormat(workBook.createDataFormat().getFormat("#,##0"));
+				sheet.getRow(1).getCell(labels.size()-4).setCellStyle(headerNumberStyle);
+				sheet.getRow(1).getCell(labels.size()-3).setCellStyle(headerNumberStyle);
+				sheet.getRow(1).getCell(labels.size()-2).setCellStyle(headerNumberStyle);;
 				sheet.setColumnWidth(0, 3800);
+				sheet.setColumnWidth(labels.size()-4, 4500);
+				sheet.setColumnWidth(labels.size()-3, 4500);
+				sheet.setColumnWidth(labels.size()-2, 4500);
+				sheet.setColumnWidth(labels.size()-1, 12000);
+				workBookTemplate.setAutoFilter(1, Shared.getSEStats().getAllWinningCombos().size() * 2, 0, labels.size() - 1);
 				try (OutputStream destFileOutputStream = new FileOutputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileName)){
+					BaseFormulaEvaluator.evaluateAllFormulaCells(workBook);
 					workBook.write(destFileOutputStream);
 					workBook.close();
 					System.out.println(PersistentStorage.buildWorkingPath() + File.separator + excelFileName + " succesfully created");
