@@ -55,7 +55,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	protected String extractionArchiveStartDate;
 	protected String extractionArchiveForSeedStartDate;
 	protected String storageType;
-	protected Function<Predicate<LocalDate>, Function<Function<LocalDate, Consumer<Storage>>, List<Storage>>> executor;
+	protected Function<Function<LocalDate, Function<List<Storage>, Integer>>, Function<Function<LocalDate, Consumer<List<Storage>>>, List<Storage>>> executor;
 	protected int engineIndex;
 	protected Integer avoidMode;
 	protected Predicate<List<Integer>> combinationFilter;
@@ -151,8 +151,14 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		executor = extractionDatePredicate -> storageProcessor -> {
 			List<Storage> storages = new ArrayList<>();
 			for (LocalDate extractionDate : extractionDates) {
-				if (extractionDatePredicate != null && extractionDatePredicate.negate().test(extractionDate)) {
-					continue;
+				if (extractionDatePredicate != null) {
+					Integer checkResult = extractionDatePredicate.apply(extractionDate).apply(storages);
+					if (checkResult == 0 && storageProcessor != null) {
+						storageProcessor.apply(extractionDate).accept(storages);
+						continue;
+					} else if (checkResult == -1) {
+						continue;
+					}
 				}
 				Storage storage = generate(
 					basicDataSupplier,
@@ -186,12 +192,12 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 						)
 					)
 				);
-				if (storageProcessor != null) {
-					storageProcessor.apply(extractionDate).accept(storage);
-				}
 				storages.add(
 					storage
 				);
+				if (storageProcessor != null) {
+					storageProcessor.apply(extractionDate).accept(storages);
+				}
 				System.out.println("\n\n");
 			}
 			return storages;
@@ -316,7 +322,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		String suffix
 	) {
 		if ("memory".equalsIgnoreCase(storageType)) {
-			return new MemoryStorage();
+			return new MemoryStorage(extractionDate, combinationCount, numberOfCombos, group, suffix);
 		}
 		return new PersistentStorage(extractionDate, combinationCount, numberOfCombos, group, suffix);
 	}
@@ -657,7 +663,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		);
 	}
 
-	public Function<Predicate<LocalDate>, Function<Function<LocalDate, Consumer<Storage>>, List<Storage>>> getExecutor() {
+	public Function<Function<LocalDate, Function<List<Storage>, Integer>>, Function<Function<LocalDate, Consumer<List<Storage>>>, List<Storage>>> getExecutor() {
 		return executor;
 	}
 

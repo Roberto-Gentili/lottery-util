@@ -1,5 +1,6 @@
 package org.rg.game.lottery.engine;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -8,7 +9,17 @@ public class MemoryStorage implements Storage {
 
 	List<List<Integer>> combos = new ArrayList<>();
 	String output;
-	MemoryStorage() {
+	String name;
+
+	MemoryStorage(
+		LocalDate extractionDate,
+		int combinationCount,
+		int numberOfCombos,
+		String group,
+		String suffix
+	) {
+		name = "[" + extractionDate.toString() + "]"+"[" + combinationCount +"]" +
+				"[" + numberOfCombos + "]" + /*"[" + toRawString(numbers) + "]" +*/ suffix + ".txt";
 		combos = new ArrayList<>();
 		output = "";
 	}
@@ -16,6 +27,11 @@ public class MemoryStorage implements Storage {
 	@Override
 	public int size() {
 		return combos.size();
+	}
+
+	@Override
+	public String getName() {
+		return name;
 	}
 
 	@Override

@@ -17,7 +17,7 @@ public class PersistentStorage implements Storage {
 	private static String workingPath;
 	BufferedWriter bufferedWriter = null;
 	String absolutePath;
-	String fileName;
+	String name;
 	int size;
 
 	public PersistentStorage(
@@ -28,7 +28,7 @@ public class PersistentStorage implements Storage {
 		String suffix
 	) {
 		absolutePath = buildWorkingPath(group) + File.separator +
-			(fileName = "[" + extractionDate.toString() + "]"+"[" + combinationCount +"]" +
+			(name = "[" + extractionDate.toString() + "]"+"[" + combinationCount +"]" +
 			"[" + numberOfCombos + "]" + /*"[" + toRawString(numbers) + "]" +*/ suffix + ".txt");
 		try (FileChannel outChan = new FileOutputStream(absolutePath, true).getChannel()) {
 		  outChan.truncate(0);
@@ -71,8 +71,8 @@ public class PersistentStorage implements Storage {
 		return absolutePath;
 	}
 
-	public String getFileName() {
-		return fileName;
+	public String getName() {
+		return name;
 	}
 
 	@Override

@@ -8,6 +8,8 @@ public interface Storage extends AutoCloseable {
 
 	int size();
 
+	public String getName();
+
 	boolean addCombo(List<Integer> selectedCombo);
 
 	List<Integer> getCombo(int idx);
