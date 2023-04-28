@@ -298,11 +298,12 @@ public class LotteryMatrixSimulator {
 		AtomicBoolean simulatorFinished
 	) {
 		return CompletableFuture.runAsync(() -> {
+			Map<String, Map<Integer, Integer>> premiumCountersForFile = new LinkedHashMap<>();
 			while (!simulatorFinished.get()) {
 				historyUpdateTaskStarted.set(true);
-				updateHistory(configuration, excelFileName, configurationName);
+				updateHistory(configuration, excelFileName, configurationName, premiumCountersForFile);
 			}
-			updateHistory(configuration, excelFileName, configurationName);
+			updateHistory(configuration, excelFileName, configurationName, premiumCountersForFile);
 		});
 
 	}
@@ -310,7 +311,8 @@ public class LotteryMatrixSimulator {
 	private static void updateHistory(
 		Properties configuration,
 		String excelFileName,
-		String configurationName
+		String configurationName,
+		Map<String, Map<Integer, Integer>> premiumCountersForFile
 	) {
 		SEStats sEStats = SEStats.get(
 			configuration.getProperty(
@@ -335,7 +337,6 @@ public class LotteryMatrixSimulator {
 			null,
 			null
 		);
-		Map<String, Map<Integer, Integer>> premiumCountersForFile = new LinkedHashMap<>();
 		for (int i = 2; i < recordFounds.get(); i++) {
 			int rowIndex = i;
 			AtomicReference<PersistentStorage> storageWrapper = new AtomicReference<>();
