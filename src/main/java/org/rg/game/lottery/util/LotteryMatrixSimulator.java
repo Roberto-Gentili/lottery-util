@@ -438,7 +438,7 @@ public class LotteryMatrixSimulator {
 			)
 		);
 		CellStyle headerNumberStyle = workBook.createCellStyle();
-		headerNumberStyle.cloneStyleFrom(sheet.getRow(1).getCell(labels.size()-4).getCellStyle());
+		headerNumberStyle.cloneStyleFrom(sheet.getRow(1).getCell(Shared.getCellIndex(sheet, "Costo")).getCellStyle());
 		headerNumberStyle.setDataFormat(workBook.createDataFormat().getFormat("#,##0"));
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, "Costo")).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, "Ritorno")).setCellStyle(headerNumberStyle);
