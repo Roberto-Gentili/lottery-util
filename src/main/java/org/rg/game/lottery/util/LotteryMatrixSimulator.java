@@ -335,6 +335,7 @@ public class LotteryMatrixSimulator {
 			null,
 			null
 		);
+		Map<String, Map<Integer, Integer>> premiumCountersForFile = new LinkedHashMap<>();
 		for (int i = 2; i < recordFounds.get(); i++) {
 			int rowIndex = i;
 			AtomicReference<PersistentStorage> storageWrapper = new AtomicReference<>();
@@ -358,7 +359,9 @@ public class LotteryMatrixSimulator {
 				null
 			);
 			if (storageWrapper.get() != null) {
-				Map<Integer, Integer> premiumCounters = (Map<Integer, Integer>)sEStats.checkQuality(storageWrapper.get()::iterator).get("premium.counters");
+				Map<Integer, Integer> premiumCounters = premiumCountersForFile.computeIfAbsent(storageWrapper.get().getName(), key ->
+					(Map<Integer, Integer>)sEStats.checkQuality(storageWrapper.get()::iterator).get("premium.counters")
+				);
 				readOrCreateExcel(
 					excelFileName,
 					workBook -> {
@@ -400,8 +403,15 @@ public class LotteryMatrixSimulator {
 						}
 					},
 					null,
-					workBook ->
-						store(excelFileName, workBook)
+					workBook -> {
+						store(excelFileName, workBook);
+						Row row = workBook.getSheet("Risultati").getRow(rowIndex);
+						System.out.println(
+							"Aggiornamento storico completato per " +
+							TimeUtils.defaultDateFormat.format(row.getCell(0).getDateCellValue()) + " - " +
+							row.getCell(fileColIndex.get()).getStringCellValue()
+						);
+					}
 				);
 			}
 		}
