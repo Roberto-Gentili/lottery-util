@@ -42,6 +42,38 @@ public class PersistentStorage implements Storage {
 		}
 	}
 
+	private PersistentStorage(String group, String fileName) {
+		absolutePath = buildWorkingPath(group) + File.separator + fileName;
+		name = fileName;
+	}
+
+	public static PersistentStorage restore(String group, String fileName) {
+		PersistentStorage storage = new PersistentStorage(group, fileName) {
+			@Override
+			public boolean addCombo(List<Integer> selectedCombo) {
+				throw new UnsupportedOperationException(this + " is only readable");
+			}
+			@Override
+			public boolean addLine() {
+				throw new UnsupportedOperationException(this + " is only readable");
+			}
+			@Override
+			public boolean addLine(String value) {
+				throw new UnsupportedOperationException(this + " is only readable");
+			}
+			@Override
+			public void addUnindexedCombo(List<Integer> selectedCombo) {
+				super.addUnindexedCombo(selectedCombo);
+			}
+		};
+		Iterator<List<Integer>> comboIterator = storage.iterator();
+		while (comboIterator.hasNext()) {
+			comboIterator.next();
+			storage.size++;
+		}
+		return storage;
+	}
+
 	public static String buildWorkingPath() {
 		return buildWorkingPath(null);
 	}
@@ -71,6 +103,7 @@ public class PersistentStorage implements Storage {
 		return absolutePath;
 	}
 
+	@Override
 	public String getName() {
 		return name;
 	}
