@@ -63,7 +63,7 @@ public class PersistentStorage implements Storage {
 			}
 			@Override
 			public void addUnindexedCombo(List<Integer> selectedCombo) {
-				super.addUnindexedCombo(selectedCombo);
+				throw new UnsupportedOperationException(this + " is only readable");
 			}
 		};
 		Iterator<List<Integer>> comboIterator = storage.iterator();
