@@ -94,16 +94,6 @@ class Shared {
 		return -1;
 	}
 
-	static List<String> allPremiumLabels() {
-		return Arrays.asList(
-			"Ambo",
-			"Terno",
-			"Quaterna",
-			"Cinquina",
-			"Tombola"
-		);
-	}
-
 	static FileSystemItem getSystemsFile(Integer year) {
 		return getSystemsFile(year.toString());
 	}

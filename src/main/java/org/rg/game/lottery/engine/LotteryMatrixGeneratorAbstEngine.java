@@ -667,10 +667,12 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		return executor;
 	}
 
+	//competition.archive.start-date
 	public String getExtractionArchiveStartDate() {
 		return extractionArchiveStartDate != null ? extractionArchiveStartDate : getDefaultExtractionArchiveStartDate();
 	}
 
+	//seed-data.start-date
 	public String getExtractionArchiveForSeedStartDate() {
 		return extractionArchiveForSeedStartDate != null ? extractionArchiveForSeedStartDate : getDefaultExtractionArchiveForSeedStartDate();
 	}

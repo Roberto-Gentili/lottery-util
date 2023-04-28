@@ -350,7 +350,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		return expression;
 	}
 
-	protected SEStats getSEStats() {
+	public SEStats getSEStats() {
 		SEStats sEStats = SEStats.get(getExtractionArchiveStartDate(), TimeUtils.defaultLocalDateFormatter.format(extractionDate));
 		if (LocalDate.now().compareTo(extractionDate) >= 0) {
 			Date latestExtractionDate = sEStats.getLatestExtractionDate();
@@ -379,8 +379,8 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		return sEStats;
 	}
 
-	private SEStats getSEStatsForSeed() {
-		return SEStats.get(getDefaultExtractionArchiveForSeedStartDate(),  TimeUtils.defaultLocalDateFormatter.format(LocalDate.now()));
+	public SEStats getSEStatsForSeed() {
+		return SEStats.get(getExtractionArchiveForSeedStartDate(),  TimeUtils.defaultLocalDateFormatter.format(LocalDate.now()));
 	}
 
 	private String processMathManipulationExpression(

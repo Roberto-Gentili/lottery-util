@@ -221,7 +221,7 @@ public class SEMassiveVerifierAndQualityChecker {
 					monthLabel.setCellValue("Mese");
 					monthLabel.setCellStyle(headerStyle);
 					int columnIndex = 1;
-					for (String premiumLabel : Shared.allPremiumLabels()) {
+					for (String premiumLabel :  SEStats.allPremiumLabels()) {
 						Cell headerCell = header.createCell(columnIndex++);
 						headerCell.setCellStyle(headerStyle);
 						headerCell.setCellValue(premiumLabel);

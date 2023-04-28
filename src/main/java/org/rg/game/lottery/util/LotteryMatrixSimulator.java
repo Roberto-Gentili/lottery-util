@@ -24,6 +24,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -45,10 +46,10 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.burningwave.core.assembler.ComponentContainer;
+import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.function.ThrowingConsumer;
 import org.burningwave.core.io.FileSystemItem;
 import org.rg.game.lottery.engine.CollectionUtils;
-import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.PersistentStorage;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.SEStats;
@@ -59,17 +60,18 @@ import org.rg.game.lottery.engine.TimeUtils;
 
 
 public class LotteryMatrixSimulator {
+	private static final String FILE_LABEL = "File";
+	private static final String DATA_AGGIORNAMENTO_STORICO_LABEL = "Data agg. storico";
 	static Pattern regexForExtractConfigFileName = Pattern.compile("\\[.*?\\]\\[.*?\\]\\[.*?\\](.*)\\.txt");
 
 	public static void main(String[] args) throws IOException {
 		ZipSecureFile.setMinInflateRatio(0);
 		Collection<CompletableFuture<Void>> futures = new ArrayList<>();
 		execute("se", futures);
-		execute("md", futures);
 		futures.stream().forEach(CompletableFuture::join);
 	}
 
-	private static <L extends LotteryMatrixGeneratorAbstEngine> void execute(
+	private static void execute(
 		String configFilePrefix,
 		Collection<CompletableFuture<Void>> futures
 	) throws IOException {
@@ -77,7 +79,7 @@ public class LotteryMatrixSimulator {
 		SEStats.get("03/12/1997", TimeUtils.defaultDateFormat.format(new Date()));
 		SEStats.get("02/07/2009", TimeUtils.defaultDateFormat.format(new Date()));
 		SEStats.forceLoadingFromExcel = true;
-		Supplier<LotteryMatrixGeneratorAbstEngine> engineSupplier = SELotteryMatrixGeneratorEngine::new;
+		Supplier<SELotteryMatrixGeneratorEngine> engineSupplier = SELotteryMatrixGeneratorEngine::new;
 		Collection<FileSystemItem> configurationFiles = new TreeSet<>((fISOne, fISTwo) -> {
 			return fISOne.getName().compareTo(fISTwo.getName());
 		});
@@ -115,6 +117,7 @@ public class LotteryMatrixSimulator {
 						simulationGroup
 					);
 				}
+				config.setProperty("storage", "filesystem");
 			}
 		}
 		for (Properties configuration : configurations) {
@@ -130,7 +133,7 @@ public class LotteryMatrixSimulator {
 					PersistentStorage.buildWorkingPath(groupName);
 					return groupName + File.separator + "report.xlsx";
 				}).orElseGet(() -> configuration.getProperty("file.name").replace("." + configuration.getProperty("file.extension"), "") + "-sim.xlsx");
-			LotteryMatrixGeneratorAbstEngine engine = engineSupplier.get();
+			SELotteryMatrixGeneratorEngine engine = engineSupplier.get();
 			String configFileName = configuration.getProperty("file.name").replace("." + configuration.getProperty("file.extension"), "");
 			configuration.setProperty(
 				"nameSuffix",
@@ -245,7 +248,14 @@ public class LotteryMatrixSimulator {
 	private static void process(
 		Properties configuration,
 		String excelFileName,
-		LotteryMatrixGeneratorAbstEngine engine, List<List<LocalDate>> competitionDates) {
+		SELotteryMatrixGeneratorEngine engine,
+		List<List<LocalDate>> competitionDates
+	) {
+		AtomicBoolean simulatorFinished = new AtomicBoolean(false);
+		AtomicBoolean historyUpdateTaskStarted = new AtomicBoolean(false);
+		CompletableFuture<Void> historyUpdateTask = startHistoryUpdateTask(
+			configuration, excelFileName, configuration.getProperty("nameSuffix"), historyUpdateTaskStarted, simulatorFinished
+		);
 		AtomicInteger redundantCounter = new AtomicInteger(0);
 		for (
 			List<LocalDate> datesToBeProcessed :
@@ -269,9 +279,137 @@ public class LotteryMatrixSimulator {
 				buildSystemProcessor(excelFileName)
 			);
 		}
+		while (!historyUpdateTaskStarted.get()) {
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException exc) {
+				throw new RuntimeException(exc);
+			}
+		}
+		simulatorFinished.set(true);
+		historyUpdateTask.join();
+	}
+
+	private static CompletableFuture<Void> startHistoryUpdateTask(
+		Properties configuration,
+		String excelFileName,
+		String configurationName,
+		AtomicBoolean historyUpdateTaskStarted,
+		AtomicBoolean simulatorFinished
+	) {
+		return CompletableFuture.runAsync(() -> {
+			while (!simulatorFinished.get()) {
+				historyUpdateTaskStarted.set(true);
+				updateHistory(configuration, excelFileName, configurationName);
+			}
+			updateHistory(configuration, excelFileName, configurationName);
+		});
+
+	}
+
+	private static void updateHistory(
+		Properties configuration,
+		String excelFileName,
+		String configurationName
+	) {
+		SEStats sEStats = SEStats.get(
+			configuration.getProperty(
+				"competition.archive.start-date",
+				new SELotteryMatrixGeneratorEngine().getDefaultExtractionArchiveStartDate()
+			), TimeUtils.defaultLocalDateFormatter.format(LocalDate.now())
+		);
+		Map<Integer, String> allPremiums = SEStats.allPremiums();
+		AtomicInteger recordFounds = new AtomicInteger(0);
+		AtomicInteger dataAggStoricoColIndex = new AtomicInteger(0);
+		AtomicInteger fileColIndex = new AtomicInteger(0);
+		AtomicReference<CellStyle> numberCellStyle = new AtomicReference<>();
+		AtomicReference<CellStyle> dateCellStyle = new AtomicReference<>();
+		readOrCreateExcel(
+			excelFileName,
+			workBook -> {
+				Sheet sheet = workBook.getSheet("Risultati");
+				recordFounds.set(workBook.getSheet("Risultati").getPhysicalNumberOfRows());
+				dataAggStoricoColIndex.set(Shared.getCellIndex(sheet, DATA_AGGIORNAMENTO_STORICO_LABEL));
+				fileColIndex.set(Shared.getCellIndex(sheet, FILE_LABEL));
+			},
+			null,
+			null
+		);
+		for (int i = 2; i < recordFounds.get(); i++) {
+			int rowIndex = i;
+			AtomicReference<PersistentStorage> storageWrapper = new AtomicReference<>();
+			readOrCreateExcel(
+				excelFileName,
+				workBook -> {
+					Sheet sheet = workBook.getSheet("Risultati");
+					Row row = sheet.getRow(rowIndex);
+					if (rowRefersTo(row, configurationName)) {
+						Date dataAggStor = row.getCell(dataAggStoricoColIndex.get()).getDateCellValue();
+						if (dataAggStor == null || dataAggStor.compareTo(sEStats.getEndDate()) < 0) {
+							PersistentStorage storage = PersistentStorage.restore(
+								configuration.getProperty("group"),
+								row.getCell(fileColIndex.get()).getStringCellValue()
+							);
+							storageWrapper.set(storage);
+						}
+					}
+				},
+				null,
+				null
+			);
+			if (storageWrapper.get() != null) {
+				Map<Integer, Integer> premiumCounters = (Map<Integer, Integer>)sEStats.checkQuality(storageWrapper.get()::iterator).get("premium.counters");
+				readOrCreateExcel(
+					excelFileName,
+					workBook -> {
+						Sheet sheet = workBook.getSheet("Risultati");
+						if (rowIndex == 2) {
+							numberCellStyle.set(workBook.createCellStyle());
+							numberCellStyle.get().setAlignment(HorizontalAlignment.RIGHT);
+							numberCellStyle.get().setDataFormat(workBook.createDataFormat().getFormat("#,##0"));
+							dateCellStyle.set(workBook.createCellStyle());
+							dateCellStyle.get().setAlignment(HorizontalAlignment.CENTER);
+							dateCellStyle.get().setDataFormat(workBook.createDataFormat().getFormat("dd/MM/yyyy"));
+						} else {
+							Row previousRow = sheet.getRow(rowIndex -1);
+							dateCellStyle.set(previousRow.getCell(dataAggStoricoColIndex.get()).getCellStyle());
+							numberCellStyle.set(
+								previousRow.getCell(Shared.getCellIndex(sheet, "Totale " + SEStats.allPremiumLabels().get(0).toLowerCase() + " (storico)")).getCellStyle()
+							);
+						}
+						Row row = sheet.getRow(rowIndex);
+						if (storageWrapper.get().getName().equals(row.getCell(fileColIndex.get()).getStringCellValue())) {
+							Cell dataAggStoricoCell = row.getCell(dataAggStoricoColIndex.get());
+							for (Map.Entry<Integer, String> premiumData : allPremiums.entrySet()) {
+								Cell cell = row.getCell(Shared.getCellIndex(sheet, "Totale " + premiumData.getValue().toLowerCase() + " (storico)"));
+								Integer premiumCounter = premiumCounters.get(premiumData.getKey());
+								cell.setCellStyle(numberCellStyle.get());
+								if (premiumCounter != null) {
+									cell.setCellValue(premiumCounter.doubleValue());
+								} else {
+									cell.setCellValue(0d);
+								}
+							}
+							Cell cell = row.getCell(Shared.getCellIndex(sheet, "Costo (storico)"));
+							cell.setCellStyle(numberCellStyle.get());
+							cell.setCellValue(
+								sEStats.getAllWinningCombos().size() * row.getCell(Shared.getCellIndex(sheet, "Costo")).getNumericCellValue()
+							);
+							dataAggStoricoCell.setCellStyle(dateCellStyle.get());
+							dataAggStoricoCell.setCellValue(sEStats.getLatestExtractionDate());
+						}
+					},
+					null,
+					workBook ->
+						store(excelFileName, workBook)
+				);
+			}
+		}
 	}
 
 	private static Function<LocalDate, Consumer<List<Storage>>> buildSystemProcessor(String excelFileName) {
+		AtomicBoolean rowAddedFlag = new AtomicBoolean(false);
+		AtomicBoolean fileCreatedFlag = new AtomicBoolean(false);
 		return extractionDate -> storages -> {
 			readOrCreateExcel(
 				excelFileName,
@@ -281,24 +419,28 @@ public class LotteryMatrixSimulator {
 					while (true) {
 						Row row = workBookTemplate.getCurrentRow();
 						if (row == null || row.getCell(0) == null || row.getCell(0).getCellType() == CellType.BLANK) {
-							addRowData(workBookTemplate, extractionDate, storages);
+							rowAddedFlag.set(addRowData(workBookTemplate, extractionDate, storages));
 							break;
 						} else {
 							workBookTemplate.addRow();
 						}
 					}
 				},
-				workBook ->
-					createWorkbook(workBook, excelFileName),
+				workBook -> {
+					createWorkbook(workBook, excelFileName);
+					fileCreatedFlag.set(true);
+				},
 				workBook -> {
 					SEStats.clear();
-					store(excelFileName, workBook);
+					if (fileCreatedFlag.get() || rowAddedFlag.get()) {
+						store(excelFileName, workBook);
+					}
 				}
 			);
 		};
 	}
 
-	private static void addRowData(
+	private static boolean addRowData(
 		SimpleWorkbookTemplate workBookTemplate,
 		LocalDate extractionDate,
 		List<Storage> storages
@@ -307,7 +449,7 @@ public class LotteryMatrixSimulator {
 		if (storage != null) {
 			Map<String, Integer> results = Shared.getSEStats().check(extractionDate, storage::iterator);
 			workBookTemplate.addCell(TimeUtils.toDate(extractionDate)).getCellStyle().setAlignment(HorizontalAlignment.CENTER);
-			List<String> allPremiumLabels = Shared.allPremiumLabels();
+			List<String> allPremiumLabels = SEStats.allPremiumLabels();
 			for (int i = 0; i < allPremiumLabels.size();i++) {
 				Integer result = results.get(allPremiumLabels.get(i));
 				if (result == null) {
@@ -324,17 +466,26 @@ public class LotteryMatrixSimulator {
 			workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
 			formula = "(H"  + currentRowNum + ")-(G" + currentRowNum + ")";
 			workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
-			workBookTemplate.addCell(Collections.nCopies(9, null));
+			workBookTemplate.addCell(Collections.nCopies(5, null));
+			workBookTemplate.addCell(0, "#,##0");
+			cell.getCellStyle().setAlignment(HorizontalAlignment.CENTER);
+			formula = "(J" + currentRowNum + "*" + SEStats.premiumPrice(2) + ")+" + "(K" + currentRowNum + "*" + SEStats.premiumPrice(3) + ")+"
+					 + "(L" + currentRowNum + "*" + SEStats.premiumPrice(4) + ")+" + "(M" + currentRowNum + "*" + SEStats.premiumPrice(5) + ")+"
+					 + "(N" + currentRowNum + "*" + SEStats.premiumPrice(6) + ")";
+			workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
+			formula = "(P"  + currentRowNum + ")-(O" + currentRowNum + ")";
+			workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
+			workBookTemplate.addCell((Date)null);
 			Cell cellName = workBookTemplate.addCell(storage.getName()).get(0);
-			if (storage instanceof PersistentStorage) {
-				PersistentStorage persistentStorage = (PersistentStorage)storage;
-				workBookTemplate.setLinkForCell(
-					HyperlinkType.FILE,
-					cellName,
-					URLEncoder.encode(persistentStorage.getName(), "UTF-8")
-				);
-			}
+			PersistentStorage persistentStorage = (PersistentStorage)storage;
+			workBookTemplate.setLinkForCell(
+				HyperlinkType.FILE,
+				cellName,
+				URLEncoder.encode(persistentStorage.getName(), "UTF-8")
+			);
+			return true;
 		}
+		return false;
 	}
 
 	private static Function<LocalDate, Function<List<Storage>, Integer>> buildExtractionDatePredicate(
@@ -404,16 +555,17 @@ public class LotteryMatrixSimulator {
 		Sheet sheet = workBookTemplate.getOrCreateSheet("Risultati", true);
 		List<String> labels = new ArrayList<>();
 		labels.add("Data");
-		List<String> allPremiumLabels = Shared.allPremiumLabels();
+		Collection<String> allPremiumLabels = SEStats.allPremiumLabels();
 		labels.addAll(allPremiumLabels);
 		labels.add("Costo");
 		labels.add("Ritorno");
 		labels.add("Saldo");
-		labels.addAll(allPremiumLabels.stream().map(label -> label + " (storico)").collect(Collectors.toList()));
+		List<String> historyLabels = allPremiumLabels.stream().map(label -> "Totale " + label.toLowerCase() + " (storico)").collect(Collectors.toList());
+		labels.addAll(historyLabels);
 		labels.add("Costo (storico)");
 		labels.add("Ritorno (storico)");
 		labels.add("Saldo (storico)");
-		labels.add("Data agg. storico");
+		labels.add(DATA_AGGIORNAMENTO_STORICO_LABEL);
 		List<String> summaryFormulas = new ArrayList<>();
 		String columnName = SimpleWorkbookTemplate.getLetterAtIndex(0);
 		summaryFormulas.add("FORMULA_COUNTA(" + columnName + "3:"+ columnName + Shared.getSEStats().getAllWinningCombos().size() * 2 +")");
@@ -423,7 +575,7 @@ public class LotteryMatrixSimulator {
 				"FORMULA_SUM(" + columnName + "3:"+ columnName + Shared.getSEStats().getAllWinningCombos().size() * 2 +")"
 			);
 		}
-		labels.add("File");
+		labels.add(FILE_LABEL);
 		summaryFormulas.add("");
 		summaryFormulas.add("");
 		summaryFormulas.add("");
@@ -443,17 +595,21 @@ public class LotteryMatrixSimulator {
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, "Costo")).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, "Ritorno")).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, "Saldo")).setCellStyle(headerNumberStyle);
+		for (String label : historyLabels) {
+			sheet.getRow(1).getCell(Shared.getCellIndex(sheet, label)).setCellStyle(headerNumberStyle);
+		}
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, "Costo (storico)")).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, "Ritorno (storico)")).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, "Saldo (storico)")).setCellStyle(headerNumberStyle);
-		sheet.setColumnWidth(0, 3800);
+		sheet.setColumnWidth(Shared.getCellIndex(sheet, "Data"), 3800);
 		sheet.setColumnWidth(Shared.getCellIndex(sheet, "Costo"), 3000);
 		sheet.setColumnWidth(Shared.getCellIndex(sheet, "Ritorno"), 3000);
 		sheet.setColumnWidth(Shared.getCellIndex(sheet, "Saldo"), 3000);
 		sheet.setColumnWidth(Shared.getCellIndex(sheet, "Costo (storico)"), 3000);
 		sheet.setColumnWidth(Shared.getCellIndex(sheet, "Ritorno (storico)"), 3000);
 		sheet.setColumnWidth(Shared.getCellIndex(sheet, "Saldo (storico)"), 3000);
-		sheet.setColumnWidth(Shared.getCellIndex(sheet, "File"), 12000);
+		sheet.setColumnWidth(Shared.getCellIndex(sheet, DATA_AGGIORNAMENTO_STORICO_LABEL), 3800);
+		sheet.setColumnWidth(Shared.getCellIndex(sheet, FILE_LABEL), 12000);
 		//workBookTemplate.setAutoFilter(1, Shared.getSEStats().getAllWinningCombos().size() * 2, 0, labels.size() - 1);
 		//System.out.println(PersistentStorage.buildWorkingPath() + File.separator + excelFileName + " succesfully created");
 	}
@@ -464,7 +620,7 @@ public class LotteryMatrixSimulator {
 		ThrowingConsumer<Workbook, Throwable> createAction,
 		ThrowingConsumer<Workbook, Throwable> finallyAction
 	) {
-		synchronized (LotteryMatrixSimulator.class) {
+		StaticComponentContainer.Synchronizer.execute(excelFileName, () -> {
 			Workbook workBook = null;
 			try {
 				try (InputStream inputStream = new FileInputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileName)) {
@@ -495,11 +651,11 @@ public class LotteryMatrixSimulator {
 					}
 				}
 			}
-		}
+		});
 	}
 
 	private static void store(String excelFileName, Workbook workBook) {
-		synchronized(LotteryMatrixSimulator.class) {
+		StaticComponentContainer.Synchronizer.execute(excelFileName, () -> {
 			try (OutputStream destFileOutputStream = new FileOutputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileName)){
 				BaseFormulaEvaluator.evaluateAllFormulaCells(workBook);
 				workBook.write(destFileOutputStream);
@@ -507,6 +663,6 @@ public class LotteryMatrixSimulator {
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
-		}
+		});
 	}
 }

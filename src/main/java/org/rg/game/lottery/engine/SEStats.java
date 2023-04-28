@@ -54,11 +54,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class SEStats {
 	private static final Map<String, SEStats> INSTANCES;
+	private static final Map<Integer, String> allPremiums;
+	private static final List<String> allPremiumLabels;
 	public static boolean forceLoadingFromExcel;
 	static {
 		SEStats.forceLoadingFromExcel =
 				Boolean.parseBoolean(System.getenv().getOrDefault("se-stats.force-loading-from excel", "false"));
 		INSTANCES = new LinkedHashMap<>();
+		allPremiums = new LinkedHashMap<>();
+		allPremiums.put(2, "Ambo");
+		allPremiums.put(3, "Terno");
+		allPremiums.put(4, "Quaterna");
+		allPremiums.put(5, "Cinquina");
+		allPremiums.put(6, "Tombola");
+		allPremiumLabels = new ArrayList<>(allPremiums.values());
 	}
 
 	private Collection<DataLoader> dataLoaders;
@@ -172,6 +181,14 @@ public class SEStats {
 				System.out.println(dataStorer.getClass() + " in unable to store extractions data: " + exc.getMessage());
 			}
 		}
+	}
+
+	public Date getStartDate() {
+		return startDate;
+	}
+
+	public Date getEndDate() {
+		return endDate;
 	}
 
 	private Date buildDate(String dateAsString) {
@@ -515,7 +532,7 @@ public class SEStats {
 			}
 		}
 		data.put("winningCombos", winningsCombosData);
-		Map<Integer, Integer> winningsCounter = new TreeMap<>();
+		Map<Integer, Integer> premiumCounters = new TreeMap<>();
 
 		StringBuffer report = new StringBuffer("Risultati storici dal " +  TimeUtils.defaultDateFormat.format(
 			allWinningCombosReversed.size() > 0? allWinningCombosReversed.get(0).getKey() : startDate
@@ -527,8 +544,8 @@ public class SEStats {
 			for (Map.Entry<Integer, List<List<Integer>>> winningCombos : winningCombosInfo.getValue().entrySet()) {
 				report.append("\t\t" + toPremiumLabel(winningCombos.getKey()) + ":\n");
 				for (List<Integer> combo : winningCombos.getValue()) {
-					Integer counter = winningsCounter.computeIfAbsent(winningCombos.getKey(), key -> 0);
-					winningsCounter.put(winningCombos.getKey(), ++counter);
+					Integer counter = premiumCounters.computeIfAbsent(winningCombos.getKey(), key -> 0);
+					premiumCounters.put(winningCombos.getKey(), ++counter);
 					report.append("\t\t\t" + ComboHandler.toString(combo) + "\n");
 				}
 			}
@@ -542,7 +559,7 @@ public class SEStats {
 			" al " + TimeUtils.defaultDateFormat.format(allWinningCombos.size() > 0 ? this.allWinningCombos.entrySet().stream().collect(Collectors.toList()).get(0).getKey() : endDate) + ":\n\n"
 		);
 		Integer returns = 0;
-		for (Map.Entry<Integer, Integer> winningInfo : winningsCounter.entrySet()) {
+		for (Map.Entry<Integer, Integer> winningInfo : premiumCounters.entrySet()) {
 			Integer type = winningInfo.getKey();
 			String label = toPremiumLabel(type);
 			returns += premiumPrice(type) * winningInfo.getValue();
@@ -552,6 +569,7 @@ public class SEStats {
 		report.append("\tRitorno:" + rightAlignedString(integerFormat.format(returns), 13) + "€\n");
 		report.append("\tRapporto:" + rightAlignedString(decimalFormat.format(((returns * 100d) / (allWinningCombosReversed.size() * systemSize)) - 100d), 12) + "%\n");
 		data.put("report.summary", report.toString());
+		data.put("premium.counters", premiumCounters);
 		return data;
 	}
 
@@ -568,22 +586,19 @@ public class SEStats {
 	}
 
 	public static String toPremiumLabel(Integer hit) {
-		if (hit == 2) {
-			return "Ambo";
-		}
-		if (hit == 3) {
-			return "Terno";
-		}
-		if (hit == 4) {
-			return "Quaterna";
-		}
-		if (hit == 5) {
-			return "Cinquina";
-		}
-		if (hit == 6) {
-			return "Tombola";
+		String label = allPremiums().get(hit);
+		if (label != null) {
+			return label;
 		}
 		throw new IllegalArgumentException();
+	}
+
+	public static List<String> allPremiumLabels() {
+		return allPremiumLabels;
+	}
+
+	public static Map<Integer, String> allPremiums() {
+		return allPremiums;
 	}
 
 	private static interface DataLoader {

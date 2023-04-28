@@ -1,6 +1,7 @@
 package org.rg.game.lottery.util;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.time.DayOfWeek;
@@ -24,7 +25,6 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.burningwave.core.io.FileSystemItem;
 import org.rg.game.lottery.engine.PersistentStorage;
 import org.rg.game.lottery.engine.TimeUtils;
 
@@ -39,7 +39,7 @@ public class ExpireDateUpdater {
 		//addUpdateInfo(computeIncrementationOfWeeks(4), "Corinti Massimo")
 		//addUpdateInfo(computeIncrementationOfWeeks(4), "Fusi Francesco")
 		//addUpdateInfo(computeIncrementationOfWeeks(4), "Pistella Maria Anna")
-		//addUpdateInfo(computeIncrementationOfWeeks(4), "Carrazza Alessandro", "Liberati Claudio")
+		//addUpdateInfo(computeIncrementationOfWeeks(2), "Carrazza Alessandro", "Liberati Claudio")
 		//addUpdateInfo(computeIncrementationOfWeeks(4), "Oroni Paola")
 		//addUpdateInfo(computeIncrementationOfWeeks(60), "Porta Danilo")
 		//addUpdateInfo(computeIncrementationOfWeeks(20), "Tondini Andrea")
@@ -61,8 +61,7 @@ public class ExpireDateUpdater {
 		history.mkdirs();
 		File backupFile = new File(history.getAbsolutePath() + "\\[" + datePattern.format(LocalDateTime.now()) + "] - " + srcFile.getName());
 		srcFile.renameTo(backupFile);
-		FileSystemItem mainFile = FileSystemItem.ofPath(backupFile.getAbsolutePath());
-		try (InputStream srcFileInputStream = mainFile.toInputStream(); Workbook workbook = new XSSFWorkbook(srcFileInputStream);) {
+		try (InputStream srcFileInputStream = new FileInputStream(backupFile); Workbook workbook = new XSSFWorkbook(srcFileInputStream);) {
 			Sheet sheet = workbook.getSheet("Abbonamenti");
 			int nameColumnIndex = getCellIndex(sheet, "Nominativo");
 			int expiryColumnIndex = getCellIndex(sheet, "Scadenza");
