@@ -27,6 +27,7 @@ import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
@@ -35,7 +36,6 @@ import org.burningwave.core.io.FileSystemItem;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.SEStats;
-import org.rg.game.lottery.engine.SimpleWorkbookTemplate;
 import org.rg.game.lottery.engine.TimeUtils;
 
 public class SEMassiveVerifierAndQualityChecker {
@@ -269,7 +269,7 @@ public class SEMassiveVerifierAndQualityChecker {
 								valueCell = summaryRow.createCell(labelIndex);
 								valueCell.setCellStyle(valueStyle);
 							}
-							String columnName = SimpleWorkbookTemplate.getLetterAtIndex(labelIndex);
+							String columnName = CellReference.convertNumToColString(labelIndex);
 							valueCell.setCellFormula("SUM(" + columnName + "2:"+ columnName + (rowIndex + 1) +")");
 						}
 					}

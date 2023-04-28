@@ -44,6 +44,7 @@ import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.StaticComponentContainer;
@@ -578,10 +579,10 @@ public class LotteryMatrixSimulator {
 		labels.add("Saldo (storico)");
 		labels.add(DATA_AGGIORNAMENTO_STORICO_LABEL);
 		List<String> summaryFormulas = new ArrayList<>();
-		String columnName = SimpleWorkbookTemplate.getLetterAtIndex(0);
+		String columnName = CellReference.convertNumToColString(0);
 		summaryFormulas.add("FORMULA_COUNTA(" + columnName + "3:"+ columnName + Shared.getSEStats().getAllWinningCombos().size() * 2 +")");
 		for (int i = 1; i < labels.size()-4; i++) {
-			columnName = SimpleWorkbookTemplate.getLetterAtIndex(i);
+			columnName = CellReference.convertNumToColString(i);
 			summaryFormulas.add(
 				"FORMULA_SUM(" + columnName + "3:"+ columnName + Shared.getSEStats().getAllWinningCombos().size() * 2 +")"
 			);

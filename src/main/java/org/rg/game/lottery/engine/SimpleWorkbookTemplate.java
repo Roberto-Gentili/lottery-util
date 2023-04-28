@@ -33,6 +33,7 @@ import org.apache.poi.ss.usermodel.SheetConditionalFormatting;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFFont;
@@ -456,7 +457,7 @@ public class SimpleWorkbookTemplate implements Closeable {
 			currentSheet.getPaneInformation() != null && currentSheet.getPaneInformation().isFreezePane() ? 2 : 1;
 		CellRangeAddress[] cellRangeAddress = new CellRangeAddress[columns.length];
 		for (int i = 0; i < cellRangeAddress.length; i++) {
-			String columnLetter = getLetterAtIndex(columns[i]);
+			String columnLetter = CellReference.convertNumToColString(columns[i]);
 			 cellRangeAddress[i] =
 				CellRangeAddress.valueOf(columnLetter + rowNumberToStart + ":" + columnLetter + (currentSheet.getLastRowNum() + 1));
 		}
@@ -485,10 +486,6 @@ public class SimpleWorkbookTemplate implements Closeable {
     		conditionalFormattingRule
 		);
         return currentSheet;
-	}
-
-	public static String getLetterAtIndex(int index) {
-		return Character.valueOf("ABCDEFGHIJKLMNOPQRSTUVWXYZ".charAt(index)).toString();
 	}
 
 	@Override
