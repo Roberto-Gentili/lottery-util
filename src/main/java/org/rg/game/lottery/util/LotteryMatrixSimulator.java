@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -24,6 +25,7 @@ import java.util.Properties;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -43,6 +45,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.burningwave.core.assembler.ComponentContainer;
+import org.burningwave.core.function.ThrowingConsumer;
 import org.burningwave.core.io.FileSystemItem;
 import org.rg.game.lottery.engine.CollectionUtils;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
@@ -168,68 +171,67 @@ public class LotteryMatrixSimulator {
 
 	private static void cleanup(String excelFileName, Collection<LocalDate> competitionDates, String configFileName, Integer redundancy) {
 		cleanupRedundant(excelFileName, configFileName, redundancy);
-		try (InputStream inputStream = new FileInputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileName)) {
-			Workbook workBook = new XSSFWorkbook(inputStream);
-			Iterator<Row> rowIterator = workBook.getSheet("Risultati").rowIterator();
-			rowIterator.next();
-			rowIterator.next();
-			int initialSize = competitionDates.size();
-			while (rowIterator.hasNext()) {
-				Row row = rowIterator.next();
-				Cell date = row.getCell(0);
-				if (rowRefersTo(row, configFileName)) {
-					Iterator<LocalDate> competitionDatesItr = competitionDates.iterator();
-					while (competitionDatesItr.hasNext()) {
-						LocalDate competitionDate = competitionDatesItr.next();
-						if (date != null && competitionDate.compareTo(TimeUtils.toLocalDate(date.getDateCellValue())) == 0) {
-							competitionDatesItr.remove();
+		readOrCreateExcel(
+			excelFileName,
+			workBook -> {
+				Iterator<Row> rowIterator = workBook.getSheet("Risultati").rowIterator();
+				rowIterator.next();
+				rowIterator.next();
+				int initialSize = competitionDates.size();
+				while (rowIterator.hasNext()) {
+					Row row = rowIterator.next();
+					Cell date = row.getCell(0);
+					if (rowRefersTo(row, configFileName)) {
+						Iterator<LocalDate> competitionDatesItr = competitionDates.iterator();
+						while (competitionDatesItr.hasNext()) {
+							LocalDate competitionDate = competitionDatesItr.next();
+							if (date != null && competitionDate.compareTo(TimeUtils.toLocalDate(date.getDateCellValue())) == 0) {
+								competitionDatesItr.remove();
+							}
 						}
 					}
 				}
-			}
-			System.out.println(competitionDates.size() + " dates will be processed, " + (initialSize - competitionDates.size()) + " already processed");
-		} catch (FileNotFoundException e) {
-
-		} catch (IOException exc) {
-			throw new RuntimeException(exc);
-		}
-
+				System.out.println(competitionDates.size() + " dates will be processed, " + (initialSize - competitionDates.size()) + " already processed");
+			},
+			workBook ->
+				createExcelFile(workBook, excelFileName),
+			workBook ->
+				store(excelFileName, workBook)
+		);
 	}
 
 	private static void cleanupRedundant(String excelFileName, String configFileName, Integer redundancy) {
-		Workbook workBook = null;
 		if (redundancy != null) {
-			try (InputStream inputStream = new FileInputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileName)) {
-				workBook = new XSSFWorkbook(inputStream);
-				Sheet sheet = workBook.getSheet("Risultati");
-				Iterator<Row> rowIterator = sheet.rowIterator();
-				rowIterator.next();
-				rowIterator.next();
-				Map<String, List<Row>> groupedForRedundancyRows = new LinkedHashMap<>();
-				while (rowIterator.hasNext()) {
-					Row row = rowIterator.next();
-					if (rowRefersTo(row, configFileName)) {
-						groupedForRedundancyRows.computeIfAbsent(
-							row.getCell(row.getLastCellNum()-1).getStringCellValue(),
-							key -> new ArrayList<>()
-						).add(row);
-					}
-				}
-				for (List<Row> rows : groupedForRedundancyRows.values()) {
-					if (rows.size() < redundancy) {
-						for (Row row : rows) {
-							sheet.removeRow(row);
+			readOrCreateExcel(
+				excelFileName,
+				workBook -> {
+					Sheet sheet = workBook.getSheet("Risultati");
+					Iterator<Row> rowIterator = sheet.rowIterator();
+					rowIterator.next();
+					rowIterator.next();
+					Map<String, List<Row>> groupedForRedundancyRows = new LinkedHashMap<>();
+					while (rowIterator.hasNext()) {
+						Row row = rowIterator.next();
+						if (rowRefersTo(row, configFileName)) {
+							groupedForRedundancyRows.computeIfAbsent(
+								row.getCell(row.getLastCellNum()-1).getStringCellValue(),
+								key -> new ArrayList<>()
+							).add(row);
 						}
 					}
-				}
-			} catch (FileNotFoundException e) {
-
-			} catch (IOException exc) {
-				throw new RuntimeException(exc);
-			}
-			if (workBook != null) {
-				store(excelFileName, workBook);
-			}
+					for (List<Row> rows : groupedForRedundancyRows.values()) {
+						if (rows.size() < redundancy) {
+							for (Row row : rows) {
+								sheet.removeRow(row);
+							}
+						}
+					}
+				},
+				workBook ->
+					createExcelFile(workBook, excelFileName),
+				workBook ->
+					store(excelFileName, workBook)
+			);
 		}
 	}
 
@@ -271,25 +273,28 @@ public class LotteryMatrixSimulator {
 
 	private static Function<LocalDate, Consumer<List<Storage>>> buildSystemProcessor(String excelFileName) {
 		return extractionDate -> storages -> {
-			Workbook workBook = null;
-			try (InputStream inputStream = new FileInputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileName);) {
-				workBook = new XSSFWorkbook(inputStream);
-				SimpleWorkbookTemplate workBookTemplate = new SimpleWorkbookTemplate(workBook);
-				workBookTemplate.getOrCreateSheet("Risultati", true);
-				while (true) {
-					Row row = workBookTemplate.getCurrentRow();
-					if (row == null || row.getCell(0) == null || row.getCell(0).getCellType() == CellType.BLANK) {
-						addRowData(workBookTemplate, extractionDate, storages);
-						break;
-					} else {
-						workBookTemplate.addRow();
+			readOrCreateExcel(
+				excelFileName,
+				workBook -> {
+					SimpleWorkbookTemplate workBookTemplate = new SimpleWorkbookTemplate(workBook);
+					workBookTemplate.getOrCreateSheet("Risultati", true);
+					while (true) {
+						Row row = workBookTemplate.getCurrentRow();
+						if (row == null || row.getCell(0) == null || row.getCell(0).getCellType() == CellType.BLANK) {
+							addRowData(workBookTemplate, extractionDate, storages);
+							break;
+						} else {
+							workBookTemplate.addRow();
+						}
 					}
+				},
+				workBook ->
+					createExcelFile(workBook, excelFileName),
+				workBook -> {
+					SEStats.clear();
+					store(excelFileName, workBook);
 				}
-			} catch (IOException exc) {
-				throw new RuntimeException(exc);
-			}
-			store(excelFileName, workBook);
-			SEStats.clear();
+			);
 		};
 	}
 
@@ -319,6 +324,7 @@ public class LotteryMatrixSimulator {
 			workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
 			formula = "(H"  + currentRowNum + ")-(G" + currentRowNum + ")";
 			workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
+			workBookTemplate.addCell(Collections.nCopies(9, null));
 			Cell cellName = workBookTemplate.addCell(storage.getName()).get(0);
 			if (storage instanceof PersistentStorage) {
 				PersistentStorage persistentStorage = (PersistentStorage)storage;
@@ -341,96 +347,163 @@ public class LotteryMatrixSimulator {
 			if (TimeUtils.defaultLocalDateFormatter.format(extractionDate).equals("25/07/2009")) {
 				System.out.println(TimeUtils.defaultLocalDateFormatter.format(extractionDate) + redundantCounter.get());
 			}
-			Integer checkResult = null;
-			Workbook workBook = null;
-			try (InputStream inputStream = new FileInputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileName)) {
-				workBook = new XSSFWorkbook(inputStream);
-				Iterator<Row> rowIterator = workBook.getSheet("Risultati").rowIterator();
-				rowIterator.next();
-				rowIterator.next();
-				while (rowIterator.hasNext()) {
-					Row row = rowIterator.next();
-					if (rowRefersTo(row, configurationName)) {
-						Cell data = row.getCell(0);
-						if (data != null && extractionDate.compareTo(TimeUtils.toLocalDate(data.getDateCellValue())) == 0) {
-							checkResult = -1;
-							break;
-						}
-					}
-				}
-			} catch (FileNotFoundException exc) {
-				workBook = new XSSFWorkbook();
-				SimpleWorkbookTemplate workBookTemplate = new SimpleWorkbookTemplate(workBook);
-				Sheet sheet = workBookTemplate.getOrCreateSheet("Risultati", true);
-				List<String> labels = new ArrayList<>();
-				labels.add("Data");
-				labels.addAll(Shared.allPremiumLabels());
-				labels.add("Costo");
-				labels.add("Ritorno");
-				labels.add("Saldo");
-				List<String> summaryFormulas = new ArrayList<>();
-				String columnName = Shared.getLetterAtIndex(0);
-				summaryFormulas.add("FORMULA_COUNTA(" + columnName + "3:"+ columnName + Shared.getSEStats().getAllWinningCombos().size() * 2 +")");
-				for (int i = 1; i < labels.size(); i++) {
-					columnName = Shared.getLetterAtIndex(i);
-					summaryFormulas.add(
-						"FORMULA_SUM(" + columnName + "3:"+ columnName + Shared.getSEStats().getAllWinningCombos().size() * 2 +")"
-					);
-				}
-				labels.add("File");
-				summaryFormulas.add("");
-				workBookTemplate.createHeader(
-					"Risultati",
-					true,
-					Arrays.asList(
-						labels,
-						summaryFormulas
-					)
-				);
-				CellStyle headerNumberStyle = workBook.createCellStyle();
-				headerNumberStyle.cloneStyleFrom(sheet.getRow(1).getCell(labels.size()-4).getCellStyle());
-				headerNumberStyle.setDataFormat(workBook.createDataFormat().getFormat("#,##0"));
-				sheet.getRow(1).getCell(labels.size()-4).setCellStyle(headerNumberStyle);
-				sheet.getRow(1).getCell(labels.size()-3).setCellStyle(headerNumberStyle);
-				sheet.getRow(1).getCell(labels.size()-2).setCellStyle(headerNumberStyle);;
-				sheet.setColumnWidth(0, 3800);
-				sheet.setColumnWidth(labels.size()-4, 4500);
-				sheet.setColumnWidth(labels.size()-3, 4500);
-				sheet.setColumnWidth(labels.size()-2, 4500);
-				sheet.setColumnWidth(labels.size()-1, 12000);
-				workBookTemplate.setAutoFilter(1, Shared.getSEStats().getAllWinningCombos().size() * 2, 0, labels.size() - 1);
-				store(excelFileName, workBook);
-				System.out.println(PersistentStorage.buildWorkingPath() + File.separator + excelFileName + " succesfully created");
-			} catch (IOException exc) {
-				throw new RuntimeException(exc);
-			}
+			AtomicReference<Integer> checkResult = new AtomicReference<Integer>();
+			readOrCreateExcel(
+				excelFileName,
+				workBook ->
+					checkResult.set(openExcelFile(workBook, configurationName, extractionDate)),
+				workBook ->
+					createExcelFile(workBook, excelFileName)
+				,
+				workBook ->
+					store(excelFileName, workBook)
+			);
 			if (redundant != null) {
 				Integer redundantCounterValue = redundantCounter.getAndIncrement();
 				if (redundantCounterValue.intValue() > 0) {
 					if (redundantCounterValue.intValue() < redundant) {
-						checkResult =
-							checkResult != null ?
-								checkResult :
-								0;
+						checkResult.set(
+							checkResult.get() != null ?
+								checkResult.get() :
+								0
+							);
 					} else {
 						redundantCounter.set(1);
 					}
 				}
 			}
-			if (checkResult == null) {
-				checkResult = 1;
+			if (checkResult.get() == null) {
+				checkResult.set(1);
 			}
-			return checkResult;
+			return checkResult.get();
 		};
 	}
 
+	private static Integer openExcelFile(
+		Workbook workBook,
+		String configurationName,
+		LocalDate extractionDate
+	) throws IOException {
+		Iterator<Row> rowIterator = workBook.getSheet("Risultati").rowIterator();
+		rowIterator.next();
+		rowIterator.next();
+		while (rowIterator.hasNext()) {
+			Row row = rowIterator.next();
+			if (rowRefersTo(row, configurationName)) {
+				Cell data = row.getCell(0);
+				if (data != null && extractionDate.compareTo(TimeUtils.toLocalDate(data.getDateCellValue())) == 0) {
+					return -1;
+				}
+			}
+		}
+		return null;
+	}
+
+	private static void createExcelFile(Workbook workBook, String excelFileName) {
+		SimpleWorkbookTemplate workBookTemplate = new SimpleWorkbookTemplate(workBook);
+		Sheet sheet = workBookTemplate.getOrCreateSheet("Risultati", true);
+		List<String> labels = new ArrayList<>();
+		labels.add("Data");
+		List<String> allPremiumLabels = Shared.allPremiumLabels();
+		labels.addAll(allPremiumLabels);
+		labels.add("Costo");
+		labels.add("Ritorno");
+		labels.add("Saldo");
+		labels.addAll(allPremiumLabels.stream().map(label -> label + " (storico)").collect(Collectors.toList()));
+		labels.add("Costo (storico)");
+		labels.add("Ritorno (storico)");
+		labels.add("Saldo (storico)");
+		labels.add("Data agg. storico");
+		List<String> summaryFormulas = new ArrayList<>();
+		String columnName = SimpleWorkbookTemplate.getLetterAtIndex(0);
+		summaryFormulas.add("FORMULA_COUNTA(" + columnName + "3:"+ columnName + Shared.getSEStats().getAllWinningCombos().size() * 2 +")");
+		for (int i = 1; i < labels.size()-4; i++) {
+			columnName = SimpleWorkbookTemplate.getLetterAtIndex(i);
+			summaryFormulas.add(
+				"FORMULA_SUM(" + columnName + "3:"+ columnName + Shared.getSEStats().getAllWinningCombos().size() * 2 +")"
+			);
+		}
+		labels.add("File");
+		summaryFormulas.add("");
+		summaryFormulas.add("");
+		summaryFormulas.add("");
+		summaryFormulas.add("");
+		summaryFormulas.add("");
+		workBookTemplate.createHeader(
+			"Risultati",
+			true,
+			Arrays.asList(
+				labels,
+				summaryFormulas
+			)
+		);
+		CellStyle headerNumberStyle = workBook.createCellStyle();
+		headerNumberStyle.cloneStyleFrom(sheet.getRow(1).getCell(labels.size()-4).getCellStyle());
+		headerNumberStyle.setDataFormat(workBook.createDataFormat().getFormat("#,##0"));
+		sheet.getRow(1).getCell(labels.size()-4).setCellStyle(headerNumberStyle);
+		sheet.getRow(1).getCell(labels.size()-3).setCellStyle(headerNumberStyle);
+		sheet.getRow(1).getCell(labels.size()-2).setCellStyle(headerNumberStyle);
+		sheet.setColumnWidth(0, 3800);
+		sheet.setColumnWidth(labels.size() - (allPremiumLabels.size() +7), 3000);
+		sheet.setColumnWidth(labels.size() - (allPremiumLabels.size() +6), 3000);
+		sheet.setColumnWidth(labels.size() - (allPremiumLabels.size() +5), 3000);
+		sheet.setColumnWidth(labels.size()-4, 3000);
+		sheet.setColumnWidth(labels.size()-3, 3000);
+		sheet.setColumnWidth(labels.size()-2, 3000);
+		sheet.setColumnWidth(labels.size()-1, 12000);
+		//workBookTemplate.setAutoFilter(1, Shared.getSEStats().getAllWinningCombos().size() * 2, 0, labels.size() - 1);
+		//System.out.println(PersistentStorage.buildWorkingPath() + File.separator + excelFileName + " succesfully created");
+	}
+
+	private static void readOrCreateExcel(
+		String excelFileName,
+		ThrowingConsumer<Workbook, Throwable> action,
+		ThrowingConsumer<Workbook, Throwable> createAction,
+		ThrowingConsumer<Workbook, Throwable> finallyAction
+	) {
+		synchronized (LotteryMatrixSimulator.class) {
+			Workbook workBook = null;
+			try {
+				try (InputStream inputStream = new FileInputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileName)) {
+					workBook = new XSSFWorkbook(inputStream);
+					action.accept(workBook);
+				} catch (FileNotFoundException exc) {
+					if (createAction == null) {
+						throw exc;
+					}
+					workBook = new XSSFWorkbook();
+					createAction.accept(workBook);
+				}
+			} catch (Throwable exc) {
+				throw new RuntimeException(exc);
+			} finally {
+				if (workBook != null) {
+					if (finallyAction!= null) {
+						try {
+							finallyAction.accept(workBook);
+						} catch (Throwable exc) {
+							throw new RuntimeException(exc);
+						}
+					}
+					try {
+						workBook.close();
+					} catch (IOException exc) {
+						throw new RuntimeException(exc);
+					}
+				}
+			}
+		}
+	}
+
 	private static void store(String excelFileName, Workbook workBook) {
-		try (OutputStream destFileOutputStream = new FileOutputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileName)){
-			BaseFormulaEvaluator.evaluateAllFormulaCells(workBook);
-			workBook.write(destFileOutputStream);
-			workBook.close();
-		} catch (IOException e) {
-			throw new RuntimeException(e);
+		synchronized(LotteryMatrixSimulator.class) {
+			try (OutputStream destFileOutputStream = new FileOutputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileName)){
+				BaseFormulaEvaluator.evaluateAllFormulaCells(workBook);
+				workBook.write(destFileOutputStream);
+				workBook.close();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
 		}
 	}
 }

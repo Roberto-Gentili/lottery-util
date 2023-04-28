@@ -146,10 +146,6 @@ class Shared {
 		);
 	}
 
-	static String getLetterAtIndex(int index) {
-		return Character.valueOf("ABCDEFGHIJKLMNOPQRSTUVWXYZ".charAt(index)).toString();
-	}
-
 	static SEStats getSEStats() {
 		return SEStats.get(Shared.sEStatsDefaultDate, TimeUtils.defaultDateFormat.format(new Date()));
 	}

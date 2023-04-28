@@ -258,6 +258,14 @@ public class SimpleWorkbookTemplate implements Closeable {
 		return getOrCreateRow(sheetName, titles.size() - 1);
 	}
 
+	public List<Cell> addCell(List<String> values) {
+		List<Cell> cells = new ArrayList<>();
+		for (int i = 0; i < values.size(); i++) {
+			cells.add(createCell(currentSheet, get(currentSheet, currentRow), getAndIncrement(currentSheet, currentCol), values.get(i)));
+		}
+		return cells;
+	}
+
 	public List<Cell> addCell(String... value) {
 		if (value == null) {
 			value = new String[0];
@@ -479,7 +487,7 @@ public class SimpleWorkbookTemplate implements Closeable {
         return currentSheet;
 	}
 
-	private String getLetterAtIndex(int index) {
+	public static String getLetterAtIndex(int index) {
 		return Character.valueOf("ABCDEFGHIJKLMNOPQRSTUVWXYZ".charAt(index)).toString();
 	}
 

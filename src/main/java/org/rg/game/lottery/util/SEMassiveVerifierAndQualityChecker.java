@@ -35,6 +35,7 @@ import org.burningwave.core.io.FileSystemItem;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.SEStats;
+import org.rg.game.lottery.engine.SimpleWorkbookTemplate;
 import org.rg.game.lottery.engine.TimeUtils;
 
 public class SEMassiveVerifierAndQualityChecker {
@@ -268,7 +269,7 @@ public class SEMassiveVerifierAndQualityChecker {
 								valueCell = summaryRow.createCell(labelIndex);
 								valueCell.setCellStyle(valueStyle);
 							}
-							String columnName = Shared.getLetterAtIndex(labelIndex);
+							String columnName = SimpleWorkbookTemplate.getLetterAtIndex(labelIndex);
 							valueCell.setCellFormula("SUM(" + columnName + "2:"+ columnName + (rowIndex + 1) +")");
 						}
 					}
