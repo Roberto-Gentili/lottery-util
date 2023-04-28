@@ -194,7 +194,7 @@ public class LotteryMatrixSimulator {
 				System.out.println(competitionDates.size() + " dates will be processed, " + (initialSize - competitionDates.size()) + " already processed");
 			},
 			workBook ->
-				createExcelFile(workBook, excelFileName),
+				createWorkbook(workBook, excelFileName),
 			workBook ->
 				store(excelFileName, workBook)
 		);
@@ -228,7 +228,7 @@ public class LotteryMatrixSimulator {
 					}
 				},
 				workBook ->
-					createExcelFile(workBook, excelFileName),
+					createWorkbook(workBook, excelFileName),
 				workBook ->
 					store(excelFileName, workBook)
 			);
@@ -289,7 +289,7 @@ public class LotteryMatrixSimulator {
 					}
 				},
 				workBook ->
-					createExcelFile(workBook, excelFileName),
+					createWorkbook(workBook, excelFileName),
 				workBook -> {
 					SEStats.clear();
 					store(excelFileName, workBook);
@@ -353,7 +353,7 @@ public class LotteryMatrixSimulator {
 				workBook ->
 					checkResult.set(openExcelFile(workBook, configurationName, extractionDate)),
 				workBook ->
-					createExcelFile(workBook, excelFileName)
+					createWorkbook(workBook, excelFileName)
 				,
 				workBook ->
 					store(excelFileName, workBook)
@@ -399,7 +399,7 @@ public class LotteryMatrixSimulator {
 		return null;
 	}
 
-	private static void createExcelFile(Workbook workBook, String excelFileName) {
+	private static void createWorkbook(Workbook workBook, String excelFileName) {
 		SimpleWorkbookTemplate workBookTemplate = new SimpleWorkbookTemplate(workBook);
 		Sheet sheet = workBookTemplate.getOrCreateSheet("Risultati", true);
 		List<String> labels = new ArrayList<>();
