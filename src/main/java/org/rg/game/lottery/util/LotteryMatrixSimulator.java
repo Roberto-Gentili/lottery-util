@@ -610,9 +610,6 @@ public class LotteryMatrixSimulator {
 		labels.add(FILE_LABEL);
 		summaryFormulas.add("");
 		summaryFormulas.add("");
-		summaryFormulas.add("");
-		summaryFormulas.add("");
-		summaryFormulas.add("");
 		workBookTemplate.createHeader(
 			"Risultati",
 			true,
