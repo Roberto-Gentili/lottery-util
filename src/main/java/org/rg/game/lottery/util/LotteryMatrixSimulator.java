@@ -530,14 +530,11 @@ public class LotteryMatrixSimulator {
 		AtomicInteger redundantCounter
 	) {
 		return extractionDate -> storages -> {
-			if (TimeUtils.defaultLocalDateFormatter.format(extractionDate).equals("25/07/2009")) {
-				System.out.println(TimeUtils.defaultLocalDateFormatter.format(extractionDate) + redundantCounter.get());
-			}
 			AtomicReference<Integer> checkResult = new AtomicReference<Integer>();
 			readOrCreateExcel(
 				excelFileName,
 				workBook ->
-					checkResult.set(openExcelFile(workBook, configurationName, extractionDate)),
+					checkResult.set(checkAlreadyProcessed(workBook, configurationName, extractionDate)),
 				workBook ->
 					createWorkbook(workBook, excelFileName)
 				,
@@ -565,11 +562,11 @@ public class LotteryMatrixSimulator {
 		};
 	}
 
-	private static Integer openExcelFile(
+	private static Integer checkAlreadyProcessed(
 		Workbook workBook,
 		String configurationName,
 		LocalDate extractionDate
-	) throws IOException {
+	) {
 		Iterator<Row> rowIterator = workBook.getSheet("Risultati").rowIterator();
 		rowIterator.next();
 		rowIterator.next();
