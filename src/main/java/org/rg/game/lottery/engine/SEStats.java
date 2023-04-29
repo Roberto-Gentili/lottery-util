@@ -573,7 +573,16 @@ public class SEStats {
 		return data;
 	}
 
-	public static int premiumPrice(int type) {
+	public static Integer premiumPrice(String label) {
+		for (Map.Entry<Integer, String> premiumEntry : allPremiums().entrySet()) {
+			if (premiumEntry.getValue().equals(label)) {
+				return premiumPrice(premiumEntry.getKey());
+			}
+		}
+		return null;
+	}
+
+	public static Integer premiumPrice(Integer type) {
 		return type == 2 ? 5 :
 			type == 3 ? 25 :
 				type == 4 ? 300:

@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -61,6 +62,13 @@ import org.rg.game.lottery.engine.TimeUtils;
 
 
 public class LotteryMatrixSimulator {
+	private static final String SALDO_LABEL = "Saldo";
+	private static final String RITORNO_LABEL = "Ritorno";
+	private static final String COSTO_LABEL = "Costo";
+	private static final String DATA_LABEL = "Data";
+	private static final String SALDO_STORICO_LABEL = "Saldo (storico)";
+	private static final String RITORNO_STORICO_LABEL = "Ritorno (storico)";
+	private static final String COSTO_STORICO_LABEL = "Costo (storico)";
 	private static final String FILE_LABEL = "File";
 	private static final String DATA_AGGIORNAMENTO_STORICO_LABEL = "Data agg. storico";
 	static Pattern regexForExtractConfigFileName = Pattern.compile("\\[.*?\\]\\[.*?\\]\\[.*?\\](.*)\\.txt");
@@ -379,14 +387,14 @@ public class LotteryMatrixSimulator {
 							Row previousRow = sheet.getRow(rowIndex -1);
 							dateCellStyle.set(previousRow.getCell(dataAggStoricoColIndex.get()).getCellStyle());
 							numberCellStyle.set(
-								previousRow.getCell(Shared.getCellIndex(sheet, "Totale " + SEStats.allPremiumLabels().get(0).toLowerCase() + " (storico)")).getCellStyle()
+								previousRow.getCell(Shared.getCellIndex(sheet, getHistoryPremiumLabel(SEStats.allPremiumLabels().get(0)))).getCellStyle()
 							);
 						}
 						Row row = sheet.getRow(rowIndex);
 						if (storageWrapper.get().getName().equals(row.getCell(fileColIndex.get()).getStringCellValue())) {
 							Cell dataAggStoricoCell = row.getCell(dataAggStoricoColIndex.get());
 							for (Map.Entry<Integer, String> premiumData : allPremiums.entrySet()) {
-								Cell cell = row.getCell(Shared.getCellIndex(sheet, "Totale " + premiumData.getValue().toLowerCase() + " (storico)"));
+								Cell cell = row.getCell(Shared.getCellIndex(sheet, getHistoryPremiumLabel(premiumData.getValue())));
 								Integer premiumCounter = premiumCounters.get(premiumData.getKey());
 								cell.setCellStyle(numberCellStyle.get());
 								if (premiumCounter != null) {
@@ -395,10 +403,10 @@ public class LotteryMatrixSimulator {
 									cell.setCellValue(0d);
 								}
 							}
-							Cell cell = row.getCell(Shared.getCellIndex(sheet, "Costo (storico)"));
+							Cell cell = row.getCell(Shared.getCellIndex(sheet, COSTO_STORICO_LABEL));
 							cell.setCellStyle(numberCellStyle.get());
 							cell.setCellValue(
-								sEStats.getAllWinningCombos().size() * row.getCell(Shared.getCellIndex(sheet, "Costo")).getNumericCellValue()
+								sEStats.getAllWinningCombos().size() * row.getCell(Shared.getCellIndex(sheet, COSTO_LABEL)).getNumericCellValue()
 							);
 							dataAggStoricoCell.setCellStyle(dateCellStyle.get());
 							dataAggStoricoCell.setCellValue(sEStats.getLatestExtractionDate());
@@ -472,20 +480,21 @@ public class LotteryMatrixSimulator {
 			Cell cell = workBookTemplate.addCell(storage.size(), "#,##0");
 			cell.getCellStyle().setAlignment(HorizontalAlignment.CENTER);
 			int currentRowNum = cell.getRow().getRowNum()+1;
-			String formula = "(B" + currentRowNum + "*" + SEStats.premiumPrice(2) + ")+" + "(C" + currentRowNum + "*" + SEStats.premiumPrice(3) + ")+"
-				 + "(D" + currentRowNum + "*" + SEStats.premiumPrice(4) + ")+" + "(E" + currentRowNum + "*" + SEStats.premiumPrice(5) + ")+"
-				 + "(F" + currentRowNum + "*" + SEStats.premiumPrice(6) + ")";
+			Sheet sheet = workBookTemplate.getOrCreateSheet("Risultati");
+			List<String> allFormulas = SEStats.allPremiumLabels().stream().map(
+				label -> generatePremiumFormula(sheet, currentRowNum, label, lb -> lb)).collect(Collectors.toList());
+			String formula = String.join("+", allFormulas);
 			workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
-			formula = "(H"  + currentRowNum + ")-(G" + currentRowNum + ")";
+			formula = generateSaldoFormula(currentRowNum, sheet, Arrays.asList(RITORNO_LABEL, COSTO_LABEL));
 			workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
-			workBookTemplate.addCell(Collections.nCopies(5, null));
+			workBookTemplate.addCell(Collections.nCopies(SEStats.allPremiums().size(), null));
 			workBookTemplate.addCell(0, "#,##0");
 			cell.getCellStyle().setAlignment(HorizontalAlignment.CENTER);
-			formula = "(J" + currentRowNum + "*" + SEStats.premiumPrice(2) + ")+" + "(K" + currentRowNum + "*" + SEStats.premiumPrice(3) + ")+"
-					 + "(L" + currentRowNum + "*" + SEStats.premiumPrice(4) + ")+" + "(M" + currentRowNum + "*" + SEStats.premiumPrice(5) + ")+"
-					 + "(N" + currentRowNum + "*" + SEStats.premiumPrice(6) + ")";
+			allFormulas = SEStats.allPremiumLabels().stream().map(
+					label -> generatePremiumFormula(sheet, currentRowNum, label, LotteryMatrixSimulator::getHistoryPremiumLabel)).collect(Collectors.toList());
+			formula = String.join("+", allFormulas);
 			workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
-			formula = "(P"  + currentRowNum + ")-(O" + currentRowNum + ")";
+			formula = generateSaldoFormula(currentRowNum, sheet, Arrays.asList(RITORNO_STORICO_LABEL, COSTO_STORICO_LABEL));
 			workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
 			workBookTemplate.addCell((Date)null);
 			Cell cellName = workBookTemplate.addCell(storage.getName()).get(0);
@@ -498,6 +507,20 @@ public class LotteryMatrixSimulator {
 			return true;
 		}
 		return false;
+	}
+
+	private static String generateSaldoFormula(int currentRowNum, Sheet sheet, List<String> labels) {
+		return String.join("-", labels.stream().map(label ->
+			"(" + CellReference.convertNumToColString(Shared.getCellIndex(sheet, label))  + currentRowNum + ")"
+		).collect(Collectors.toList()));
+	}
+
+	private static String generatePremiumFormula(Sheet sheet, int currentRowNum, String columnLabel, UnaryOperator<String> transformer) {
+		return "(" + CellReference.convertNumToColString(Shared.getCellIndex(sheet, transformer.apply(columnLabel))) + currentRowNum + "*" + SEStats.premiumPrice(columnLabel) + ")";
+	}
+
+	private static String getHistoryPremiumLabel(String label) {
+		return "Totale " + label.toLowerCase() + " (storico)";
 	}
 
 	private static Function<LocalDate, Function<List<Storage>, Integer>> buildExtractionDatePredicate(
@@ -566,22 +589,22 @@ public class LotteryMatrixSimulator {
 		SimpleWorkbookTemplate workBookTemplate = new SimpleWorkbookTemplate(workBook);
 		Sheet sheet = workBookTemplate.getOrCreateSheet("Risultati", true);
 		List<String> labels = new ArrayList<>();
-		labels.add("Data");
+		labels.add(DATA_LABEL);
 		Collection<String> allPremiumLabels = SEStats.allPremiumLabels();
 		labels.addAll(allPremiumLabels);
-		labels.add("Costo");
-		labels.add("Ritorno");
-		labels.add("Saldo");
-		List<String> historyLabels = allPremiumLabels.stream().map(label -> "Totale " + label.toLowerCase() + " (storico)").collect(Collectors.toList());
+		labels.add(COSTO_LABEL);
+		labels.add(RITORNO_LABEL);
+		labels.add(SALDO_LABEL);
+		List<String> historyLabels = allPremiumLabels.stream().map(label -> getHistoryPremiumLabel(label)).collect(Collectors.toList());
 		labels.addAll(historyLabels);
-		labels.add("Costo (storico)");
-		labels.add("Ritorno (storico)");
-		labels.add("Saldo (storico)");
+		labels.add(COSTO_STORICO_LABEL);
+		labels.add(RITORNO_STORICO_LABEL);
+		labels.add(SALDO_STORICO_LABEL);
 		labels.add(DATA_AGGIORNAMENTO_STORICO_LABEL);
 		List<String> summaryFormulas = new ArrayList<>();
 		String columnName = CellReference.convertNumToColString(0);
 		summaryFormulas.add("FORMULA_COUNTA(" + columnName + "3:"+ columnName + Shared.getSEStats().getAllWinningCombos().size() * 2 +")");
-		for (int i = 1; i < labels.size()-4; i++) {
+		for (int i = 1; i < labels.size()-1; i++) {
 			columnName = CellReference.convertNumToColString(i);
 			summaryFormulas.add(
 				"FORMULA_SUM(" + columnName + "3:"+ columnName + Shared.getSEStats().getAllWinningCombos().size() * 2 +")"
@@ -602,24 +625,24 @@ public class LotteryMatrixSimulator {
 			)
 		);
 		CellStyle headerNumberStyle = workBook.createCellStyle();
-		headerNumberStyle.cloneStyleFrom(sheet.getRow(1).getCell(Shared.getCellIndex(sheet, "Costo")).getCellStyle());
+		headerNumberStyle.cloneStyleFrom(sheet.getRow(1).getCell(Shared.getCellIndex(sheet, COSTO_LABEL)).getCellStyle());
 		headerNumberStyle.setDataFormat(workBook.createDataFormat().getFormat("#,##0"));
-		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, "Costo")).setCellStyle(headerNumberStyle);
-		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, "Ritorno")).setCellStyle(headerNumberStyle);
-		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, "Saldo")).setCellStyle(headerNumberStyle);
+		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, COSTO_LABEL)).setCellStyle(headerNumberStyle);
+		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, RITORNO_LABEL)).setCellStyle(headerNumberStyle);
+		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, SALDO_LABEL)).setCellStyle(headerNumberStyle);
 		for (String label : historyLabels) {
 			sheet.getRow(1).getCell(Shared.getCellIndex(sheet, label)).setCellStyle(headerNumberStyle);
 		}
-		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, "Costo (storico)")).setCellStyle(headerNumberStyle);
-		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, "Ritorno (storico)")).setCellStyle(headerNumberStyle);
-		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, "Saldo (storico)")).setCellStyle(headerNumberStyle);
-		sheet.setColumnWidth(Shared.getCellIndex(sheet, "Data"), 3800);
-		sheet.setColumnWidth(Shared.getCellIndex(sheet, "Costo"), 3000);
-		sheet.setColumnWidth(Shared.getCellIndex(sheet, "Ritorno"), 3000);
-		sheet.setColumnWidth(Shared.getCellIndex(sheet, "Saldo"), 3000);
-		sheet.setColumnWidth(Shared.getCellIndex(sheet, "Costo (storico)"), 3000);
-		sheet.setColumnWidth(Shared.getCellIndex(sheet, "Ritorno (storico)"), 3000);
-		sheet.setColumnWidth(Shared.getCellIndex(sheet, "Saldo (storico)"), 3000);
+		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, COSTO_STORICO_LABEL)).setCellStyle(headerNumberStyle);
+		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, RITORNO_STORICO_LABEL)).setCellStyle(headerNumberStyle);
+		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, SALDO_STORICO_LABEL)).setCellStyle(headerNumberStyle);
+		sheet.setColumnWidth(Shared.getCellIndex(sheet, DATA_LABEL), 3800);
+		sheet.setColumnWidth(Shared.getCellIndex(sheet, COSTO_LABEL), 3000);
+		sheet.setColumnWidth(Shared.getCellIndex(sheet, RITORNO_LABEL), 3000);
+		sheet.setColumnWidth(Shared.getCellIndex(sheet, SALDO_LABEL), 3000);
+		sheet.setColumnWidth(Shared.getCellIndex(sheet, COSTO_STORICO_LABEL), 3000);
+		sheet.setColumnWidth(Shared.getCellIndex(sheet, RITORNO_STORICO_LABEL), 3000);
+		sheet.setColumnWidth(Shared.getCellIndex(sheet, SALDO_STORICO_LABEL), 3000);
 		sheet.setColumnWidth(Shared.getCellIndex(sheet, DATA_AGGIORNAMENTO_STORICO_LABEL), 3800);
 		sheet.setColumnWidth(Shared.getCellIndex(sheet, FILE_LABEL), 12000);
 		//workBookTemplate.setAutoFilter(1, Shared.getSEStats().getAllWinningCombos().size() * 2, 0, labels.size() - 1);
