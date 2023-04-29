@@ -10,6 +10,7 @@ public class MemoryStorage implements Storage {
 	List<List<Integer>> combos = new ArrayList<>();
 	String output;
 	String name;
+	boolean isClosed;
 
 	MemoryStorage(
 		LocalDate extractionDate,
@@ -106,6 +107,11 @@ public class MemoryStorage implements Storage {
 				}
 			}
 		};
+	}
+
+	@Override
+	public void close() {
+		isClosed = true;
 	}
 
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public interface Storage extends AutoCloseable {
+	static final String END_LINE_PREFIX = "Mr. Random suggerisce";
 
 	int size();
 

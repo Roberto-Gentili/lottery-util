@@ -535,7 +535,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 				);
 			}
 
-			String text = "\nMr. Random suggerisce " + (shouldBePlayedAbsolutely? "assolutamente " : "") + "di " + (shouldBePlayed? "giocare" : "non giocare") + " il sistema per questo concorso";
+			String text = "\n" +Storage.END_LINE_PREFIX + " " + (shouldBePlayedAbsolutely? "assolutamente " : "") + "di " + (shouldBePlayed? "giocare" : "non giocare") + " il sistema per questo concorso";
 			storage.addLine(text);
 			if (avoidMode == 1 || avoidMode == 2) {
 				if ((avoidMode == 1 && shouldBePlayed) || (avoidMode == 2 && shouldBePlayedAbsolutely)) {

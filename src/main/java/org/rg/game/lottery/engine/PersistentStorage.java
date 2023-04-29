@@ -19,6 +19,7 @@ public class PersistentStorage implements Storage {
 	String absolutePath;
 	String name;
 	int size;
+	Boolean isClosed;
 
 	public PersistentStorage(
 		LocalDate extractionDate,
@@ -210,10 +211,34 @@ public class PersistentStorage implements Storage {
 		}
 	 }
 
+	public boolean isClosed() {
+		if (isClosed != null) {
+			return isClosed;
+		}
+		if (bufferedWriter != null) {
+			return false;
+		}
+		synchronized (this) {
+			if (isClosed == null) {
+				try (BufferedReader br = new BufferedReader(new FileReader(absolutePath))) {
+			        String line;
+			        while ((line = br.readLine()) != null) {
+			           if (line.contains(END_LINE_PREFIX)) {
+			        	   isClosed = true;
+			           }
+			        }
+			    } catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return isClosed;
+	}
 
 	@Override
 	public void close() {
 		try {
+			isClosed = true;
 			bufferedWriter.close();
 		} catch (IOException e) {
 			e.printStackTrace();
