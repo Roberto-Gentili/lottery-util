@@ -1,4 +1,4 @@
-package org.rg.game.lottery.util;
+package org.rg.game.lottery.application;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -34,11 +34,11 @@ import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.rg.game.lottery.engine.IOUtils;
+import org.rg.game.core.IOUtils;
+import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.SEStats;
-import org.rg.game.lottery.engine.TimeUtils;
 
 public class SEMassiveVerifierAndQualityChecker {
 

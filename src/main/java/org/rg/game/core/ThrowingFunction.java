@@ -26,20 +26,32 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.rg.game.lottery.engine;
+package org.rg.game.core;
+
 
 import java.util.Objects;
 
+
 @FunctionalInterface
-public interface ThrowingRunnable<E extends Throwable> {
+public interface ThrowingFunction<T, R, E extends Throwable> {
 
-    public abstract void run() throws E;
 
-    default ThrowingRunnable<E> andThen(ThrowingRunnable<E> after) {
+    R apply(T t) throws E;
+
+
+    default <V> ThrowingFunction<V, R, E> compose(ThrowingFunction<? super V, ? extends T, ? extends E> before) {
+        Objects.requireNonNull(before);
+        return (V v) -> apply(before.apply(v));
+    }
+
+
+    default <V> ThrowingFunction<T, V, E> andThen(ThrowingFunction<? super R, ? extends V, ? extends E> after) {
         Objects.requireNonNull(after);
-        return () -> {
-        	run();
-        	after.run();
-        };
+        return (T t) -> after.apply(apply(t));
+    }
+
+
+    static <T, E extends Throwable> ThrowingFunction<T, T, E> identity() {
+        return t -> t;
     }
 }

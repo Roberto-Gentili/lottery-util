@@ -1,4 +1,4 @@
-package org.rg.game.lottery.util;
+package org.rg.game.lottery.application;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -13,7 +13,7 @@ import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
-import org.rg.game.lottery.engine.IOUtils;
+import org.rg.game.core.IOUtils;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.MDLotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.PersistentStorage;

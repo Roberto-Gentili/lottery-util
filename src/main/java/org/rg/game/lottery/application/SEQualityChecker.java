@@ -1,4 +1,4 @@
-package org.rg.game.lottery.util;
+package org.rg.game.lottery.application;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,9 +17,9 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
-import org.rg.game.lottery.engine.TimeUtils;
 
 public class SEQualityChecker {
 

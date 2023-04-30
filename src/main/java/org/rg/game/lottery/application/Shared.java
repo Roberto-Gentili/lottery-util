@@ -1,4 +1,4 @@
-package org.rg.game.lottery.util;
+package org.rg.game.lottery.application;
 
 import java.io.File;
 import java.text.DecimalFormat;
@@ -20,11 +20,11 @@ import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.ComboHandler;
 import org.rg.game.lottery.engine.PersistentStorage;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.SEStats;
-import org.rg.game.lottery.engine.TimeUtils;
 
 class Shared {
 

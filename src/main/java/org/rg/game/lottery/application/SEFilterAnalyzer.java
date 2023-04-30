@@ -1,4 +1,4 @@
-package org.rg.game.lottery.util;
+package org.rg.game.lottery.application;
 
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;

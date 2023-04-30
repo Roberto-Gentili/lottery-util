@@ -26,19 +26,11 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.rg.game.lottery.engine;
-
-import java.util.Objects;
+package org.rg.game.core;
 
 @FunctionalInterface
-public interface ThrowingConsumer<T, E extends Throwable> {
+public interface ThrowingSupplier<T, E extends Throwable> {
 
-    void accept(T t) throws E;
-
-    default ThrowingConsumer<T, E> andThen(ThrowingConsumer<? super T, ? extends E> after) {
-        Objects.requireNonNull(after);
-        return (T t) -> { accept(t); after.accept(t); };
-    }
+	T get() throws E;
 
 }
-

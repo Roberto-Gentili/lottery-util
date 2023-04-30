@@ -1,4 +1,4 @@
-package org.rg.game.lottery.engine;
+package org.rg.game.core;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
