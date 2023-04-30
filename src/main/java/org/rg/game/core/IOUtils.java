@@ -38,9 +38,10 @@ public class IOUtils {
 		try {
 			File resourceFolder = Paths.get(IOUtils.class.getResource("/" +
 				IOUtils.class.getName().replace(".", "/") + ".class"
-			).toURI()).toFile()
-			.getParentFile().getParentFile().getParentFile()
-			.getParentFile().getParentFile().getParentFile();
+			).toURI()).toFile();
+			for (String pathSegment : IOUtils.class.getName().split("\\.")) {
+				resourceFolder = resourceFolder.getParentFile();
+			}
 			return Arrays.asList(resourceFolder.listFiles(filter));
 		} catch (URISyntaxException e) {
 			throw new RuntimeException(e);

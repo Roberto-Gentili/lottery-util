@@ -195,6 +195,7 @@ public class LotteryMatrixSimulator {
 	}
 
 	private static void cleanup(Properties configuration, String excelFileName, Collection<LocalDate> competitionDates, String configFileName, Integer redundancy) {
+		int initialSize = competitionDates.size();
 		Iterator<LocalDate> datesIterator = competitionDates.iterator();
 		SEStats sEStats = getSEStats(configuration);
 		LocalDate latestExtractionArchiveStartDate = TimeUtils.toLocalDate(sEStats.getLatestExtractionDate());
@@ -210,7 +211,6 @@ public class LotteryMatrixSimulator {
 				Iterator<Row> rowIterator = workBook.getSheet("Risultati").rowIterator();
 				rowIterator.next();
 				rowIterator.next();
-				int initialSize = competitionDates.size();
 				while (rowIterator.hasNext()) {
 					Row row = rowIterator.next();
 					Cell date = row.getCell(0);
@@ -224,13 +224,13 @@ public class LotteryMatrixSimulator {
 						}
 					}
 				}
-				System.out.println(competitionDates.size() + " dates will be processed, " + (initialSize - competitionDates.size()) + " already processed");
 			},
 			workBook ->
 				createWorkbook(workBook, excelFileName),
 			workBook ->
 				store(excelFileName, workBook)
 		);
+		System.out.println(competitionDates.size() + " dates will be processed, " + (initialSize - competitionDates.size()) + " already processed");
 	}
 
 	private static void cleanupRedundant(String excelFileName, String configFileName, Integer redundancy) {
