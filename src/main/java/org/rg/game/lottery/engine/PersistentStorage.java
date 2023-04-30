@@ -169,16 +169,16 @@ public class PersistentStorage implements Storage {
 		try {
 			BufferedReader bufferedReader = new BufferedReader(new FileReader(absolutePath));
 			return new Iterator<List<Integer>>() {
-				List<Integer> currentCombo = nextCombo();
+				List<Integer> nextCombo = nextCombo();
 
 				@Override
 				public List<Integer> next() {
-					if (currentCombo == null) {
+					if (nextCombo == null) {
 						throw new NoSuchElementException("No combo available");
 					}
-					List<Integer> currentCombo = this.currentCombo;
-					this.currentCombo = nextCombo();
-					if (this.currentCombo == null) {
+					List<Integer> currentCombo = this.nextCombo;
+					this.nextCombo = nextCombo();
+					if (this.nextCombo == null) {
 						close();
 					}
 					return currentCombo;
@@ -186,10 +186,10 @@ public class PersistentStorage implements Storage {
 
 				@Override
 				public boolean hasNext() {
-					if (currentCombo == null) {
+					if (nextCombo == null) {
 						close();
 					}
-					return currentCombo != null;
+					return nextCombo != null;
 				}
 
 				public void close() {
