@@ -11,7 +11,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.URLEncoder;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -798,8 +797,7 @@ public class LotteryMatrixSimulator {
 			File file = new File(PersistentStorage.buildWorkingPath() + File.separator + excelFileName);
 			savingOperationCounters.put(excelFileName, savingCounterForFile);
 			if (savingCounterForFile % 500 == 0) {
-				Shared.backup(
-					LocalDateTime.now(),
+				IOUtils.INSTANCE.backup(
 					file,
 					file.getParentFile().getAbsolutePath()
 				);
