@@ -78,6 +78,7 @@ public class PersistentStorage implements Storage {
 			if (!(exc.getCause() instanceof FileNotFoundException)) {
 				throw exc;
 			}
+			return null;
 		}
 		return storage;
 	}
