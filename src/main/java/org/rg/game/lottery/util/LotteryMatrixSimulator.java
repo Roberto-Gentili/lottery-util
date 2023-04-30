@@ -76,6 +76,8 @@ public class LotteryMatrixSimulator {
 	private static final ObjectMapper objectMapper = new ObjectMapper();
 	static Pattern regexForExtractConfigFileName = Pattern.compile("\\[.*?\\]\\[.*?\\]\\[.*?\\](.*)\\.txt");
 	static String hostName;
+	static SEStats allTimeStats;
+
 	public static void main(String[] args) throws IOException {
 		hostName = InetAddress.getLocalHost().getHostName();
 		ZipSecureFile.setMinInflateRatio(0);
@@ -89,7 +91,7 @@ public class LotteryMatrixSimulator {
 		Collection<CompletableFuture<Void>> futures
 	) throws IOException {
 		SEStats.forceLoadingFromExcel = false;
-		SEStats.get("03/12/1997", TimeUtils.defaultDateFormat.format(new Date()));
+		allTimeStats = SEStats.get("03/12/1997", TimeUtils.defaultDateFormat.format(new Date()));
 		SEStats.get("02/07/2009", TimeUtils.defaultDateFormat.format(new Date()));
 		SEStats.forceLoadingFromExcel = true;
 		Supplier<SELotteryMatrixGeneratorEngine> engineSupplier = SELotteryMatrixGeneratorEngine::new;
@@ -571,7 +573,7 @@ public class LotteryMatrixSimulator {
 	) throws UnsupportedEncodingException {
 		Storage storage = !storages.isEmpty() ? storages.get(storages.size() -1) : null;
 		if (storage != null) {
-			Map<String, Integer> results = Shared.getSEStats().check(extractionDate, storage::iterator);
+			Map<String, Integer> results = allTimeStats.check(extractionDate, storage::iterator);
 			workBookTemplate.addCell(TimeUtils.toDate(extractionDate)).getCellStyle().setAlignment(HorizontalAlignment.CENTER);
 			List<String> allPremiumLabels = SEStats.allPremiumLabels();
 			for (int i = 0; i < allPremiumLabels.size();i++) {
