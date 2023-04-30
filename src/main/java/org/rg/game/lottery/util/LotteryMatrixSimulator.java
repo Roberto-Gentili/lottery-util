@@ -156,6 +156,7 @@ public class LotteryMatrixSimulator {
 			Collection<LocalDate> competitionDatesFlat = engine.computeExtractionDates(configuration.getProperty("competition"));
 			String redundantConfigValue = configuration.getProperty("simulation.redundancy");
 			cleanup(
+				configuration,
 				excelFileName,
 				competitionDatesFlat,
 				configFileName,
@@ -186,7 +187,15 @@ public class LotteryMatrixSimulator {
 		}
 	}
 
-	private static void cleanup(String excelFileName, Collection<LocalDate> competitionDates, String configFileName, Integer redundancy) {
+	private static void cleanup(Properties configuration, String excelFileName, Collection<LocalDate> competitionDates, String configFileName, Integer redundancy) {
+		Iterator<LocalDate> datesIterator = competitionDates.iterator();
+		SEStats sEStats = getSEStats(configuration);
+		LocalDate latestExtractionArchiveStartDate = TimeUtils.toLocalDate(sEStats.getLatestExtractionDate());
+		while (datesIterator.hasNext()) {
+			if (datesIterator.next().compareTo(latestExtractionArchiveStartDate) > 0) {
+				datesIterator.remove();
+			}
+		}
 		cleanupRedundant(excelFileName, configFileName, redundancy);
 		readOrCreateExcel(
 			excelFileName,
@@ -354,12 +363,7 @@ public class LotteryMatrixSimulator {
 		Map<String, Map<Integer, Integer>> premiumCountersForFile
 	) {
 		boolean isSlave = Boolean.parseBoolean(configuration.getProperty("simulation.slave", "false"));
-		SEStats sEStats = SEStats.get(
-			configuration.getProperty(
-				"competition.archive.start-date",
-				new SELotteryMatrixGeneratorEngine().getDefaultExtractionArchiveStartDate()
-			), TimeUtils.defaultLocalDateFormatter.format(LocalDate.now())
-		);
+		SEStats sEStats = getSEStats(configuration);
 		Map<Integer, String> allPremiums = SEStats.allPremiums();
 		AtomicInteger recordFounds = new AtomicInteger(0);
 		AtomicInteger dataAggStoricoColIndex = new AtomicInteger(0);
@@ -475,6 +479,16 @@ public class LotteryMatrixSimulator {
 				}
 			}
 		}
+	}
+
+	private static SEStats getSEStats(Properties configuration) {
+		SEStats sEStats = SEStats.get(
+			configuration.getProperty(
+				"competition.archive.start-date",
+				new SELotteryMatrixGeneratorEngine().getDefaultExtractionArchiveStartDate()
+			), TimeUtils.defaultLocalDateFormatter.format(LocalDate.now())
+		);
+		return sEStats;
 	}
 
 	private static Map<String, Object> readPremiumCountersData(File premiumCountersFile) {
