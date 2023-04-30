@@ -1,8 +1,11 @@
 package org.rg.game.lottery.util;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
@@ -10,8 +13,7 @@ import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
-import org.burningwave.core.assembler.ComponentContainer;
-import org.burningwave.core.io.FileSystemItem;
+import org.rg.game.lottery.engine.IOUtils;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.MDLotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.PersistentStorage;
@@ -35,28 +37,32 @@ public class LotteryMatrixGenerator {
 		Supplier<LotteryMatrixGeneratorAbstEngine> engineSupplier =
 			configFilePrefix.equals("se") ? SELotteryMatrixGeneratorEngine::new :
 				configFilePrefix.equals("md") ? MDLotteryMatrixGeneratorEngine::new : null;
-		Collection<FileSystemItem> configurationFiles = new TreeSet<>((fISOne, fISTwo) -> {
+		Collection<File> configurationFiles = new TreeSet<>((fISOne, fISTwo) -> {
 			return fISOne.getName().compareTo(fISTwo.getName());
 		});
-		configurationFiles.addAll(FileSystemItem.ofPath(
-			PersistentStorage.buildWorkingPath()).findInChildren(
-				FileSystemItem.Criteria.forAllFileThat(file -> file.getName().contains("-matrix-generator") && file.getExtension().equals("properties"))
+
+		configurationFiles.addAll(
+			Arrays.asList(
+				new File(PersistentStorage.buildWorkingPath()).listFiles((directory, fileName) ->
+					fileName.contains("-matrix-generator") && fileName.endsWith(".properties")
+				)
 			)
 		);
+
 		configurationFiles.addAll(
-			ComponentContainer.getInstance().getPathHelper().findResources(absolutePath -> {
-				return absolutePath.contains(configFilePrefix + "-matrix-generator") && absolutePath.endsWith("properties");
-			})
+			IOUtils.INSTANCE.findResources((directory, fileName) ->
+				fileName.contains(configFilePrefix + "-matrix-generator") && fileName.endsWith("properties")
+			)
 		);
 		List<Properties> configurations = new ArrayList<>();
-		for (FileSystemItem fIS : configurationFiles) {
-			try (InputStream configIS = fIS.toInputStream()) {
+		for (File file : configurationFiles) {
+			try (InputStream configIS = new FileInputStream(file)) {
 				Properties config = new Properties();
 				config.load(configIS);
 				if (Boolean.parseBoolean(config.getProperty("enabled", "false"))) {
-					config.setProperty("file.name", fIS.getName());
-					config.setProperty("file.parent.absolutePath", fIS.getParent().getAbsolutePath());
-					config.setProperty("file.extension", fIS.getExtension());
+					config.setProperty("file.name", file.getName());
+					config.setProperty("file.parent.absolutePath", file.getParentFile().getAbsolutePath());
+					config.setProperty("file.extension", IOUtils.INSTANCE.getExtension(file));
 					configurations.add(config);
 
 				}

@@ -1,13 +1,15 @@
 /*
- * This file is part of ToolFactory JVM driver.
+ * This file is part of Burningwave Core.
  *
- * Hosted at: https://github.com/toolfactory/jvm-driver
+ * Author: Roberto Gentili
+ *
+ * Hosted at: https://github.com/burningwave/core
  *
  * --
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2021-2022 Luke Hutchison, Roberto Gentili
+ * Copyright (c) 2019-2022 Roberto Gentili
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without
@@ -24,12 +26,11 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-module testing {
+package org.rg.game.lottery.engine;
 
-    requires jdk.unsupported;
-	requires org.apache.poi.ooxml;
-	requires com.fasterxml.jackson.databind;
-	requires org.jsoup;
-	requires org.apache.poi.poi;
+@FunctionalInterface
+public interface ThrowingSupplier<T, E extends Throwable> {
+
+	T get() throws E;
 
 }

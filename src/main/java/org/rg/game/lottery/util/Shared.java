@@ -1,8 +1,10 @@
 package org.rg.game.lottery.util;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.DecimalFormat;
 import java.time.LocalDate;
@@ -24,9 +26,8 @@ import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.burningwave.core.assembler.StaticComponentContainer;
-import org.burningwave.core.io.FileSystemItem;
 import org.rg.game.lottery.engine.ComboHandler;
+import org.rg.game.lottery.engine.IOUtils;
 import org.rg.game.lottery.engine.PersistentStorage;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.SEStats;
@@ -94,13 +95,13 @@ class Shared {
 		return -1;
 	}
 
-	static FileSystemItem getSystemsFile(Integer year) {
+	static File getSystemsFile(Integer year) {
 		return getSystemsFile(year.toString());
 	}
 
-	static FileSystemItem getSystemsFile(String extractionYear) {
+	static File getSystemsFile(String extractionYear) {
 		String suffix = System.getenv("file-to-be-processed-suffix");
-		FileSystemItem file = FileSystemItem.ofPath(PersistentStorage.buildWorkingPath() +
+		File file = new File(PersistentStorage.buildWorkingPath() +
 			File.separator + "[SE]["+ extractionYear +"] - " + (suffix != null ? suffix : "Sistemi") +".xlsx");
 		//System.out.println("Processing file " + file.getName());
 		return file;
@@ -140,19 +141,19 @@ class Shared {
 		return SEStats.get(Shared.sEStatsDefaultDate, TimeUtils.defaultDateFormat.format(new Date()));
 	}
 
-	static FileSystemItem backup(
-		LocalDateTime backupTime, FileSystemItem mainFile
+	static File backup(
+		LocalDateTime backupTime, File mainFile
 	) throws IOException {
-		String backupFileName = mainFile.getName().replace("." +  mainFile.getExtension(), "") + " - [" + Shared.datePattern.format(backupTime) + "]." + mainFile.getExtension();
-		String backupFilePath = mainFile.getParent().getAbsolutePath() + "\\Backup sistemi\\" + backupFileName;
+		String backupFileName = mainFile.getName().replace("." +  IOUtils.INSTANCE.getExtension(mainFile), "") + " - [" + Shared.datePattern.format(backupTime) + "]." + IOUtils.INSTANCE.getExtension(mainFile);
+		String backupFilePath = mainFile.getParentFile().getAbsolutePath() + "\\Backup sistemi\\" + backupFileName;
 		if (!new File(backupFilePath).exists()) {
-			try (OutputStream backupOutputStream = new FileOutputStream(backupFilePath)) {
-				StaticComponentContainer.Streams.copy(
-					mainFile.toInputStream(),
+			try (InputStream inputStream = new FileInputStream(mainFile); OutputStream backupOutputStream = new FileOutputStream(backupFilePath)) {
+				IOUtils.INSTANCE.copy(
+					inputStream,
 					backupOutputStream
 				);
 			}
-			return FileSystemItem.of(new File(backupFilePath));
+			return new File(backupFilePath);
 		}
 		return null;
 	}

@@ -1,5 +1,7 @@
 package org.rg.game.lottery.util;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
@@ -15,7 +17,6 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.burningwave.core.io.FileSystemItem;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.TimeUtils;
@@ -59,10 +60,10 @@ public class SEQualityChecker {
 				String extractionYear = extractionDate.split("\\/")[2];
 				String extractionMonth = Shared.getMonth(extractionDate);
 				String extractionDay = extractionDate.split("\\/")[0];
-				FileSystemItem mainFile =
+				File mainFile =
 					Shared.getSystemsFile(extractionYear);
 				List<List<Integer>> system = new ArrayList<>();
-				try (InputStream srcFileInputStream = mainFile.toInputStream(); Workbook workbook = new XSSFWorkbook(srcFileInputStream);) {
+				try (InputStream srcFileInputStream = new FileInputStream(mainFile); Workbook workbook = new XSSFWorkbook(srcFileInputStream);) {
 					Sheet sheet = workbook.getSheet(extractionMonth);
 					if (sheet == null) {
 						System.out.println("No sheet named '" + extractionMonth + "' to test for date " + extractionDate);

@@ -1,5 +1,7 @@
 package org.rg.game.lottery.util;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -25,7 +27,6 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.burningwave.core.io.FileSystemItem;
 import org.rg.game.lottery.engine.SEStats;
 import org.rg.game.lottery.engine.TimeUtils;
 
@@ -72,8 +73,8 @@ public class Verifier {
 		String extractionYear = extractionDate.split("\\/")[2];
 		String extractionMonth = Shared.getMonth(extractionDate);
 		String extractionDay = extractionDate.split("\\/")[0];
-		FileSystemItem mainFile = Shared.getSystemsFile(extractionYear);
-		try (InputStream srcFileInputStream = mainFile.toInputStream(); Workbook workbook = new XSSFWorkbook(srcFileInputStream);) {
+		File mainFile = Shared.getSystemsFile(extractionYear);
+		try (InputStream srcFileInputStream = new FileInputStream(mainFile); Workbook workbook = new XSSFWorkbook(srcFileInputStream);) {
 			Sheet sheet = workbook.getSheet(extractionMonth);
 			int offset = Shared.getCellIndex(sheet, extractionDay);
 			if (offset < 0) {

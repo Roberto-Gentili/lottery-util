@@ -1,5 +1,7 @@
 package org.rg.game.lottery.util;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,7 +34,6 @@ import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.burningwave.core.io.FileSystemItem;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.SEStats;
@@ -82,11 +83,10 @@ public class SEMassiveVerifierAndQualityChecker {
 				String extractionYear = extractionDate.split("\\/")[2];
 				String extractionMonth = Shared.getMonth(extractionDate);
 				String extractionDay = extractionDate.split("\\/")[0];
-				FileSystemItem mainFile = Shared.getSystemsFile(extractionYear);
+				File mainFile = Shared.getSystemsFile(extractionYear);
 				Shared.backup(backupTime, mainFile);
-				mainFile.reset();
 				List<List<Integer>> system = new ArrayList<>();
-				try (InputStream srcFileInputStream = mainFile.toInputStream();
+				try (InputStream srcFileInputStream = new FileInputStream(mainFile);
 					Workbook workbook = new XSSFWorkbook(srcFileInputStream);
 				) {
 					XSSFFont boldFont = (XSSFFont) workbook.createFont();
@@ -191,9 +191,8 @@ public class SEMassiveVerifierAndQualityChecker {
 			int year = yearAndDataForMonth.getKey();
 			Map<String, Map<Integer, Integer>> dataForMonth = yearAndDataForMonth.getValue();
 			System.out.println("\t" + year + ":");
-			FileSystemItem mainFile = Shared.getSystemsFile(year);
-			mainFile.reset();
-			try (InputStream srcFileInputStream = mainFile.toInputStream();
+			File mainFile = Shared.getSystemsFile(year);
+			try (InputStream srcFileInputStream = new FileInputStream(mainFile);
 				Workbook workbook = new XSSFWorkbook(srcFileInputStream);
 			) {
 				Sheet sheet = Shared.getSummarySheet(workbook);

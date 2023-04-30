@@ -48,16 +48,15 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.burningwave.core.assembler.ComponentContainer;
-import org.burningwave.core.assembler.StaticComponentContainer;
-import org.burningwave.core.function.ThrowingConsumer;
-import org.burningwave.core.io.FileSystemItem;
 import org.rg.game.lottery.engine.CollectionUtils;
+import org.rg.game.lottery.engine.IOUtils;
 import org.rg.game.lottery.engine.PersistentStorage;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.SEStats;
 import org.rg.game.lottery.engine.SimpleWorkbookTemplate;
 import org.rg.game.lottery.engine.Storage;
+import org.rg.game.lottery.engine.Synchronizer;
+import org.rg.game.lottery.engine.ThrowingConsumer;
 import org.rg.game.lottery.engine.TimeUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -94,27 +93,30 @@ public class LotteryMatrixSimulator {
 		SEStats.get("02/07/2009", TimeUtils.defaultDateFormat.format(new Date()));
 		SEStats.forceLoadingFromExcel = true;
 		Supplier<SELotteryMatrixGeneratorEngine> engineSupplier = SELotteryMatrixGeneratorEngine::new;
-		Collection<FileSystemItem> configurationFiles = new TreeSet<>((fISOne, fISTwo) -> {
+		Collection<File> configurationFiles = new TreeSet<>((fISOne, fISTwo) -> {
 			return fISOne.getName().compareTo(fISTwo.getName());
 		});
-		configurationFiles.addAll(FileSystemItem.ofPath(
-			PersistentStorage.buildWorkingPath()).findInChildren(
-				FileSystemItem.Criteria.forAllFileThat(file -> file.getName().contains("-matrix-generator") && file.getExtension().equals("properties"))
+		configurationFiles.addAll(
+			Arrays.asList(
+				new File(PersistentStorage.buildWorkingPath()).listFiles((directory, fileName) ->
+					fileName.contains("-matrix-generator") && fileName.endsWith(".properties")
+				)
 			)
 		);
+
 		configurationFiles.addAll(
-			ComponentContainer.getInstance().getPathHelper().findResources(absolutePath -> {
-				return absolutePath.contains(configFilePrefix + "-matrix-generator") && absolutePath.endsWith("properties");
-			})
+			IOUtils.INSTANCE.findResources((directory, fileName) ->
+				fileName.contains(configFilePrefix + "-matrix-generator") && fileName.endsWith("properties")
+			)
 		);
 		List<Properties> configurations = new ArrayList<>();
-		for (FileSystemItem fIS : configurationFiles) {
-			try (InputStream configIS = fIS.toInputStream()) {
+		for (File fIS : configurationFiles) {
+			try (InputStream configIS = new FileInputStream(fIS)) {
 				Properties config = new Properties();
 				config.load(configIS);
 				config.setProperty("file.name", fIS.getName());
-				config.setProperty("file.parent.absolutePath", fIS.getParent().getAbsolutePath());
-				config.setProperty("file.extension", fIS.getExtension());
+				config.setProperty("file.parent.absolutePath", fIS.getParentFile().getAbsolutePath());
+				config.setProperty("file.extension", IOUtils.INSTANCE.getExtension(fIS));
 				String simulationDates = config.getProperty("simulation.dates");
 				if (simulationDates != null) {
 					config.setProperty("competition", simulationDates);
@@ -751,7 +753,7 @@ public class LotteryMatrixSimulator {
 		ThrowingConsumer<Workbook, Throwable> createAction,
 		ThrowingConsumer<Workbook, Throwable> finallyAction
 	) {
-		StaticComponentContainer.Synchronizer.execute(excelFileName, () -> {
+		Synchronizer.INSTANCE.execute(excelFileName, () -> {
 			Workbook workBook = null;
 			try {
 				try (InputStream inputStream = new FileInputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileName)) {
@@ -786,7 +788,7 @@ public class LotteryMatrixSimulator {
 	}
 
 	private static void store(String excelFileName, Workbook workBook) {
-		StaticComponentContainer.Synchronizer.execute(excelFileName, () -> {
+		Synchronizer.INSTANCE.execute(excelFileName, () -> {
 			try (OutputStream destFileOutputStream = new FileOutputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileName)){
 				BaseFormulaEvaluator.evaluateAllFormulaCells(workBook);
 				workBook.write(destFileOutputStream);
