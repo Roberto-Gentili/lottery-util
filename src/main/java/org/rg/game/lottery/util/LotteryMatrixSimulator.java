@@ -340,7 +340,9 @@ public class LotteryMatrixSimulator {
 				historyUpdateTaskStarted.set(true);
 				updateHistory(configuration, excelFileName, configurationName, premiumCountersForFile);
 			}
-			Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+			if (!isSlave) {
+				Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+			}
 			updateHistory(configuration, excelFileName, configurationName, premiumCountersForFile);
 		});
 
