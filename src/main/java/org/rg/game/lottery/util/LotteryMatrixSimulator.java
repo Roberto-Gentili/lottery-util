@@ -710,7 +710,7 @@ public class LotteryMatrixSimulator {
 		for (int i = 1; i < labels.size()-1; i++) {
 			columnName = CellReference.convertNumToColString(i);
 			summaryFormulas.add(
-				"FORMULA_SUM(" + columnName + "3:"+ columnName + Shared.getSEStats().getAllWinningCombos().size() * 2 +")"
+				"FORMULA_SUM(" + columnName + "3:"+ columnName + allTimeStats.getAllWinningCombos().size() * 2 +")"
 			);
 		}
 		labels.add(FILE_LABEL);
