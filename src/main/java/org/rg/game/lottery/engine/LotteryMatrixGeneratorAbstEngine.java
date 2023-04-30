@@ -373,7 +373,8 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 			if (storageRef != null) {
 				while (!storageRef.isClosed()) {
 					try {
-						Thread.sleep(1000);
+						System.out.println("Waiting for " + storageRef.getName() + " prepared by someone else");
+						Thread.sleep(2000);
 					} catch (InterruptedException e) {
 						throw new RuntimeException(e);
 					}
