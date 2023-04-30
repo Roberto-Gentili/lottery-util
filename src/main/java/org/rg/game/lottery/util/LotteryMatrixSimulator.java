@@ -409,7 +409,7 @@ public class LotteryMatrixSimulator {
 			if (storageWrapper.get() != null) {
 				Map<Integer, Integer> premiumCounters = premiumCountersForFile.computeIfAbsent(storageWrapper.get().getName(), key -> {
 					PersistentStorage storage = storageWrapper.get();
-					File premiumCountersFile = new File(storage.getAbsolutePathWithoutExtension() + ".json");
+					File premiumCountersFile = new File(storage.getAbsolutePathWithoutExtension() + "-historical-data.json");
 					if (!premiumCountersFile.exists()) {
 						return computePremiumCountersData(sEStats, storage, premiumCountersFile);
 					} else {
