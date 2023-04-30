@@ -34,6 +34,7 @@ import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.openxml4j.util.ZipSecureFile;
@@ -378,8 +379,11 @@ public class LotteryMatrixSimulator {
 			null,
 			null
 		);
-		for (int i = 2; i < recordFounds.get(); i++) {
-			int rowIndex = i;
+		List<Integer> excelRecords = IntStream.range(2, recordFounds.get()).boxed().collect(Collectors.toList());
+		if (isSlave) {
+			Collections.shuffle(excelRecords);
+		}
+		for (Integer rowIndex : excelRecords) {
 			AtomicReference<PersistentStorage> storageWrapper = new AtomicReference<>();
 			readOrCreateExcel(
 				excelFileName,
