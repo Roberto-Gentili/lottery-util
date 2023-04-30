@@ -395,7 +395,7 @@ public class LotteryMatrixSimulator {
 					Row row = sheet.getRow(rowIndex);
 					if (rowRefersTo(row, configurationName)) {
 						Date dataAggStor = row.getCell(dataAggStoricoColIndex.get()).getDateCellValue();
-						if (dataAggStor == null || dataAggStor.compareTo(sEStats.getEndDate()) < 0) {
+						if (dataAggStor == null || dataAggStor.compareTo(sEStats.getLatestExtractionDate()) < 0) {
 							PersistentStorage storage = PersistentStorage.restore(
 								configuration.getProperty("group"),
 								row.getCell(fileColIndex.get()).getStringCellValue()
