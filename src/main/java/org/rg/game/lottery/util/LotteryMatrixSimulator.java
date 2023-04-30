@@ -76,8 +76,9 @@ public class LotteryMatrixSimulator {
 	private static final String DATA_AGGIORNAMENTO_STORICO_LABEL = "Data agg. storico";
 	private static final ObjectMapper objectMapper = new ObjectMapper();
 	static Pattern regexForExtractConfigFileName = Pattern.compile("\\[.*?\\]\\[.*?\\]\\[.*?\\](.*)\\.txt");
-
+	static String hostName;
 	public static void main(String[] args) throws IOException {
+		hostName = InetAddress.getLocalHost().getHostName();
 		ZipSecureFile.setMinInflateRatio(0);
 		Collection<CompletableFuture<Void>> futures = new ArrayList<>();
 		execute("se", futures);
@@ -123,7 +124,7 @@ public class LotteryMatrixSimulator {
 				}
 				String simulationGroup = config.getProperty("simulation.group");
 				if (simulationGroup != null) {
-					simulationGroup = simulationGroup.replace("${localhost.name}", InetAddress.getLocalHost().getHostName());
+					simulationGroup = simulationGroup.replace("${localhost.name}", hostName);
 					config.setProperty("simulation.group", simulationGroup);
 					config.setProperty(
 						"group",
