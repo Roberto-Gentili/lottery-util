@@ -254,7 +254,7 @@ public class PersistentStorage implements Storage {
 				}
 			}
 		}
-		return isClosed;
+		return isClosed != null ? isClosed : false;
 	}
 
 	@Override
