@@ -203,15 +203,18 @@ public class PersistentStorage implements Storage {
 				private List<Integer> nextCombo() {
 					try {
 						String line = bufferedReader.readLine();
-						List<Integer> selectedCombo = new ArrayList<>();
-						for (String numberAsString : line.split("\\t")) {
-							try {
-								selectedCombo.add(Integer.parseInt(numberAsString));
-							} catch (NumberFormatException exc) {
-								return null;
+						if (line != null) {
+							List<Integer> selectedCombo = new ArrayList<>();
+							for (String numberAsString : line.split("\\t")) {
+								try {
+									selectedCombo.add(Integer.parseInt(numberAsString));
+								} catch (NumberFormatException exc) {
+									return null;
+								}
 							}
+							return selectedCombo;
 						}
-						return selectedCombo;
+						return null;
 					} catch (IOException exc) {
 						throw new RuntimeException(exc);
 					}
