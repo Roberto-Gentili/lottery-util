@@ -197,6 +197,12 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 							"overwrite-if-exists",
 							"1"
 						)
+					),
+					Long.parseLong(
+						config.getProperty(
+							"waiting-someone-for-generation.timeout",
+							"300"
+						)
 					)
 				);
 				storages.add(
@@ -350,7 +356,8 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		String group,
 		String suffix,
 		boolean notEquilibrateCombinationAtLeastOneNumberAmongThoseChosen,
-		int overwriteIfExists
+		int overwriteIfExists,
+		long waitingSomeoneForGenerationTimeout
 	) {
 		Map<String, Object> data = basicDataSupplier.apply(extractionDate);
 		List<Integer> numbers = (List<Integer>)data.get("numbersToBePlayed");
@@ -373,11 +380,11 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 			storageRef = PersistentStorage.restore(group, Storage.computeName(extractionDate, combinationComponents, numberOfCombos, suffix));
 			if (storageRef != null) {
 				try {
-					long timeout = 300_000;
+					long timeout = waitingSomeoneForGenerationTimeout * 1000;
 					while (!storageRef.isClosed() && overwriteIfExists == 0 && timeout >= 0) {
 						try {
 							System.out.println("Waiting a maximum of " + timeout/1000 + " seconds for " + storageRef.getName() + " prepared by someone else");
-							Thread.sleep(timeout - (timeout -= 2000));
+							Thread.sleep(timeout - (timeout -= 1000));
 						} catch (InterruptedException e) {
 							throw new RuntimeException(e);
 						}
