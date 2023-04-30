@@ -114,4 +114,9 @@ public class MemoryStorage implements Storage {
 		isClosed = true;
 	}
 
+	@Override
+	public boolean isClosed() {
+		return isClosed;
+	}
+
 }

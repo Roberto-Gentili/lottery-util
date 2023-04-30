@@ -3,6 +3,7 @@ package org.rg.game.lottery.engine;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -17,6 +18,7 @@ public class PersistentStorage implements Storage {
 	private static String workingPath;
 	BufferedWriter bufferedWriter = null;
 	String absolutePath;
+	String parentPath;
 	String name;
 	int size;
 	Boolean isClosed;
@@ -28,9 +30,8 @@ public class PersistentStorage implements Storage {
 		String group,
 		String suffix
 	) {
-		absolutePath = buildWorkingPath(group) + File.separator +
-			(name = "[" + extractionDate.toString() + "]"+"[" + combinationCount +"]" +
-			"[" + numberOfCombos + "]" + /*"[" + toRawString(numbers) + "]" +*/ suffix + ".txt");
+		absolutePath = (parentPath = buildWorkingPath(group)) + File.separator +
+			(name = Storage.computeName(extractionDate, combinationCount, numberOfCombos, suffix));
 		try (FileChannel outChan = new FileOutputStream(absolutePath, true).getChannel()) {
 		  outChan.truncate(0);
 		} catch (IOException exc) {
@@ -44,7 +45,7 @@ public class PersistentStorage implements Storage {
 	}
 
 	private PersistentStorage(String group, String fileName) {
-		absolutePath = buildWorkingPath(group) + File.separator + fileName;
+		absolutePath = (parentPath = buildWorkingPath(group)) + File.separator + fileName;
 		name = fileName;
 	}
 
@@ -68,9 +69,15 @@ public class PersistentStorage implements Storage {
 			}
 		};
 		Iterator<List<Integer>> comboIterator = storage.iterator();
-		while (comboIterator.hasNext()) {
-			comboIterator.next();
-			storage.size++;
+		try {
+			while (comboIterator.hasNext()) {
+				comboIterator.next();
+				storage.size++;
+			}
+		} catch (RuntimeException exc) {
+			if (!(exc.getCause() instanceof FileNotFoundException)) {
+				throw exc;
+			}
 		}
 		return storage;
 	}
@@ -104,9 +111,22 @@ public class PersistentStorage implements Storage {
 		return absolutePath;
 	}
 
+	public String getAbsolutePathWithoutExtension() {
+		return absolutePath.substring(0, absolutePath.lastIndexOf("."));
+	}
+
 	@Override
 	public String getName() {
 		return name;
+	}
+
+	public String getParentPath() {
+		return name;
+	}
+
+
+	public String getNameWithoutExtension() {
+		return name.substring(0, name.lastIndexOf("."));
 	}
 
 	@Override
@@ -211,6 +231,7 @@ public class PersistentStorage implements Storage {
 		}
 	 }
 
+	@Override
 	public boolean isClosed() {
 		if (isClosed != null) {
 			return isClosed;

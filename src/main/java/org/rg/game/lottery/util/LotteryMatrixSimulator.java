@@ -59,6 +59,8 @@ import org.rg.game.lottery.engine.SimpleWorkbookTemplate;
 import org.rg.game.lottery.engine.Storage;
 import org.rg.game.lottery.engine.TimeUtils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 
 
 public class LotteryMatrixSimulator {
@@ -71,6 +73,7 @@ public class LotteryMatrixSimulator {
 	private static final String COSTO_STORICO_LABEL = "Costo (storico)";
 	private static final String FILE_LABEL = "File";
 	private static final String DATA_AGGIORNAMENTO_STORICO_LABEL = "Data agg. storico";
+	private static final ObjectMapper objectMapper = new ObjectMapper();
 	static Pattern regexForExtractConfigFileName = Pattern.compile("\\[.*?\\]\\[.*?\\]\\[.*?\\](.*)\\.txt");
 
 	public static void main(String[] args) throws IOException {
@@ -127,6 +130,7 @@ public class LotteryMatrixSimulator {
 					);
 				}
 				config.setProperty("storage", "filesystem");
+				config.setProperty("overwrite-if-exists", "false");
 			}
 		}
 		for (Properties configuration : configurations) {
@@ -260,12 +264,38 @@ public class LotteryMatrixSimulator {
 		SELotteryMatrixGeneratorEngine engine,
 		List<List<LocalDate>> competitionDates
 	) {
+		String redundantConfigValue = configuration.getProperty("simulation.redundancy");
+		boolean isSlave = Boolean.parseBoolean(configuration.getProperty("simulation.slave", "false"));
+		Function<LocalDate, Function<List<Storage>, Integer>> extractionDatePredicate = null;
+		Function<LocalDate, Consumer<List<Storage>>> systemProcessor = null;
+		AtomicInteger redundantCounter = new AtomicInteger(0);
+		if (isSlave) {
+			if (redundantConfigValue != null) {
+				for (
+					List<LocalDate> datesToBeProcessed :
+					competitionDates
+				) {
+					LocalDate date = datesToBeProcessed.get(0);
+					datesToBeProcessed.clear();
+					datesToBeProcessed.add(date);
+				}
+			}
+			Collections.shuffle(competitionDates);
+		} else {
+			extractionDatePredicate = buildExtractionDatePredicate(
+				configuration.getProperty("nameSuffix"),
+				excelFileName,
+				redundantConfigValue != null? Integer.valueOf(redundantConfigValue) : null,
+				redundantCounter
+			);
+			systemProcessor = buildSystemProcessor(excelFileName);
+		}
 		AtomicBoolean simulatorFinished = new AtomicBoolean(false);
 		AtomicBoolean historyUpdateTaskStarted = new AtomicBoolean(false);
 		CompletableFuture<Void> historyUpdateTask = startHistoryUpdateTask(
 			configuration, excelFileName, configuration.getProperty("nameSuffix"), historyUpdateTaskStarted, simulatorFinished
 		);
-		AtomicInteger redundantCounter = new AtomicInteger(0);
+
 		for (
 			List<LocalDate> datesToBeProcessed :
 			competitionDates
@@ -276,16 +306,10 @@ public class LotteryMatrixSimulator {
 				)
 			);
 			engine.setup(configuration);
-			String redundantConfigValue = configuration.getProperty("simulation.redundancy");
 			engine.getExecutor().apply(
-				buildExtractionDatePredicate(
-					configuration.getProperty("nameSuffix"),
-					excelFileName,
-					redundantConfigValue != null? Integer.valueOf(redundantConfigValue) : null,
-					redundantCounter
-				)
+				extractionDatePredicate
 			).apply(
-				buildSystemProcessor(excelFileName)
+				systemProcessor
 			);
 		}
 		while (!historyUpdateTaskStarted.get()) {
@@ -323,6 +347,7 @@ public class LotteryMatrixSimulator {
 		String configurationName,
 		Map<String, Map<Integer, Integer>> premiumCountersForFile
 	) {
+		boolean isSlave = Boolean.parseBoolean(configuration.getProperty("simulation.slave", "false"));
 		SEStats sEStats = SEStats.get(
 			configuration.getProperty(
 				"competition.archive.start-date",
@@ -369,61 +394,109 @@ public class LotteryMatrixSimulator {
 				null
 			);
 			if (storageWrapper.get() != null) {
-				Map<Integer, Integer> premiumCounters = premiumCountersForFile.computeIfAbsent(storageWrapper.get().getName(), key ->
-					(Map<Integer, Integer>)sEStats.checkQuality(storageWrapper.get()::iterator).get("premium.counters")
-				);
-				readOrCreateExcel(
-					excelFileName,
-					workBook -> {
-						Sheet sheet = workBook.getSheet("Risultati");
-						if (rowIndex == 2) {
-							numberCellStyle.set(workBook.createCellStyle());
-							numberCellStyle.get().setAlignment(HorizontalAlignment.RIGHT);
-							numberCellStyle.get().setDataFormat(workBook.createDataFormat().getFormat("#,##0"));
-							dateCellStyle.set(workBook.createCellStyle());
-							dateCellStyle.get().setAlignment(HorizontalAlignment.CENTER);
-							dateCellStyle.get().setDataFormat(workBook.createDataFormat().getFormat("dd/MM/yyyy"));
-						} else {
-							Row previousRow = sheet.getRow(rowIndex -1);
-							dateCellStyle.set(previousRow.getCell(dataAggStoricoColIndex.get()).getCellStyle());
-							numberCellStyle.set(
-								previousRow.getCell(Shared.getCellIndex(sheet, getHistoryPremiumLabel(SEStats.allPremiumLabels().get(0)))).getCellStyle()
-							);
+				Map<Integer, Integer> premiumCounters = premiumCountersForFile.computeIfAbsent(storageWrapper.get().getName(), key -> {
+					PersistentStorage storage = storageWrapper.get();
+					File premiumCountersFile = new File(storage.getAbsolutePathWithoutExtension() + ".json");
+					if (!premiumCountersFile.exists()) {
+						return computePremiumCountersData(sEStats, storage, premiumCountersFile);
+					} else {
+						Map<String, Object> data = readPremiumCountersData(premiumCountersFile);
+						if (LocalDate.parse(
+							(String)data.get("referenceDate"),
+							TimeUtils.defaultLocalDateFormatter
+							).compareTo(TimeUtils.toLocalDate(sEStats.getLatestExtractionDate())) < 0
+						) {
+							return computePremiumCountersData(sEStats, storage, premiumCountersFile);
 						}
-						Row row = sheet.getRow(rowIndex);
-						if (storageWrapper.get().getName().equals(row.getCell(fileColIndex.get()).getStringCellValue())) {
-							Cell dataAggStoricoCell = row.getCell(dataAggStoricoColIndex.get());
-							for (Map.Entry<Integer, String> premiumData : allPremiums.entrySet()) {
-								Cell cell = row.getCell(Shared.getCellIndex(sheet, getHistoryPremiumLabel(premiumData.getValue())));
-								Integer premiumCounter = premiumCounters.get(premiumData.getKey());
-								cell.setCellStyle(numberCellStyle.get());
-								if (premiumCounter != null) {
-									cell.setCellValue(premiumCounter.doubleValue());
-								} else {
-									cell.setCellValue(0d);
-								}
-							}
-							Cell cell = row.getCell(Shared.getCellIndex(sheet, COSTO_STORICO_LABEL));
-							cell.setCellStyle(numberCellStyle.get());
-							cell.setCellValue(
-								sEStats.getAllWinningCombos().size() * row.getCell(Shared.getCellIndex(sheet, COSTO_LABEL)).getNumericCellValue()
-							);
-							dataAggStoricoCell.setCellStyle(dateCellStyle.get());
-							dataAggStoricoCell.setCellValue(sEStats.getLatestExtractionDate());
-						}
-					},
-					null,
-					workBook -> {
-						store(excelFileName, workBook);
-						Row row = workBook.getSheet("Risultati").getRow(rowIndex);
-						System.out.println(
-							"Aggiornamento storico completato per " +
-							TimeUtils.defaultDateFormat.format(row.getCell(0).getDateCellValue()) + " - " +
-							row.getCell(fileColIndex.get()).getStringCellValue()
-						);
+						return (Map<Integer, Integer>)data.get("premiumCounters");
 					}
-				);
+				});
+				if (!isSlave) {
+					readOrCreateExcel(
+						excelFileName,
+						workBook -> {
+							Sheet sheet = workBook.getSheet("Risultati");
+							if (rowIndex == 2) {
+								numberCellStyle.set(workBook.createCellStyle());
+								numberCellStyle.get().setAlignment(HorizontalAlignment.RIGHT);
+								numberCellStyle.get().setDataFormat(workBook.createDataFormat().getFormat("#,##0"));
+								dateCellStyle.set(workBook.createCellStyle());
+								dateCellStyle.get().setAlignment(HorizontalAlignment.CENTER);
+								dateCellStyle.get().setDataFormat(workBook.createDataFormat().getFormat("dd/MM/yyyy"));
+							} else {
+								Row previousRow = sheet.getRow(rowIndex -1);
+								dateCellStyle.set(previousRow.getCell(dataAggStoricoColIndex.get()).getCellStyle());
+								numberCellStyle.set(
+									previousRow.getCell(Shared.getCellIndex(sheet, getHistoryPremiumLabel(SEStats.allPremiumLabels().get(0)))).getCellStyle()
+								);
+							}
+							Row row = sheet.getRow(rowIndex);
+							if (storageWrapper.get().getName().equals(row.getCell(fileColIndex.get()).getStringCellValue())) {
+								Cell dataAggStoricoCell = row.getCell(dataAggStoricoColIndex.get());
+								for (Map.Entry<Integer, String> premiumData : allPremiums.entrySet()) {
+									Cell cell = row.getCell(Shared.getCellIndex(sheet, getHistoryPremiumLabel(premiumData.getValue())));
+									Integer premiumCounter = premiumCounters.get(premiumData.getKey());
+									cell.setCellStyle(numberCellStyle.get());
+									if (premiumCounter != null) {
+										cell.setCellValue(premiumCounter.doubleValue());
+									} else {
+										cell.setCellValue(0d);
+									}
+								}
+								Cell cell = row.getCell(Shared.getCellIndex(sheet, COSTO_STORICO_LABEL));
+								cell.setCellStyle(numberCellStyle.get());
+								cell.setCellValue(
+									sEStats.getAllWinningCombos().size() * row.getCell(Shared.getCellIndex(sheet, COSTO_LABEL)).getNumericCellValue()
+								);
+								dataAggStoricoCell.setCellStyle(dateCellStyle.get());
+								dataAggStoricoCell.setCellValue(sEStats.getLatestExtractionDate());
+							}
+						},
+						null,
+						workBook -> {
+							store(excelFileName, workBook);
+							Row row = workBook.getSheet("Risultati").getRow(rowIndex);
+							System.out.println(
+								"Aggiornamento storico completato per " +
+								TimeUtils.defaultDateFormat.format(row.getCell(0).getDateCellValue()) + " - " +
+								row.getCell(fileColIndex.get()).getStringCellValue()
+							);
+						}
+					);
+				}
 			}
+		}
+	}
+
+	private static Map<String, Object> readPremiumCountersData(File premiumCountersFile) {
+		Map<String, Object> data = null;
+		try {
+			data = objectMapper.readValue(premiumCountersFile, Map.class);
+			data.put("premiumCounters",((Map<String, Integer>)objectMapper.readValue(premiumCountersFile, Map.class).get("premiumCounters")).entrySet().stream()
+				.collect(Collectors.toMap(entry -> Integer.parseInt(entry.getKey()), Map.Entry::getValue, (x, y) -> y, LinkedHashMap::new)));
+		} catch (IOException exc) {
+			throw new RuntimeException(exc);
+		}
+		return data;
+	}
+
+	private static Map<Integer, Integer> computePremiumCountersData(SEStats sEStats, PersistentStorage storage,
+			File premiumCountersFile) {
+		Map<String, Object> qualityCheckResult = sEStats.checkQuality(storage::iterator);
+		Map<Integer, Integer> pC =
+			(Map<Integer, Integer>)qualityCheckResult.get("premium.counters");
+		Map<String, Object> data = new LinkedHashMap<>();
+		data.put("premiumCounters", pC);
+		data.put("referenceDate", qualityCheckResult.get("referenceDate"));
+		writePremiumCountersData(premiumCountersFile, data);
+		return pC;
+	}
+
+	private static void writePremiumCountersData(File premiumCountersFile, Map<String, Object> qualityCheckResult) {
+		try {
+			objectMapper.writeValue(premiumCountersFile, qualityCheckResult);
+		} catch (IOException exc) {
+			throw new RuntimeException(exc);
 		}
 	}
 
@@ -688,7 +761,6 @@ public class LotteryMatrixSimulator {
 			try (OutputStream destFileOutputStream = new FileOutputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileName)){
 				BaseFormulaEvaluator.evaluateAllFormulaCells(workBook);
 				workBook.write(destFileOutputStream);
-				workBook.close();
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}

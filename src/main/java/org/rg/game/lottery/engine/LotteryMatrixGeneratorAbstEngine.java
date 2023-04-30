@@ -190,6 +190,12 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 							"combination.not-equilibrate.at-least-one-number-among-those-chosen",
 							String.valueOf(!"sequence".equals(comboIndexSelectorType))
 						)
+					),
+					Boolean.parseBoolean(
+						config.getProperty(
+							"overwrite-if-exists",
+							"true"
+						)
 					)
 				);
 				storages.add(
@@ -342,7 +348,8 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		Integer magicCombinationMaxNumber,
 		String group,
 		String suffix,
-		boolean notEquilibrateCombinationAtLeastOneNumberAmongThoseChosen
+		boolean notEquilibrateCombinationAtLeastOneNumberAmongThoseChosen,
+		boolean overwriteIfExists
 	) {
 		Map<String, Object> data = basicDataSupplier.apply(extractionDate);
 		List<Integer> numbers = (List<Integer>)data.get("numbersToBePlayed");
@@ -361,6 +368,21 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 			numberOfCombos = new BigDecimal((ratio * numbers.size()) / combinationComponents).setScale(0, RoundingMode.UP).intValue();
 		}
 		Storage storageRef = null;
+		if (!overwriteIfExists) {
+			storageRef = PersistentStorage.restore(group, Storage.computeName(extractionDate, combinationComponents, numberOfCombos, suffix));
+			if (storageRef != null) {
+				while (!storageRef.isClosed()) {
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						throw new RuntimeException(e);
+					}
+				}
+				System.out.println(storageRef.getName() + " succesfully restored");
+				storageRef.printAll();
+				return storageRef;
+			}
+		}
 		AtomicInteger discoveredComboCounter = new AtomicInteger(0);
 		AtomicLong fromFilterDiscardedComboCounter = new AtomicLong(0);
 		ComboHandler comboHandler = new ComboHandler(numbers, combinationComponents);

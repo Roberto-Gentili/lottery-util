@@ -1,11 +1,22 @@
 package org.rg.game.lottery.engine;
 
+import java.time.LocalDate;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public interface Storage extends AutoCloseable {
 	static final String END_LINE_PREFIX = "Mr. Random suggerisce";
+
+	public static String computeName(
+		LocalDate extractionDate,
+		int combinationCount,
+		int numberOfCombos,
+		String suffix
+	) {
+		return "[" + extractionDate.toString() + "]"+"[" + combinationCount +"]" +
+			"[" + numberOfCombos + "]" + /*"[" + toRawString(numbers) + "]" +*/ suffix + ".txt";
+	}
 
 	int size();
 
@@ -46,7 +57,10 @@ public interface Storage extends AutoCloseable {
 
 	}
 
+	boolean isClosed();
+
 	public Iterator<List<Integer>> iterator();
 
 	void delete();
+
 }

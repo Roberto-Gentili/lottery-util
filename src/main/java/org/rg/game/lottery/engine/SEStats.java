@@ -570,6 +570,7 @@ public class SEStats {
 		report.append("\tRapporto:" + rightAlignedString(decimalFormat.format(((returns * 100d) / (allWinningCombosReversed.size() * systemSize)) - 100d), 12) + "%\n");
 		data.put("report.summary", report.toString());
 		data.put("premium.counters", premiumCounters);
+		data.put("referenceDate", TimeUtils.defaultDateFormat.format(getLatestExtractionDate()));
 		return data;
 	}
 
