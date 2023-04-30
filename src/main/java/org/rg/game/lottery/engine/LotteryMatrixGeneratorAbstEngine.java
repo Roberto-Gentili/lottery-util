@@ -373,10 +373,11 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 			storageRef = PersistentStorage.restore(group, Storage.computeName(extractionDate, combinationComponents, numberOfCombos, suffix));
 			if (storageRef != null) {
 				try {
-					while (!storageRef.isClosed() && overwriteIfExists == 0) {
+					long timeout = 300_000;
+					while (!storageRef.isClosed() && overwriteIfExists == 0 && timeout >= 0) {
 						try {
-							System.out.println("Waiting for " + storageRef.getName() + " prepared by someone else");
-							Thread.sleep(2000);
+							System.out.println("Waiting a maximum of " + timeout/1000 + " seconds for " + storageRef.getName() + " prepared by someone else");
+							Thread.sleep(timeout - (timeout -= 2000));
 						} catch (InterruptedException e) {
 							throw new RuntimeException(e);
 						}
@@ -389,6 +390,9 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 					if (overwriteIfExists == -1) {
 						System.out.println(storageRef.getName() + " not generated");
 						return null;
+					}
+					if (timeout < 0) {
+						System.out.println("Wait for system generation by others ended: the system will be overwritten");
 					}
 				} catch (RuntimeException exc) {
 					if (!(exc.getCause() instanceof FileNotFoundException)) {
