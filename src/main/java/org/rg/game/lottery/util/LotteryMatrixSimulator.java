@@ -706,7 +706,7 @@ public class LotteryMatrixSimulator {
 		labels.add(DATA_AGGIORNAMENTO_STORICO_LABEL);
 		List<String> summaryFormulas = new ArrayList<>();
 		String columnName = CellReference.convertNumToColString(0);
-		summaryFormulas.add("FORMULA_COUNTA(" + columnName + "3:"+ columnName + Shared.getSEStats().getAllWinningCombos().size() * 2 +")");
+		summaryFormulas.add("FORMULA_COUNTA(" + columnName + "3:"+ columnName + allTimeStats.getAllWinningCombos().size() * 2 +")");
 		for (int i = 1; i < labels.size()-1; i++) {
 			columnName = CellReference.convertNumToColString(i);
 			summaryFormulas.add(
