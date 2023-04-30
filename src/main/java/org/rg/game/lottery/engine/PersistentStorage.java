@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 public class PersistentStorage implements Storage {
 	private static String workingPath;
@@ -68,8 +69,8 @@ public class PersistentStorage implements Storage {
 				throw new UnsupportedOperationException(this + " is only readable");
 			}
 		};
-		Iterator<List<Integer>> comboIterator = storage.iterator();
 		try {
+			Iterator<List<Integer>> comboIterator = storage.iterator();
 			while (comboIterator.hasNext()) {
 				comboIterator.next();
 				storage.size++;
@@ -163,6 +164,65 @@ public class PersistentStorage implements Storage {
 	}
 
 	@Override
+	@SuppressWarnings("resource")
+	public Iterator<List<Integer>> iterator() {
+		try {
+			BufferedReader bufferedReader = new BufferedReader(new FileReader(absolutePath));
+			return new Iterator<List<Integer>>() {
+				List<Integer> currentCombo = nextCombo();
+
+				@Override
+				public List<Integer> next() {
+					if (currentCombo == null) {
+						throw new NoSuchElementException("No combo available");
+					}
+					List<Integer> currentCombo = this.currentCombo;
+					this.currentCombo = nextCombo();
+					if (this.currentCombo == null) {
+						close();
+					}
+					return currentCombo;
+				}
+
+				@Override
+				public boolean hasNext() {
+					if (currentCombo == null) {
+						close();
+					}
+					return currentCombo != null;
+				}
+
+				public void close() {
+					try {
+						bufferedReader.close();
+					} catch (IOException exc) {
+						throw new RuntimeException(exc);
+					}
+				}
+
+				private List<Integer> nextCombo() {
+					try {
+						String line = bufferedReader.readLine();
+						List<Integer> selectedCombo = new ArrayList<>();
+						for (String numberAsString : line.split("\\t")) {
+							try {
+								selectedCombo.add(Integer.parseInt(numberAsString));
+							} catch (NumberFormatException exc) {
+								return null;
+							}
+						}
+						return selectedCombo;
+					} catch (IOException exc) {
+						throw new RuntimeException(exc);
+					}
+				}
+			};
+		} catch (FileNotFoundException exc) {
+			throw new RuntimeException(exc);
+		}
+	}
+/*
+	@Override
 	public Iterator<List<Integer>> iterator() {
 		return new Iterator<List<Integer>>() {
 			int currentIndex = 0;
@@ -176,7 +236,7 @@ public class PersistentStorage implements Storage {
 				return getCombo(currentIndex) != null;
 			}
 		};
-	}
+	}*/
 
 	@Override
 	public boolean addCombo(List<Integer> selectedCombo) {
