@@ -250,7 +250,7 @@ public class PersistentStorage implements Storage {
 			           }
 			        }
 			    } catch (IOException e) {
-					e.printStackTrace();
+					throw new RuntimeException(e);
 				}
 			}
 		}

@@ -132,7 +132,7 @@ public class LotteryMatrixSimulator {
 					);
 				}
 				config.setProperty("storage", "filesystem");
-				config.setProperty("overwrite-if-exists", "false");
+				config.setProperty("overwrite-if-exists", String.valueOf(Boolean.parseBoolean(config.getProperty("simulation.slave", "false"))? 0 : -1));
 			}
 		}
 		for (Properties configuration : configurations) {

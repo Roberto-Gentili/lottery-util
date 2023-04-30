@@ -1,5 +1,6 @@
 package org.rg.game.lottery.engine;
 
+import java.io.FileNotFoundException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.InetAddress;
@@ -191,10 +192,10 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 							String.valueOf(!"sequence".equals(comboIndexSelectorType))
 						)
 					),
-					Boolean.parseBoolean(
+					Integer.parseInt(
 						config.getProperty(
 							"overwrite-if-exists",
-							"true"
+							"1"
 						)
 					)
 				);
@@ -349,7 +350,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		String group,
 		String suffix,
 		boolean notEquilibrateCombinationAtLeastOneNumberAmongThoseChosen,
-		boolean overwriteIfExists
+		int overwriteIfExists
 	) {
 		Map<String, Object> data = basicDataSupplier.apply(extractionDate);
 		List<Integer> numbers = (List<Integer>)data.get("numbersToBePlayed");
@@ -368,20 +369,32 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 			numberOfCombos = new BigDecimal((ratio * numbers.size()) / combinationComponents).setScale(0, RoundingMode.UP).intValue();
 		}
 		Storage storageRef = null;
-		if (!overwriteIfExists) {
+		if (overwriteIfExists < 1 && "filesystem".equalsIgnoreCase(storageType)) {
 			storageRef = PersistentStorage.restore(group, Storage.computeName(extractionDate, combinationComponents, numberOfCombos, suffix));
 			if (storageRef != null) {
-				while (!storageRef.isClosed()) {
-					try {
-						System.out.println("Waiting for " + storageRef.getName() + " prepared by someone else");
-						Thread.sleep(2000);
-					} catch (InterruptedException e) {
-						throw new RuntimeException(e);
+				try {
+					while (!storageRef.isClosed() && overwriteIfExists == 0) {
+						try {
+							System.out.println("Waiting for " + storageRef.getName() + " prepared by someone else");
+							Thread.sleep(2000);
+						} catch (InterruptedException e) {
+							throw new RuntimeException(e);
+						}
+					}
+					if (storageRef.isClosed()) {
+						System.out.println(storageRef.getName() + " succesfully restored");
+						storageRef.printAll();
+						return storageRef;
+					}
+					if (overwriteIfExists == -1) {
+						System.out.println(storageRef.getName() + " not generated");
+						return null;
+					}
+				} catch (RuntimeException exc) {
+					if (!(exc.getCause() instanceof FileNotFoundException)) {
+						throw exc;
 					}
 				}
-				System.out.println(storageRef.getName() + " succesfully restored");
-				storageRef.printAll();
-				return storageRef;
 			}
 		}
 		AtomicInteger discoveredComboCounter = new AtomicInteger(0);
