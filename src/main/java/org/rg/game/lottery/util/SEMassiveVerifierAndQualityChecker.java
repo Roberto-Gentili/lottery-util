@@ -84,7 +84,11 @@ public class SEMassiveVerifierAndQualityChecker {
 				String extractionMonth = Shared.getMonth(extractionDate);
 				String extractionDay = extractionDate.split("\\/")[0];
 				File mainFile = Shared.getSystemsFile(extractionYear);
-				Shared.backup(backupTime, mainFile);
+				Shared.backup(
+					backupTime,
+					mainFile,
+					mainFile.getParentFile().getAbsolutePath() + File.separator + "Backup sistemi"
+				);
 				List<List<Integer>> system = new ArrayList<>();
 				try (InputStream srcFileInputStream = new FileInputStream(mainFile);
 					Workbook workbook = new XSSFWorkbook(srcFileInputStream);

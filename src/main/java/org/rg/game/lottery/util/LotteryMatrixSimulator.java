@@ -11,6 +11,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.URLEncoder;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -24,6 +25,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -64,6 +66,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 public class LotteryMatrixSimulator {
+	private static final Map<String, Integer> savingOperationCounters = new ConcurrentHashMap<>();
 	private static final String SALDO_LABEL = "Saldo";
 	private static final String RITORNO_LABEL = "Ritorno";
 	private static final String COSTO_LABEL = "Costo";
@@ -791,9 +794,20 @@ public class LotteryMatrixSimulator {
 
 	private static void store(String excelFileName, Workbook workBook) {
 		Synchronizer.INSTANCE.execute(excelFileName, () -> {
-			try (OutputStream destFileOutputStream = new FileOutputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileName)){
+			Integer savingCounterForFile = savingOperationCounters.computeIfAbsent(excelFileName, key -> 0) + 1;
+			File file = new File(PersistentStorage.buildWorkingPath() + File.separator + excelFileName);
+			savingOperationCounters.put(excelFileName, savingCounterForFile);
+			if (savingCounterForFile % 500 == 0) {
+				Shared.backup(
+					LocalDateTime.now(),
+					file,
+					file.getParentFile().getAbsolutePath()
+				);
+			}
+			try (OutputStream destFileOutputStream = new FileOutputStream(file)){
 				BaseFormulaEvaluator.evaluateAllFormulaCells(workBook);
 				workBook.write(destFileOutputStream);
+
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}

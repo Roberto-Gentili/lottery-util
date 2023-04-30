@@ -2,6 +2,7 @@ package org.rg.game.lottery.util;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -142,20 +143,28 @@ class Shared {
 	}
 
 	static File backup(
-		LocalDateTime backupTime, File mainFile
-	) throws IOException {
-		String backupFileName = mainFile.getName().replace("." +  IOUtils.INSTANCE.getExtension(mainFile), "") + " - [" + Shared.datePattern.format(backupTime) + "]." + IOUtils.INSTANCE.getExtension(mainFile);
-		String backupFilePath = mainFile.getParentFile().getAbsolutePath() + "\\Backup sistemi\\" + backupFileName;
-		if (!new File(backupFilePath).exists()) {
-			try (InputStream inputStream = new FileInputStream(mainFile); OutputStream backupOutputStream = new FileOutputStream(backupFilePath)) {
-				IOUtils.INSTANCE.copy(
-					inputStream,
-					backupOutputStream
-				);
+		LocalDateTime backupTime,
+		File mainFile,
+		String destFolderAbsolutePath
+	) {
+		try {
+			String backupFileName = mainFile.getName().replace("." +  IOUtils.INSTANCE.getExtension(mainFile), "") + " - [" + Shared.datePattern.format(backupTime) + "]." + IOUtils.INSTANCE.getExtension(mainFile);
+			String backupFilePath = destFolderAbsolutePath + File.separator + backupFileName;
+			if (!new File(backupFilePath).exists()) {
+				try (InputStream inputStream = new FileInputStream(mainFile); OutputStream backupOutputStream = new FileOutputStream(backupFilePath)) {
+					IOUtils.INSTANCE.copy(
+						inputStream,
+						backupOutputStream
+					);
+				}
+				return new File(backupFilePath);
 			}
-			return new File(backupFilePath);
+			return null;
+		} catch (FileNotFoundException e) {
+			throw new RuntimeException(e);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
-		return null;
 	}
 
 	static String getSystemEnv(String key, String defaultValue) {
