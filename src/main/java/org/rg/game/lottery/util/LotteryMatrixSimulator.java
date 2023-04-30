@@ -480,9 +480,14 @@ public class LotteryMatrixSimulator {
 		return data;
 	}
 
-	private static Map<Integer, Integer> computePremiumCountersData(SEStats sEStats, PersistentStorage storage,
-			File premiumCountersFile) {
+	private static Map<Integer, Integer> computePremiumCountersData(
+		SEStats sEStats,
+		PersistentStorage storage,
+		File premiumCountersFile
+	) {
+		System.out.println("Computing historycal data of " + storage.getName());
 		Map<String, Object> qualityCheckResult = sEStats.checkQuality(storage::iterator);
+		System.out.println("Computed historycal data of " + storage.getName());
 		Map<Integer, Integer> pC =
 			(Map<Integer, Integer>)qualityCheckResult.get("premium.counters");
 		Map<String, Object> data = new LinkedHashMap<>();
