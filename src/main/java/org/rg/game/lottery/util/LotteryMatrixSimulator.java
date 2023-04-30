@@ -331,11 +331,16 @@ public class LotteryMatrixSimulator {
 		AtomicBoolean simulatorFinished
 	) {
 		return CompletableFuture.runAsync(() -> {
+			boolean isSlave = Boolean.parseBoolean(configuration.getProperty("simulation.slave", "false"));
+			if (!isSlave) {
+				Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
+			}
 			Map<String, Map<Integer, Integer>> premiumCountersForFile = new LinkedHashMap<>();
 			while (!simulatorFinished.get()) {
 				historyUpdateTaskStarted.set(true);
 				updateHistory(configuration, excelFileName, configurationName, premiumCountersForFile);
 			}
+			Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 			updateHistory(configuration, excelFileName, configurationName, premiumCountersForFile);
 		});
 
