@@ -569,7 +569,11 @@ public class SEStats {
 		report.append("\tRapporto:" + rightAlignedString(decimalFormat.format(((returns * 100d) / (allWinningCombosReversed.size() * systemSize)) - 100d), 12) + "%\n");
 		data.put("report.summary", report.toString());
 		data.put("premium.counters", premiumCounters);
-		data.put("referenceDate", TimeUtils.defaultDateFormat.format(getLatestExtractionDate()));
+		Date referenceDate = getLatestExtractionDate();
+		if (referenceDate == null) {//Nel caso lo storico non abbia dati
+			referenceDate = endDate.compareTo(startDate) >= 0 ? endDate : startDate;
+		}
+		data.put("referenceDate", TimeUtils.defaultDateFormat.format(referenceDate));
 		return data;
 	}
 
