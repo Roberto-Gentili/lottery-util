@@ -399,8 +399,9 @@ public class LotteryMatrixSimulator {
 			AtomicReference<PersistentStorage> storageWrapper = new AtomicReference<>();
 			if (simulatorFinished.get()) {
 				setThreadPriorityToMax();
-				if (rowProcessedCounter % 100 == 0) {
-					System.out.println("History update is going to finish: " + (excelRecords.size() - (rowProcessedCounter + 1)) + " remained");
+				int remainedRecords = (excelRecords.size() - (rowProcessedCounter + 1));
+				if (remainedRecords % 100 == 0) {
+					System.out.println("History update is going to finish: " + remainedRecords + " remained");
 				}
 			}
 			readOrCreateExcel(
