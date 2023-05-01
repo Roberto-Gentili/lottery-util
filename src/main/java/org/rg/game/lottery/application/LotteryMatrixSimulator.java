@@ -334,29 +334,41 @@ public class LotteryMatrixSimulator {
 		return CompletableFuture.runAsync(() -> {
 			boolean isSlave = Boolean.parseBoolean(configuration.getProperty("simulation.slave", "false"));
 			if (!isSlave) {
-				Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
+				if (!simulatorFinished.get()) {
+					Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
+				} else{
+					setThreadPriorityToMax();
+				}
 			}
 			Map<String, Map<Integer, Integer>> premiumCountersForFile = new LinkedHashMap<>();
 			while (!simulatorFinished.get()) {
 				historyUpdateTaskStarted.set(true);
-				updateHistory(configuration, excelFileName, configurationName, premiumCountersForFile);
+				updateHistory(configuration, excelFileName, configurationName, premiumCountersForFile, simulatorFinished);
 				try {
 					Thread.sleep(1000);
 				} catch (InterruptedException exc) {
 					throw new RuntimeException(exc);
 				}
 			}
-			Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
-			updateHistory(configuration, excelFileName, configurationName, premiumCountersForFile);
+			setThreadPriorityToMax();
+			updateHistory(configuration, excelFileName, configurationName, premiumCountersForFile, simulatorFinished);
 		});
 
+	}
+
+	private static void setThreadPriorityToMax() {
+		if (Thread.currentThread().getPriority() != Thread.MAX_PRIORITY) {
+			System.out.println("Setting priority of Thread " + Thread.currentThread() + " to max");
+			Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+		}
 	}
 
 	private static void updateHistory(
 		Properties configuration,
 		String excelFileName,
 		String configurationName,
-		Map<String, Map<Integer, Integer>> premiumCountersForFile
+		Map<String, Map<Integer, Integer>> premiumCountersForFile,
+		AtomicBoolean simulatorFinished
 	) {
 		boolean isSlave = Boolean.parseBoolean(configuration.getProperty("simulation.slave", "false"));
 		SEStats sEStats = getSEStats(configuration);
@@ -381,8 +393,16 @@ public class LotteryMatrixSimulator {
 		if (isSlave) {
 			Collections.shuffle(excelRecords);
 		}
+		int rowProcessedCounter = 0;
 		for (Integer rowIndex : excelRecords) {
+			++rowProcessedCounter;
 			AtomicReference<PersistentStorage> storageWrapper = new AtomicReference<>();
+			if (simulatorFinished.get()) {
+				setThreadPriorityToMax();
+				if (rowProcessedCounter % 100 == 0) {
+					System.out.println("History update is going to finish: " + (excelRecords.size() - (rowProcessedCounter + 1)) + " remained");
+				}
+			}
 			readOrCreateExcel(
 				excelFileName,
 				workBook -> {
