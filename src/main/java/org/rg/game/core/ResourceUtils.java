@@ -42,6 +42,14 @@ public class ResourceUtils {
 		}
 	}
 
+	public List<File> findOrdered(String filePrefix, String extension, String... paths) {
+		return toOrderedList(find(filePrefix, extension, paths), false);
+	}
+
+	public List<File> findReverseOrdered(String filePrefix, String extension, String... paths) {
+		return toOrderedList(find(filePrefix, extension, paths), true);
+	}
+
 	public List<File> find(String filePrefix, String extension, String... paths) {
 		Collection<File> files = new TreeSet<>((fISOne, fISTwo) -> {
 			return fISOne.getName().compareTo(fISTwo.getName());
@@ -96,7 +104,6 @@ public class ResourceUtils {
 				properties.add(config);
 			}
 		}
-
 		return new ArrayList<>(properties);
 	}
 
@@ -132,16 +139,23 @@ public class ResourceUtils {
 		}
 	}
 
-	private List<File> toOrderedList(Object files) {
-		Set<File> orderedFiles = new TreeSet<>((fileOne, fileTwo) -> {
-			return fileOne.getName().compareTo(fileTwo.getName());
-		});
+	public List<File> toOrderedList(Object files, boolean reversed) {
+		Comparator<File> fileComparator = (fileOne, fileTwo) ->
+			fileOne.getName().compareTo(fileTwo.getName());
+		if (reversed) {
+			fileComparator = fileComparator.reversed();
+		}
+		Set<File> orderedFiles = new TreeSet<>(fileComparator);
 		if (files.getClass().isArray()) {
 			orderedFiles.addAll(Arrays.asList((File[])files));
 		} else if (files instanceof Collection) {
 			orderedFiles.addAll((Collection<File>)files);
 		}
 		return new ArrayList<>(orderedFiles);
+	}
+
+	public List<File> toOrderedList(Object files) {
+		return toOrderedList(files, false);
 	}
 
 }

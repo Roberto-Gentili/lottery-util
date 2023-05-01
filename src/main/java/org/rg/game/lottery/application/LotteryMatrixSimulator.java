@@ -321,6 +321,7 @@ public class LotteryMatrixSimulator {
 		}
 		simulatorFinished.set(true);
 		historyUpdateTask.join();
+		backup(new File(PersistentStorage.buildWorkingPath() + File.separator + excelFileName));
 	}
 
 	private static CompletableFuture<Void> startHistoryUpdateTask(
@@ -785,10 +786,7 @@ public class LotteryMatrixSimulator {
 			File file = new File(PersistentStorage.buildWorkingPath() + File.separator + excelFileName);
 			savingOperationCounters.put(excelFileName, savingCounterForFile);
 			if (savingCounterForFile % 500 == 0) {
-				ResourceUtils.INSTANCE.backup(
-					file,
-					file.getParentFile().getAbsolutePath()
-				);
+				backup(file);
 			}
 			try (OutputStream destFileOutputStream = new FileOutputStream(file)){
 				BaseFormulaEvaluator.evaluateAllFormulaCells(workBook);
@@ -798,5 +796,21 @@ public class LotteryMatrixSimulator {
 				throw new RuntimeException(e);
 			}
 		});
+	}
+
+	private static void backup(File file) {
+		ResourceUtils.INSTANCE.backup(
+			file,
+			file.getParentFile().getAbsolutePath()
+		);
+		List<File> backupFiles = ResourceUtils.INSTANCE.findOrdered("report - ", "xlsx", file.getParentFile().getAbsolutePath());
+		if (backupFiles.size() > 4) {
+			Iterator<File> backupFileIterator = backupFiles.iterator();
+			while (backupFiles.size() > 4) {
+				File backupFile = backupFileIterator.next();
+				backupFile.delete();
+				backupFileIterator.remove();
+			}
+		}
 	}
 }
