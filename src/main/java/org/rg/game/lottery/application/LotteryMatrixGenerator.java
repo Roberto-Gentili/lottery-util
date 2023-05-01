@@ -13,7 +13,7 @@ import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
-import org.rg.game.core.IOUtils;
+import org.rg.game.core.ResourceUtils;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.MDLotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.PersistentStorage;
@@ -50,7 +50,7 @@ public class LotteryMatrixGenerator {
 		);
 
 		configurationFiles.addAll(
-			IOUtils.INSTANCE.findResources((directory, fileName) ->
+			ResourceUtils.INSTANCE.find((directory, fileName) ->
 				fileName.contains(configFilePrefix + "-matrix-generator") && fileName.endsWith("properties")
 			)
 		);
@@ -62,7 +62,7 @@ public class LotteryMatrixGenerator {
 				if (Boolean.parseBoolean(config.getProperty("enabled", "false"))) {
 					config.setProperty("file.name", file.getName());
 					config.setProperty("file.parent.absolutePath", file.getParentFile().getAbsolutePath());
-					config.setProperty("file.extension", IOUtils.INSTANCE.getExtension(file));
+					config.setProperty("file.extension", ResourceUtils.INSTANCE.getExtension(file));
 					configurations.add(config);
 
 				}

@@ -34,7 +34,7 @@ import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.rg.game.core.IOUtils;
+import org.rg.game.core.ResourceUtils;
 import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
@@ -85,7 +85,7 @@ public class SEMassiveVerifierAndQualityChecker {
 				String extractionMonth = Shared.getMonth(extractionDate);
 				String extractionDay = extractionDate.split("\\/")[0];
 				File mainFile = Shared.getSystemsFile(extractionYear);
-				IOUtils.INSTANCE.backup(
+				ResourceUtils.INSTANCE.backup(
 					backupTime,
 					mainFile,
 					mainFile.getParentFile().getAbsolutePath() + File.separator + "Backup sistemi"

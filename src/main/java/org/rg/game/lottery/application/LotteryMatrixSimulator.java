@@ -50,7 +50,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.rg.game.core.CollectionUtils;
-import org.rg.game.core.IOUtils;
+import org.rg.game.core.ResourceUtils;
 import org.rg.game.core.Synchronizer;
 import org.rg.game.core.ThrowingConsumer;
 import org.rg.game.core.TimeUtils;
@@ -109,7 +109,7 @@ public class LotteryMatrixSimulator {
 		);
 
 		configurationFiles.addAll(
-			IOUtils.INSTANCE.findResources((directory, fileName) ->
+			ResourceUtils.INSTANCE.find((directory, fileName) ->
 				fileName.contains(configFilePrefix + "-matrix-generator") && fileName.endsWith("properties")
 			)
 		);
@@ -120,7 +120,7 @@ public class LotteryMatrixSimulator {
 				config.load(configIS);
 				config.setProperty("file.name", fIS.getName());
 				config.setProperty("file.parent.absolutePath", fIS.getParentFile().getAbsolutePath());
-				config.setProperty("file.extension", IOUtils.INSTANCE.getExtension(fIS));
+				config.setProperty("file.extension", ResourceUtils.INSTANCE.getExtension(fIS));
 				String simulationDates = config.getProperty("simulation.dates");
 				if (simulationDates != null) {
 					config.setProperty("competition", simulationDates);
@@ -797,7 +797,7 @@ public class LotteryMatrixSimulator {
 			File file = new File(PersistentStorage.buildWorkingPath() + File.separator + excelFileName);
 			savingOperationCounters.put(excelFileName, savingCounterForFile);
 			if (savingCounterForFile % 500 == 0) {
-				IOUtils.INSTANCE.backup(
+				ResourceUtils.INSTANCE.backup(
 					file,
 					file.getParentFile().getAbsolutePath()
 				);
