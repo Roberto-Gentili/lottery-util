@@ -781,21 +781,19 @@ public class LotteryMatrixSimulator {
 	}
 
 	private static void store(String excelFileName, Workbook workBook) {
-		Synchronizer.INSTANCE.execute(excelFileName, () -> {
-			Integer savingCounterForFile = savingOperationCounters.computeIfAbsent(excelFileName, key -> 0) + 1;
-			File file = new File(PersistentStorage.buildWorkingPath() + File.separator + excelFileName);
-			savingOperationCounters.put(excelFileName, savingCounterForFile);
-			if (savingCounterForFile % 100 == 0) {
-				backup(file);
-			}
-			try (OutputStream destFileOutputStream = new FileOutputStream(file)){
-				BaseFormulaEvaluator.evaluateAllFormulaCells(workBook);
-				workBook.write(destFileOutputStream);
+		Integer savingCounterForFile = savingOperationCounters.computeIfAbsent(excelFileName, key -> 0) + 1;
+		File file = new File(PersistentStorage.buildWorkingPath() + File.separator + excelFileName);
+		savingOperationCounters.put(excelFileName, savingCounterForFile);
+		if (savingCounterForFile % 100 == 0) {
+			backup(file);
+		}
+		try (OutputStream destFileOutputStream = new FileOutputStream(file)){
+			BaseFormulaEvaluator.evaluateAllFormulaCells(workBook);
+			workBook.write(destFileOutputStream);
 
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-		});
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private static void backup(File file) {
