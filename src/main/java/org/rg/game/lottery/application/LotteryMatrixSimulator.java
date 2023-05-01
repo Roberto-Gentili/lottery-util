@@ -785,7 +785,7 @@ public class LotteryMatrixSimulator {
 			Integer savingCounterForFile = savingOperationCounters.computeIfAbsent(excelFileName, key -> 0) + 1;
 			File file = new File(PersistentStorage.buildWorkingPath() + File.separator + excelFileName);
 			savingOperationCounters.put(excelFileName, savingCounterForFile);
-			if (savingCounterForFile % 500 == 0) {
+			if (savingCounterForFile % 100 == 0) {
 				backup(file);
 			}
 			try (OutputStream destFileOutputStream = new FileOutputStream(file)){
