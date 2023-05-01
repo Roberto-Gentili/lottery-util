@@ -71,8 +71,6 @@ public class SEStats {
 		allPremiumLabels = new ArrayList<>(allPremiums.values());
 	}
 
-	private Collection<DataLoader> dataLoaders;
-	private Collection<DataStorer> dataStorers;
 	private boolean global;
 
 	protected DecimalFormat decimalFormat = new DecimalFormat( "#,##0.##" );
@@ -141,11 +139,11 @@ public class SEStats {
 		this.endDate = buildDate(endDate);
 		this.allWinningCombos = new TreeMap<>(TimeUtils.reversedDateComparator);
 		this.allWinningCombosWithJollyAndSuperstar = new TreeMap<>(TimeUtils.reversedDateComparator);
-		dataLoaders = Arrays.asList(
+		Collection<DataLoader> dataLoaders = Arrays.asList(
 			new InternetDataLoader(this.startDate, this.endDate, allWinningCombos, allWinningCombosWithJollyAndSuperstar),
 			new FromExcelDataLoader()
 		);
-		dataStorers = new ArrayList<>();
+		Collection<DataStorer> dataStorers = new ArrayList<>();
 		if ((startDate.equals("03/12/1997") || startDate.equals("02/07/2009")) && TimeUtils.defaultDateFormat.format(new Date()).equals(endDate)) {
 			/*dataStorers.add(
 				new ToExcelDataStorerV1()
@@ -727,7 +725,7 @@ public class SEStats {
 
 		@Override
 		public boolean load() throws Throwable {
-			try (InputStream inputStream = new FileInputStream(PersistentStorage.buildWorkingPath() + File.separator + new ToExcelDataStorerV2().getFileName());
+			try (InputStream inputStream = new FileInputStream(PersistentStorage.buildWorkingPath() + File.separator + new ToExcelDataStorerV2().getFileName("03/12/1997"));
 				Workbook workbook = new XSSFWorkbook(inputStream);
 			) {
 				Sheet sheet = workbook.getSheet("Storico estrazioni");
@@ -766,6 +764,10 @@ public class SEStats {
 
 		private String getFileName() {
 			return "[SE]" + defaultDateFmtForFile.format(startDate) + " - Archivio estrazioni e statistiche v1.xlsx";
+		}
+
+		private String getFileName(String startDateFormatted) {
+			return "[SE]" + defaultDateFmtForFile.format(LocalDate.parse(startDateFormatted, TimeUtils.defaultLocalDateFormatter)) + " - Archivio estrazioni e statistiche v1.xlsx";
 		}
 
 		@Override
@@ -874,6 +876,10 @@ public class SEStats {
 
 		private String getFileName() {
 			return "[SE]" + defaultDateFmtForFile.format(startDate) + " - Archivio estrazioni e statistiche v2.xlsx";
+		}
+
+		private String getFileName(String startDateFormatted) {
+			return "[SE]" + defaultDateFmtForFile.format(LocalDate.parse(startDateFormatted, TimeUtils.defaultLocalDateFormatter)) + " - Archivio estrazioni e statistiche v2.xlsx";
 		}
 
 		@Override
