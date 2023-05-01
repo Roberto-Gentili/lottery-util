@@ -97,8 +97,8 @@ public class SEStats {
 
 	public static final SEStats get(String startDate, String endDate) {
 		boolean isGlobal = false;
-		if (LocalDate.parse(endDate, TimeUtils.defaultLocalDateFormatter).compareTo(LocalDate.now()) >= 0) {
-			endDate = TimeUtils.defaultLocalDateFormatter.format(LocalDate.now());
+		if (LocalDate.parse(endDate, TimeUtils.defaultLocalDateFormat).compareTo(LocalDate.now()) >= 0) {
+			endDate = TimeUtils.defaultLocalDateFormat.format(LocalDate.now());
 			isGlobal = startDate.equals("03/12/1997") || startDate.equals("02/07/2009");
 		}
 		String key = startDate+"->"+endDate;
@@ -766,8 +766,8 @@ public class SEStats {
 			return "[SE]" + defaultDateFmtForFile.format(startDate) + " - Archivio estrazioni e statistiche v1.xlsx";
 		}
 
-		private String getFileName(String startDateFormatted) {
-			return "[SE]" + defaultDateFmtForFile.format(LocalDate.parse(startDateFormatted, TimeUtils.defaultLocalDateFormatter)) + " - Archivio estrazioni e statistiche v1.xlsx";
+		private String getFileName(String startDateFormatted) throws ParseException {
+			return "[SE]" + defaultDateFmtForFile.format(TimeUtils.defaultDateFormat.parse(startDateFormatted)) + " - Archivio estrazioni e statistiche v1.xlsx";
 		}
 
 		@Override
@@ -878,8 +878,8 @@ public class SEStats {
 			return "[SE]" + defaultDateFmtForFile.format(startDate) + " - Archivio estrazioni e statistiche v2.xlsx";
 		}
 
-		private String getFileName(String startDateFormatted) {
-			return "[SE]" + defaultDateFmtForFile.format(LocalDate.parse(startDateFormatted, TimeUtils.defaultLocalDateFormatter)) + " - Archivio estrazioni e statistiche v2.xlsx";
+		private String getFileName(String startDateFormatted) throws ParseException {
+			return "[SE]" + defaultDateFmtForFile.format(TimeUtils.defaultDateFormat.parse(startDateFormatted)) + " - Archivio estrazioni e statistiche v2.xlsx";
 		}
 
 		@Override
@@ -1039,10 +1039,10 @@ public class SEStats {
 		if (startDate.getDayOfWeek().getValue() == DayOfWeek.MONDAY.getValue() ||
 			startDate.getDayOfWeek().getValue() == DayOfWeek.WEDNESDAY.getValue()
 		) {
-			System.out.println("Attenzione: il concorso eseguito in data " + TimeUtils.defaultLocalDateWithDayNameFormatter.format(startDate) + " risulta essere anticipato");
+			System.out.println("Attenzione: il concorso eseguito in data " + TimeUtils.defaultLocalDateWithDayNameFormat.format(startDate) + " risulta essere anticipato");
 			return 3;
 		} else if (startDate.getDayOfWeek().getValue() == DayOfWeek.FRIDAY.getValue()) {
-			System.out.println("Attenzione: il concorso eseguito in data " + TimeUtils.defaultLocalDateWithDayNameFormatter.format(startDate) + " risulta essere anticipato");
+			System.out.println("Attenzione: il concorso eseguito in data " + TimeUtils.defaultLocalDateWithDayNameFormat.format(startDate) + " risulta essere anticipato");
 			return 4;
 		}
 		return startDate.getDayOfWeek().getValue() == DayOfWeek.SATURDAY.getValue() ? 3 : 2;

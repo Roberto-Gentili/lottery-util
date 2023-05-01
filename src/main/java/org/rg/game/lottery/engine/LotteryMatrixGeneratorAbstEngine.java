@@ -82,7 +82,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		System.out.println(
 			"Computing for the following extraction dates:\n\t"+
 			String.join(", ",
-				extractionDates.stream().map(TimeUtils.defaultLocalDateFormatter::format).collect(Collectors.toList())
+				extractionDates.stream().map(TimeUtils.defaultLocalDateFormat::format).collect(Collectors.toList())
 			)
 		);
 		storageType = config.getProperty("storage", "memory").replaceAll("\\s+","");
@@ -133,11 +133,11 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 			}
 			Map<String, Object> basicData = basicDataSupplier.apply(extractionDate);
 			numbersToBePlayedForData.put(
-				TimeUtils.defaultLocalDateFormatter.format(extractionDate),
+				TimeUtils.defaultLocalDateFormat.format(extractionDate),
 				(List<Integer>)basicData.get("chosenNumbers")
 			);
 			numbersToBeExludedForData.put(
-				TimeUtils.defaultLocalDateFormatter.format(extractionDate),
+				TimeUtils.defaultLocalDateFormat.format(extractionDate),
 				(List<Integer>)basicData.get("numbersToBeDiscarded")
 			);
 		}
@@ -244,7 +244,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 				} else {
 					LocalDate extractionDate = "next".equalsIgnoreCase(dateWithOffset[0])?
 						computeNextExtractionDate(LocalDate.now(), true) :
-						computeNextExtractionDate(LocalDate.parse(dateWithOffset[0],  TimeUtils.defaultLocalDateFormatter), false);
+						computeNextExtractionDate(LocalDate.parse(dateWithOffset[0],  TimeUtils.defaultLocalDateFormat), false);
 					if (dateWithOffset.length == 2) {
 						String[] range = dateWithOffset[1].split("\\*");
 						for (int i = 0; i < Integer.parseInt(range[0]); i++) {

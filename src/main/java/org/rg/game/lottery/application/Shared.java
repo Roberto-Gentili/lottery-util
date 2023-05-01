@@ -46,7 +46,7 @@ class Shared {
 	}
 
 	static String getMonth(String date) {
-		return getMonth(LocalDate.parse(date, TimeUtils.defaultLocalDateFormatter));
+		return getMonth(LocalDate.parse(date, TimeUtils.defaultLocalDateFormat));
 	}
 
 	static String getMonth(LocalDate date) {

@@ -353,7 +353,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	public SEStats getSEStats() {
-		SEStats sEStats = SEStats.get(getExtractionArchiveStartDate(), TimeUtils.defaultLocalDateFormatter.format(extractionDate));
+		SEStats sEStats = SEStats.get(getExtractionArchiveStartDate(), TimeUtils.defaultLocalDateFormat.format(extractionDate));
 		if (LocalDate.now().compareTo(extractionDate) >= 0) {
 			Date latestExtractionDate = sEStats.getLatestExtractionDate();
 			if (latestExtractionDate != null && latestExtractionDate.toInstant()
@@ -372,8 +372,8 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 					sEStats = SEStats.get(
 						getExtractionArchiveStartDate(),
 						LocalDate.parse(
-							getExtractionArchiveStartDate(),  TimeUtils.defaultLocalDateFormatter
-						).minus(1, ChronoUnit.DAYS).format( TimeUtils.defaultLocalDateFormatter)
+							getExtractionArchiveStartDate(),  TimeUtils.defaultLocalDateFormat
+						).minus(1, ChronoUnit.DAYS).format( TimeUtils.defaultLocalDateFormat)
 					);
 				}
 			}
@@ -382,7 +382,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	public SEStats getSEStatsForSeed() {
-		return SEStats.get(getExtractionArchiveForSeedStartDate(),  TimeUtils.defaultLocalDateFormatter.format(LocalDate.now()));
+		return SEStats.get(getExtractionArchiveForSeedStartDate(),  TimeUtils.defaultLocalDateFormat.format(LocalDate.now()));
 	}
 
 	private String processMathManipulationExpression(

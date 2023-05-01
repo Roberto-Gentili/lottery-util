@@ -12,10 +12,10 @@ import java.util.Date;
 public class TimeUtils {
 
 	public static final String DEFAULT_TIME_ZONE = "Europe/Rome";
-	public static DateTimeFormatter dateTimeFormatterForBackup = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
+	public static DateTimeFormatter dateTimeFormatForBackup = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
 	public static SimpleDateFormat defaultDateFormat = new SimpleDateFormat("dd/MM/yyyy");
-	public static DateTimeFormatter defaultLocalDateFormatter = DateTimeFormatter.ofPattern(defaultDateFormat.toPattern());
-	public static DateTimeFormatter defaultLocalDateWithDayNameFormatter = DateTimeFormatter.ofPattern("EEEE " + defaultDateFormat.toPattern());
+	public static DateTimeFormatter defaultLocalDateFormat = DateTimeFormatter.ofPattern(defaultDateFormat.toPattern());
+	public static DateTimeFormatter defaultLocalDateWithDayNameFormat = DateTimeFormatter.ofPattern("EEEE " + defaultDateFormat.toPattern());
 	public static Comparator<Date> reversedDateComparator = Collections.reverseOrder((dateOne, dateTwo) -> dateOne.compareTo(dateTwo));
 	public static Comparator<LocalDate> reversedLocalDateComparator = Collections.reverseOrder((dateOne, dateTwo) -> dateOne.compareTo(dateTwo));
 

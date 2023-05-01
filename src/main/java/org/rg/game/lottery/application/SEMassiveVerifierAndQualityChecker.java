@@ -80,7 +80,7 @@ public class SEMassiveVerifierAndQualityChecker {
 		LocalDateTime backupTime = LocalDateTime.now();
 		for (List<Map.Entry<LocalDate, Object>> dateGroup: dateGroupsList) {
 			for (Map.Entry<LocalDate, Object> dateInfo : dateGroup) {
-				String extractionDate = TimeUtils.defaultLocalDateFormatter.format(dateInfo.getKey());
+				String extractionDate = TimeUtils.defaultLocalDateFormat.format(dateInfo.getKey());
 				String extractionYear = extractionDate.split("\\/")[2];
 				String extractionMonth = Shared.getMonth(extractionDate);
 				String extractionDay = extractionDate.split("\\/")[0];
@@ -305,7 +305,7 @@ public class SEMassiveVerifierAndQualityChecker {
 		XSSFFont boldFont
 	) {
 		if (winningCombo == null || winningCombo.isEmpty()) {
-			return "Nessuna estrazione per il concorso del " + TimeUtils.defaultLocalDateFormatter.format(extractionDate) + "\n";
+			return "Nessuna estrazione per il concorso del " + TimeUtils.defaultLocalDateFormat.format(extractionDate) + "\n";
 		}
 		Map<Integer,List<List<Integer>>> winningCombos = new TreeMap<>();
 		Collection<Integer> hitNumbers = new LinkedHashSet<>();
@@ -344,7 +344,7 @@ public class SEMassiveVerifierAndQualityChecker {
 		StringBuffer result = new StringBuffer();
 		if (!winningCombo.isEmpty()) {
 			if (!winningCombos.isEmpty()) {
-				result.append("Numeri estratti per il *superenalotto* del " + TimeUtils.defaultLocalDateFormatter.format(extractionDate) +": " + Shared.toWAString(winningCombo, ", ", hitNumbers) + "\n");
+				result.append("Numeri estratti per il *superenalotto* del " + TimeUtils.defaultLocalDateFormat.format(extractionDate) +": " + Shared.toWAString(winningCombo, ", ", hitNumbers) + "\n");
 				for (Map.Entry<Integer, List<List<Integer>>> combos: winningCombos.entrySet()) {
 					result.append("\t*Combinazioni con " + SEStats.toPremiumLabel(combos.getKey()).toLowerCase() + "*:" + "\n");
 					for (List<Integer> combo : combos.getValue()) {
@@ -354,7 +354,7 @@ public class SEMassiveVerifierAndQualityChecker {
 					}
 				}
 			} else {
-				result.append("Nessuna vincita per il concorso del " + TimeUtils.defaultLocalDateFormatter.format(extractionDate) + "\n");
+				result.append("Nessuna vincita per il concorso del " + TimeUtils.defaultLocalDateFormat.format(extractionDate) + "\n");
 			}
 		}
 		return result.toString();
@@ -418,7 +418,7 @@ public class SEMassiveVerifierAndQualityChecker {
 		XSSFFont boldFont
 	) {
 		Collection<Integer> hitNumbers = new LinkedHashSet<>();
-		String extractionDateAsString = TimeUtils.defaultLocalDateFormatter.format(extractionDate);
+		String extractionDateAsString = TimeUtils.defaultLocalDateFormat.format(extractionDate);
 		for (List<Integer> winningCombo : allWinningCombos.values()) {
 			for (List<Integer> currentCombo : system) {
 				Integer hit = 0;

@@ -113,7 +113,7 @@ public class ResourceUtils {
 		String destFolderAbsolutePath
 	) {
 		try {
-			String backupFileName = mainFile.getName().replace("." +  getExtension(mainFile), "") + " - [" + TimeUtils.dateTimeFormatterForBackup.format(backupTime) + "]." + getExtension(mainFile);
+			String backupFileName = mainFile.getName().replace("." +  getExtension(mainFile), "") + " - [" + TimeUtils.dateTimeFormatForBackup.format(backupTime) + "]." + getExtension(mainFile);
 			String backupFilePath = destFolderAbsolutePath + File.separator + backupFileName;
 			if (!new File(backupFilePath).exists()) {
 				try (InputStream inputStream = new FileInputStream(mainFile); OutputStream backupOutputStream = new FileOutputStream(backupFilePath)) {

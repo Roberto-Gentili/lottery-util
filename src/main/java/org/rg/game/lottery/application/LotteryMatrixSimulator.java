@@ -302,7 +302,7 @@ public class LotteryMatrixSimulator {
 		) {
 			configuration.setProperty("competition",
 				String.join(",",
-					datesToBeProcessed.stream().map(TimeUtils.defaultLocalDateFormatter::format).collect(Collectors.toList())
+					datesToBeProcessed.stream().map(TimeUtils.defaultLocalDateFormat::format).collect(Collectors.toList())
 				)
 			);
 			engine.setup(configuration);
@@ -406,7 +406,7 @@ public class LotteryMatrixSimulator {
 						Map<String, Object> data = readPremiumCountersData(premiumCountersFile);
 						if (LocalDate.parse(
 							(String)data.get("referenceDate"),
-							TimeUtils.defaultLocalDateFormatter
+							TimeUtils.defaultLocalDateFormat
 							).compareTo(TimeUtils.toLocalDate(sEStats.getLatestExtractionDate())) < 0
 						) {
 							return computePremiumCountersData(sEStats, storage, premiumCountersFile);
@@ -476,7 +476,7 @@ public class LotteryMatrixSimulator {
 			configuration.getProperty(
 				"competition.archive.start-date",
 				new SELotteryMatrixGeneratorEngine().getDefaultExtractionArchiveStartDate()
-			), TimeUtils.defaultLocalDateFormatter.format(LocalDate.now())
+			), TimeUtils.defaultLocalDateFormat.format(LocalDate.now())
 		);
 		return sEStats;
 	}

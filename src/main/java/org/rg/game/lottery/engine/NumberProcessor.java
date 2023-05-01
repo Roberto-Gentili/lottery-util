@@ -263,22 +263,22 @@ public class NumberProcessor {
 
 	private List<Integer> getAllChosenNumbers(Context context, String[] numbersAsString, LocalDate extractionDate) {
 		if (numbersAsString.length == 1) {
-			return context.allChosenNumbers.get(context.elaborationIndex - 1).get(TimeUtils.defaultLocalDateFormatter.format(extractionDate));
+			return context.allChosenNumbers.get(context.elaborationIndex - 1).get(TimeUtils.defaultLocalDateFormat.format(extractionDate));
 		}
 		List<Integer> chosenNumbers = new ArrayList<>();
 		for (int i = 1; i < numbersAsString.length; i++) {
-			chosenNumbers.addAll(context.allChosenNumbers.get(context.elaborationIndex - Integer.valueOf(numbersAsString[i])).get(TimeUtils.defaultLocalDateFormatter.format(extractionDate)));
+			chosenNumbers.addAll(context.allChosenNumbers.get(context.elaborationIndex - Integer.valueOf(numbersAsString[i])).get(TimeUtils.defaultLocalDateFormat.format(extractionDate)));
 		}
 		return chosenNumbers;
 	}
 
 	private List<Integer> getAllExcludedNumbers(Context context, String[] numbersAsString, LocalDate extractionDate) {
 		if (numbersAsString.length == 1) {
-			return context.allDiscardedNumbers.get(context.elaborationIndex - 1).get(TimeUtils.defaultLocalDateFormatter.format(extractionDate));
+			return context.allDiscardedNumbers.get(context.elaborationIndex - 1).get(TimeUtils.defaultLocalDateFormat.format(extractionDate));
 		}
 		List<Integer> chosenNumbers = new ArrayList<>();
 		for (int i = 1; i < numbersAsString.length; i++) {
-			chosenNumbers.addAll(context.allDiscardedNumbers.get(context.elaborationIndex - Integer.valueOf(numbersAsString[i])).get(TimeUtils.defaultLocalDateFormatter.format(extractionDate)));
+			chosenNumbers.addAll(context.allDiscardedNumbers.get(context.elaborationIndex - Integer.valueOf(numbersAsString[i])).get(TimeUtils.defaultLocalDateFormat.format(extractionDate)));
 		}
 		return chosenNumbers;
 	}
