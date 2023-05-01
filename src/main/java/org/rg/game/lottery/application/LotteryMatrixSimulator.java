@@ -102,35 +102,28 @@ public class LotteryMatrixSimulator {
 				configFilePrefix + "-matrix-generator", "properties",
 				PersistentStorage.buildWorkingPath()
 			);
-
 		List<Properties> configurations = new ArrayList<>();
-		for (File fIS : configurationFiles) {
-			try (InputStream configIS = new FileInputStream(fIS)) {
-				Properties config = new Properties();
-				config.load(configIS);
-				config.setProperty("file.name", fIS.getName());
-				config.setProperty("file.parent.absolutePath", fIS.getParentFile().getAbsolutePath());
-				config.setProperty("file.extension", ResourceUtils.INSTANCE.getExtension(fIS));
-				String simulationDates = config.getProperty("simulation.dates");
-				if (simulationDates != null) {
-					config.setProperty("competition", simulationDates);
-				}
-				if (Boolean.parseBoolean(config.getProperty("enabled", "false"))) {
-					configurations.add(config);
-				}
-				String simulationGroup = config.getProperty("simulation.group");
-				if (simulationGroup != null) {
-					simulationGroup = simulationGroup.replace("${localhost.name}", hostName);
-					config.setProperty("simulation.group", simulationGroup);
-					config.setProperty(
-						"group",
-						simulationGroup
-					);
-				}
-				config.setProperty("storage", "filesystem");
-				config.setProperty("overwrite-if-exists", String.valueOf(Boolean.parseBoolean(config.getProperty("simulation.slave", "false"))? -1 : 0));
+		for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles)) {
+			String simulationDates = config.getProperty("simulation.dates");
+			if (simulationDates != null) {
+				config.setProperty("competition", simulationDates);
 			}
+			if (Boolean.parseBoolean(config.getProperty("enabled", "false"))) {
+				configurations.add(config);
+			}
+			String simulationGroup = config.getProperty("simulation.group");
+			if (simulationGroup != null) {
+				simulationGroup = simulationGroup.replace("${localhost.name}", hostName);
+				config.setProperty("simulation.group", simulationGroup);
+				config.setProperty(
+					"group",
+					simulationGroup
+				);
+			}
+			config.setProperty("storage", "filesystem");
+			config.setProperty("overwrite-if-exists", String.valueOf(Boolean.parseBoolean(config.getProperty("simulation.slave", "false"))? -1 : 0));
 		}
+
 		for (Properties configuration : configurations) {
 			System.out.println(
 				"Processing file '" + configuration.getProperty("file.name") + "' located in '" + configuration.getProperty("file.parent.absolutePath") + "'"

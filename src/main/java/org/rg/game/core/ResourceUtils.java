@@ -8,13 +8,17 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.math.BigDecimal;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Properties;
+import java.util.Set;
 import java.util.TreeSet;
 
 public class ResourceUtils {
@@ -32,19 +36,19 @@ public class ResourceUtils {
 			for (String pathSegment : IOUtils.class.getName().split("\\.")) {
 				resourceFolder = resourceFolder.getParentFile();
 			}
-			return Arrays.asList(resourceFolder.listFiles(filter));
+			return toOrderedList(resourceFolder.listFiles(filter));
 		} catch (URISyntaxException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
 	public List<File> find(String filePrefix, String extension, String... paths) {
-		Collection<File> configurationFiles = new TreeSet<>((fISOne, fISTwo) -> {
+		Collection<File> files = new TreeSet<>((fISOne, fISTwo) -> {
 			return fISOne.getName().compareTo(fISTwo.getName());
 		});
 
 		for (String path : paths) {
-			configurationFiles.addAll(
+			files.addAll(
 				Arrays.asList(
 					new File(path).listFiles((directory, fileName) ->
 						fileName.contains(filePrefix) && fileName.endsWith(extension)
@@ -53,12 +57,47 @@ public class ResourceUtils {
 			);
 		}
 
-		configurationFiles.addAll(
+		files.addAll(
 			ResourceUtils.INSTANCE.find((directory, fileName) ->
 				fileName.contains(filePrefix) && fileName.endsWith(extension)
 			)
 		);
-		return new ArrayList<>(configurationFiles);
+		return toOrderedList(files);
+	}
+
+
+	public List<Properties> toOrderedProperties(List<File> files) throws IOException {
+		Comparator<Properties> comparator = (propsOne, propsTwo) -> {
+			BigDecimal propsOnePriority =
+					MathUtils.INSTANCE.stringToBigDecimal(propsOne.getProperty("priority-of-this-configuration"));
+				BigDecimal propsTwoPriority =
+					MathUtils.INSTANCE.stringToBigDecimal(propsTwo.getProperty("priority-of-this-configuration"));
+				return propsOnePriority.compareTo(propsTwoPriority);
+		};
+		Set<Properties> properties = new TreeSet<>(comparator.reversed());
+		for (int i = 0; i < files.size(); i++) {
+			File file = files.get(i);
+			try (InputStream configIS = new FileInputStream(file)) {
+				Properties config = new Properties() {
+					@Override
+					public String toString() {
+						String priority = getProperty("priority-of-this-configuration");
+						if (priority != null) {
+							return getProperty("file.name") + " - priority: " + priority;
+						}
+						return super.toString();
+					}
+				};
+				config.setProperty("priority-of-this-configuration", String.valueOf((files.size() - 1) - i));
+				config.load(configIS);
+				config.setProperty("file.name", file.getName());
+				config.setProperty("file.parent.absolutePath", file.getParentFile().getAbsolutePath());
+				config.setProperty("file.extension", ResourceUtils.INSTANCE.getExtension(file));
+				properties.add(config);
+			}
+		}
+
+		return new ArrayList<>(properties);
 	}
 
 	public File backup(
@@ -91,6 +130,18 @@ public class ResourceUtils {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	private List<File> toOrderedList(Object files) {
+		Set<File> orderedFiles = new TreeSet<>((fileOne, fileTwo) -> {
+			return fileOne.getName().compareTo(fileTwo.getName());
+		});
+		if (files.getClass().isArray()) {
+			orderedFiles.addAll(Arrays.asList((File[])files));
+		} else if (files instanceof Collection) {
+			orderedFiles.addAll((Collection<File>)files);
+		}
+		return new ArrayList<>(orderedFiles);
 	}
 
 }

@@ -1,9 +1,7 @@
 package org.rg.game.lottery.application;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -41,19 +39,11 @@ public class LotteryMatrixGenerator {
 				configFilePrefix + "-matrix-generator", "properties",
 				PersistentStorage.buildWorkingPath()
 			);
-
 		List<Properties> configurations = new ArrayList<>();
-		for (File file : configurationFiles) {
-			try (InputStream configIS = new FileInputStream(file)) {
-				Properties config = new Properties();
-				config.load(configIS);
-				if (Boolean.parseBoolean(config.getProperty("enabled", "false"))) {
-					config.setProperty("file.name", file.getName());
-					config.setProperty("file.parent.absolutePath", file.getParentFile().getAbsolutePath());
-					config.setProperty("file.extension", ResourceUtils.INSTANCE.getExtension(file));
-					configurations.add(config);
-
-				}
+		for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles)) {
+			String simulationDates = config.getProperty("simulation.dates");
+			if (Boolean.parseBoolean(config.getProperty("enabled", "false"))) {
+				configurations.add(config);
 			}
 		}
 		for (Properties configuration : configurations) {
