@@ -401,7 +401,7 @@ public class LotteryMatrixSimulator {
 				setThreadPriorityToMax();
 				int remainedRecords = (excelRecords.size() - (rowProcessedCounter + 1));
 				if (remainedRecords % 100 == 0) {
-					System.out.println("History update is going to finish: " + remainedRecords + " remained");
+					System.out.println("History update is going to finish: " + remainedRecords + " records remained");
 				}
 			}
 			readOrCreateExcel(
