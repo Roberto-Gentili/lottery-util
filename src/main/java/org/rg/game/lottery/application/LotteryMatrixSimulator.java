@@ -69,7 +69,7 @@ public class LotteryMatrixSimulator {
 	private static final String RITORNO_LABEL = "Ritorno";
 	private static final String COSTO_LABEL = "Costo";
 	private static final String DATA_LABEL = "Data";
-	private static final String SALDO_STORICO_LABEL = "Saldo (storico)";
+	private static final String SALDO_STORICO_LABEL = "Saldo (storico) in %";
 	private static final String RITORNO_STORICO_LABEL = "Ritorno (storico)";
 	private static final String COSTO_STORICO_LABEL = "Costo (storico)";
 	private static final String FILE_LABEL = "File";
@@ -722,12 +722,16 @@ public class LotteryMatrixSimulator {
 		List<String> summaryFormulas = new ArrayList<>();
 		String columnName = CellReference.convertNumToColString(0);
 		summaryFormulas.add("FORMULA_COUNTA(" + columnName + "3:"+ columnName + allTimeStats.getAllWinningCombos().size() * 2 +")");
-		for (int i = 1; i < labels.size()-1; i++) {
+		for (int i = 1; i < labels.size()-2; i++) {
 			columnName = CellReference.convertNumToColString(i);
 			summaryFormulas.add(
 				"FORMULA_SUM(" + columnName + "3:"+ columnName + allTimeStats.getAllWinningCombos().size() * 2 +")"
 			);
 		}
+		summaryFormulas.add(
+			"FORMULA_TEXT((SUM(" + CellReference.convertNumToColString(labels.indexOf(SALDO_STORICO_LABEL)) + "3:" +
+			CellReference.convertNumToColString(labels.indexOf(SALDO_STORICO_LABEL)) + allTimeStats.getAllWinningCombos().size() * 2 +
+			")/" + CellReference.convertNumToColString(labels.indexOf(COSTO_STORICO_LABEL)) + "2),\"###,00%\")");
 		labels.add(FILE_LABEL);
 		summaryFormulas.add("");
 		summaryFormulas.add("");
