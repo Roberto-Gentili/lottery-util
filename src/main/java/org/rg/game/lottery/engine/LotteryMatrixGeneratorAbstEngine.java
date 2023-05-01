@@ -394,7 +394,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 						return null;
 					}
 					if (timeout < 0) {
-						System.out.println("Wait for system generation by others ended: " + storageRef.getName() + " will be overwritten");
+						System.out.println("Waiting for system generation by others ended: " + storageRef.getName() + " will be overwritten");
 					}
 				} catch (RuntimeException exc) {
 					if (!(exc.getCause() instanceof FileNotFoundException)) {
