@@ -322,6 +322,7 @@ public class LotteryMatrixSimulator {
 		simulatorFinished.set(true);
 		historyUpdateTask.join();
 		backup(new File(PersistentStorage.buildWorkingPath() + File.separator + excelFileName));
+		System.out.println("Processing of " + configuration.getProperty("file.name") + " succesfully finished");
 	}
 
 	private static CompletableFuture<Void> startHistoryUpdateTask(
@@ -333,6 +334,7 @@ public class LotteryMatrixSimulator {
 	) {
 		return CompletableFuture.runAsync(() -> {
 			boolean isSlave = Boolean.parseBoolean(configuration.getProperty("simulation.slave", "false"));
+			int initialPriority = Thread.currentThread().getPriority();
 			if (!isSlave) {
 				if (!simulatorFinished.get()) {
 					Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
@@ -352,6 +354,7 @@ public class LotteryMatrixSimulator {
 			}
 			setThreadPriorityToMax();
 			updateHistory(configuration, excelFileName, configurationName, premiumCountersForFile, simulatorFinished);
+			Thread.currentThread().setPriority(initialPriority);
 		});
 
 	}
