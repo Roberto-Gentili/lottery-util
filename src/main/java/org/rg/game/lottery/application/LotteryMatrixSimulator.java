@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -97,22 +96,13 @@ public class LotteryMatrixSimulator {
 		SEStats.get("02/07/2009", TimeUtils.defaultDateFormat.format(new Date()));
 		SEStats.forceLoadingFromExcel = true;
 		Supplier<SELotteryMatrixGeneratorEngine> engineSupplier = SELotteryMatrixGeneratorEngine::new;
-		Collection<File> configurationFiles = new TreeSet<>((fISOne, fISTwo) -> {
-			return fISOne.getName().compareTo(fISTwo.getName());
-		});
-		configurationFiles.addAll(
-			Arrays.asList(
-				new File(PersistentStorage.buildWorkingPath()).listFiles((directory, fileName) ->
-					fileName.contains("-matrix-generator") && fileName.endsWith(".properties")
-				)
-			)
-		);
 
-		configurationFiles.addAll(
-			ResourceUtils.INSTANCE.find((directory, fileName) ->
-				fileName.contains(configFilePrefix + "-matrix-generator") && fileName.endsWith("properties")
-			)
-		);
+		List<File> configurationFiles =
+			ResourceUtils.INSTANCE.find(
+				configFilePrefix + "-matrix-generator", "properties",
+				PersistentStorage.buildWorkingPath()
+			);
+
 		List<Properties> configurations = new ArrayList<>();
 		for (File fIS : configurationFiles) {
 			try (InputStream configIS = new FileInputStream(fIS)) {

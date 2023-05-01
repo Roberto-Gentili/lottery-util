@@ -5,11 +5,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
-import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
@@ -37,23 +35,13 @@ public class LotteryMatrixGenerator {
 		Supplier<LotteryMatrixGeneratorAbstEngine> engineSupplier =
 			configFilePrefix.equals("se") ? SELotteryMatrixGeneratorEngine::new :
 				configFilePrefix.equals("md") ? MDLotteryMatrixGeneratorEngine::new : null;
-		Collection<File> configurationFiles = new TreeSet<>((fISOne, fISTwo) -> {
-			return fISOne.getName().compareTo(fISTwo.getName());
-		});
 
-		configurationFiles.addAll(
-			Arrays.asList(
-				new File(PersistentStorage.buildWorkingPath()).listFiles((directory, fileName) ->
-					fileName.contains("-matrix-generator") && fileName.endsWith(".properties")
-				)
-			)
-		);
+		List<File> configurationFiles =
+			ResourceUtils.INSTANCE.find(
+				configFilePrefix + "-matrix-generator", "properties",
+				PersistentStorage.buildWorkingPath()
+			);
 
-		configurationFiles.addAll(
-			ResourceUtils.INSTANCE.find((directory, fileName) ->
-				fileName.contains(configFilePrefix + "-matrix-generator") && fileName.endsWith("properties")
-			)
-		);
 		List<Properties> configurations = new ArrayList<>();
 		for (File file : configurationFiles) {
 			try (InputStream configIS = new FileInputStream(file)) {

@@ -11,8 +11,11 @@ import java.io.OutputStream;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.TreeSet;
 
 public class ResourceUtils {
 	public static final ResourceUtils INSTANCE = new ResourceUtils();
@@ -33,6 +36,29 @@ public class ResourceUtils {
 		} catch (URISyntaxException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public List<File> find(String filePrefix, String extension, String... paths) {
+		Collection<File> configurationFiles = new TreeSet<>((fISOne, fISTwo) -> {
+			return fISOne.getName().compareTo(fISTwo.getName());
+		});
+
+		for (String path : paths) {
+			configurationFiles.addAll(
+				Arrays.asList(
+					new File(path).listFiles((directory, fileName) ->
+						fileName.contains(filePrefix) && fileName.endsWith(extension)
+					)
+				)
+			);
+		}
+
+		configurationFiles.addAll(
+			ResourceUtils.INSTANCE.find((directory, fileName) ->
+				fileName.contains(filePrefix) && fileName.endsWith(extension)
+			)
+		);
+		return new ArrayList<>(configurationFiles);
 	}
 
 	public File backup(
