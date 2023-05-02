@@ -373,13 +373,6 @@ public class LotteryMatrixSimulator {
 		Map<String, Map<Integer, Integer>> premiumCountersForFile,
 		AtomicBoolean simulatorFinished
 	) {
-		String basePath = Optional.ofNullable(configuration.getProperty("simulation.group")).map(groupName -> {
-			return PersistentStorage.buildWorkingPath(groupName);
-		}).orElseGet(() -> PersistentStorage.buildWorkingPath());
-		//Puliamo file json duplicati da google drive
-		for (File file : ResourceUtils.INSTANCE.find("(1)", "json", basePath)) {
-			file.delete();
-		}
 		boolean isSlave = Boolean.parseBoolean(configuration.getProperty("simulation.slave", "false"));
 		SEStats sEStats = getSEStats(configuration);
 		Map<Integer, String> allPremiums = SEStats.allPremiums();
@@ -505,6 +498,13 @@ public class LotteryMatrixSimulator {
 					);
 				}
 			}
+		}
+		String basePath = Optional.ofNullable(configuration.getProperty("simulation.group")).map(groupName -> {
+			return PersistentStorage.buildWorkingPath(groupName);
+		}).orElseGet(() -> PersistentStorage.buildWorkingPath());
+		//Puliamo file json duplicati da google drive
+		for (File file : ResourceUtils.INSTANCE.find("(1)", "json", basePath)) {
+			file.delete();
 		}
 	}
 
