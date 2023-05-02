@@ -69,7 +69,7 @@ public class LotteryMatrixSimulator {
 	private static final String RITORNO_LABEL = "Ritorno";
 	private static final String COSTO_LABEL = "Costo";
 	private static final String DATA_LABEL = "Data";
-	private static final String SALDO_STORICO_LABEL = "Saldo (storico) in %";
+	private static final String SALDO_STORICO_LABEL = "Saldo (storico)";
 	private static final String RITORNO_STORICO_LABEL = "Ritorno (storico)";
 	private static final String COSTO_STORICO_LABEL = "Costo (storico)";
 	private static final String FILE_LABEL = "File";
