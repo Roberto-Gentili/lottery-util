@@ -74,10 +74,29 @@ public class LotteryMatrixSimulator {
 	private static final String COSTO_STORICO_LABEL = "Costo (storico)";
 	private static final String FILE_LABEL = "File";
 	private static final String DATA_AGGIORNAMENTO_STORICO_LABEL = "Data agg. storico";
+	private static final List<String> excelHeaderLabels;
+
 	private static final ObjectMapper objectMapper = new ObjectMapper();
 	static Pattern regexForExtractConfigFileName = Pattern.compile("\\[.*?\\]\\[.*?\\]\\[.*?\\](.*)\\.txt");
 	static String hostName;
 	static SEStats allTimeStats;
+
+	static {
+		excelHeaderLabels = new ArrayList<>();
+		excelHeaderLabels.add(DATA_LABEL);
+		Collection<String> allPremiumLabels = SEStats.allPremiumLabels();
+		excelHeaderLabels.addAll(allPremiumLabels);
+		excelHeaderLabels.add(COSTO_LABEL);
+		excelHeaderLabels.add(RITORNO_LABEL);
+		excelHeaderLabels.add(SALDO_LABEL);
+		List<String> historyLabels = allPremiumLabels.stream().map(label -> getHistoryPremiumLabel(label)).collect(Collectors.toList());
+		excelHeaderLabels.addAll(historyLabels);
+		excelHeaderLabels.add(COSTO_STORICO_LABEL);
+		excelHeaderLabels.add(RITORNO_STORICO_LABEL);
+		excelHeaderLabels.add(SALDO_STORICO_LABEL);
+		excelHeaderLabels.add(DATA_AGGIORNAMENTO_STORICO_LABEL);
+		excelHeaderLabels.add(FILE_LABEL);
+	}
 
 	public static void main(String[] args) throws IOException {
 		hostName = InetAddress.getLocalHost().getHostName();
@@ -321,6 +340,19 @@ public class LotteryMatrixSimulator {
 		}
 		simulatorFinished.set(true);
 		historyUpdateTask.join();
+		if (!isSlave) {
+			readOrCreateExcel(
+				excelFileName,
+				workBook -> {
+					new SimpleWorkbookTemplate(workBook)
+						.setAutoFilter(1, Shared.getSEStats().getAllWinningCombos().size() * 2, 0, excelHeaderLabels.size() - 1);
+				},
+				null,
+				workBook -> {
+					store(excelFileName, workBook);
+				}
+			);
+		}
 		backup(new File(PersistentStorage.buildWorkingPath() + File.separator + excelFileName));
 		System.out.println("Processing of " + configuration.getProperty("file.name") + " succesfully finished");
 	}
@@ -509,13 +541,12 @@ public class LotteryMatrixSimulator {
 	}
 
 	private static SEStats getSEStats(Properties configuration) {
-		SEStats sEStats = SEStats.get(
+		return SEStats.get(
 			configuration.getProperty(
 				"competition.archive.start-date",
 				new SELotteryMatrixGeneratorEngine().getDefaultExtractionArchiveStartDate()
 			), TimeUtils.defaultLocalDateFormat.format(LocalDate.now())
 		);
-		return sEStats;
 	}
 
 	private static Map<String, Object> readPremiumCountersData(File premiumCountersFile) {
@@ -713,40 +744,27 @@ public class LotteryMatrixSimulator {
 	private static void createWorkbook(Workbook workBook, String excelFileName) {
 		SimpleWorkbookTemplate workBookTemplate = new SimpleWorkbookTemplate(workBook);
 		Sheet sheet = workBookTemplate.getOrCreateSheet("Risultati", true);
-		List<String> labels = new ArrayList<>();
-		labels.add(DATA_LABEL);
-		Collection<String> allPremiumLabels = SEStats.allPremiumLabels();
-		labels.addAll(allPremiumLabels);
-		labels.add(COSTO_LABEL);
-		labels.add(RITORNO_LABEL);
-		labels.add(SALDO_LABEL);
-		List<String> historyLabels = allPremiumLabels.stream().map(label -> getHistoryPremiumLabel(label)).collect(Collectors.toList());
-		labels.addAll(historyLabels);
-		labels.add(COSTO_STORICO_LABEL);
-		labels.add(RITORNO_STORICO_LABEL);
-		labels.add(SALDO_STORICO_LABEL);
-		labels.add(DATA_AGGIORNAMENTO_STORICO_LABEL);
+
 		List<String> summaryFormulas = new ArrayList<>();
 		String columnName = CellReference.convertNumToColString(0);
 		summaryFormulas.add("FORMULA_COUNTA(" + columnName + "3:"+ columnName + allTimeStats.getAllWinningCombos().size() * 2 +")");
-		for (int i = 1; i < labels.size()-2; i++) {
+		for (int i = 1; i < excelHeaderLabels.size()-3; i++) {
 			columnName = CellReference.convertNumToColString(i);
 			summaryFormulas.add(
 				"FORMULA_SUM(" + columnName + "3:"+ columnName + allTimeStats.getAllWinningCombos().size() * 2 +")"
 			);
 		}
 		summaryFormulas.add(
-			"FORMULA_TEXT((SUM(" + CellReference.convertNumToColString(labels.indexOf(SALDO_STORICO_LABEL)) + "3:" +
-			CellReference.convertNumToColString(labels.indexOf(SALDO_STORICO_LABEL)) + allTimeStats.getAllWinningCombos().size() * 2 +
-			")/" + CellReference.convertNumToColString(labels.indexOf(COSTO_STORICO_LABEL)) + "2),\"###,00%\")");
-		labels.add(FILE_LABEL);
+			"FORMULA_TEXT((SUM(" + CellReference.convertNumToColString(excelHeaderLabels.indexOf(SALDO_STORICO_LABEL)) + "3:" +
+			CellReference.convertNumToColString(excelHeaderLabels.indexOf(SALDO_STORICO_LABEL)) + allTimeStats.getAllWinningCombos().size() * 2 +
+			")/" + CellReference.convertNumToColString(excelHeaderLabels.indexOf(COSTO_STORICO_LABEL)) + "2),\"###,00%\")");
 		summaryFormulas.add("");
 		summaryFormulas.add("");
 		workBookTemplate.createHeader(
 			"Risultati",
 			true,
 			Arrays.asList(
-				labels,
+				excelHeaderLabels,
 				summaryFormulas
 			)
 		);
@@ -756,7 +774,7 @@ public class LotteryMatrixSimulator {
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, COSTO_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, RITORNO_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, SALDO_LABEL)).setCellStyle(headerNumberStyle);
-		for (String label : historyLabels) {
+		for (String label : SEStats.allPremiumLabels().stream().map(label -> getHistoryPremiumLabel(label)).collect(Collectors.toList())) {
 			sheet.getRow(1).getCell(Shared.getCellIndex(sheet, label)).setCellStyle(headerNumberStyle);
 		}
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, COSTO_STORICO_LABEL)).setCellStyle(headerNumberStyle);
@@ -771,7 +789,6 @@ public class LotteryMatrixSimulator {
 		sheet.setColumnWidth(Shared.getCellIndex(sheet, SALDO_STORICO_LABEL), 3000);
 		sheet.setColumnWidth(Shared.getCellIndex(sheet, DATA_AGGIORNAMENTO_STORICO_LABEL), 3800);
 		sheet.setColumnWidth(Shared.getCellIndex(sheet, FILE_LABEL), 12000);
-		//workBookTemplate.setAutoFilter(1, Shared.getSEStats().getAllWinningCombos().size() * 2, 0, labels.size() - 1);
 		//System.out.println(PersistentStorage.buildWorkingPath() + File.separator + excelFileName + " succesfully created");
 	}
 
@@ -825,7 +842,6 @@ public class LotteryMatrixSimulator {
 		try (OutputStream destFileOutputStream = new FileOutputStream(file)){
 			BaseFormulaEvaluator.evaluateAllFormulaCells(workBook);
 			workBook.write(destFileOutputStream);
-
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
