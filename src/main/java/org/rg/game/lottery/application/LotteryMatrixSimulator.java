@@ -344,8 +344,9 @@ public class LotteryMatrixSimulator {
 			readOrCreateExcel(
 				excelFileName,
 				workBook -> {
-					new SimpleWorkbookTemplate(workBook)
-						.setAutoFilter(1, Shared.getSEStats().getAllWinningCombos().size() * 2, 0, excelHeaderLabels.size() - 1);
+					SimpleWorkbookTemplate workBookTemplate = new SimpleWorkbookTemplate(workBook);
+					workBookTemplate.getOrCreateSheet("Risultati", true);
+					workBookTemplate.setAutoFilter(1, Shared.getSEStats().getAllWinningCombos().size() * 2, 0, excelHeaderLabels.size() - 1);
 				},
 				null,
 				workBook -> {
