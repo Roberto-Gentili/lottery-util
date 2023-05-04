@@ -459,12 +459,16 @@ public class SEMassiveVerifierAndQualityChecker {
 		results.append(":\n");
 		Map<Integer,List<List<Integer>>> systemResultsInHistory = historyData.get(extractionDateAsString);
 		if (systemResultsInHistory != null) {
-			results.append("\n");
-			for (Map.Entry<Integer, List<List<Integer>>> singleHistoryResult : systemResultsInHistory.entrySet()) {
+			Iterator<Map.Entry<Integer, List<List<Integer>>>> systemResultsInHistoryItr = systemResultsInHistory.entrySet().iterator();
+			while (systemResultsInHistoryItr.hasNext()) {
+				Map.Entry<Integer, List<List<Integer>>> singleHistoryResult = systemResultsInHistoryItr.next();
 				String label = SEStats.toPremiumLabel(singleHistoryResult.getKey());
 				results.append("    ");
 				results.append(label, boldFont);
 				results.append(": " + Shared.integerFormat.format(singleHistoryResult.getValue().size()) + "\n");
+				if (systemResultsInHistoryItr.hasNext()) {
+					results.append("\n");
+				}
 			}
 		} else {
 			results.append("    nessuna vincita");
