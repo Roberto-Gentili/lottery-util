@@ -124,7 +124,7 @@ public class LotteryMatrixSimulator {
 		List<Properties> configurations = new ArrayList<>();
 		for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles)) {
 			String simulationDates = config.getProperty("simulation.dates");
-			if (Boolean.parseBoolean(config.getProperty("enabled", "false"))) {
+			if (Boolean.parseBoolean(config.getProperty("simulation.enabled", "false"))) {
 				configurations.add(config);
 				if (simulationDates != null) {
 					config.setProperty("competition", simulationDates);
