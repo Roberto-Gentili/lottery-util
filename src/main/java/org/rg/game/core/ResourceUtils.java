@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Properties;
@@ -75,14 +76,7 @@ public class ResourceUtils {
 
 
 	public List<Properties> toOrderedProperties(List<File> files) throws IOException {
-		Comparator<Properties> comparator = (propsOne, propsTwo) -> {
-			BigDecimal propsOnePriority =
-					MathUtils.INSTANCE.stringToBigDecimal(propsOne.getProperty("priority-of-this-configuration"));
-				BigDecimal propsTwoPriority =
-					MathUtils.INSTANCE.stringToBigDecimal(propsTwo.getProperty("priority-of-this-configuration"));
-				return propsOnePriority.compareTo(propsTwoPriority);
-		};
-		Set<Properties> properties = new TreeSet<>(comparator.reversed());
+		List<Properties> properties = new ArrayList<>();
 		for (int i = 0; i < files.size(); i++) {
 			File file = files.get(i);
 			try (InputStream configIS = new FileInputStream(file)) {
@@ -104,7 +98,15 @@ public class ResourceUtils {
 				properties.add(config);
 			}
 		}
-		return new ArrayList<>(properties);
+		Comparator<Properties> comparator = (propsOne, propsTwo) -> {
+			BigDecimal propsOnePriority =
+					MathUtils.INSTANCE.stringToBigDecimal(propsOne.getProperty("priority-of-this-configuration"));
+				BigDecimal propsTwoPriority =
+					MathUtils.INSTANCE.stringToBigDecimal(propsTwo.getProperty("priority-of-this-configuration"));
+				return propsOnePriority.compareTo(propsTwoPriority);
+		};
+		Collections.sort(properties, comparator);
+		return properties;
 	}
 
 	public File backup(
