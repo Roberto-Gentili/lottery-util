@@ -328,9 +328,8 @@ public class SEMassiveVerifierAndQualityChecker {
 		}
 		results.append("Vincente", boldFont);
 		results.append(": ");
-		results.append(
-			Shared.toString(winningCombo, ", ") + "\n\n"
-		);
+		printWinningComboWithHitHighLights(winningCombo, hitNumbers, results, boldFont);
+		results.append("\n");
 		results.append("Concorso", boldFont);
 		results.append(": ");
 		if (!winningCombos.isEmpty()) {
@@ -358,6 +357,29 @@ public class SEMassiveVerifierAndQualityChecker {
 			}
 		}
 		return result.toString();
+	}
+
+	private static void printWinningComboWithHitHighLights(
+		List<Integer> winningCombo,
+		Collection<Integer> hitNumbers,
+		XSSFRichTextString results,
+		XSSFFont boldFont
+	) {
+		Iterator<Integer> winningComboIterator = winningCombo.iterator();
+		while (winningComboIterator.hasNext()) {
+			Integer winningNumber = winningComboIterator.next();
+			if (hitNumbers.contains(winningNumber)) {
+				results.append(winningNumber.toString(), boldFont);
+			} else {
+				results.append(winningNumber.toString());
+			}
+			if (winningComboIterator.hasNext()) {
+				results.append(", ");
+			}
+		}
+		results.append(
+			"\n"
+		);
 	}
 
 	private static void printDetailedWinningInfo(
