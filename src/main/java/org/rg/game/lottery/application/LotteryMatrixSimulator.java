@@ -119,13 +119,13 @@ public class LotteryMatrixSimulator {
 		List<File> configurationFiles =
 			ResourceUtils.INSTANCE.find(
 				configFilePrefix + "-matrix-generator", "properties",
-				PersistentStorage.buildWorkingPath()
+				PersistentStorage.buildWorkingPath(),
+				ResourceUtils.INSTANCE.getResource("simulations").getAbsolutePath()
 			);
 		List<Properties> configurations = new ArrayList<>();
 		for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles)) {
 			String simulationDates = config.getProperty("simulation.dates");
 			if (Boolean.parseBoolean(config.getProperty("simulation.enabled", "false"))) {
-				configurations.add(config);
 				if (simulationDates != null) {
 					config.setProperty("competition", simulationDates);
 				}

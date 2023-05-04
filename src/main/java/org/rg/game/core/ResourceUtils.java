@@ -30,6 +30,10 @@ public class ResourceUtils {
 	}
 
 	public List<File> find(FilenameFilter filter) {
+		return toOrderedList(getResourceFolder().listFiles(filter));
+	}
+
+	public File getResourceFolder() {
 		try {
 			File resourceFolder = Paths.get(IOUtils.class.getResource("/" +
 				IOUtils.class.getName().replace(".", "/") + ".class"
@@ -37,10 +41,18 @@ public class ResourceUtils {
 			for (String pathSegment : IOUtils.class.getName().split("\\.")) {
 				resourceFolder = resourceFolder.getParentFile();
 			}
-			return toOrderedList(resourceFolder.listFiles(filter));
+			return resourceFolder;
 		} catch (URISyntaxException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public File getResource(String path) {
+		File file = new File(getResourceFolder() + File.separator + path);
+		if (file.exists()) {
+			return file;
+		}
+		return null;
 	}
 
 	public List<File> findOrdered(String filePrefix, String extension, String... paths) {
@@ -52,9 +64,7 @@ public class ResourceUtils {
 	}
 
 	public List<File> find(String filePrefix, String extension, String... paths) {
-		Collection<File> files = new TreeSet<>((fISOne, fISTwo) -> {
-			return fISOne.getName().compareTo(fISTwo.getName());
-		});
+		Collection<File> files = new TreeSet<>(buildFileComparator());
 
 		for (String path : paths) {
 			files.addAll(
@@ -76,27 +86,13 @@ public class ResourceUtils {
 
 
 	public List<Properties> toOrderedProperties(List<File> files) throws IOException {
-		List<Properties> properties = new ArrayList<>();
+		List<Properties> propertiesColl = new ArrayList<>();
 		for (int i = 0; i < files.size(); i++) {
-			File file = files.get(i);
-			try (InputStream configIS = new FileInputStream(file)) {
-				Properties config = new Properties() {
-					@Override
-					public String toString() {
-						String priority = getProperty("priority-of-this-configuration");
-						if (priority != null) {
-							return getProperty("file.name") + " - priority: " + priority;
-						}
-						return super.toString();
-					}
-				};
-				config.setProperty("priority-of-this-configuration", String.valueOf((files.size() - 1) - i));
-				config.load(configIS);
-				config.setProperty("file.name", file.getName());
-				config.setProperty("file.parent.absolutePath", file.getParentFile().getAbsolutePath());
-				config.setProperty("file.extension", ResourceUtils.INSTANCE.getExtension(file));
-				properties.add(config);
+			Properties properties = toProperties(files.get(i));
+			if (properties.getProperty("priority-of-this-configuration") == null) {
+				properties.setProperty("priority-of-this-configuration", String.valueOf((files.size() - 1) - i));
 			}
+			propertiesColl.add(properties);
 		}
 		Comparator<Properties> comparator = (propsOne, propsTwo) -> {
 			BigDecimal propsOnePriority =
@@ -105,8 +101,44 @@ public class ResourceUtils {
 					MathUtils.INSTANCE.stringToBigDecimal(propsTwo.getProperty("priority-of-this-configuration"));
 				return propsOnePriority.compareTo(propsTwoPriority);
 		};
-		Collections.sort(properties, comparator);
-		return properties;
+		Collections.sort(propertiesColl, comparator);
+		return propertiesColl;
+	}
+
+	private Properties toProperties(File file) throws IOException {
+		try (InputStream configIS = new FileInputStream(file)) {
+			Properties properties = new Properties() {
+
+				private static final long serialVersionUID = -5098290977439105868L;
+
+				@Override
+				public String toString() {
+					String priority = getProperty("priority-of-this-configuration");
+					if (priority != null) {
+						return getProperty("file.name") + " - priority: " + priority;
+					}
+					return super.toString();
+				}
+			};
+
+			properties.load(configIS);
+			properties.setProperty("file.name", file.getName());
+			properties.setProperty("file.parent.absolutePath", file.getParentFile().getAbsolutePath());
+			properties.setProperty("file.extension", ResourceUtils.INSTANCE.getExtension(file));
+			String base = properties.getProperty("base");
+			if (base != null) {
+				if (!(base.startsWith("./") || base.startsWith("../"))) {
+					base = "./" + base;
+				}
+				Properties parentProperties = toProperties(
+					Paths.get(file.getParentFile().getAbsolutePath() + File.separator + base).normalize().toFile()
+				);
+				parentProperties.putAll(properties);
+				properties = parentProperties;
+				properties.remove("base");
+			}
+			return properties;
+		}
 	}
 
 	public File backup(
@@ -142,18 +174,24 @@ public class ResourceUtils {
 	}
 
 	public List<File> toOrderedList(Object files, boolean reversed) {
-		Comparator<File> fileComparator = (fileOne, fileTwo) ->
-			fileOne.getName().compareTo(fileTwo.getName());
-		if (reversed) {
-			fileComparator = fileComparator.reversed();
-		}
-		Set<File> orderedFiles = new TreeSet<>(fileComparator);
+		Set<File> orderedFiles = new TreeSet<>(reversed ?  buildFileComparator().reversed() :  buildFileComparator());
 		if (files.getClass().isArray()) {
 			orderedFiles.addAll(Arrays.asList((File[])files));
 		} else if (files instanceof Collection) {
 			orderedFiles.addAll((Collection<File>)files);
 		}
 		return new ArrayList<>(orderedFiles);
+	}
+
+	private Comparator<File> buildFileComparator() {
+		Comparator<File> fileComparator = (fileOne, fileTwo) -> {
+			int fileNameComparator = fileOne.getName().compareTo(fileTwo.getName());
+			if (fileNameComparator == 0) {
+				return fileOne.getAbsolutePath().compareTo(fileTwo.getAbsolutePath());
+			}
+			return fileNameComparator;
+		};
+		return fileComparator;
 	}
 
 	public List<File> toOrderedList(Object files) {
