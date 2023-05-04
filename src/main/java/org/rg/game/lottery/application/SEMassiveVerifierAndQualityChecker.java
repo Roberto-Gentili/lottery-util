@@ -147,7 +147,7 @@ public class SEMassiveVerifierAndQualityChecker {
 						system.add(currentCombo);
 					}
 					rowIterator = sheet.rowIterator();
-					sheet.setColumnWidth(offset + 6, 6600);
+					sheet.setColumnWidth(offset + 6, 5000);
 					rowIterator.next();
 					Cell cell = rowIterator.next().getCell(offset + 6);
 					XSSFRichTextString results = new XSSFRichTextString();
@@ -215,7 +215,7 @@ public class SEMassiveVerifierAndQualityChecker {
 					normalFont = workbook.createFont();
 					normalFont.setBold(false);
 					sheet.createFreezePane(0, 1);
-					header =  sheet.createRow(rowIndex);
+					header = sheet.createRow(rowIndex);
 					CellStyle headerStyle = workbook.createCellStyle();
 					headerStyle.setFont(boldFont);
 					headerStyle.setAlignment(HorizontalAlignment.CENTER);
@@ -225,7 +225,7 @@ public class SEMassiveVerifierAndQualityChecker {
 					monthLabel.setCellValue("Mese");
 					monthLabel.setCellStyle(headerStyle);
 					int columnIndex = 1;
-					for (String premiumLabel :  SEStats.allPremiumLabels()) {
+					for (String premiumLabel : SEStats.allPremiumLabels()) {
 						Cell headerCell = header.createCell(columnIndex++);
 						headerCell.setCellStyle(headerStyle);
 						headerCell.setCellValue(premiumLabel);
@@ -327,17 +327,16 @@ public class SEMassiveVerifierAndQualityChecker {
 			}
 		}
 		results.append("Vincente", boldFont);
-		results.append(": ");
+		results.append(":\n    ");
 		printWinningComboWithHitHighLights(winningCombo, hitNumbers, results, boldFont);
 		results.append("\n");
 		results.append("Concorso", boldFont);
-		results.append(": ");
+		results.append(":\n");
 		if (!winningCombos.isEmpty()) {
-			results.append("\n");
 			printSummaryWinningInfo(winningCombo, results, boldFont, winningCombos);
 			//printDetailedWinningInfo(winningCombo, results, boldFont, winningCombos);
 		} else {
-			results.append("nessuna vincita");
+			results.append("    nessuna vincita");
 		}
 		results.append("\n");
 		StringBuffer result = new StringBuffer();
@@ -389,12 +388,12 @@ public class SEMassiveVerifierAndQualityChecker {
 		Map<Integer, List<List<Integer>>> winningCombos
 	) {
 		for (Map.Entry<Integer, List<List<Integer>>> combos: winningCombos.entrySet()) {
-			results.append("  " + SEStats.toPremiumLabel(combos.getKey()), boldFont);
+			results.append("    " + SEStats.toPremiumLabel(combos.getKey()), boldFont);
 			results.append(":" + "\n");
 			Iterator<List<Integer>> combosIterator = combos.getValue().iterator();
 			while (combosIterator.hasNext()) {
 				List<Integer> currentCombo = combosIterator.next();
-				results.append("    ");
+				results.append("        ");
 				Iterator<Integer> winningComboIterator = currentCombo.iterator();
 				while (winningComboIterator.hasNext()) {
 					Integer number = winningComboIterator.next();
@@ -423,7 +422,7 @@ public class SEMassiveVerifierAndQualityChecker {
 		Iterator<Map.Entry<Integer, List<List<Integer>>>> winningAndCombosIterator = winningCombos.entrySet().iterator();
 		while (winningAndCombosIterator.hasNext()) {
 			Map.Entry<Integer, List<List<Integer>>> combos = winningAndCombosIterator.next();
-			results.append("  " + SEStats.toPremiumLabel(combos.getKey()), boldFont);
+			results.append("    " + SEStats.toPremiumLabel(combos.getKey()), boldFont);
 			results.append(": " + combos.getValue().size());
 			if (winningAndCombosIterator.hasNext()) {
 				results.append("\n");
@@ -457,18 +456,18 @@ public class SEMassiveVerifierAndQualityChecker {
 			}
 		}
 		results.append("Storico", boldFont);
-		results.append(": ");
+		results.append(":\n");
 		Map<Integer,List<List<Integer>>> systemResultsInHistory = historyData.get(extractionDateAsString);
 		if (systemResultsInHistory != null) {
 			results.append("\n");
 			for (Map.Entry<Integer, List<List<Integer>>> singleHistoryResult : systemResultsInHistory.entrySet()) {
 				String label = SEStats.toPremiumLabel(singleHistoryResult.getKey());
-				results.append("  ");
+				results.append("    ");
 				results.append(label, boldFont);
 				results.append(": " + Shared.integerFormat.format(singleHistoryResult.getValue().size()) + "\n");
 			}
 		} else {
-			results.append("nessuna vincita");
+			results.append("    nessuna vincita");
 		}
 	}
 
