@@ -333,12 +333,12 @@ public class SEMassiveVerifierAndQualityChecker {
 		}
 		results.append("Vincente", boldFont);
 		results.append(":\n    ");
-		printWinningComboWithHitHighLights(winningCombo, hitNumbers, results, boldFont);
+		printWinningComboWithHitHighLights(winningCombo, hitNumbers, results, boldHighLightedFont);
 		results.append("\n");
 		results.append("Concorso", boldFont);
 		results.append(":\n");
 		if (!winningCombos.isEmpty()) {
-			printSummaryWinningInfo(winningCombo, results, boldHighLightedFont, winningCombos);
+			printSummaryWinningInfo(winningCombo, results, boldFont, winningCombos);
 			//printDetailedWinningInfo(winningCombo, results, boldFont, winningCombos);
 		} else {
 			results.append("    nessuna vincita");
@@ -367,13 +367,13 @@ public class SEMassiveVerifierAndQualityChecker {
 		List<Integer> winningCombo,
 		Collection<Integer> hitNumbers,
 		XSSFRichTextString results,
-		XSSFFont boldFont
+		XSSFFont boldHighLightedFont
 	) {
 		Iterator<Integer> winningComboIterator = winningCombo.iterator();
 		while (winningComboIterator.hasNext()) {
 			Integer winningNumber = winningComboIterator.next();
 			if (hitNumbers.contains(winningNumber)) {
-				results.append(winningNumber.toString(), boldFont);
+				results.append(winningNumber.toString(), boldHighLightedFont);
 			} else {
 				results.append(winningNumber.toString());
 			}
