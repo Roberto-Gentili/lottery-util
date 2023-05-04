@@ -96,6 +96,9 @@ public class SEMassiveVerifierAndQualityChecker {
 				) {
 					XSSFFont boldFont = (XSSFFont) workbook.createFont();
 					boldFont.setBold(true);
+					XSSFFont boldHighLightedFont = (XSSFFont) workbook.createFont();
+					boldHighLightedFont.setBold(true);
+					boldHighLightedFont.setColor(IndexedColors.ORANGE.getIndex());
 					CellStyle boldAndCeneteredCellStyle = workbook.createCellStyle();
 					boldAndCeneteredCellStyle.setFont(boldFont);
 					boldAndCeneteredCellStyle.setAlignment(HorizontalAlignment.CENTER);
@@ -159,7 +162,8 @@ public class SEMassiveVerifierAndQualityChecker {
 							system,
 							winningCombo,
 							results,
-							boldFont
+							boldFont,
+							boldHighLightedFont
 						)
 					);
 					if (results.getString() != null) {
@@ -302,7 +306,8 @@ public class SEMassiveVerifierAndQualityChecker {
 		List<List<Integer>> combosToBeChecked,
 		List<Integer> winningCombo,
 		XSSFRichTextString results,
-		XSSFFont boldFont
+		XSSFFont boldFont,
+		XSSFFont boldHighLightedFont
 	) {
 		if (winningCombo == null || winningCombo.isEmpty()) {
 			return "Nessuna estrazione per il concorso del " + TimeUtils.defaultLocalDateFormat.format(extractionDate) + "\n";
@@ -333,7 +338,7 @@ public class SEMassiveVerifierAndQualityChecker {
 		results.append("Concorso", boldFont);
 		results.append(":\n");
 		if (!winningCombos.isEmpty()) {
-			printSummaryWinningInfo(winningCombo, results, boldFont, winningCombos);
+			printSummaryWinningInfo(winningCombo, results, boldHighLightedFont, winningCombos);
 			//printDetailedWinningInfo(winningCombo, results, boldFont, winningCombos);
 		} else {
 			results.append("    nessuna vincita");
