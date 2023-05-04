@@ -465,7 +465,7 @@ public class SEMassiveVerifierAndQualityChecker {
 				String label = SEStats.toPremiumLabel(singleHistoryResult.getKey());
 				results.append("    ");
 				results.append(label, boldFont);
-				results.append(": " + Shared.integerFormat.format(singleHistoryResult.getValue().size()) + "\n");
+				results.append(": " + Shared.integerFormat.format(singleHistoryResult.getValue().size()));
 				if (systemResultsInHistoryItr.hasNext()) {
 					results.append("\n");
 				}
