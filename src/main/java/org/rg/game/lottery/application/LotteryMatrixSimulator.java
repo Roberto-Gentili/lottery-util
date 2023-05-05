@@ -776,8 +776,9 @@ public class LotteryMatrixSimulator {
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, COSTO_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, RITORNO_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, SALDO_LABEL)).setCellStyle(headerNumberStyle);
-		for (String label : SEStats.allPremiumLabels().stream().map(label -> getHistoryPremiumLabel(label)).collect(Collectors.toList())) {
+		for (String label : SEStats.allPremiumLabels()) {
 			sheet.getRow(1).getCell(Shared.getCellIndex(sheet, label)).setCellStyle(headerNumberStyle);
+			sheet.getRow(1).getCell(Shared.getCellIndex(sheet, getHistoryPremiumLabel(label))).setCellStyle(headerNumberStyle);
 		}
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, COSTO_STORICO_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, RITORNO_STORICO_LABEL)).setCellStyle(headerNumberStyle);
