@@ -101,7 +101,7 @@ public class ResourceUtils {
 					MathUtils.INSTANCE.stringToBigDecimal(propsTwo.getProperty("priority-of-this-configuration"));
 				return propsOnePriority.compareTo(propsTwoPriority);
 		};
-		Collections.sort(propertiesColl, comparator);
+		Collections.sort(propertiesColl, comparator.reversed());
 		return propertiesColl;
 	}
 
