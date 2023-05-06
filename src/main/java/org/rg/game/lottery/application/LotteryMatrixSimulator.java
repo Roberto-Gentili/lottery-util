@@ -198,7 +198,12 @@ public class LotteryMatrixSimulator {
 		}
 	}
 
-	private static void cleanup(Properties configuration, String excelFileName, Collection<LocalDate> competitionDates, String configFileName, Integer redundancy) {
+	private static void cleanup(
+		Properties configuration,
+		String excelFileName,
+		Collection<LocalDate> competitionDates,
+		String configFileName, Integer redundancy
+	) {
 		int initialSize = competitionDates.size();
 		Iterator<LocalDate> datesIterator = competitionDates.iterator();
 		SEStats sEStats = getSEStats(configuration);
@@ -208,7 +213,9 @@ public class LotteryMatrixSimulator {
 				datesIterator.remove();
 			}
 		}
-		cleanupRedundant(excelFileName, configFileName, redundancy);
+		if (redundancy != null) {
+			cleanupRedundant(excelFileName, configFileName, redundancy, competitionDates);
+		}
 		readOrCreateExcel(
 			excelFileName,
 			workBook -> {
@@ -237,44 +244,54 @@ public class LotteryMatrixSimulator {
 		System.out.println(competitionDates.size() + " dates will be processed, " + (initialSize - competitionDates.size()) + " already processed");
 	}
 
-	private static void cleanupRedundant(String excelFileName, String configFileName, Integer redundancy) {
-		if (redundancy != null) {
-			readOrCreateExcel(
-				excelFileName,
-				workBook -> {
-					Sheet sheet = workBook.getSheet("Risultati");
-					Iterator<Row> rowIterator = sheet.rowIterator();
-					rowIterator.next();
-					rowIterator.next();
-					Map<String, List<Row>> groupedForRedundancyRows = new LinkedHashMap<>();
-					while (rowIterator.hasNext()) {
-						Row row = rowIterator.next();
-						if (rowRefersTo(row, configFileName)) {
-							groupedForRedundancyRows.computeIfAbsent(
-								row.getCell(row.getLastCellNum()-1).getStringCellValue(),
-								key -> new ArrayList<>()
-							).add(row);
+	private static void cleanupRedundant(String excelFileName, String configFileName, Integer redundancy, Collection<LocalDate> competitionDatesFlat) {
+		List<LocalDate> competionDateLatestBlock =
+			CollectionUtils.toSubLists(
+				new ArrayList<>(competitionDatesFlat),
+				redundancy
+			).stream().reduce((prev, next) -> next).orElse(null);
+		readOrCreateExcel(
+			excelFileName,
+			workBook -> {
+				Sheet sheet = workBook.getSheet("Risultati");
+				Iterator<Row> rowIterator = sheet.rowIterator();
+				rowIterator.next();
+				rowIterator.next();
+				Map<String, List<Row>> groupedForRedundancyRows = new LinkedHashMap<>();
+				while (rowIterator.hasNext()) {
+					Row row = rowIterator.next();
+					if (rowRefersTo(row, configFileName)) {
+						groupedForRedundancyRows.computeIfAbsent(
+							row.getCell(row.getLastCellNum()-1).getStringCellValue(),
+							key -> new ArrayList<>()
+						).add(row);
+					}
+				}
+				List<List<Row>> allGroupedForRedundancyRows = new ArrayList<>(groupedForRedundancyRows.values());
+				List<Row> latestGroupOfRows = allGroupedForRedundancyRows.stream().reduce((prev, next) -> next).orElse(null);
+				for (List<Row> rows : allGroupedForRedundancyRows) {
+					if (rows.size() < redundancy) {
+						for (Row row : rows) {
+							sheet.removeRow(row);
 						}
 					}
-					for (List<Row> rows : groupedForRedundancyRows.values()) {
-						if (rows.size() < redundancy) {
-							for (Row row : rows) {
-								sheet.removeRow(row);
-							}
-						}
+				}
+				if (latestGroupOfRows != null && latestGroupOfRows.size() != redundancy && latestGroupOfRows.size() != competionDateLatestBlock.size()) {
+					for (Row row : latestGroupOfRows) {
+						sheet.removeRow(row);
 					}
-				},
-				workBook ->
-					createWorkbook(workBook, excelFileName),
-				workBook ->
-					store(excelFileName, workBook)
-			);
-		}
+				}
+			},
+			workBook ->
+				createWorkbook(workBook, excelFileName),
+			workBook ->
+				store(excelFileName, workBook)
+		);
 	}
 
 	private static boolean rowRefersTo(Row row, String configurationName) {
 		Matcher matcher = regexForExtractConfigFileName.matcher(
-			row.getCell(row.getLastCellNum()-1).getStringCellValue()
+			row.getCell(Shared.getCellIndex(row.getSheet(), FILE_LABEL)).getStringCellValue()
 		);
 		return matcher.find() && matcher.group(1).equals(configurationName);
 	}
@@ -346,9 +363,10 @@ public class LotteryMatrixSimulator {
 			readOrCreateExcel(
 				excelFileName,
 				workBook -> {
-					SimpleWorkbookTemplate workBookTemplate = new SimpleWorkbookTemplate(workBook);
-					workBookTemplate.getOrCreateSheet("Risultati", true);
-					workBookTemplate.setAutoFilter(1, Shared.getSEStats().getAllWinningCombos().size() * 2, 0, excelHeaderLabels.size() - 1);
+					try (SimpleWorkbookTemplate workBookTemplate = new SimpleWorkbookTemplate(workBook);) {
+						workBookTemplate.getOrCreateSheet("Risultati", true);
+						workBookTemplate.setAutoFilter(1, Shared.getSEStats().getAllWinningCombos().size() * 2, 0, excelHeaderLabels.size() - 1);
+					}
 				},
 				null,
 				workBook -> {
