@@ -148,7 +148,7 @@ public class SEStats {
 			new FromExcelDataLoader(this.startDate, this.endDate, allWinningCombos, allWinningCombosWithJollyAndSuperstar)
 		);
 		Collection<DataStorer> dataStorers = new ArrayList<>();
-		if ((startDate.equals(FIRST_EXTRACTION_DATE_AS_STRING) || startDate.equals("02/07/2009")) && TimeUtils.defaultDateFormat.format(new Date()).equals(endDate)) {
+		if ((startDate.equals(FIRST_EXTRACTION_DATE_AS_STRING) || startDate.equals("02/07/2009")) && TimeUtils.getDefaultDateFormat().format(new Date()).equals(endDate)) {
 			/*dataStorers.add(
 				new ToExcelDataStorerV1()
 			);*/
@@ -196,7 +196,7 @@ public class SEStats {
 
 	private Date buildDate(String dateAsString) {
 		try {
-			return TimeUtils.defaultDateFormat.parse(dateAsString);
+			return TimeUtils.getDefaultDateFormat().parse(dateAsString);
 		} catch (ParseException exc) {
 			throw new RuntimeException(exc);
 		}
@@ -457,7 +457,7 @@ public class SEStats {
 
 	public List<Integer> getWinningComboOf(Date date) {
 		return allWinningCombos.entrySet().stream().filter(entry ->
-			TimeUtils.defaultDateFormat.format(entry.getKey()).equals(TimeUtils.defaultDateFormat.format(date))
+			TimeUtils.getDefaultDateFormat().format(entry.getKey()).equals(TimeUtils.getDefaultDateFormat().format(date))
 		).map(Map.Entry::getValue).findAny().orElseGet(() -> null);
 	}
 
@@ -545,13 +545,13 @@ public class SEStats {
 		data.put("winningCombos", winningsCombosData);
 		Map<Integer, Integer> premiumCounters = new TreeMap<>();
 
-		StringBuffer report = new StringBuffer("Risultati storici dal " +  TimeUtils.defaultDateFormat.format(
+		StringBuffer report = new StringBuffer("Risultati storici dal " +  TimeUtils.getDefaultDateFormat().format(
 			allWinningCombosReversed.size() > 0? allWinningCombosReversed.get(0).getKey() : startDate
 		) + ":\n\n");
 		Iterator<Map.Entry<Date, Map<Integer, List<List<Integer>>>>> winningsCombosDataItr = winningsCombosData.entrySet().iterator();
 		while (winningsCombosDataItr.hasNext()) {
 			Map.Entry<Date, Map<Integer, List<List<Integer>>>> winningCombosInfo = winningsCombosDataItr.next();
-			report.append("\t" + TimeUtils.defaultDateFormat.format(winningCombosInfo.getKey()) + ":\n");
+			report.append("\t" + TimeUtils.getDefaultDateFormat().format(winningCombosInfo.getKey()) + ":\n");
 			for (Map.Entry<Integer, List<List<Integer>>> winningCombos : winningCombosInfo.getValue().entrySet()) {
 				report.append("\t\t" + toPremiumLabel(winningCombos.getKey()) + ":\n");
 				for (List<Integer> combo : winningCombos.getValue()) {
@@ -566,8 +566,8 @@ public class SEStats {
 		}
 		data.put("report.detail", report.toString());
 		report = new StringBuffer("");
-		report.append("Riepilogo risultati storici dal " + TimeUtils.defaultDateFormat.format(allWinningCombosReversed.size() > 0 ? allWinningCombosReversed.get(0).getKey() : startDate) +
-			" al " + TimeUtils.defaultDateFormat.format(allWinningCombos.size() > 0 ? this.allWinningCombos.entrySet().stream().collect(Collectors.toList()).get(0).getKey() : endDate) + ":\n\n"
+		report.append("Riepilogo risultati storici dal " + TimeUtils.getDefaultDateFormat().format(allWinningCombosReversed.size() > 0 ? allWinningCombosReversed.get(0).getKey() : startDate) +
+			" al " + TimeUtils.getDefaultDateFormat().format(allWinningCombos.size() > 0 ? this.allWinningCombos.entrySet().stream().collect(Collectors.toList()).get(0).getKey() : endDate) + ":\n\n"
 		);
 		Integer returns = 0;
 		for (Map.Entry<Integer, Integer> winningInfo : premiumCounters.entrySet()) {
@@ -585,7 +585,7 @@ public class SEStats {
 		if (referenceDate == null) {//Nel caso lo storico non abbia dati
 			referenceDate = endDate.compareTo(startDate) >= 0 ? endDate : startDate;
 		}
-		data.put("referenceDate", TimeUtils.defaultDateFormat.format(referenceDate));
+		data.put("referenceDate", TimeUtils.getDefaultDateFormat().format(referenceDate));
 		return data;
 	}
 
@@ -848,11 +848,11 @@ public class SEStats {
 	private class ToExcelDataStorerV1 implements DataStorer {
 
 		private String getFileName() {
-			return "[SE]" + TimeUtils.defaultDateFmtForFilePrefix.format(startDate) + " - Archivio estrazioni e statistiche v1.xlsx";
+			return "[SE]" + TimeUtils.getDefaultDateFmtForFilePrefix().format(startDate) + " - Archivio estrazioni e statistiche v1.xlsx";
 		}
 
 		private String getFileName(String startDateFormatted) throws ParseException {
-			return "[SE]" + TimeUtils.defaultDateFmtForFilePrefix.format(TimeUtils.defaultDateFormat.parse(startDateFormatted)) + " - Archivio estrazioni e statistiche v1.xlsx";
+			return "[SE]" + TimeUtils.getDefaultDateFmtForFilePrefix().format(TimeUtils.getDefaultDateFormat().parse(startDateFormatted)) + " - Archivio estrazioni e statistiche v1.xlsx";
 		}
 
 		@Override
@@ -964,11 +964,11 @@ public class SEStats {
 		}
 
 		private String getFileName() {
-			return "[SE]" + TimeUtils.defaultDateFmtForFilePrefix.format(sEStats.startDate) + " - Archivio estrazioni e statistiche v2.xlsx";
+			return "[SE]" + TimeUtils.getDefaultDateFmtForFilePrefix().format(sEStats.startDate) + " - Archivio estrazioni e statistiche v2.xlsx";
 		}
 
 		private static String getFileName(String startDateFormatted) throws ParseException {
-			return "[SE]" + TimeUtils.defaultDateFmtForFilePrefix.format(TimeUtils.defaultDateFormat.parse(startDateFormatted)) + " - Archivio estrazioni e statistiche v2.xlsx";
+			return "[SE]" + TimeUtils.getDefaultDateFmtForFilePrefix().format(TimeUtils.getDefaultDateFormat().parse(startDateFormatted)) + " - Archivio estrazioni e statistiche v2.xlsx";
 		}
 
 		@Override

@@ -50,7 +50,7 @@ public class Verifier {
 			connection.setRequestProperty("accept", "application/json");
 			InputStream responseStream = connection.getInputStream();
 			Map<String,Object> data = new ObjectMapper().readValue(responseStream, Map.class);
-			extractionDate = TimeUtils.defaultDateFormat.format(new Date((Long)data.get("dataEstrazione")));
+			extractionDate = TimeUtils.getDefaultDateFormat().format(new Date((Long)data.get("dataEstrazione")));
 			winningCombo = ((List<String>)((Map<String,Object>)data.get("combinazioneVincente")).get("estratti"))
 				.stream().map(Integer::valueOf).collect(Collectors.toList());
 			connection.disconnect();
@@ -68,7 +68,7 @@ public class Verifier {
 					startDate = startDate.minus(1, ChronoUnit.DAYS);
 				}
 			}
-			extractionDate = TimeUtils.defaultDateFormat.format(startDate);
+			extractionDate = TimeUtils.getDefaultDateFormat().format(startDate);
 		}
 		String extractionYear = extractionDate.split("\\/")[2];
 		String extractionMonth = Shared.getMonth(extractionDate);

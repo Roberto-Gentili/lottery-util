@@ -175,7 +175,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 				discardedFromHistory++;
 				if (fineLog) {
 					comboSums.add(comboForDate.getValue().stream().mapToInt(Integer::intValue).sum());
-					System.out.println("  Filter discarded winning combo of " + TimeUtils.defaultDateFormat.format(comboForDate.getKey()) + ":  " +
+					System.out.println("  Filter discarded winning combo of " + TimeUtils.getDefaultDateFormat().format(comboForDate.getKey()) + ":  " +
 						ComboHandler.toString(comboForDate.getValue()));
 				}
 			}
@@ -371,7 +371,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 			) {
 				latestExtractionDate = sEStats.getLatestExtractionDate(2);
 				if (latestExtractionDate != null) {
-					sEStats = SEStats.get(getExtractionArchiveStartDate(), TimeUtils.defaultDateFormat.format(latestExtractionDate));
+					sEStats = SEStats.get(getExtractionArchiveStartDate(), TimeUtils.getDefaultDateFormat().format(latestExtractionDate));
 				} else {
 					sEStats = SEStats.get(
 						getExtractionArchiveStartDate(),

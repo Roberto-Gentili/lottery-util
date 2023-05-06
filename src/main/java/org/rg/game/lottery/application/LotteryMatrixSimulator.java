@@ -111,8 +111,8 @@ public class LotteryMatrixSimulator {
 		Collection<CompletableFuture<Void>> futures
 	) throws IOException {
 		SEStats.forceLoadingFromExcel = false;
-		allTimeStats = SEStats.get("03/12/1997", TimeUtils.defaultDateFormat.format(new Date()));
-		SEStats.get("02/07/2009", TimeUtils.defaultDateFormat.format(new Date()));
+		allTimeStats = SEStats.get("03/12/1997", TimeUtils.getDefaultDateFormat().format(new Date()));
+		SEStats.get("02/07/2009", TimeUtils.getDefaultDateFormat().format(new Date()));
 		SEStats.forceLoadingFromExcel = true;
 		Supplier<SELotteryMatrixGeneratorEngine> engineSupplier = SELotteryMatrixGeneratorEngine::new;
 
@@ -544,7 +544,7 @@ public class LotteryMatrixSimulator {
 							Row row = workBook.getSheet("Risultati").getRow(rowIndex);
 							System.out.println(
 								"Aggiornamento storico completato per " +
-								TimeUtils.defaultDateFormat.format(row.getCell(0).getDateCellValue()) + " - " +
+								TimeUtils.getDefaultDateFormat().format(row.getCell(0).getDateCellValue()) + " - " +
 								row.getCell(fileColIndex.get()).getStringCellValue()
 							);
 						}

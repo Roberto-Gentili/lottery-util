@@ -12,11 +12,11 @@ import java.util.Date;
 public class TimeUtils {
 
 	public static final String DEFAULT_TIME_ZONE = "Europe/Rome";
-	public static SimpleDateFormat defaultDateFmtForFilePrefix = new SimpleDateFormat("[yyyy][MM][dd]");
+	private static ThreadLocal<SimpleDateFormat> defaultDateFmtForFilePrefix = ThreadLocal.withInitial(() -> new SimpleDateFormat("[yyyy][MM][dd]"));
 	public static DateTimeFormatter dateTimeFormatForBackup = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
-	public static SimpleDateFormat defaultDateFormat = new SimpleDateFormat("dd/MM/yyyy");
-	public static DateTimeFormatter defaultLocalDateFormat = DateTimeFormatter.ofPattern(defaultDateFormat.toPattern());
-	public static DateTimeFormatter defaultLocalDateWithDayNameFormat = DateTimeFormatter.ofPattern("EEEE " + defaultDateFormat.toPattern());
+	private static ThreadLocal<SimpleDateFormat> defaultDateFormat = ThreadLocal.withInitial(() -> new SimpleDateFormat("dd/MM/yyyy"));
+	public static DateTimeFormatter defaultLocalDateFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+	public static DateTimeFormatter defaultLocalDateWithDayNameFormat = DateTimeFormatter.ofPattern("EEEE " + getDefaultDateFormat().toPattern());
 	public static Comparator<Date> reversedDateComparator = Collections.reverseOrder((dateOne, dateTwo) -> dateOne.compareTo(dateTwo));
 	public static Comparator<LocalDate> reversedLocalDateComparator = Collections.reverseOrder((dateOne, dateTwo) -> dateOne.compareTo(dateTwo));
 
@@ -38,6 +38,14 @@ public class TimeUtils {
 
 	public static boolean isBetween(Date source, Date startDate, Date endDate) {
 		return startDate.compareTo(source) <= 0 && endDate.compareTo(source) >= 0;
+	}
+
+	public static SimpleDateFormat getDefaultDateFormat() {
+		return defaultDateFormat.get();
+	}
+
+	public static SimpleDateFormat getDefaultDateFmtForFilePrefix() {
+		return defaultDateFmtForFilePrefix.get();
 	}
 
 }

@@ -130,7 +130,7 @@ class Shared {
 	}
 
 	static SEStats getSEStats() {
-		return SEStats.get(Shared.sEStatsDefaultDate, TimeUtils.defaultDateFormat.format(new Date()));
+		return SEStats.get(Shared.sEStatsDefaultDate, TimeUtils.getDefaultDateFormat().format(new Date()));
 	}
 
 	static String getSystemEnv(String key, String defaultValue) {
