@@ -159,7 +159,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 
 	@Override
 	public String getDefaultExtractionArchiveForSeedStartDate() {
-		return "03/12/1997";
+		return SEStats.FIRST_EXTRACTION_DATE_AS_STRING;
 	}
 
 	@Override

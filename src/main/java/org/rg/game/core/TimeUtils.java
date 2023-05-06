@@ -12,6 +12,7 @@ import java.util.Date;
 public class TimeUtils {
 
 	public static final String DEFAULT_TIME_ZONE = "Europe/Rome";
+	public static SimpleDateFormat defaultDateFmtForFilePrefix = new SimpleDateFormat("[yyyy][MM][dd]");
 	public static DateTimeFormatter dateTimeFormatForBackup = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
 	public static SimpleDateFormat defaultDateFormat = new SimpleDateFormat("dd/MM/yyyy");
 	public static DateTimeFormatter defaultLocalDateFormat = DateTimeFormatter.ofPattern(defaultDateFormat.toPattern());

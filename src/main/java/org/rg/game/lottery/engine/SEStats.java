@@ -57,6 +57,10 @@ public class SEStats {
 	private static final Map<String, SEStats> INSTANCES;
 	private static final Map<Integer, String> allPremiums;
 	private static final List<String> allPremiumLabels;
+	static final String FIRST_EXTRACTION_DATE_AS_STRING = "03/12/1997";
+	static final LocalDate FIRST_EXTRACTION_LOCAL_DATE = LocalDate.parse(FIRST_EXTRACTION_DATE_AS_STRING, TimeUtils.defaultLocalDateFormat);
+	static final Date FIRST_EXTRACTION_DATE = TimeUtils.toDate(FIRST_EXTRACTION_LOCAL_DATE);
+
 	public static boolean forceLoadingFromExcel;
 	static {
 		SEStats.forceLoadingFromExcel =
@@ -75,7 +79,6 @@ public class SEStats {
 
 	protected DecimalFormat decimalFormat = new DecimalFormat( "#,##0.##" );
 	protected DecimalFormat integerFormat = new DecimalFormat( "#,##0" );
-	protected DateFormat defaultDateFmtForFile = new SimpleDateFormat("[yyyy][MM][dd]");
 	protected Date startDate;
 	protected Date endDate;
 
@@ -140,16 +143,17 @@ public class SEStats {
 		this.allWinningCombos = new TreeMap<>(TimeUtils.reversedDateComparator);
 		this.allWinningCombosWithJollyAndSuperstar = new TreeMap<>(TimeUtils.reversedDateComparator);
 		Collection<DataLoader> dataLoaders = Arrays.asList(
+			new FromGlobalSEStatsDataLoader(this.startDate, this.endDate, allWinningCombos, allWinningCombosWithJollyAndSuperstar),
 			new InternetDataLoader(this.startDate, this.endDate, allWinningCombos, allWinningCombosWithJollyAndSuperstar),
-			new FromExcelDataLoader()
+			new FromExcelDataLoader(this.startDate, this.endDate, allWinningCombos, allWinningCombosWithJollyAndSuperstar)
 		);
 		Collection<DataStorer> dataStorers = new ArrayList<>();
-		if ((startDate.equals("03/12/1997") || startDate.equals("02/07/2009")) && TimeUtils.defaultDateFormat.format(new Date()).equals(endDate)) {
+		if ((startDate.equals(FIRST_EXTRACTION_DATE_AS_STRING) || startDate.equals("02/07/2009")) && TimeUtils.defaultDateFormat.format(new Date()).equals(endDate)) {
 			/*dataStorers.add(
 				new ToExcelDataStorerV1()
 			);*/
 			dataStorers.add(
-				new ToExcelDataStorerV2()
+				new ToExcelDataStorerV2(this)
 			);
 		}
 		boolean dataLoaded = false;
@@ -626,6 +630,33 @@ public class SEStats {
 
 		public boolean load() throws Throwable;
 
+		static abstract class Abst implements DataLoader{
+			protected Date startDate;
+			protected Date endDate;
+			protected Map<Date, List<Integer>> allWinningCombos;
+			protected Map<Date, List<Integer>> allWinningCombosWithJollyAndSuperstar;
+			protected DateFormat dateFmt;
+
+			Abst(
+				Date startDate,
+				Date endDate
+			) {
+				this(startDate, endDate, new TreeMap<>(TimeUtils.reversedDateComparator), new TreeMap<>(TimeUtils.reversedDateComparator));
+			}
+
+			Abst(
+				Date startDate,
+				Date endDate,
+				Map<Date, List<Integer>> allWinningCombos,
+				Map<Date, List<Integer>> allWinningCombosWithJollyAndSuperstar) {
+				this.startDate = startDate;
+				this.endDate = endDate;
+				this.allWinningCombos = allWinningCombos;
+				this.allWinningCombosWithJollyAndSuperstar = allWinningCombosWithJollyAndSuperstar;
+				this.dateFmt = new SimpleDateFormat("yyyy dd MMMM", Locale.ITALY);
+			}
+		}
+
 	}
 
 	private static interface DataStorer {
@@ -634,31 +665,21 @@ public class SEStats {
 
 	}
 
-	public static class InternetDataLoader implements DataLoader {
+	public static class InternetDataLoader extends org.rg.game.lottery.engine.SEStats.DataLoader.Abst {
 		public static final String LATEST_WINNING_COMBO_URL = "https://www.gntn-pgd.it/gntn-info-web/rest/gioco/superenalotto/estrazioni/ultimoconcorso";
 		public static final String EXTRACTIONS_ARCHIVE_URL = "https://www.superenalotto.net/estrazioni/${year}";
 
-		protected Date startDate;
-		protected Date endDate;
-		private Map<Date, List<Integer>> allWinningCombos;
-		private Map<Date, List<Integer>> allWinningCombosWithJollyAndSuperstar;
-		protected DateFormat dateFmt;
-
-		public InternetDataLoader(Date startDate,
-				Date endDate) {
-			this(startDate, endDate, new TreeMap<>(TimeUtils.reversedDateComparator), new TreeMap<>(TimeUtils.reversedDateComparator));
+		InternetDataLoader(Date startDate, Date endDate) {
+			super(startDate, endDate);
 		}
 
-		public InternetDataLoader(
+		InternetDataLoader(
 			Date startDate,
 			Date endDate,
 			Map<Date, List<Integer>> allWinningCombos,
-			Map<Date, List<Integer>> allWinningCombosWithJollyAndSuperstar) {
-			this.startDate = startDate;
-			this.endDate = endDate;
-			this.allWinningCombos = allWinningCombos;
-			this.allWinningCombosWithJollyAndSuperstar = allWinningCombosWithJollyAndSuperstar;
-			this.dateFmt = new SimpleDateFormat("yyyy dd MMMM", Locale.ITALY);
+			Map<Date, List<Integer>> allWinningCombosWithJollyAndSuperstar
+		) {
+			super(startDate, endDate, allWinningCombos, allWinningCombosWithJollyAndSuperstar);
 		}
 
 		public static Map.Entry<Date, List<Integer>> getLatestWinningCombo() {
@@ -735,11 +756,61 @@ public class SEStats {
 
 	}
 
-	private class FromExcelDataLoader implements DataLoader {
+	private class FromGlobalSEStatsDataLoader extends DataLoader.Abst {
+
+		FromGlobalSEStatsDataLoader(Date startDate, Date endDate) {
+			super(startDate, endDate);
+		}
+
+		FromGlobalSEStatsDataLoader(
+			Date startDate,
+			Date endDate,
+			Map<Date, List<Integer>> allWinningCombos,
+			Map<Date, List<Integer>> allWinningCombosWithJollyAndSuperstar
+		) {
+			super(startDate, endDate, allWinningCombos, allWinningCombosWithJollyAndSuperstar);
+		}
 
 		@Override
 		public boolean load() throws Throwable {
-			try (InputStream inputStream = new FileInputStream(PersistentStorage.buildWorkingPath() + File.separator + new ToExcelDataStorerV2().getFileName("03/12/1997"));
+			if (TimeUtils.toLocalDate(startDate).compareTo(FIRST_EXTRACTION_LOCAL_DATE) == 0 &&
+				TimeUtils.toLocalDate(endDate).compareTo(LocalDate.now()) == 0
+			) {
+				return false;
+			}
+			SEStats sEStats = SEStats.get(FIRST_EXTRACTION_DATE_AS_STRING, TimeUtils.defaultLocalDateFormat.format(LocalDate.now()));
+			for (Map.Entry<Date, List<Integer>> winningComboInfo : sEStats.allWinningCombos.entrySet()) {
+				if (winningComboInfo.getKey().compareTo(startDate) >= 0 && winningComboInfo.getKey().compareTo(endDate) <= 0) {
+					this.allWinningCombos.put(winningComboInfo.getKey(), winningComboInfo.getValue());
+				}
+			}
+			for (Map.Entry<Date, List<Integer>> winningComboInfo : sEStats.allWinningCombosWithJollyAndSuperstar.entrySet()) {
+				if (winningComboInfo.getKey().compareTo(startDate) >= 0 && winningComboInfo.getKey().compareTo(endDate) <= 0) {
+					this.allWinningCombosWithJollyAndSuperstar.put(winningComboInfo.getKey(), winningComboInfo.getValue());
+				}
+			}
+			return true;
+		}
+
+	}
+
+	private static class FromExcelDataLoader extends DataLoader.Abst {
+		FromExcelDataLoader(Date startDate, Date endDate) {
+			super(startDate, endDate);
+		}
+
+		FromExcelDataLoader(
+			Date startDate,
+			Date endDate,
+			Map<Date, List<Integer>> allWinningCombos,
+			Map<Date, List<Integer>> allWinningCombosWithJollyAndSuperstar
+		) {
+			super(startDate, endDate, allWinningCombos, allWinningCombosWithJollyAndSuperstar);
+		}
+
+		@Override
+		public boolean load() throws Throwable {
+			try (InputStream inputStream = new FileInputStream(PersistentStorage.buildWorkingPath() + File.separator + ToExcelDataStorerV2.getFileName("03/12/1997"));
 				Workbook workbook = new XSSFWorkbook(inputStream);
 			) {
 				Sheet sheet = workbook.getSheet("Storico estrazioni");
@@ -777,11 +848,11 @@ public class SEStats {
 	private class ToExcelDataStorerV1 implements DataStorer {
 
 		private String getFileName() {
-			return "[SE]" + defaultDateFmtForFile.format(startDate) + " - Archivio estrazioni e statistiche v1.xlsx";
+			return "[SE]" + TimeUtils.defaultDateFmtForFilePrefix.format(startDate) + " - Archivio estrazioni e statistiche v1.xlsx";
 		}
 
 		private String getFileName(String startDateFormatted) throws ParseException {
-			return "[SE]" + defaultDateFmtForFile.format(TimeUtils.defaultDateFormat.parse(startDateFormatted)) + " - Archivio estrazioni e statistiche v1.xlsx";
+			return "[SE]" + TimeUtils.defaultDateFmtForFilePrefix.format(TimeUtils.defaultDateFormat.parse(startDateFormatted)) + " - Archivio estrazioni e statistiche v1.xlsx";
 		}
 
 		@Override
@@ -886,14 +957,18 @@ public class SEStats {
 
 	}
 
-	private class ToExcelDataStorerV2 implements DataStorer {
-
-		private String getFileName() {
-			return "[SE]" + defaultDateFmtForFile.format(startDate) + " - Archivio estrazioni e statistiche v2.xlsx";
+	private static class ToExcelDataStorerV2 implements DataStorer {
+		SEStats sEStats;
+		private ToExcelDataStorerV2(SEStats sEStats) {
+			this.sEStats = sEStats;
 		}
 
-		private String getFileName(String startDateFormatted) throws ParseException {
-			return "[SE]" + defaultDateFmtForFile.format(TimeUtils.defaultDateFormat.parse(startDateFormatted)) + " - Archivio estrazioni e statistiche v2.xlsx";
+		private String getFileName() {
+			return "[SE]" + TimeUtils.defaultDateFmtForFilePrefix.format(sEStats.startDate) + " - Archivio estrazioni e statistiche v2.xlsx";
+		}
+
+		private static String getFileName(String startDateFormatted) throws ParseException {
+			return "[SE]" + TimeUtils.defaultDateFmtForFilePrefix.format(TimeUtils.defaultDateFormat.parse(startDateFormatted)) + " - Archivio estrazioni e statistiche v2.xlsx";
 		}
 
 		@Override
@@ -944,16 +1019,16 @@ public class SEStats {
 						"Distanza in % dal record di assenze consecutive"
 					)
 				).setHeight((short)1152);
-				for (Map.Entry<String, Integer> extractionData : extractedNumberCounters) {
+				for (Map.Entry<String, Integer> extractionData : sEStats.extractedNumberCounters) {
 					template.addRow();
 					template.addCell(Integer.parseInt(extractionData.getKey()), "0");
 					template.addCell(extractionData.getValue(), "0");
-					template.addCell(getExtractedNumberCountersFromMostExtractedCoupleFor(extractionData.getKey()), "0");
-					template.addCell(getExtractedNumberCountersFromMostExtractedTripleFor(extractionData.getKey()), "0");
-					template.addCell(getCounterOfAbsencesFromCompetitionsFor(extractionData.getKey()), "0");
-					template.addCell(getAbsenceRecordFromCompetitionsFor(extractionData.getKey()), "0");
-					template.addCell(getDistanceFromAbsenceRecordFor(extractionData.getKey()), "0");
-					Double distanceFromAbsenceRecordPerc = getDistanceFromAbsenceRecordPercentageFor(extractionData.getKey());
+					template.addCell(sEStats.getExtractedNumberCountersFromMostExtractedCoupleFor(extractionData.getKey()), "0");
+					template.addCell(sEStats.getExtractedNumberCountersFromMostExtractedTripleFor(extractionData.getKey()), "0");
+					template.addCell(sEStats.getCounterOfAbsencesFromCompetitionsFor(extractionData.getKey()), "0");
+					template.addCell(sEStats.getAbsenceRecordFromCompetitionsFor(extractionData.getKey()), "0");
+					template.addCell(sEStats.getDistanceFromAbsenceRecordFor(extractionData.getKey()), "0");
+					Double distanceFromAbsenceRecordPerc = sEStats.getDistanceFromAbsenceRecordPercentageFor(extractionData.getKey());
 					template.addCell(
 							distanceFromAbsenceRecordPerc /100
 					).setCellStyle(percentageNumberStyle);
@@ -967,7 +1042,7 @@ public class SEStats {
 				sheet.setColumnWidth(1, 3640);
 				sheet.setColumnWidth(2,	3584);
 				template.createHeader(true, Arrays.asList("1° numero", "2° numero", "Conteggio estrazioni")).setHeight((short)576);
-				for (Map.Entry<String, Integer> extractedNumberPairCounter : extractedNumberPairCounters) {
+				for (Map.Entry<String, Integer> extractedNumberPairCounter : sEStats.extractedNumberPairCounters) {
 					String[] numbers = extractedNumberPairCounter.getKey().split("-");
 					template.addRow();
 					template.addCell(Integer.parseInt(numbers[0]), "0");
@@ -981,7 +1056,7 @@ public class SEStats {
 				sheet.setColumnWidth(2, 3640);
 				sheet.setColumnWidth(3,	3584);
 				template.createHeader(true, Arrays.asList("1° numero", "2° numero", "3° numero", "Conteggio estrazioni")).setHeight((short)576);
-				for (Map.Entry<String, Integer> extractedNumberTripleCounter : extractedNumberTripleCounters) {
+				for (Map.Entry<String, Integer> extractedNumberTripleCounter : sEStats.extractedNumberTripleCounters) {
 					String[] numbers = extractedNumberTripleCounter.getKey().split("-");
 					template.addRow();
 					template.addCell(Integer.parseInt(numbers[0]), "0");
@@ -1004,7 +1079,7 @@ public class SEStats {
 					true,
 					Arrays.asList("Data", "1° numero", "2° numero", "3° numero", "4° numero", "5° numero", "6° numero", "Jolly", "Superstar")
 				).setHeight((short)288);
-				for (Map.Entry<Date, List<Integer>> extractionData : allWinningCombosWithJollyAndSuperstar.entrySet()) {
+				for (Map.Entry<Date, List<Integer>> extractionData : sEStats.allWinningCombosWithJollyAndSuperstar.entrySet()) {
 					template.addRow();
 					template.addCell(extractionData.getKey()).getCellStyle().setAlignment(HorizontalAlignment.LEFT);
 					List<Integer> extractedNumers = extractionData.getValue();
