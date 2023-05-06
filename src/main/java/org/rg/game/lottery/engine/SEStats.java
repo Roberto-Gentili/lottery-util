@@ -627,6 +627,8 @@ public class SEStats {
 	}
 
 	public static class InternetDataLoader implements DataLoader {
+		public static final String LATEST_WINNING_COMBO_URL = "https://www.gntn-pgd.it/gntn-info-web/rest/gioco/superenalotto/estrazioni/ultimoconcorso";
+		public static final String EXTRACTIONS_ARCHIVE_URL = "https://www.superenalotto.net/estrazioni/${year}";
 
 		protected Date startDate;
 		protected Date endDate;
@@ -653,7 +655,7 @@ public class SEStats {
 
 		public static Map.Entry<Date, List<Integer>> getLatestWinningCombo() {
 			try {
-				URL url = new URL("https://www.gntn-pgd.it/gntn-info-web/rest/gioco/superenalotto/estrazioni/ultimoconcorso");
+				URL url = new URL(LATEST_WINNING_COMBO_URL);
 				HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 				connection.setRequestProperty("accept", "application/json");
 				InputStream responseStream = connection.getInputStream();
@@ -690,7 +692,7 @@ public class SEStats {
 			}
 			for (int year : IntStream.range(startYear, (endYear + 1)).map(i -> (endYear + 1) - i + startYear - 1).toArray()) {
 				System.out.println("Loading all extraction data of " + year);
-				Document doc = Jsoup.connect("https://www.superenalotto.net/estrazioni/" + year).get();
+				Document doc = Jsoup.connect(EXTRACTIONS_ARCHIVE_URL.replace("${year}", String.valueOf(year))).get();
 				Element table = doc.select("table[class=resultsTable table light]").first();
 				Iterator<Element> itr = table.select("tr").iterator();
 				while (itr.hasNext()) {

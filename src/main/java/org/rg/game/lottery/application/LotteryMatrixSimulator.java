@@ -146,7 +146,8 @@ public class LotteryMatrixSimulator {
 
 		for (Properties configuration : configurations) {
 			System.out.println(
-				"Processing file '" + configuration.getProperty("file.name") + "' located in '" + configuration.getProperty("file.parent.absolutePath") + "'"
+				"Processing file '" + configuration.getProperty("file.name") + "' located in '" + configuration.getProperty("file.parent.absolutePath") + "' in " +
+					(Boolean.parseBoolean(configuration.getProperty("simulation.slave")) ? "slave" : "master") + " mode"
 			);
 			String info = configuration.getProperty("info");
 			if (info != null) {

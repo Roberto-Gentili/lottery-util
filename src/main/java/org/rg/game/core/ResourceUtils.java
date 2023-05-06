@@ -125,16 +125,18 @@ public class ResourceUtils {
 			properties.setProperty("file.name", file.getName());
 			properties.setProperty("file.parent.absolutePath", file.getParentFile().getAbsolutePath());
 			properties.setProperty("file.extension", ResourceUtils.INSTANCE.getExtension(file));
-			String base = properties.getProperty("base");
-			if (base != null) {
-				if (!(base.startsWith("./") || base.startsWith("../"))) {
-					base = "./" + base;
+			String baseProps = properties.getProperty("base");
+			if (baseProps != null) {
+				for (String base : baseProps.split(";")) {
+					if (!(base.startsWith("./") || base.startsWith("../"))) {
+						base = "./" + base;
+					}
+					Properties parentProperties = toProperties(
+						Paths.get(file.getParentFile().getAbsolutePath() + File.separator + base).normalize().toFile()
+					);
+					parentProperties.putAll(properties);
+					properties = parentProperties;
 				}
-				Properties parentProperties = toProperties(
-					Paths.get(file.getParentFile().getAbsolutePath() + File.separator + base).normalize().toFile()
-				);
-				parentProperties.putAll(properties);
-				properties = parentProperties;
 				properties.remove("base");
 			}
 			return properties;
