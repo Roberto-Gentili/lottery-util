@@ -204,7 +204,6 @@ public class LotteryMatrixSimulator {
 		Collection<LocalDate> competitionDates,
 		String configFileName, Integer redundancy
 	) {
-		int initialSize = competitionDates.size();
 		Iterator<LocalDate> datesIterator = competitionDates.iterator();
 		SEStats sEStats = getSEStats(configuration);
 		LocalDate latestExtractionArchiveStartDate = TimeUtils.toLocalDate(sEStats.getLatestExtractionDate());
@@ -213,6 +212,7 @@ public class LotteryMatrixSimulator {
 				datesIterator.remove();
 			}
 		}
+		int initialSize = competitionDates.size();
 		if (redundancy != null) {
 			cleanupRedundant(excelFileName, configFileName, redundancy, competitionDates);
 		}
