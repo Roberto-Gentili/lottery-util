@@ -398,11 +398,11 @@ public class SEStats {
 	public List<Integer> getDistanceFromAbsenceRecordPercentageRankReversed() {
 		return toReversed(getDistanceFromAbsenceRecordPercentageRank());
 	}
-
+	
 	public List<Integer> getAbsencesRecordFromCompetitionsRank() {
 		return absencesRecordFromCompetitions.stream().map(entry -> Integer.parseInt(entry.getKey())).collect(Collectors.toList());
 	}
-
+	
 	public List<Integer> getAbsencesRecordFromCompetitionsRankReversed() {
 		return toReversed(getAbsencesRecordFromCompetitionsRank());
 	}

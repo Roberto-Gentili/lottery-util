@@ -26,11 +26,13 @@ public class NumberProcessor {
 	public static final String LESS_EXTRACTED_COUPLE_KEY = "lessExtCouple";
 	public static final String LESS_EXTRACTED_TRIPLE_KEY = "lessExtTriple";
 	public static final String NEAREST_FROM_RECORD_ABSENCE_PERCENTAGE_KEY = "nearFromRecAbsPerc";
+	public static final String BIGGEST_ABSENCE_RECORD_KEY = "biggestAbsRec";
+	public static final String SMALLEST_ABSENCE_RECORD_KEY = "smallestAbsRec";
 	public static final String PREVIOUS_SYSTEM_KEY = PREVIOUS_KEY + "Sys";
 	public static final String SKIP_KEY = "skip";
 	public static final String NUMERICAL_SET_REG_EX =
 		RANDOM_KEY + "|" + MOST_EXTRACTED_COUPLE_KEY + "|" + MOST_EXTRACTED_TRIPLE_KEY + "|" + MOST_EXTRACTED_KEY + "|" + LESS_EXTRACTED_COUPLE_KEY + "|" +
-		LESS_EXTRACTED_TRIPLE_KEY + "|" + LESS_EXTRACTED_KEY + "|" + NEAREST_FROM_RECORD_ABSENCE_PERCENTAGE_KEY;
+		LESS_EXTRACTED_TRIPLE_KEY + "|" + LESS_EXTRACTED_KEY + "|" + NEAREST_FROM_RECORD_ABSENCE_PERCENTAGE_KEY + "|" + BIGGEST_ABSENCE_RECORD_KEY + "|" + SMALLEST_ABSENCE_RECORD_KEY;
 
 	public List<Integer> retrieveNumbersToBePlayed(
 		Context context,
