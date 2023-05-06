@@ -398,11 +398,11 @@ public class SEStats {
 	public List<Integer> getDistanceFromAbsenceRecordPercentageRankReversed() {
 		return toReversed(getDistanceFromAbsenceRecordPercentageRank());
 	}
-	
+
 	public List<Integer> getAbsencesRecordFromCompetitionsRank() {
 		return absencesRecordFromCompetitions.stream().map(entry -> Integer.parseInt(entry.getKey())).collect(Collectors.toList());
 	}
-	
+
 	public List<Integer> getAbsencesRecordFromCompetitionsRankReversed() {
 		return toReversed(getAbsencesRecordFromCompetitionsRank());
 	}
@@ -669,7 +669,7 @@ public class SEStats {
 				InputStream responseStream = connection.getInputStream();
 				Map<String,Object> data = new ObjectMapper().readValue(responseStream, Map.class);
 				connection.disconnect();
-				Date extractionDate = new Date((Long)data.get("dataEstrazione"));
+				Date extractionDate = TimeUtils.toDate(TimeUtils.toLocalDate(new Date((Long)data.get("dataEstrazione"))).atStartOfDay().toLocalDate());
 				Map<String,Object> winningComboData = (Map<String,Object>)data.get("combinazioneVincente");
 				List<Integer> winningCombo = ((List<String>)winningComboData.get("estratti"))
 					.stream().map(Integer::valueOf).collect(Collectors.toList());
