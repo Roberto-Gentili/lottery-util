@@ -20,6 +20,7 @@ import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.rg.game.core.LogUtils;
 import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.ComboHandler;
 import org.rg.game.lottery.engine.PersistentStorage;
@@ -95,7 +96,7 @@ class Shared {
 		String suffix = System.getenv("file-to-be-processed-suffix");
 		File file = new File(PersistentStorage.buildWorkingPath() +
 			File.separator + "[SE]["+ extractionYear +"] - " + (suffix != null ? suffix : "Sistemi") +".xlsx");
-		//System.out.println("Processing file " + file.getName());
+		//LogUtils.logInfo("Processing file " + file.getName());
 		return file;
 	}
 
@@ -153,7 +154,7 @@ class Shared {
 			75,77,79,
 			80,83,84,85,86,88,90
 		);
-		//System.out.println(ComboHandler.sizeOf(ComboHandler.sizeOf(ourNumbers.size(), 6), 34));
+		//LogUtils.logInfo(ComboHandler.sizeOf(ComboHandler.sizeOf(ourNumbers.size(), 6), 34));
 		int count = 0;
 		List<List<Integer>> system = new ArrayList<>();
 		int bound = 4;
@@ -171,7 +172,7 @@ class Shared {
 			}
 			if (hit == bound) {
 				system.add(winningCombo);
-				System.out.println(toString(winningCombo, "\t"));
+				LogUtils.info(toString(winningCombo, "\t"));
 			}
 		}
 		SELotteryMatrixGeneratorEngine engine = new SELotteryMatrixGeneratorEngine();
@@ -181,7 +182,7 @@ class Shared {
 		for (List<Integer> winningCombo : system) {
 			inClauses.add("in " + ComboHandler.toString(winningCombo, ",") + ":" + bound + "," + 6);
 		}
-		System.out.println("(" + String.join("|", inClauses) + ")");
+		LogUtils.info("(" + String.join("|", inClauses) + ")");
 	}
 
 }

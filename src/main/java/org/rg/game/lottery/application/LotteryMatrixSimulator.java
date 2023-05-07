@@ -51,6 +51,7 @@ import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.xmlbeans.impl.values.XmlValueDisconnectedException;
 import org.rg.game.core.CollectionUtils;
+import org.rg.game.core.LogUtils;
 import org.rg.game.core.NetworkUtils;
 import org.rg.game.core.ResourceUtils;
 import org.rg.game.core.Synchronizer;
@@ -149,13 +150,13 @@ public class LotteryMatrixSimulator {
 		}
 
 		for (Properties configuration : configurations) {
-			System.out.println(
+			LogUtils.info(
 				"Processing file '" + configuration.getProperty("file.name") + "' located in '" + configuration.getProperty("file.parent.absolutePath") + "' in " +
 					(Boolean.parseBoolean(configuration.getProperty("simulation.slave")) ? "slave" : "master") + " mode"
 			);
 			String info = configuration.getProperty("info");
 			if (info != null) {
-				System.out.println(info);
+				LogUtils.info(info);
 			}
 			String excelFileName =
 				Optional.ofNullable(configuration.getProperty("simulation.group")).map(groupName -> {
@@ -245,7 +246,7 @@ public class LotteryMatrixSimulator {
 			workBook ->
 				store(excelFileName, workBook)
 		);
-		System.out.println(competitionDates.size() + " dates will be processed, " + (initialSize - competitionDates.size()) + " already processed");
+		LogUtils.info(competitionDates.size() + " dates will be processed, " + (initialSize - competitionDates.size()) + " already processed");
 	}
 
 	private static void cleanupRedundant(String excelFileName, String configFileName, Integer redundancy, Collection<LocalDate> competitionDatesFlat) {
@@ -379,7 +380,7 @@ public class LotteryMatrixSimulator {
 			);
 		}
 		backup(new File(PersistentStorage.buildWorkingPath() + File.separator + excelFileName));
-		System.out.println("Processing of " + configuration.getProperty("file.name") + " succesfully finished");
+		LogUtils.info("Processing of " + configuration.getProperty("file.name") + " succesfully finished");
 	}
 
 	private static CompletableFuture<Void> startHistoryUpdateTask(
@@ -418,7 +419,7 @@ public class LotteryMatrixSimulator {
 
 	private static void setThreadPriorityToMax() {
 		if (Thread.currentThread().getPriority() != Thread.MAX_PRIORITY) {
-			System.out.println("Setting priority of Thread " + Thread.currentThread() + " to max");
+			LogUtils.info("Setting priority of Thread " + Thread.currentThread() + " to max");
 			Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 		}
 	}
@@ -461,7 +462,7 @@ public class LotteryMatrixSimulator {
 				setThreadPriorityToMax();
 				int remainedRecords = (excelRecords.size() - (rowProcessedCounter + 1));
 				if (remainedRecords % 100 == 0) {
-					System.out.println("History update is going to finish: " + remainedRecords + " records remained");
+					LogUtils.info("History update is going to finish: " + remainedRecords + " records remained");
 				}
 			}
 			readOrCreateExcel(
@@ -546,7 +547,7 @@ public class LotteryMatrixSimulator {
 						workBook -> {
 							store(excelFileName, workBook);
 							Row row = workBook.getSheet("Risultati").getRow(rowIndex);
-							System.out.println(
+							LogUtils.info(
 								"Aggiornamento storico completato per " +
 								TimeUtils.getDefaultDateFormat().format(row.getCell(0).getDateCellValue()) + " - " +
 								row.getCell(fileColIndex.get()).getStringCellValue()
@@ -591,9 +592,9 @@ public class LotteryMatrixSimulator {
 		PersistentStorage storage,
 		File premiumCountersFile
 	) {
-		System.out.println("Computing historycal data of " + storage.getName());
+		LogUtils.info("Computing historycal data of " + storage.getName());
 		Map<String, Object> qualityCheckResult = sEStats.checkQuality(storage::iterator);
-		System.out.println("Computed historycal data of " + storage.getName());
+		LogUtils.info("Computed historycal data of " + storage.getName());
 		Map<Integer, Integer> pC =
 			(Map<Integer, Integer>)qualityCheckResult.get("premium.counters");
 		Map<String, Object> data = new LinkedHashMap<>();
@@ -815,7 +816,7 @@ public class LotteryMatrixSimulator {
 		sheet.setColumnWidth(Shared.getCellIndex(sheet, SALDO_STORICO_LABEL), 3000);
 		sheet.setColumnWidth(Shared.getCellIndex(sheet, DATA_AGGIORNAMENTO_STORICO_LABEL), 3800);
 		sheet.setColumnWidth(Shared.getCellIndex(sheet, FILE_LABEL), 12000);
-		//System.out.println(PersistentStorage.buildWorkingPath() + File.separator + excelFileName + " succesfully created");
+		//LogUtils.logInfo(PersistentStorage.buildWorkingPath() + File.separator + excelFileName + " succesfully created");
 	}
 
 	private static void readOrCreateExcel(
@@ -878,12 +879,12 @@ public class LotteryMatrixSimulator {
 				backups = ResourceUtils.INSTANCE.findOrdered(effectiveExcelFileNameWithoutExtension + " - ", excelFileExtension, excelFileParentPath);
 			}
 			if (backups.isEmpty()) {
-				System.err.println("Error in Excel file '" + excelFileAbsolutePath + "'. No backup found");
+				LogUtils.error("Error in Excel file '" + excelFileAbsolutePath + "'. No backup found");
 				throw exc;
 			}
 			Iterator<File> backupsIterator = backups.iterator();
 			File backup = backupsIterator.next();
-			System.out.println("Error in Excel file '" + excelFileAbsolutePath + "'.\nTrying to restore previous backup: '" + backup.getAbsolutePath() + "'");
+			LogUtils.info("Error in Excel file '" + excelFileAbsolutePath + "'.\nTrying to restore previous backup: '" + backup.getAbsolutePath() + "'");
 			File processedFile = new File(excelFileAbsolutePath);
 			if (!processedFile.delete() || !backup.renameTo(processedFile)) {
 				throw exc;

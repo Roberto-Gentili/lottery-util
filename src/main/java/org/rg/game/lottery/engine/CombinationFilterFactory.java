@@ -15,6 +15,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.rg.game.core.LogUtils;
+
 public class CombinationFilterFactory {
 	public static final CombinationFilterFactory INSTANCE;
 	private ExpressionToPredicateEngine<List<Integer>> expressionEngine;
@@ -433,7 +435,7 @@ public class CombinationFilterFactory {
 			return combo -> {
 				boolean result = predicate.test(combo);
 				if (!result) {
-					System.out.println("[" + filterAsString + "] returned false on combo:\t" + ComboHandler.toString(combo));
+					LogUtils.info("[" + filterAsString + "] returned false on combo:\t" + ComboHandler.toString(combo));
 				}
 				return result;
 			};

@@ -49,6 +49,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.rg.game.core.LogUtils;
 import org.rg.game.core.Throwables;
 import org.rg.game.core.TimeUtils;
 
@@ -164,7 +165,7 @@ public class SEStats {
 					break;
 				}
 			} catch (Throwable exc) {
-				System.out.println(dataLoader.getClass() + " in unable to load extractions data: " + exc.getMessage());
+				LogUtils.info(dataLoader.getClass() + " in unable to load extractions data: " + exc.getMessage());
 			}
 		}
 		if (!dataLoaded) {
@@ -172,17 +173,17 @@ public class SEStats {
 		}
 
 		loadStats();
-		System.out.println("\nAll extraction data have been succesfully loaded for period " + startDate + " -> " + endDate + "\n\n");
+		LogUtils.info("\nAll extraction data have been succesfully loaded for period " + startDate + " -> " + endDate + "\n\n");
 		for (DataStorer dataStorer : dataStorers) {
 			try {
 				if (dataStorer.store()) {
 
 				} else {
-					System.out.println(dataStorer.getClass() + " stored no data");
+					LogUtils.info(dataStorer.getClass() + " stored no data");
 				}
 			} catch (Throwable exc) {
 				exc.printStackTrace();
-				System.out.println(dataStorer.getClass() + " in unable to store extractions data: " + exc.getMessage());
+				LogUtils.info(dataStorer.getClass() + " in unable to store extractions data: " + exc.getMessage());
 			}
 		}
 	}
@@ -274,9 +275,9 @@ public class SEStats {
 		};
 		extractedNumberTripleCounters = extractedNumberTripleCountersMap.entrySet().stream().sorted(integerComparator.reversed()).collect(Collectors.toList());
 		extractedNumberPairCounters = extractedNumberPairCountersMap.entrySet().stream().sorted(integerComparator.reversed()).collect(Collectors.toList());
-		//extractedNumberPairCounters.stream().forEach(entry -> System.out.println(String.join("\t", Arrays.asList(entry.getKey().split("-"))) + "\t" + entry.getValue()));
+		//extractedNumberPairCounters.stream().forEach(entry -> LogUtils.logInfo(String.join("\t", Arrays.asList(entry.getKey().split("-"))) + "\t" + entry.getValue()));
 		extractedNumberCounters = extractedNumberCountersMap.entrySet().stream().sorted(integerComparator.reversed()).collect(Collectors.toList());
-		//extractedNumberCounters.stream().forEach(entry -> System.out.println(String.join("\t", Arrays.asList(entry.getKey().split("-"))) + "\t" + entry.getValue()));
+		//extractedNumberCounters.stream().forEach(entry -> LogUtils.logInfo(String.join("\t", Arrays.asList(entry.getKey().split("-"))) + "\t" + entry.getValue()));
 		Map<Integer, Integer> extractedNumberFromMostExtractedCoupleMap = new LinkedHashMap<>();
 		extractedNumberPairCounters.stream().forEach(entry -> {
 			for (Integer number : Arrays.stream(entry.getKey().split("-")).map(Integer::parseInt).collect(Collectors.toList())) {
@@ -714,14 +715,14 @@ public class SEStats {
 			int startYear =  calendar.get(Calendar.YEAR);
 			calendar.setTime(currentDate);
 			int endYear = calendar.get(Calendar.YEAR);
-			System.out.println();
+			LogUtils.info();
 			Map.Entry<Date, List<Integer>> latestWinningCombo = getLatestWinningCombo();
 			if (TimeUtils.isBetween(latestWinningCombo.getKey(), startDate, endDate)) {
 				allWinningCombos.put(latestWinningCombo.getKey(), latestWinningCombo.getValue().subList(0, 6));
 				allWinningCombosWithJollyAndSuperstar.put(latestWinningCombo.getKey(), latestWinningCombo.getValue());
 			}
 			for (int year : IntStream.range(startYear, (endYear + 1)).map(i -> (endYear + 1) - i + startYear - 1).toArray()) {
-				System.out.println("Loading all extraction data of " + year);
+				LogUtils.info("Loading all extraction data of " + year);
 				Document doc = Jsoup.connect(EXTRACTIONS_ARCHIVE_URL.replace("${year}", String.valueOf(year))).get();
 				Element table = doc.select("table[class=resultsTable table light]").first();
 				Iterator<Element> itr = table.select("tr").iterator();
@@ -1129,10 +1130,10 @@ public class SEStats {
 		if (startDate.getDayOfWeek().getValue() == DayOfWeek.MONDAY.getValue() ||
 			startDate.getDayOfWeek().getValue() == DayOfWeek.WEDNESDAY.getValue()
 		) {
-			System.out.println("Attenzione: il concorso eseguito in data " + TimeUtils.defaultLocalDateWithDayNameFormat.format(startDate) + " risulta essere anticipato");
+			LogUtils.info("Attenzione: il concorso eseguito in data " + TimeUtils.defaultLocalDateWithDayNameFormat.format(startDate) + " risulta essere anticipato");
 			return 3;
 		} else if (startDate.getDayOfWeek().getValue() == DayOfWeek.FRIDAY.getValue()) {
-			System.out.println("Attenzione: il concorso eseguito in data " + TimeUtils.defaultLocalDateWithDayNameFormat.format(startDate) + " risulta essere anticipato");
+			LogUtils.info("Attenzione: il concorso eseguito in data " + TimeUtils.defaultLocalDateWithDayNameFormat.format(startDate) + " risulta essere anticipato");
 			return 4;
 		}
 		return startDate.getDayOfWeek().getValue() == DayOfWeek.SATURDAY.getValue() ? 3 : 2;

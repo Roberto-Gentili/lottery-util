@@ -14,6 +14,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
+import org.rg.game.core.LogUtils;
+
 public class ComboHandler {
 
 	private List<Integer> numbers;
@@ -63,7 +65,7 @@ public class ComboHandler {
 			number = number.subtract(BigInteger.ONE);
 			BigInteger processedNumbers = initialValue.subtract(number);
 			if (processedNumbers.mod(divisor).compareTo(BigInteger.ZERO) == 0) {
-				System.out.println("Processed " + processedNumbers
+				LogUtils.info("Processed " + processedNumbers
 					.toString() + " numbers - Factorial: " + factorial.toString());
 			}
 		}
@@ -125,7 +127,7 @@ public class ComboHandler {
 	    		);
 	    	}
 	    	/*if ((combinationCounter.get() % 10_000_000) == 0) {
-	    		System.out.println("Tested " + combinationCounter.get() + " of combinations");
+	    		LogUtils.logInfo("Tested " + combinationCounter.get() + " of combinations");
     		}*/
 	    } else if (start <= end) {
 	        indexes[index] = start;

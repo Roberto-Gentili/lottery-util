@@ -27,6 +27,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.rg.game.core.LogUtils;
 import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.SEStats;
 
@@ -78,7 +79,7 @@ public class Verifier {
 			Sheet sheet = workbook.getSheet(extractionMonth);
 			int offset = Shared.getCellIndex(sheet, extractionDay);
 			if (offset < 0) {
-				System.out.println("No combination to test for date " + extractionDate);
+				LogUtils.info("No combination to test for date " + extractionDate);
 				return;
 			}
 			Iterator<Row> rowIterator = sheet.rowIterator();
@@ -107,25 +108,25 @@ public class Verifier {
 				}
 				if (hit > 1) {
 					winningCombos.computeIfAbsent(hit, ht -> new ArrayList<>()).add(currentCombo);
-					System.out.println(comboCount + ") " + Shared.toString(currentCombo, "\t"));
+					LogUtils.info(comboCount + ") " + Shared.toString(currentCombo, "\t"));
 				}
 				comboCount++;
 			}
 			if (!winningCombo.isEmpty()) {
-				System.out.println("\n\nNumeri estratti per il *" + competionName + "* del " + extractionDate +": " + Shared.toWAString(winningCombo, ", ", hitNumbers));
+				LogUtils.info("\n\nNumeri estratti per il *" + competionName + "* del " + extractionDate +": " + Shared.toWAString(winningCombo, ", ", hitNumbers));
 				if (!winningCombos.isEmpty()) {
 					for (Map.Entry<Integer, List<List<Integer>>> combos: winningCombos.entrySet()) {
-						System.out.println("\t*Combinazioni con " + SEStats.toPremiumLabel(combos.getKey()).toLowerCase() + "*:");
+						LogUtils.info("\t*Combinazioni con " + SEStats.toPremiumLabel(combos.getKey()).toLowerCase() + "*:");
 						for (List<Integer> combo : combos.getValue()) {
-							System.out.println("\t\t" +
+							LogUtils.info("\t\t" +
 								Shared.toWAString(combo, "\t", winningCombo)
 							);
 						}
 					}
 				} else {
-					System.out.println("Nessuna vincita");
+					LogUtils.info("Nessuna vincita");
 				}
-				System.out.println();
+				LogUtils.info();
 			}
 		} catch (Throwable exc) {
 			exc.printStackTrace();

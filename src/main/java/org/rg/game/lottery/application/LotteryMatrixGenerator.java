@@ -9,6 +9,7 @@ import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
+import org.rg.game.core.LogUtils;
 import org.rg.game.core.ResourceUtils;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.MDLotteryMatrixGeneratorEngine;
@@ -47,12 +48,12 @@ public class LotteryMatrixGenerator {
 			}
 		}
 		for (Properties configuration : configurations) {
-			System.out.println(
+			LogUtils.info(
 				"Processing file '" + configuration.getProperty("file.name") + "' located in '" + configuration.getProperty("file.parent.absolutePath") + "'"
 			);
 			String info = configuration.getProperty("info");
 			if (info != null) {
-				System.out.println(info);
+				LogUtils.info(info);
 			}
 			LotteryMatrixGeneratorAbstEngine engine = engineSupplier.get();
 			configuration.setProperty("nameSuffix", configuration.getProperty("file.name")

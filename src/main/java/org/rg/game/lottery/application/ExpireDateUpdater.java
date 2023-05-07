@@ -25,6 +25,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.rg.game.core.LogUtils;
 import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.PersistentStorage;
 
@@ -67,7 +68,7 @@ public class ExpireDateUpdater {
 			int expiryColumnIndex = getCellIndex(sheet, "Scadenza");
 			Iterator<Row> rowIterator = sheet.rowIterator();
 			rowIterator.next();
-			System.out.println("Aggiornamento data scadenza abbonamento:\n");
+			LogUtils.info("Aggiornamento data scadenza abbonamento:\n");
 			while (rowIterator.hasNext()) {
 				Row row = rowIterator.next();
 				String clientName = null;
@@ -110,7 +111,7 @@ public class ExpireDateUpdater {
 									}
 								}
 								boolean expireSoon = expiryLocalDate.minus(7, ChronoUnit.DAYS).compareTo(LocalDate.now()) <= 0;
-								System.out.println(
+								LogUtils.info(
 									(expireSoon ? "*" : "") + row.getCell(nameColumnIndex).getStringCellValue() + (expireSoon ? "*" : "") +" da " + startExpiryDate.format(TimeUtils.defaultLocalDateFormat) +
 									" a " + (expireSoon ? "*" : "") +expiryLocalDate.format(TimeUtils.defaultLocalDateFormat) + (expireSoon ? "*" : "")
 								);

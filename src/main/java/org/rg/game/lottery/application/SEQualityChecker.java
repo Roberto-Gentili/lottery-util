@@ -17,6 +17,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.rg.game.core.LogUtils;
 import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
@@ -66,12 +67,12 @@ public class SEQualityChecker {
 				try (InputStream srcFileInputStream = new FileInputStream(mainFile); Workbook workbook = new XSSFWorkbook(srcFileInputStream);) {
 					Sheet sheet = workbook.getSheet(extractionMonth);
 					if (sheet == null) {
-						System.out.println("No sheet named '" + extractionMonth + "' to test for date " + extractionDate);
+						LogUtils.info("No sheet named '" + extractionMonth + "' to test for date " + extractionDate);
 						continue;
 					}
 					int offset = Shared.getCellIndex(sheet, extractionDay);
 					if (offset < 0) {
-						System.out.println("No combination to test for date " + extractionDate);
+						LogUtils.info("No combination to test for date " + extractionDate);
 						continue;
 					}
 					Iterator<Row> rowIterator = sheet.rowIterator();
@@ -92,12 +93,12 @@ public class SEQualityChecker {
 						}
 						system.add(currentCombo);
 					}
-					System.out.println("\nAnalisi del sistema del " + extractionDate + ":" );
+					LogUtils.info("\nAnalisi del sistema del " + extractionDate + ":" );
 					Map<String, Object> report = Shared.getSEStats().checkQuality(system::iterator);
 					if ((boolean)dateInfo.getValue()) {
-						System.out.println("\t" + ((String)report.get("report.detail")).replace("\n", "\n\t"));
+						LogUtils.info("\t" + ((String)report.get("report.detail")).replace("\n", "\n\t"));
 					}
-					System.out.println("\t" + ((String)report.get("report.summary")).replace("\n", "\n\t"));
+					LogUtils.info("\t" + ((String)report.get("report.summary")).replace("\n", "\n\t"));
 				} catch (Throwable exc) {
 					exc.printStackTrace();
 				}

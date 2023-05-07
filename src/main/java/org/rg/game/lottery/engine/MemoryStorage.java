@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.rg.game.core.LogUtils;
+
 public class MemoryStorage implements Storage {
 
 	List<List<Integer>> combos = new ArrayList<>();
@@ -67,7 +69,7 @@ public class MemoryStorage implements Storage {
 
 	@Override
 	public void printAll() {
-		System.out.println(output);
+		LogUtils.info(output);
 	}
 
 	@Override

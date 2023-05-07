@@ -15,6 +15,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import org.rg.game.core.LogUtils;
 import org.rg.game.core.Throwables;
 
 public class PersistentStorage implements Storage {
@@ -100,7 +101,7 @@ public class PersistentStorage implements Storage {
 						System.getProperty("user.home") + File.separator +
 						"Desktop" + File.separator +
 						"Combos";
-					System.out.println("Set working path to: " + workingPath);
+					LogUtils.info("Set working path to: " + workingPath);
 					PersistentStorage.workingPath = workingPath;
 				}
 			}
@@ -290,7 +291,7 @@ public class PersistentStorage implements Storage {
 	    try (BufferedReader br = new BufferedReader(new FileReader(absolutePath))) {
 	        String line;
 	        while ((line = br.readLine()) != null) {
-	           System.out.println(line);
+	           LogUtils.info(line);
 	        }
 	    } catch (IOException e) {
 			e.printStackTrace();
