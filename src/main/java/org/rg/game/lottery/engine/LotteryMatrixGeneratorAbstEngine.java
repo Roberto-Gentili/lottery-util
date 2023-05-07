@@ -388,7 +388,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 						}
 					}
 					if (storageRef.isClosed()) {
-						LogUtils.info(storageRef.getName() + " succesfully restored");
+						LogUtils.info(storageRef.getName() + " succesfully restored\n");
 						storageRef.printAll();
 						return storageRef;
 					}
