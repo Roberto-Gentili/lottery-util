@@ -4,7 +4,7 @@ public class LogUtils {
 
 	public static void info(String... reports) {
 		for (String report : reports) {
-			LogUtils.info(report);
+			System.out.println(report);
 		}
 	}
 
