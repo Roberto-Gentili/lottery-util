@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.UnaryOperator;
@@ -94,7 +95,7 @@ public class ComboHandler {
 			result
 		);
 		if (!indexesToBeFound.isEmpty()) {
-			throw new RuntimeException("Not all indexes have been found");
+			throw new NoSuchElementException("Not all indexes have been found");
 		}
 		return result;
 	}

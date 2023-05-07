@@ -2,7 +2,6 @@ package org.rg.game.core;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -43,7 +42,7 @@ public class ResourceUtils {
 			}
 			return resourceFolder;
 		} catch (URISyntaxException e) {
-			throw new RuntimeException(e);
+			return Throwables.sneakyThrow(e);
 		}
 	}
 
@@ -168,10 +167,8 @@ public class ResourceUtils {
 				return new File(backupFilePath);
 			}
 			return null;
-		} catch (FileNotFoundException e) {
-			throw new RuntimeException(e);
 		} catch (IOException e) {
-			throw new RuntimeException(e);
+			return Throwables.sneakyThrow(e);
 		}
 	}
 

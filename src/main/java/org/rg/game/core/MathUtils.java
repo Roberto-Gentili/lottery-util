@@ -33,7 +33,7 @@ public class MathUtils {
 		try {
 			return ((BigDecimal)decimalFormat.parse(value));
 		} catch (ParseException exc) {
-			throw new RuntimeException(exc);
+			return Throwables.sneakyThrow(exc);
 		}
 	}
 

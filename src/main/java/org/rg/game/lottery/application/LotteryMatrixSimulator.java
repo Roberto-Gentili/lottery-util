@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.InetAddress;
 import java.net.URLEncoder;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -37,6 +36,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.poi.common.usermodel.HyperlinkType;
+import org.apache.poi.ooxml.POIXMLException;
 import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.poi.ss.formula.BaseFormulaEvaluator;
 import org.apache.poi.ss.usermodel.Cell;
@@ -49,8 +49,10 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.rg.game.core.CollectionUtils;
+import org.rg.game.core.NetworkUtils;
 import org.rg.game.core.ResourceUtils;
 import org.rg.game.core.Synchronizer;
+import org.rg.game.core.Throwables;
 import org.rg.game.core.ThrowingConsumer;
 import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.PersistentStorage;
@@ -99,7 +101,7 @@ public class LotteryMatrixSimulator {
 	}
 
 	public static void main(String[] args) throws IOException {
-		hostName = InetAddress.getLocalHost().getHostName();
+		hostName = NetworkUtils.INSTANCE.thisHostName();
 		ZipSecureFile.setMinInflateRatio(0);
 		Collection<CompletableFuture<Void>> futures = new ArrayList<>();
 		execute("se", futures);
@@ -354,7 +356,7 @@ public class LotteryMatrixSimulator {
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException exc) {
-				throw new RuntimeException(exc);
+				Throwables.sneakyThrow(exc);
 			}
 		}
 		simulatorFinished.set(true);
@@ -402,7 +404,7 @@ public class LotteryMatrixSimulator {
 				try {
 					Thread.sleep(1000);
 				} catch (InterruptedException exc) {
-					throw new RuntimeException(exc);
+					Throwables.sneakyThrow(exc);
 				}
 			}
 			setThreadPriorityToMax();
@@ -577,7 +579,7 @@ public class LotteryMatrixSimulator {
 			data.put("premiumCounters",((Map<String, Integer>)objectMapper.readValue(premiumCountersFile, Map.class).get("premiumCounters")).entrySet().stream()
 				.collect(Collectors.toMap(entry -> Integer.parseInt(entry.getKey()), Map.Entry::getValue, (x, y) -> y, LinkedHashMap::new)));
 		} catch (IOException exc) {
-			throw new RuntimeException(exc);
+			Throwables.sneakyThrow(exc);
 		}
 		return data;
 	}
@@ -603,7 +605,7 @@ public class LotteryMatrixSimulator {
 		try {
 			objectMapper.writeValue(premiumCountersFile, qualityCheckResult);
 		} catch (IOException exc) {
-			throw new RuntimeException(exc);
+			Throwables.sneakyThrow(exc);
 		}
 	}
 
@@ -820,38 +822,73 @@ public class LotteryMatrixSimulator {
 		ThrowingConsumer<Workbook, Throwable> createAction,
 		ThrowingConsumer<Workbook, Throwable> finallyAction
 	) {
-		Synchronizer.INSTANCE.execute(excelFileName, () -> {
-			Workbook workBook = null;
-			try {
-				try (InputStream inputStream = new FileInputStream(PersistentStorage.buildWorkingPath() + File.separator + excelFileName)) {
-					workBook = new XSSFWorkbook(inputStream);
-					action.accept(workBook);
-				} catch (FileNotFoundException exc) {
-					if (createAction == null) {
-						throw exc;
+		readOrCreateExcelOrComputeBackups(excelFileName, null, action, createAction, finallyAction);
+	}
+
+	private static void readOrCreateExcelOrComputeBackups(
+		String excelFileName,
+		Collection<File> backups,
+		ThrowingConsumer<Workbook, Throwable> action,
+		ThrowingConsumer<Workbook, Throwable> createAction,
+		ThrowingConsumer<Workbook, Throwable> finallyAction
+	) {
+		excelFileName = excelFileName.replace("/", File.separator).replace("\\", File.separator);
+		String excelFileAbsolutePath = (PersistentStorage.buildWorkingPath() + File.separator + excelFileName).replace("/", File.separator).replace("\\", File.separator);
+		try {
+			Synchronizer.INSTANCE.execute(excelFileName, () -> {
+				Workbook workBook = null;
+				try {
+					try (InputStream inputStream = new FileInputStream(excelFileAbsolutePath)) {
+						workBook = new XSSFWorkbook(inputStream);
+						action.accept(workBook);
+					} catch (FileNotFoundException exc) {
+						if (createAction == null) {
+							throw exc;
+						}
+						workBook = new XSSFWorkbook();
+						createAction.accept(workBook);
 					}
-					workBook = new XSSFWorkbook();
-					createAction.accept(workBook);
-				}
-			} catch (Throwable exc) {
-				throw new RuntimeException(exc);
-			} finally {
-				if (workBook != null) {
-					if (finallyAction!= null) {
+				} catch (Throwable exc) {
+					Throwables.sneakyThrow(exc);
+				} finally {
+					if (workBook != null) {
+						if (finallyAction!= null) {
+							try {
+								finallyAction.accept(workBook);
+							} catch (Throwable exc) {
+								Throwables.sneakyThrow(exc);
+							}
+						}
 						try {
-							finallyAction.accept(workBook);
-						} catch (Throwable exc) {
-							throw new RuntimeException(exc);
+							workBook.close();
+						} catch (IOException exc) {
+							Throwables.sneakyThrow(exc);
 						}
 					}
-					try {
-						workBook.close();
-					} catch (IOException exc) {
-						throw new RuntimeException(exc);
-					}
 				}
+			});
+		} catch (POIXMLException exc) {
+			String excelFileParentPath = excelFileAbsolutePath.substring(0, excelFileAbsolutePath.lastIndexOf(File.separator));
+			String effectiveExcelFileName =  excelFileAbsolutePath.substring(excelFileAbsolutePath.lastIndexOf(File.separator)+1);
+			String effectiveExcelFileNameWithoutExtension = effectiveExcelFileName.substring(0, effectiveExcelFileName.lastIndexOf("."));
+			String excelFileExtension = effectiveExcelFileName.substring(effectiveExcelFileName.lastIndexOf(".") +1);
+			if (backups == null) {
+				backups = ResourceUtils.INSTANCE.findOrdered(effectiveExcelFileNameWithoutExtension + " - ", excelFileExtension, excelFileParentPath);
 			}
-		});
+			if (backups.isEmpty()) {
+				System.err.println("Error in Excel file '" + excelFileAbsolutePath + "'. No backup found");
+				throw exc;
+			}
+			Iterator<File> backupsIterator = backups.iterator();
+			File backup = backupsIterator.next();
+			System.out.println("Error in Excel file '" + excelFileAbsolutePath + "'.\nTrying to restore previous backup: '" + backup.getAbsolutePath() + "'");
+			File processedFile = new File(excelFileAbsolutePath);
+			if (!processedFile.delete() || !backup.renameTo(processedFile)) {
+				throw exc;
+			}
+			backupsIterator.remove();
+			readOrCreateExcelOrComputeBackups(excelFileName, backups, action, createAction, finallyAction);
+		}
 	}
 
 	private static void store(String excelFileName, Workbook workBook) {
@@ -865,7 +902,7 @@ public class LotteryMatrixSimulator {
 			BaseFormulaEvaluator.evaluateAllFormulaCells(workBook);
 			workBook.write(destFileOutputStream);
 		} catch (IOException e) {
-			throw new RuntimeException(e);
+			Throwables.sneakyThrow(e);
 		}
 	}
 

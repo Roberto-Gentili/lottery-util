@@ -15,6 +15,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import org.rg.game.core.Throwables;
+
 public class PersistentStorage implements Storage {
 	private static String workingPath;
 	BufferedWriter bufferedWriter = null;
@@ -41,7 +43,7 @@ public class PersistentStorage implements Storage {
 		try {
 			bufferedWriter = new BufferedWriter(new FileWriter(absolutePath, false));
 		} catch (IOException exc) {
-			throw new RuntimeException(exc);
+			Throwables.sneakyThrow(exc);
 		}
 	}
 
@@ -75,8 +77,8 @@ public class PersistentStorage implements Storage {
 				comboIterator.next();
 				storage.size++;
 			}
-		} catch (RuntimeException exc) {
-			if (!(exc.getCause() instanceof FileNotFoundException)) {
+		} catch (Throwable exc) {
+			if (!(exc instanceof FileNotFoundException)) {
 				throw exc;
 			}
 			return null;
@@ -158,7 +160,7 @@ public class PersistentStorage implements Storage {
 				}
 			}
 		} catch (IOException exc) {
-			throw new RuntimeException(exc);
+			Throwables.sneakyThrow(exc);
 		}
 		return null;
 	}
@@ -196,7 +198,7 @@ public class PersistentStorage implements Storage {
 					try {
 						bufferedReader.close();
 					} catch (IOException exc) {
-						throw new RuntimeException(exc);
+						Throwables.sneakyThrow(exc);
 					}
 				}
 
@@ -216,12 +218,12 @@ public class PersistentStorage implements Storage {
 						}
 						return null;
 					} catch (IOException exc) {
-						throw new RuntimeException(exc);
+						return Throwables.sneakyThrow(exc);
 					}
 				}
 			};
 		} catch (FileNotFoundException exc) {
-			throw new RuntimeException(exc);
+			return Throwables.sneakyThrow(exc);
 		}
 	}
 /*
@@ -249,7 +251,7 @@ public class PersistentStorage implements Storage {
 				bufferedWriter.flush();
 				++size;
 			} catch (IOException exc) {
-				throw new RuntimeException(exc);
+				Throwables.sneakyThrow(exc);
 			}
 			return true;
 		}
@@ -262,7 +264,7 @@ public class PersistentStorage implements Storage {
 			bufferedWriter.write("\n" + ComboHandler.toString(selectedCombo));
 			bufferedWriter.flush();
 		} catch (IOException exc) {
-			throw new RuntimeException(exc);
+			Throwables.sneakyThrow(exc);
 		}
 	}
 
@@ -278,7 +280,7 @@ public class PersistentStorage implements Storage {
 				return true;
 			}
 		} catch (IOException exc) {
-			throw new RuntimeException(exc);
+			Throwables.sneakyThrow(exc);
 		}
 		return false;
 	}
@@ -313,7 +315,7 @@ public class PersistentStorage implements Storage {
 			           }
 			        }
 			    } catch (IOException e) {
-					throw new RuntimeException(e);
+					Throwables.sneakyThrow(e);
 				}
 			}
 		}
@@ -336,7 +338,7 @@ public class PersistentStorage implements Storage {
 			bufferedWriter.write("\n" + value);
 			bufferedWriter.flush();
 		} catch (IOException e) {
-			throw new RuntimeException(e);
+			Throwables.sneakyThrow(e);
 		}
 		return true;
 	}
@@ -347,7 +349,7 @@ public class PersistentStorage implements Storage {
 			bufferedWriter.write("\n");
 			bufferedWriter.flush();
 		} catch (IOException e) {
-			throw new RuntimeException(e);
+			Throwables.sneakyThrow(e);
 		}
 		return true;
 	}
@@ -357,7 +359,7 @@ public class PersistentStorage implements Storage {
 		try {
 			bufferedWriter.close();
 		} catch (IOException e) {
-			throw new RuntimeException(e);
+			Throwables.sneakyThrow(e);
 		}
 		new File(absolutePath).delete();
 	}

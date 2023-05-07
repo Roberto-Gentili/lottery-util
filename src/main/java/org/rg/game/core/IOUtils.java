@@ -16,7 +16,7 @@ public class IOUtils {
 				output.write(buffer, 0, bytesRead);
 			}
 		} catch (IOException e) {
-			throw new RuntimeException(e);
+			Throwables.sneakyThrow(e);
 		}
 	}
 

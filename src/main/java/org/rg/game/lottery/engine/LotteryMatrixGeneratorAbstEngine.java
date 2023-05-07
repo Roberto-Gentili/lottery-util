@@ -3,8 +3,6 @@ package org.rg.game.lottery.engine;
 import java.io.FileNotFoundException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -36,6 +34,8 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.rg.game.core.NetworkUtils;
+import org.rg.game.core.Throwables;
 import org.rg.game.core.TimeUtils;
 
 public abstract class LotteryMatrixGeneratorAbstEngine {
@@ -143,14 +143,9 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		}
 		reportEnabled = Boolean.parseBoolean(config.getProperty("report.enabled", "true"));
 		reportDetailEnabled = Boolean.parseBoolean(config.getProperty("report.detail.enabled", "false"));
-		String group;
-		try {
-			group = config.getProperty("group") != null ?
-				config.getProperty("group").replace("${localhost.name}", InetAddress.getLocalHost().getHostName()):
-				null;
-		} catch (UnknownHostException exc) {
-			throw new RuntimeException(exc);
-		}
+		String group = config.getProperty("group") != null ?
+			config.getProperty("group").replace("${localhost.name}", NetworkUtils.INSTANCE.thisHostName()):
+			null;
 		executor = extractionDatePredicate -> storageProcessor -> {
 			List<Storage> storages = new ArrayList<>();
 			for (LocalDate extractionDate : extractionDates) {
@@ -388,7 +383,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 							System.out.println("Waiting a maximum of " + timeout/1000 + " seconds for " + storageRef.getName() + " prepared by someone else");
 							Thread.sleep(timeout - (timeout -= 1000));
 						} catch (InterruptedException e) {
-							throw new RuntimeException(e);
+							Throwables.sneakyThrow(e);
 						}
 					}
 					if (storageRef.isClosed()) {
@@ -403,8 +398,8 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 					if (timeout < 0) {
 						System.out.println("Waiting for system generation by others ended: " + storageRef.getName() + " will be overwritten");
 					}
-				} catch (RuntimeException exc) {
-					if (!(exc.getCause() instanceof FileNotFoundException)) {
+				} catch (Throwable exc) {
+					if (!(exc instanceof FileNotFoundException)) {
 						throw exc;
 					}
 				}
