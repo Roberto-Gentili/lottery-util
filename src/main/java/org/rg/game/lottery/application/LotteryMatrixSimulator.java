@@ -219,7 +219,10 @@ public class LotteryMatrixSimulator {
 		}
 		int initialSize = competitionDates.size();
 		if (redundancy != null) {
-			cleanupRedundant(excelFileName, configFileName, redundancy, competitionDates);
+			cleanupRedundant(
+				configuration,
+				excelFileName, configFileName, redundancy, competitionDates
+			);
 		}
 		readOrCreateExcel(
 			excelFileName,
@@ -244,12 +247,13 @@ public class LotteryMatrixSimulator {
 			workBook ->
 				createWorkbook(workBook, excelFileName),
 			workBook ->
-				store(excelFileName, workBook)
+				store(excelFileName, workBook),
+			Boolean.parseBoolean(configuration.getProperty("simulation.slave"))
 		);
 		LogUtils.info(competitionDates.size() + " dates will be processed, " + (initialSize - competitionDates.size()) + " already processed");
 	}
 
-	private static void cleanupRedundant(String excelFileName, String configFileName, Integer redundancy, Collection<LocalDate> competitionDatesFlat) {
+	private static void cleanupRedundant(Properties configuration, String excelFileName, String configFileName, Integer redundancy, Collection<LocalDate> competitionDatesFlat) {
 		List<LocalDate> competionDateLatestBlock =
 			CollectionUtils.toSubLists(
 				new ArrayList<>(competitionDatesFlat),
@@ -290,7 +294,8 @@ public class LotteryMatrixSimulator {
 			workBook ->
 				createWorkbook(workBook, excelFileName),
 			workBook ->
-				store(excelFileName, workBook)
+				store(excelFileName, workBook),
+			Boolean.parseBoolean(configuration.getProperty("simulation.slave"))
 		);
 	}
 
@@ -326,12 +331,12 @@ public class LotteryMatrixSimulator {
 			Collections.shuffle(competitionDates);
 		} else {
 			extractionDatePredicate = buildExtractionDatePredicate(
-				configuration.getProperty("nameSuffix"),
+				configuration,
 				excelFileName,
 				redundantConfigValue != null? Integer.valueOf(redundantConfigValue) : null,
 				redundantCounter
 			);
-			systemProcessor = buildSystemProcessor(excelFileName);
+			systemProcessor = buildSystemProcessor(configuration, excelFileName);
 		}
 		AtomicBoolean simulatorFinished = new AtomicBoolean(false);
 		AtomicBoolean historyUpdateTaskStarted = new AtomicBoolean(false);
@@ -376,7 +381,8 @@ public class LotteryMatrixSimulator {
 				null,
 				workBook -> {
 					store(excelFileName, workBook);
-				}
+				},
+				Boolean.parseBoolean(configuration.getProperty("simulation.slave"))
 			);
 		}
 		backup(new File(PersistentStorage.buildWorkingPath() + File.separator + excelFileName));
@@ -448,7 +454,8 @@ public class LotteryMatrixSimulator {
 				fileColIndex.set(Shared.getCellIndex(sheet, FILE_LABEL));
 			},
 			null,
-			null
+			null,
+			Boolean.parseBoolean(configuration.getProperty("simulation.slave"))
 		);
 		List<Integer> excelRecords = IntStream.range(2, recordFounds.get()).boxed().collect(Collectors.toList());
 		if (isSlave) {
@@ -482,7 +489,8 @@ public class LotteryMatrixSimulator {
 					}
 				},
 				null,
-				null
+				null,
+				Boolean.parseBoolean(configuration.getProperty("simulation.slave"))
 			);
 			if (storageWrapper.get() != null) {
 				Map<Integer, Integer> premiumCounters = premiumCountersForFile.computeIfAbsent(storageWrapper.get().getName(), key -> {
@@ -552,7 +560,8 @@ public class LotteryMatrixSimulator {
 								TimeUtils.getDefaultDateFormat().format(row.getCell(0).getDateCellValue()) + " - " +
 								row.getCell(fileColIndex.get()).getStringCellValue()
 							);
-						}
+						},
+						Boolean.parseBoolean(configuration.getProperty("simulation.slave"))
 					);
 				}
 			}
@@ -612,7 +621,7 @@ public class LotteryMatrixSimulator {
 		}
 	}
 
-	private static Function<LocalDate, Consumer<List<Storage>>> buildSystemProcessor(String excelFileName) {
+	private static Function<LocalDate, Consumer<List<Storage>>> buildSystemProcessor(Properties configuration, String excelFileName) {
 		AtomicBoolean rowAddedFlag = new AtomicBoolean(false);
 		AtomicBoolean fileCreatedFlag = new AtomicBoolean(false);
 		return extractionDate -> storages -> {
@@ -640,7 +649,8 @@ public class LotteryMatrixSimulator {
 					if (fileCreatedFlag.get() || rowAddedFlag.get()) {
 						store(excelFileName, workBook);
 					}
-				}
+				},
+				Boolean.parseBoolean(configuration.getProperty("simulation.slave"))
 			);
 		};
 	}
@@ -709,11 +719,12 @@ public class LotteryMatrixSimulator {
 	}
 
 	private static Function<LocalDate, Function<List<Storage>, Integer>> buildExtractionDatePredicate(
-		String configurationName,
+		Properties configuration,
 		String excelFileName,
 		Integer redundant,
 		AtomicInteger redundantCounter
 	) {
+		String configurationName = configuration.getProperty("nameSuffix");
 		return extractionDate -> storages -> {
 			AtomicReference<Integer> checkResult = new AtomicReference<Integer>();
 			readOrCreateExcel(
@@ -724,7 +735,8 @@ public class LotteryMatrixSimulator {
 					createWorkbook(workBook, excelFileName)
 				,
 				workBook ->
-					store(excelFileName, workBook)
+					store(excelFileName, workBook),
+				Boolean.parseBoolean(configuration.getProperty("simulation.slave"))
 			);
 			if (redundant != null) {
 				Integer redundantCounterValue = redundantCounter.getAndIncrement();
@@ -823,9 +835,10 @@ public class LotteryMatrixSimulator {
 		String excelFileName,
 		ThrowingConsumer<Workbook, Throwable> action,
 		ThrowingConsumer<Workbook, Throwable> createAction,
-		ThrowingConsumer<Workbook, Throwable> finallyAction
+		ThrowingConsumer<Workbook, Throwable> finallyAction,
+		boolean isSlave
 	) {
-		readOrCreateExcelOrComputeBackups(excelFileName, null, action, createAction, finallyAction);
+		readOrCreateExcelOrComputeBackups(excelFileName, null, action, createAction, finallyAction,isSlave);
 	}
 
 	private static void readOrCreateExcelOrComputeBackups(
@@ -833,7 +846,8 @@ public class LotteryMatrixSimulator {
 		Collection<File> backups,
 		ThrowingConsumer<Workbook, Throwable> action,
 		ThrowingConsumer<Workbook, Throwable> createAction,
-		ThrowingConsumer<Workbook, Throwable> finallyAction
+		ThrowingConsumer<Workbook, Throwable> finallyAction,
+		boolean isSlave
 	) {
 		excelFileName = excelFileName.replace("/", File.separator).replace("\\", File.separator);
 		String excelFileAbsolutePath = (PersistentStorage.buildWorkingPath() + File.separator + excelFileName).replace("/", File.separator).replace("\\", File.separator);
@@ -871,26 +885,35 @@ public class LotteryMatrixSimulator {
 				}
 			});
 		} catch (POIXMLException | EmptyFileException | XmlValueDisconnectedException exc) {
-			String excelFileParentPath = excelFileAbsolutePath.substring(0, excelFileAbsolutePath.lastIndexOf(File.separator));
-			String effectiveExcelFileName =  excelFileAbsolutePath.substring(excelFileAbsolutePath.lastIndexOf(File.separator)+1);
-			String effectiveExcelFileNameWithoutExtension = effectiveExcelFileName.substring(0, effectiveExcelFileName.lastIndexOf("."));
-			String excelFileExtension = effectiveExcelFileName.substring(effectiveExcelFileName.lastIndexOf(".") +1);
-			if (backups == null) {
-				backups = ResourceUtils.INSTANCE.findOrdered(effectiveExcelFileNameWithoutExtension + " - ", excelFileExtension, excelFileParentPath);
+			if (isSlave) {
+				LogUtils.error("Error in Excel file '" + excelFileAbsolutePath + "'. Wating for restore by master");
+				try {
+					Thread.sleep(5000);
+				} catch (InterruptedException e) {
+					Throwables.sneakyThrow(e);
+				}
+			} else {
+				String excelFileParentPath = excelFileAbsolutePath.substring(0, excelFileAbsolutePath.lastIndexOf(File.separator));
+				String effectiveExcelFileName =  excelFileAbsolutePath.substring(excelFileAbsolutePath.lastIndexOf(File.separator)+1);
+				String effectiveExcelFileNameWithoutExtension = effectiveExcelFileName.substring(0, effectiveExcelFileName.lastIndexOf("."));
+				String excelFileExtension = effectiveExcelFileName.substring(effectiveExcelFileName.lastIndexOf(".") +1);
+				if (backups == null) {
+					backups = ResourceUtils.INSTANCE.findOrdered(effectiveExcelFileNameWithoutExtension + " - ", excelFileExtension, excelFileParentPath);
+				}
+				if (backups.isEmpty()) {
+					LogUtils.error("Error in Excel file '" + excelFileAbsolutePath + "'. No backup found");
+					throw exc;
+				}
+				Iterator<File> backupsIterator = backups.iterator();
+				File backup = backupsIterator.next();
+				LogUtils.warn("Error in Excel file '" + excelFileAbsolutePath + "'.\nTrying to restore previous backup: '" + backup.getAbsolutePath() + "'");
+				File processedFile = new File(excelFileAbsolutePath);
+				if (!processedFile.delete() || !backup.renameTo(processedFile)) {
+					throw exc;
+				}
+				backupsIterator.remove();
 			}
-			if (backups.isEmpty()) {
-				LogUtils.error("Error in Excel file '" + excelFileAbsolutePath + "'. No backup found");
-				throw exc;
-			}
-			Iterator<File> backupsIterator = backups.iterator();
-			File backup = backupsIterator.next();
-			LogUtils.warn("Error in Excel file '" + excelFileAbsolutePath + "'.\nTrying to restore previous backup: '" + backup.getAbsolutePath() + "'");
-			File processedFile = new File(excelFileAbsolutePath);
-			if (!processedFile.delete() || !backup.renameTo(processedFile)) {
-				throw exc;
-			}
-			backupsIterator.remove();
-			readOrCreateExcelOrComputeBackups(excelFileName, backups, action, createAction, finallyAction);
+			readOrCreateExcelOrComputeBackups(excelFileName, backups, action, createAction, finallyAction, isSlave);
 		}
 	}
 
