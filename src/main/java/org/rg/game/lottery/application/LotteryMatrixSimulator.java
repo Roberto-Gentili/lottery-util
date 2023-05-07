@@ -35,6 +35,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.apache.poi.EmptyFileException;
 import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ooxml.POIXMLException;
 import org.apache.poi.openxml4j.util.ZipSecureFile;
@@ -48,6 +49,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.xmlbeans.impl.values.XmlValueDisconnectedException;
 import org.rg.game.core.CollectionUtils;
 import org.rg.game.core.NetworkUtils;
 import org.rg.game.core.ResourceUtils;
@@ -867,7 +869,7 @@ public class LotteryMatrixSimulator {
 					}
 				}
 			});
-		} catch (POIXMLException exc) {
+		} catch (POIXMLException | EmptyFileException | XmlValueDisconnectedException exc) {
 			String excelFileParentPath = excelFileAbsolutePath.substring(0, excelFileAbsolutePath.lastIndexOf(File.separator));
 			String effectiveExcelFileName =  excelFileAbsolutePath.substring(excelFileAbsolutePath.lastIndexOf(File.separator)+1);
 			String effectiveExcelFileNameWithoutExtension = effectiveExcelFileName.substring(0, effectiveExcelFileName.lastIndexOf("."));
