@@ -884,7 +884,7 @@ public class LotteryMatrixSimulator {
 			}
 			Iterator<File> backupsIterator = backups.iterator();
 			File backup = backupsIterator.next();
-			LogUtils.info("Error in Excel file '" + excelFileAbsolutePath + "'.\nTrying to restore previous backup: '" + backup.getAbsolutePath() + "'");
+			LogUtils.warn("Error in Excel file '" + excelFileAbsolutePath + "'.\nTrying to restore previous backup: '" + backup.getAbsolutePath() + "'");
 			File processedFile = new File(excelFileAbsolutePath);
 			if (!processedFile.delete() || !backup.renameTo(processedFile)) {
 				throw exc;

@@ -109,12 +109,12 @@ public class SEMassiveVerifierAndQualityChecker {
 					normalAndCeneteredCellStyle.setAlignment(HorizontalAlignment.CENTER);
 					Sheet sheet = workbook.getSheet(extractionMonth);
 					if (sheet == null) {
-						LogUtils.info("Nessun foglio da verificare per il mese " + extractionMonth);
+						LogUtils.warn("Nessun foglio da verificare per il mese " + extractionMonth);
 						continue;
 					}
 					int offset = Shared.getCellIndex(sheet, extractionDay);
 					if (offset < 0) {
-						LogUtils.info("Nessuna combinazione da verificare per la data " + extractionDate + "\n");
+						LogUtils.warn("Nessuna combinazione da verificare per la data " + extractionDate + "\n");
 						continue;
 					}
 					Iterator<Row> rowIterator = sheet.rowIterator();

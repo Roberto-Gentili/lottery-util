@@ -79,7 +79,7 @@ public class Verifier {
 			Sheet sheet = workbook.getSheet(extractionMonth);
 			int offset = Shared.getCellIndex(sheet, extractionDay);
 			if (offset < 0) {
-				LogUtils.info("No combination to test for date " + extractionDate);
+				LogUtils.warn("No combination to test for date " + extractionDate);
 				return;
 			}
 			Iterator<Row> rowIterator = sheet.rowIterator();

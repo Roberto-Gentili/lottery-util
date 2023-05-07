@@ -67,12 +67,12 @@ public class SEQualityChecker {
 				try (InputStream srcFileInputStream = new FileInputStream(mainFile); Workbook workbook = new XSSFWorkbook(srcFileInputStream);) {
 					Sheet sheet = workbook.getSheet(extractionMonth);
 					if (sheet == null) {
-						LogUtils.info("No sheet named '" + extractionMonth + "' to test for date " + extractionDate);
+						LogUtils.warn("No sheet named '" + extractionMonth + "' to test for date " + extractionDate);
 						continue;
 					}
 					int offset = Shared.getCellIndex(sheet, extractionDay);
 					if (offset < 0) {
-						LogUtils.info("No combination to test for date " + extractionDate);
+						LogUtils.warn("No combination to test for date " + extractionDate);
 						continue;
 					}
 					Iterator<Row> rowIterator = sheet.rowIterator();

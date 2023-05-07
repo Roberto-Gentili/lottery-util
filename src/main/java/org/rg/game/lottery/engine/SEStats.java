@@ -165,7 +165,7 @@ public class SEStats {
 					break;
 				}
 			} catch (Throwable exc) {
-				LogUtils.info(dataLoader.getClass() + " in unable to load extractions data: " + exc.getMessage());
+				LogUtils.warn(dataLoader.getClass() + " in unable to load extractions data: " + exc.getMessage());
 			}
 		}
 		if (!dataLoaded) {
