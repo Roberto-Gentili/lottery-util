@@ -140,15 +140,7 @@ public class SELotterySimpleSimulator {
 				if (simulationDates != null) {
 					config.setProperty("competition", simulationDates);
 				}
-				String simulationGroup = config.getProperty("simulation.group");
-				if (simulationGroup != null) {
-					simulationGroup = simulationGroup.replace("${localhost.name}", hostName);
-					config.setProperty("simulation.group", simulationGroup);
-					config.setProperty(
-						"group",
-						simulationGroup
-					);
-				}
+				setGroup(config);
 				config.setProperty("storage", "filesystem");
 				config.setProperty("overwrite-if-exists", String.valueOf(Boolean.parseBoolean(config.getProperty("simulation.slave", "false"))? -1 : 0));
 				configurations.add(config);
@@ -209,14 +201,32 @@ public class SELotterySimpleSimulator {
 		}
 	}
 
-	protected static void removeNextOfLatestExtractionDate(Properties config, Collection<LocalDate> extractionDates) {
+	protected static void setGroup(Properties config) {
+		String simulationGroup = config.getProperty("simulation.group");
+		if (simulationGroup != null) {
+			simulationGroup = simulationGroup.replace("${localhost.name}", hostName);
+			config.setProperty("simulation.group", simulationGroup);
+			config.setProperty(
+				"group",
+				simulationGroup
+			);
+		}
+	}
+
+	protected static LocalDate removeNextOfLatestExtractionDate(Properties config, Collection<LocalDate> extractionDates) {
 		Iterator<LocalDate> extractionDatesIterator = extractionDates.iterator();
 		LocalDate latestExtractionArchiveStartDate = TimeUtils.toLocalDate(getSEStats(config).getLatestExtractionDate());
+		LocalDate nextAfterLatest = null;
 		while (extractionDatesIterator.hasNext()) {
-			if (extractionDatesIterator.next().compareTo(latestExtractionArchiveStartDate) > 0) {
+			LocalDate currentIterated = extractionDatesIterator.next();
+			if (currentIterated.compareTo(latestExtractionArchiveStartDate) > 0) {
+				if (nextAfterLatest == null) {
+					nextAfterLatest = currentIterated;
+				}
 				extractionDatesIterator.remove();
 			}
 		}
+		return nextAfterLatest;
 	}
 
 	protected static void cleanup(

@@ -49,22 +49,30 @@ public class LotteryMatrixGenerator {
 			}
 		}
 		for (Properties configuration : configurations) {
-			LogUtils.info(
-				"Processing file '" + configuration.getProperty("file.name") + "' located in '" + configuration.getProperty("file.parent.absolutePath") + "'"
-			);
-			String info = configuration.getProperty("info");
-			if (info != null) {
-				LogUtils.info(info);
-			}
-			LotteryMatrixGeneratorAbstEngine engine = engineSupplier.get();
-			configuration.setProperty("nameSuffix", configuration.getProperty("file.name")
-				.replace("." + configuration.getProperty("file.extension"), ""));
-			engine.setup(configuration);
-			if (Boolean.parseBoolean(configuration.getProperty("async", "false"))) {
-				futures.add(CompletableFuture.runAsync(() -> engine.getExecutor().apply(null).apply(null)));
-			} else {
-				engine.getExecutor().apply(null).apply(null);
-			}
+			process(futures, engineSupplier, configuration);
+		}
+	}
+
+	protected static void process(
+		Collection<CompletableFuture<Void>> futures,
+		Supplier<LotteryMatrixGeneratorAbstEngine> engineSupplier,
+		Properties configuration
+	) {
+		LogUtils.info(
+			"Processing file '" + configuration.getProperty("file.name") + "' located in '" + configuration.getProperty("file.parent.absolutePath") + "'"
+		);
+		String info = configuration.getProperty("info");
+		if (info != null) {
+			LogUtils.info(info);
+		}
+		LotteryMatrixGeneratorAbstEngine engine = engineSupplier.get();
+		configuration.setProperty("nameSuffix", configuration.getProperty("file.name")
+			.replace("." + configuration.getProperty("file.extension"), ""));
+		engine.setup(configuration);
+		if (Boolean.parseBoolean(configuration.getProperty("async", "false"))) {
+			futures.add(CompletableFuture.runAsync(() -> engine.getExecutor().apply(null).apply(null)));
+		} else {
+			engine.getExecutor().apply(null).apply(null);
 		}
 	}
 
