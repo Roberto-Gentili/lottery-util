@@ -33,7 +33,6 @@ import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import org.apache.poi.EmptyFileException;
 import org.apache.poi.common.usermodel.HyperlinkType;
@@ -373,10 +372,9 @@ public class LotteryMatrixSimulator {
 			readOrCreateExcel(
 				excelFileName,
 				workBook -> {
-					try (SimpleWorkbookTemplate workBookTemplate = new SimpleWorkbookTemplate(workBook);) {
-						workBookTemplate.getOrCreateSheet("Risultati", true);
-						workBookTemplate.setAutoFilter(1, Shared.getSEStats().getAllWinningCombos().size() * 2, 0, excelHeaderLabels.size() - 1);
-					}
+					SimpleWorkbookTemplate workBookTemplate = new SimpleWorkbookTemplate(workBook);
+					workBookTemplate.getOrCreateSheet("Risultati", true);
+					workBookTemplate.setAutoFilter(1, Shared.getSEStats().getAllWinningCombos().size() * 2, 0, excelHeaderLabels.size() - 1);
 				},
 				null,
 				workBook -> {
@@ -440,34 +438,41 @@ public class LotteryMatrixSimulator {
 		boolean isSlave = Boolean.parseBoolean(configuration.getProperty("simulation.slave", "false"));
 		SEStats sEStats = getSEStats(configuration);
 		Map<Integer, String> allPremiums = SEStats.allPremiums();
-		AtomicInteger recordFounds = new AtomicInteger(0);
 		AtomicInteger dataAggStoricoColIndex = new AtomicInteger(0);
 		AtomicInteger fileColIndex = new AtomicInteger(0);
 		AtomicReference<CellStyle> numberCellStyle = new AtomicReference<>();
 		AtomicReference<CellStyle> dateCellStyle = new AtomicReference<>();
+		List<Integer> excelRecordsToBeUpdated = new ArrayList<>();
 		readOrCreateExcel(
 			excelFileName,
 			workBook -> {
 				Sheet sheet = workBook.getSheet("Risultati");
-				recordFounds.set(workBook.getSheet("Risultati").getPhysicalNumberOfRows());
 				dataAggStoricoColIndex.set(Shared.getCellIndex(sheet, DATA_AGGIORNAMENTO_STORICO_LABEL));
 				fileColIndex.set(Shared.getCellIndex(sheet, FILE_LABEL));
+				for (int i = 2; i < sheet.getPhysicalNumberOfRows(); i++) {
+					Row row = sheet.getRow(i);
+					if (rowRefersTo(row, configurationName)) {
+						Date dataAggStor = row.getCell(dataAggStoricoColIndex.get()).getDateCellValue();
+						if (dataAggStor == null || dataAggStor.compareTo(sEStats.getLatestExtractionDate()) < 0) {
+							excelRecordsToBeUpdated.add(i);
+						}
+					}
+				}
 			},
 			null,
 			null,
 			Boolean.parseBoolean(configuration.getProperty("simulation.slave"))
 		);
-		List<Integer> excelRecords = IntStream.range(2, recordFounds.get()).boxed().collect(Collectors.toList());
 		if (isSlave) {
-			Collections.shuffle(excelRecords);
+			Collections.shuffle(excelRecordsToBeUpdated);
 		}
 		int rowProcessedCounter = 0;
-		for (Integer rowIndex : excelRecords) {
+		for (Integer rowIndex : excelRecordsToBeUpdated) {
 			++rowProcessedCounter;
 			AtomicReference<PersistentStorage> storageWrapper = new AtomicReference<>();
 			if (simulatorFinished.get()) {
 				setThreadPriorityToMax();
-				int remainedRecords = (excelRecords.size() - (rowProcessedCounter + 1));
+				int remainedRecords = (excelRecordsToBeUpdated.size() - (rowProcessedCounter + 1));
 				if (remainedRecords % 100 == 0) {
 					LogUtils.info("History update is going to finish: " + remainedRecords + " records remained");
 				}
