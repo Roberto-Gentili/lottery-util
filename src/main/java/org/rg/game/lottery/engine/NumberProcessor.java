@@ -25,7 +25,7 @@ public class NumberProcessor {
 	public static final String LESS_EXTRACTED_KEY = "lessExt";
 	public static final String LESS_EXTRACTED_COUPLE_KEY = "lessExtCouple";
 	public static final String LESS_EXTRACTED_TRIPLE_KEY = "lessExtTriple";
-	public static final String NEAREST_FROM_RECORD_ABSENCE_PERCENTAGE_KEY = "nearFromRecAbsPerc";
+	public static final String NEAREST_FROM_RECORD_ABSENCE_PERCENTAGE_KEY = "nearFromAbsRecPerc";
 	public static final String BIGGEST_ABSENCE_RECORD_KEY = "biggestAbsRec";
 	public static final String SMALLEST_ABSENCE_RECORD_KEY = "smallestAbsRec";
 	public static final String PREVIOUS_SYSTEM_KEY = PREVIOUS_KEY + "Sys";
