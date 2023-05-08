@@ -37,7 +37,7 @@ public class LotteryMatrixGenerator {
 		List<File> configurationFiles =
 			ResourceUtils.INSTANCE.find(
 				configFilePrefix + "-matrix-generator", "properties",
-				Shared.retrieveFolderFromSystemEnv(
+				Shared.pathsFromSystemEnv(
 					"working-path.generations.folder",
 					"resources.generations.folder"
 				)

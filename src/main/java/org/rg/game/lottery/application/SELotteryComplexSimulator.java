@@ -61,7 +61,7 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 		for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(
 			ResourceUtils.INSTANCE.find(
 				configFilePrefix + "-complex-simulation", "properties",
-				Shared.retrieveFolderFromSystemEnv(
+				Shared.pathsFromSystemEnv(
 					"working-path.complex-simulations.folder",
 					"resources.complex-simulations.folder"
 				)

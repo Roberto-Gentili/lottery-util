@@ -35,11 +35,11 @@ class Shared {
 		System.getenv("competition.archive.start-date"):
 		new SELotteryMatrixGeneratorEngine().getExtractionArchiveStartDate();
 
-	static String[] retrieveFolderFromSystemEnv(String... keys) {
-		return retrieveFolderFromSystemEnv(null, keys);
+	static String[] pathsFromSystemEnv(String... keys) {
+		return pathsFromSystemEnv(null, keys);
 	}
 
-	static String[] retrieveFolderFromSystemEnv(List<String> values, String... keys) {
+	static String[] pathsFromSystemEnv(List<String> values, String... keys) {
 		if (values == null) {
 			values = new ArrayList<>();
 		}

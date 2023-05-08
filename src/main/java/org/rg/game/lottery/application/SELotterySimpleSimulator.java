@@ -122,7 +122,7 @@ public class SELotterySimpleSimulator {
 		List<File> configurationFiles =
 			ResourceUtils.INSTANCE.find(
 				configFilePrefix + "-simple-simulation", "properties",
-				Shared.retrieveFolderFromSystemEnv(
+				Shared.pathsFromSystemEnv(
 					"working-path.simulations.folder",
 					"resources.simulations.folder"
 				)
