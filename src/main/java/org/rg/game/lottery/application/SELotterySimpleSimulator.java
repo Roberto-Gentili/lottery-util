@@ -67,7 +67,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 
-public class SELotteryMatrixSimulator {
+public class SELotterySimpleSimulator {
 	private static final Map<String, Integer> savingOperationCounters = new ConcurrentHashMap<>();
 	private static final String SALDO_LABEL = "Saldo";
 	private static final String RITORNO_LABEL = "Ritorno";
@@ -692,7 +692,7 @@ public class SELotteryMatrixSimulator {
 			workBookTemplate.addCell(0, "#,##0");
 			cell.getCellStyle().setAlignment(HorizontalAlignment.CENTER);
 			allFormulas = SEStats.allPremiumLabels().stream().map(
-					label -> generatePremiumFormula(sheet, currentRowNum, label, SELotteryMatrixSimulator::getHistoryPremiumLabel)).collect(Collectors.toList());
+					label -> generatePremiumFormula(sheet, currentRowNum, label, SELotterySimpleSimulator::getHistoryPremiumLabel)).collect(Collectors.toList());
 			formula = String.join("+", allFormulas);
 			workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
 			formula = generateSaldoFormula(currentRowNum, sheet, Arrays.asList(RITORNO_STORICO_LABEL, COSTO_STORICO_LABEL));
