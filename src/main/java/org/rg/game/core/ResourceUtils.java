@@ -74,12 +74,6 @@ public class ResourceUtils {
 				)
 			);
 		}
-
-		files.addAll(
-			ResourceUtils.INSTANCE.find((directory, fileName) ->
-				fileName.contains(filePrefix) && fileName.endsWith(extension)
-			)
-		);
 		return toOrderedList(files);
 	}
 

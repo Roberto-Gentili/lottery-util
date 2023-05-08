@@ -38,7 +38,8 @@ public class LotteryMatrixGenerator {
 		List<File> configurationFiles =
 			ResourceUtils.INSTANCE.find(
 				configFilePrefix + "-matrix-generator", "properties",
-				PersistentStorage.buildWorkingPath()
+				PersistentStorage.buildWorkingPath(),
+				ResourceUtils.INSTANCE.getResourceFolder().getAbsolutePath()
 			);
 		List<Properties> configurations = new ArrayList<>();
 		for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles)) {

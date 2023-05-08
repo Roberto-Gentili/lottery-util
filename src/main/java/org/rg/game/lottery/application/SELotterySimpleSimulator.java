@@ -110,7 +110,7 @@ public class SELotterySimpleSimulator {
 		futures.stream().forEach(CompletableFuture::join);
 	}
 
-	private static void execute(
+	protected static void execute(
 		String configFilePrefix,
 		Collection<CompletableFuture<Void>> futures
 	) throws IOException {
@@ -202,7 +202,7 @@ public class SELotterySimpleSimulator {
 		}
 	}
 
-	private static void cleanup(
+	protected static void cleanup(
 		Properties configuration,
 		String excelFileName,
 		Collection<LocalDate> competitionDates,
@@ -306,7 +306,7 @@ public class SELotterySimpleSimulator {
 		return matcher.find() && matcher.group(1).equals(configurationName);
 	}
 
-	private static void process(
+	protected static void process(
 		Properties configuration,
 		String excelFileName,
 		SELotteryMatrixGeneratorEngine engine,
