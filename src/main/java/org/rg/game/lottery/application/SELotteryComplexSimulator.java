@@ -68,7 +68,7 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 			List<LocalDate> extractionDates = new ArrayList<>(new SELotteryMatrixGeneratorEngine().computeExtractionDates(config.getProperty("simulation.dates")));
 			LocalDate nextAfterLatest = removeNextOfLatestExtractionDate(config, extractionDates);
 			if (!extractionDates.isEmpty()) {
-				Random random = new Random(TimeUtils.toDate(extractionDates.stream().findFirst().orElseGet(() -> null)).getTime());
+				Random random = new Random(allTimeStats.getSeedData(extractionDates.stream().findFirst().orElseGet(() -> null)).getValue());
 				Iterator<Integer> randomIntsIterator = random.ints(0, simpleConfigurations.size()).boxed().iterator();
 				Map<Properties, Set<LocalDate>> extractionDatesForConfigs = new LinkedHashMap<>();
 				for (int i = 0; i < extractionDates.size(); i++) {
