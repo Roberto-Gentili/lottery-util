@@ -74,12 +74,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	protected int getIncrementDays(LocalDate startDate) {
 		SEStats sEStats = getSEStatsForSeed();
 		int comparisonResult = TimeUtils.toDate(startDate).compareTo(sEStats.getLatestExtractionDate());
-		if (comparisonResult >= 0) {
-			if (comparisonResult == 0) {
-				return 0;
-			}
-			return startDate.getDayOfWeek().getValue() == DayOfWeek.SATURDAY.getValue() ? 3 : 2;
-		} else {
+		if (comparisonResult < 0) {
 			List<Date> dates = new ArrayList<>(sEStats.getAllWinningCombosReversed().keySet());
 			for (int i = 1; i < dates.size(); i++) {
 				LocalDate extractionDate = TimeUtils.toLocalDate(dates.get(i));

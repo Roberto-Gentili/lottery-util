@@ -119,15 +119,22 @@ public class SELotterySimpleSimulator {
 		SEStats.get("02/07/2009", TimeUtils.getDefaultDateFormat().format(new Date()));
 		SEStats.forceLoadingFromExcel = true;
 		Supplier<SELotteryMatrixGeneratorEngine> engineSupplier = SELotteryMatrixGeneratorEngine::new;
-
 		List<File> configurationFiles =
 			ResourceUtils.INSTANCE.find(
 				configFilePrefix + "-simple-simulation", "properties",
 				PersistentStorage.buildWorkingPath(),
 				ResourceUtils.INSTANCE.getResource("simulations").getAbsolutePath()
 			);
+		prepareAndProcess(futures, engineSupplier, ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles));
+	}
+
+	protected static void prepareAndProcess(
+		Collection<CompletableFuture<Void>> futures,
+		Supplier<SELotteryMatrixGeneratorEngine> engineSupplier,
+		List<Properties> configurationProperties
+	) throws IOException {
 		List<Properties> configurations = new ArrayList<>();
-		for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles)) {
+		for (Properties config : configurationProperties) {
 			String simulationDates = config.getProperty("simulation.dates");
 			if (Boolean.parseBoolean(config.getProperty("simulation.enabled", "false"))) {
 				if (simulationDates != null) {
@@ -202,20 +209,23 @@ public class SELotterySimpleSimulator {
 		}
 	}
 
+	protected static void removeNextOfLatestExtractionDate(Properties config, Collection<LocalDate> extractionDates) {
+		Iterator<LocalDate> extractionDatesIterator = extractionDates.iterator();
+		LocalDate latestExtractionArchiveStartDate = TimeUtils.toLocalDate(getSEStats(config).getLatestExtractionDate());
+		while (extractionDatesIterator.hasNext()) {
+			if (extractionDatesIterator.next().compareTo(latestExtractionArchiveStartDate) > 0) {
+				extractionDatesIterator.remove();
+			}
+		}
+	}
+
 	protected static void cleanup(
 		Properties configuration,
 		String excelFileName,
 		Collection<LocalDate> competitionDates,
 		String configFileName, Integer redundancy
 	) {
-		Iterator<LocalDate> datesIterator = competitionDates.iterator();
-		SEStats sEStats = getSEStats(configuration);
-		LocalDate latestExtractionArchiveStartDate = TimeUtils.toLocalDate(sEStats.getLatestExtractionDate());
-		while (datesIterator.hasNext()) {
-			if (datesIterator.next().compareTo(latestExtractionArchiveStartDate) > 0) {
-				datesIterator.remove();
-			}
-		}
+		removeNextOfLatestExtractionDate(configuration, competitionDates);
 		int initialSize = competitionDates.size();
 		if (redundancy != null) {
 			cleanupRedundant(
@@ -581,7 +591,7 @@ public class SELotterySimpleSimulator {
 		}
 	}
 
-	private static SEStats getSEStats(Properties configuration) {
+	protected static SEStats getSEStats(Properties configuration) {
 		return SEStats.get(
 			configuration.getProperty(
 				"competition.archive.start-date",
@@ -590,7 +600,7 @@ public class SELotterySimpleSimulator {
 		);
 	}
 
-	private static Map<String, Object> readPremiumCountersData(File premiumCountersFile) {
+	protected static Map<String, Object> readPremiumCountersData(File premiumCountersFile) {
 		Map<String, Object> data = null;
 		try {
 			data = objectMapper.readValue(premiumCountersFile, Map.class);
@@ -602,7 +612,7 @@ public class SELotterySimpleSimulator {
 		return data;
 	}
 
-	private static Map<Integer, Integer> computePremiumCountersData(
+	protected static Map<Integer, Integer> computePremiumCountersData(
 		SEStats sEStats,
 		PersistentStorage storage,
 		File premiumCountersFile
@@ -661,7 +671,7 @@ public class SELotterySimpleSimulator {
 		};
 	}
 
-	private static boolean addRowData(
+	protected static boolean addRowData(
 		SimpleWorkbookTemplate workBookTemplate,
 		LocalDate extractionDate,
 		List<Storage> storages
@@ -710,21 +720,21 @@ public class SELotterySimpleSimulator {
 		return false;
 	}
 
-	private static String generateSaldoFormula(int currentRowNum, Sheet sheet, List<String> labels) {
+	protected static String generateSaldoFormula(int currentRowNum, Sheet sheet, List<String> labels) {
 		return String.join("-", labels.stream().map(label ->
 			"(" + CellReference.convertNumToColString(Shared.getCellIndex(sheet, label))  + currentRowNum + ")"
 		).collect(Collectors.toList()));
 	}
 
-	private static String generatePremiumFormula(Sheet sheet, int currentRowNum, String columnLabel, UnaryOperator<String> transformer) {
+	protected static String generatePremiumFormula(Sheet sheet, int currentRowNum, String columnLabel, UnaryOperator<String> transformer) {
 		return "(" + CellReference.convertNumToColString(Shared.getCellIndex(sheet, transformer.apply(columnLabel))) + currentRowNum + "*" + SEStats.premiumPrice(columnLabel) + ")";
 	}
 
-	private static String getHistoryPremiumLabel(String label) {
+	protected static String getHistoryPremiumLabel(String label) {
 		return "Totale " + label.toLowerCase() + " (storico)";
 	}
 
-	private static Function<LocalDate, Function<List<Storage>, Integer>> buildExtractionDatePredicate(
+	protected static Function<LocalDate, Function<List<Storage>, Integer>> buildExtractionDatePredicate(
 		Properties configuration,
 		String excelFileName,
 		Integer redundant,
@@ -765,7 +775,7 @@ public class SELotterySimpleSimulator {
 		};
 	}
 
-	private static Integer checkAlreadyProcessed(
+	protected static Integer checkAlreadyProcessed(
 		Workbook workBook,
 		String configurationName,
 		LocalDate extractionDate
@@ -785,7 +795,7 @@ public class SELotterySimpleSimulator {
 		return null;
 	}
 
-	private static void createWorkbook(Workbook workBook, String excelFileName) {
+	protected static void createWorkbook(Workbook workBook, String excelFileName) {
 		SimpleWorkbookTemplate workBookTemplate = new SimpleWorkbookTemplate(workBook);
 		Sheet sheet = workBookTemplate.getOrCreateSheet("Risultati", true);
 
@@ -837,7 +847,7 @@ public class SELotterySimpleSimulator {
 		//LogUtils.logInfo(PersistentStorage.buildWorkingPath() + File.separator + excelFileName + " succesfully created");
 	}
 
-	private static void readOrCreateExcel(
+	protected static void readOrCreateExcel(
 		String excelFileName,
 		ThrowingConsumer<Workbook, Throwable> action,
 		ThrowingConsumer<Workbook, Throwable> createAction,
@@ -847,7 +857,7 @@ public class SELotterySimpleSimulator {
 		readOrCreateExcelOrComputeBackups(excelFileName, null, action, createAction, finallyAction,isSlave);
 	}
 
-	private static void readOrCreateExcelOrComputeBackups(
+	protected static void readOrCreateExcelOrComputeBackups(
 		String excelFileName,
 		Collection<File> backups,
 		ThrowingConsumer<Workbook, Throwable> action,
@@ -923,7 +933,7 @@ public class SELotterySimpleSimulator {
 		}
 	}
 
-	private static void store(String excelFileName, Workbook workBook) {
+	protected static void store(String excelFileName, Workbook workBook) {
 		Integer savingCounterForFile = savingOperationCounters.computeIfAbsent(excelFileName, key -> 0) + 1;
 		File file = new File(PersistentStorage.buildWorkingPath() + File.separator + excelFileName);
 		savingOperationCounters.put(excelFileName, savingCounterForFile);
@@ -938,7 +948,7 @@ public class SELotterySimpleSimulator {
 		}
 	}
 
-	private static void backup(File file) {
+	protected static void backup(File file) {
 		ResourceUtils.INSTANCE.backup(
 			file,
 			file.getParentFile().getAbsolutePath()

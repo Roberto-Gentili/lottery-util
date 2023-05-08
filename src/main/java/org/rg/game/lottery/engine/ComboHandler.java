@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
-import org.rg.game.core.LogUtils;
+import org.rg.game.core.MathUtils;
 
 public class ComboHandler {
 
@@ -46,38 +46,19 @@ public class ComboHandler {
 	}
 
 	public static BigInteger sizeOf(BigInteger numbersCount, BigInteger combinationCount) {
-		return factorial(
+		return MathUtils.INSTANCE.factorial(
 			numbersCount
 		).divide(
-			factorial(combinationCount)
+			MathUtils.INSTANCE.factorial(combinationCount)
 			.multiply(
-				factorial(numbersCount.subtract(combinationCount))
+				MathUtils.INSTANCE.factorial(numbersCount.subtract(combinationCount))
 			)
 		);
 	}
 
-	public static BigInteger factorial(BigInteger number) {
-		BigInteger factorial = BigInteger.ONE;
-		BigInteger divisor = BigInteger.valueOf(100_000);
-		BigInteger initialValue = number;
-		while (number.compareTo(BigInteger.ZERO) > 0) {
-			factorial = factorial.multiply(number);
-			number = number.subtract(BigInteger.ONE);
-			BigInteger processedNumbers = initialValue.subtract(number);
-			if (processedNumbers.mod(divisor).compareTo(BigInteger.ZERO) == 0) {
-				LogUtils.info("Processed " + processedNumbers
-					.toString() + " numbers - Factorial: " + factorial.toString());
-			}
-		}
-		return factorial;
-	}
 
 	public int getSizeAsInt() {
 		return getSize().intValue();
-	}
-
-	public static BigInteger factorial(Number number) {
-		return factorial(BigInteger.valueOf(number.longValue()));
 	}
 
 	public Map<Integer, List<Integer>> find(Collection<Integer> indexes, boolean useSameCollectionInstance) {

@@ -1,6 +1,7 @@
 package org.rg.game.core;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
@@ -35,6 +36,26 @@ public class MathUtils {
 		} catch (ParseException exc) {
 			return Throwables.sneakyThrow(exc);
 		}
+	}
+
+	public BigInteger factorial(BigInteger number) {
+		BigInteger factorial = BigInteger.ONE;
+		BigInteger divisor = BigInteger.valueOf(100_000);
+		BigInteger initialValue = number;
+		while (number.compareTo(BigInteger.ZERO) > 0) {
+			factorial = factorial.multiply(number);
+			number = number.subtract(BigInteger.ONE);
+			BigInteger processedNumbers = initialValue.subtract(number);
+			if (processedNumbers.mod(divisor).compareTo(BigInteger.ZERO) == 0) {
+				LogUtils.info("Processed " + processedNumbers
+					.toString() + " numbers - Factorial: " + factorial.toString());
+			}
+		}
+		return factorial;
+	}
+
+	public BigInteger factorial(Number number) {
+		return factorial(BigInteger.valueOf(number.longValue()));
 	}
 
 }
