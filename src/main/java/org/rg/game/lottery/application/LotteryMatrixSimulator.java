@@ -277,6 +277,7 @@ public class LotteryMatrixSimulator {
 				}
 				List<List<Row>> allGroupedForRedundancyRows = new ArrayList<>(groupedForRedundancyRows.values());
 				List<Row> latestGroupOfRows = allGroupedForRedundancyRows.stream().reduce((prev, next) -> next).orElse(null);
+				allGroupedForRedundancyRows.remove(latestGroupOfRows);
 				for (List<Row> rows : allGroupedForRedundancyRows) {
 					if (rows.size() < redundancy) {
 						for (Row row : rows) {
