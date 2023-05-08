@@ -122,7 +122,7 @@ public class SELotteryMatrixSimulator {
 
 		List<File> configurationFiles =
 			ResourceUtils.INSTANCE.find(
-				configFilePrefix + "-matrix-generator", "properties",
+				configFilePrefix + "-simple-simulation", "properties",
 				PersistentStorage.buildWorkingPath(),
 				ResourceUtils.INSTANCE.getResource("simulations").getAbsolutePath()
 			);
