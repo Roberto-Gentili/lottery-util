@@ -898,7 +898,7 @@ public class LotteryMatrixSimulator {
 				String effectiveExcelFileNameWithoutExtension = effectiveExcelFileName.substring(0, effectiveExcelFileName.lastIndexOf("."));
 				String excelFileExtension = effectiveExcelFileName.substring(effectiveExcelFileName.lastIndexOf(".") +1);
 				if (backups == null) {
-					backups = ResourceUtils.INSTANCE.findOrdered(effectiveExcelFileNameWithoutExtension + " - ", excelFileExtension, excelFileParentPath);
+					backups = ResourceUtils.INSTANCE.findReverseOrdered(effectiveExcelFileNameWithoutExtension + " - ", excelFileExtension, excelFileParentPath);
 				}
 				if (backups.isEmpty()) {
 					LogUtils.error("Error in Excel file '" + excelFileAbsolutePath + "'. No backup found");
