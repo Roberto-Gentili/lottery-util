@@ -61,8 +61,10 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 		for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(
 			ResourceUtils.INSTANCE.find(
 				configFilePrefix + "-complex-simulation", "properties",
-				PersistentStorage.buildWorkingPath(),
-				ResourceUtils.INSTANCE.getResource("simulations").getAbsolutePath()
+				Shared.retrieveFolderFromSystemEnv(
+					"working-path.complex-simulations.folder",
+					"resources.complex-simulations.folder"
+				)
 			)
 		)) {
 			List<LocalDate> extractionDates = new ArrayList<>(new SELotteryMatrixGeneratorEngine().computeExtractionDates(config.getProperty("simulation.dates")));

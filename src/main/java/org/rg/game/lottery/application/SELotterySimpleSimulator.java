@@ -122,11 +122,15 @@ public class SELotterySimpleSimulator {
 		List<File> configurationFiles =
 			ResourceUtils.INSTANCE.find(
 				configFilePrefix + "-simple-simulation", "properties",
-				PersistentStorage.buildWorkingPath(),
-				ResourceUtils.INSTANCE.getResource("simulations").getAbsolutePath()
+				Shared.retrieveFolderFromSystemEnv(
+					"working-path.simulations.folder",
+					"resources.simulations.folder"
+				)
 			);
 		prepareAndProcess(futures, engineSupplier, ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles));
 	}
+
+
 
 	protected static void prepareAndProcess(
 		Collection<CompletableFuture<Void>> futures,

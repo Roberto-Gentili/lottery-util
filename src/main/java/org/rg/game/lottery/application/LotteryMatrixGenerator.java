@@ -13,7 +13,6 @@ import org.rg.game.core.LogUtils;
 import org.rg.game.core.ResourceUtils;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.MDLotteryMatrixGeneratorEngine;
-import org.rg.game.lottery.engine.PersistentStorage;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 
 
@@ -38,8 +37,10 @@ public class LotteryMatrixGenerator {
 		List<File> configurationFiles =
 			ResourceUtils.INSTANCE.find(
 				configFilePrefix + "-matrix-generator", "properties",
-				PersistentStorage.buildWorkingPath(),
-				ResourceUtils.INSTANCE.getResourceFolder().getAbsolutePath()
+				Shared.retrieveFolderFromSystemEnv(
+					"working-path.generations.folder",
+					"resources.generations.folder"
+				)
 			);
 		List<Properties> configurations = new ArrayList<>();
 		for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles)) {

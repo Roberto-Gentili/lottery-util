@@ -47,7 +47,10 @@ public class ResourceUtils {
 	}
 
 	public File getResource(String path) {
-		File file = new File(getResourceFolder() + File.separator + path);
+		File file = getResourceFolder();
+		if (path != null && !path.isEmpty()) {
+			file = new File(file.getAbsolutePath() + File.separator + path);
+		}
 		if (file.exists()) {
 			return file;
 		}
