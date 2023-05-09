@@ -15,6 +15,9 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.IntSupplier;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.apache.poi.openxml4j.util.ZipSecureFile;
@@ -70,11 +73,11 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 			List<LocalDate> extractionDates = new ArrayList<>(new SELotteryMatrixGeneratorEngine().computeExtractionDates(config.getProperty("simulation.dates")));
 			LocalDate nextAfterLatest = removeNextOfLatestExtractionDate(config, extractionDates);
 			if (!extractionDates.isEmpty()) {
-				Random random = new Random(allTimeStats.getSeedData(extractionDates.stream().findFirst().orElseGet(() -> null)).getValue());
-				Iterator<Integer> randomIntsIterator = random.ints(0, simpleConfigurations.size()).boxed().iterator();
+
+				Supplier<Integer> configurationIndexIterator = indexIterator(config, extractionDates, simpleConfigurations);
 				Map<Properties, Set<LocalDate>> extractionDatesForConfigs = new LinkedHashMap<>();
 				for (int i = 0; i < extractionDates.size(); i++) {
-					Properties simpleConfiguration = simpleConfigurations.get(randomIntsIterator.next());
+					Properties simpleConfiguration = simpleConfigurations.get(configurationIndexIterator.get());
 					Set<LocalDate> extractionDatesForConfig=
 							extractionDatesForConfigs.computeIfAbsent(simpleConfiguration, key -> new TreeSet<>());
 					extractionDatesForConfig.add(extractionDates.get(i));
@@ -96,7 +99,7 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 				prepareAndProcess(futures, SELotteryMatrixGeneratorEngine::new, simpleConfigurations);
 				if (nextAfterLatest != null) {
 					Properties nextAfterLatestConfiguration = new Properties();
-					nextAfterLatestConfiguration.putAll(simpleConfigurations.get(randomIntsIterator.next()));
+					nextAfterLatestConfiguration.putAll(simpleConfigurations.get(configurationIndexIterator.get()));
 					nextAfterLatestConfiguration.put("competition", TimeUtils.defaultLocalDateFormat.format(nextAfterLatest));
 					nextAfterLatestConfiguration.setProperty("storage", "filesystem");
 					nextAfterLatestConfiguration.setProperty("overwrite-if-exists", "1");
@@ -110,6 +113,62 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 			}
 		}
 
+	}
+
+	protected static Supplier<Integer> indexIterator(Properties configuration, List<LocalDate> extractionDates, List<Properties> simpleConfigurations) {
+		String simulationsOrder = configuration.getProperty("simulation.order", "random");
+		if (simulationsOrder.startsWith("random")) {
+			IntSupplier stepSupplier = buildStepSupplier(extractionDates, simulationsOrder);
+			Supplier<Integer> randomItr = randomIterator(extractionDates, 0, simpleConfigurations.size())::next;
+			AtomicInteger indexWrapper = new AtomicInteger(randomItr.get());
+			AtomicInteger latestStepValue = new AtomicInteger(stepSupplier.getAsInt());
+			return () -> {
+				if (latestStepValue.decrementAndGet() == 0) {
+					latestStepValue.set(stepSupplier.getAsInt());
+					return indexWrapper.getAndSet(randomItr.get());
+				}
+				return indexWrapper.get();
+			};
+		} else if (simulationsOrder.startsWith("sequence")) {
+			IntSupplier stepSupplier = buildStepSupplier(extractionDates, simulationsOrder);
+			AtomicInteger indexWrapper = new AtomicInteger(0);
+			AtomicInteger latestStepValue = new AtomicInteger(stepSupplier.getAsInt());
+			return () -> {
+				if (indexWrapper.get() == simpleConfigurations.size()) {
+					indexWrapper.set(0);
+				}
+				if (latestStepValue.decrementAndGet() == 0) {
+					latestStepValue.set(stepSupplier.getAsInt());
+					return indexWrapper.getAndIncrement();
+				} else {
+					return indexWrapper.get();
+				}
+			};
+		}
+		throw new IllegalArgumentException("Unvalid simulation.order parameter value");
+	}
+
+	protected static IntSupplier buildStepSupplier(List<LocalDate> extractionDates, String rawOptions) {
+		String[] options = rawOptions.split(":");
+		return options.length > 1?
+			options[1].contains("random") ?
+				boundedRandomizer(extractionDates, options[1].split("random")[1].replaceAll("\\s+","").split("->")) :
+				() -> Integer.parseInt(options[1]) :
+					() -> 1;
+	}
+
+	private static IntSupplier boundedRandomizer(List<LocalDate> extractionDates, String[] minAndMax) {
+		if (minAndMax.length != 2) {
+			minAndMax = new String[] {"1", minAndMax[0]};
+		}
+		Random random = new Random(allTimeStats.getSeedData(extractionDates.stream().findFirst().orElseGet(() -> null)).getValue());
+		Iterator<Integer> randomIterator = random.ints(Integer.parseInt(minAndMax[0]), Integer.parseInt(minAndMax[1]) + 1).boxed().iterator();
+		return randomIterator::next;
+	}
+
+	protected static Iterator<Integer> randomIterator(List<LocalDate> extractionDates, int minValue, int maxValue) {
+		Random random = new Random(allTimeStats.getSeedData(extractionDates.stream().findFirst().orElseGet(() -> null)).getValue());
+		return random.ints(minValue, maxValue).boxed().iterator();
 	}
 
 }
