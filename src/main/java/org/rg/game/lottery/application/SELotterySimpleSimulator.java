@@ -826,16 +826,12 @@ public class SELotterySimpleSimulator {
 		List<String> summaryFormulas = new ArrayList<>();
 		String columnName = CellReference.convertNumToColString(0);
 		summaryFormulas.add("FORMULA_COUNTA(" + columnName + "3:"+ columnName + allTimeStats.getAllWinningCombos().size() * 2 +")");
-		for (int i = 1; i < excelHeaderLabels.size()-3; i++) {
+		for (int i = 1; i < excelHeaderLabels.size()-2; i++) {
 			columnName = CellReference.convertNumToColString(i);
 			summaryFormulas.add(
 				"FORMULA_SUM(" + columnName + "3:"+ columnName + allTimeStats.getAllWinningCombos().size() * 2 +")"
 			);
 		}
-		summaryFormulas.add(
-			"FORMULA_TEXT((SUM(" + CellReference.convertNumToColString(excelHeaderLabels.indexOf(SALDO_STORICO_LABEL)) + "3:" +
-			CellReference.convertNumToColString(excelHeaderLabels.indexOf(SALDO_STORICO_LABEL)) + allTimeStats.getAllWinningCombos().size() * 2 +
-			")/" + CellReference.convertNumToColString(excelHeaderLabels.indexOf(COSTO_STORICO_LABEL)) + "2),\"###,00%\")");
 		summaryFormulas.add("");
 		summaryFormulas.add("");
 		workBookTemplate.createHeader(
@@ -852,6 +848,11 @@ public class SELotterySimpleSimulator {
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, COSTO_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, RITORNO_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, SALDO_LABEL)).setCellStyle(headerNumberStyle);
+		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, SALDO_LABEL)).setCellFormula(
+			"TEXT((SUM(" + CellReference.convertNumToColString(excelHeaderLabels.indexOf(SALDO_LABEL)) + "3:" +
+			CellReference.convertNumToColString(excelHeaderLabels.indexOf(SALDO_LABEL)) + allTimeStats.getAllWinningCombos().size() * 2 +
+			")/" + CellReference.convertNumToColString(excelHeaderLabels.indexOf(COSTO_LABEL)) + "2),\"###,00%\")"
+		);
 		for (String label : SEStats.allPremiumLabels()) {
 			sheet.getRow(1).getCell(Shared.getCellIndex(sheet, label)).setCellStyle(headerNumberStyle);
 			sheet.getRow(1).getCell(Shared.getCellIndex(sheet, getHistoryPremiumLabel(label))).setCellStyle(headerNumberStyle);
@@ -859,6 +860,11 @@ public class SELotterySimpleSimulator {
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, COSTO_STORICO_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, RITORNO_STORICO_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, SALDO_STORICO_LABEL)).setCellStyle(headerNumberStyle);
+		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, SALDO_STORICO_LABEL)).setCellFormula(
+			"TEXT((SUM(" + CellReference.convertNumToColString(excelHeaderLabels.indexOf(SALDO_STORICO_LABEL)) + "3:" +
+			CellReference.convertNumToColString(excelHeaderLabels.indexOf(SALDO_STORICO_LABEL)) + allTimeStats.getAllWinningCombos().size() * 2 +
+			")/" + CellReference.convertNumToColString(excelHeaderLabels.indexOf(COSTO_STORICO_LABEL)) + "2),\"###,00%\")"
+		);
 		sheet.setColumnWidth(Shared.getCellIndex(sheet, DATA_LABEL), 3800);
 		sheet.setColumnWidth(Shared.getCellIndex(sheet, COSTO_LABEL), 3000);
 		sheet.setColumnWidth(Shared.getCellIndex(sheet, RITORNO_LABEL), 3000);
