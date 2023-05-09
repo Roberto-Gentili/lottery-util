@@ -95,13 +95,10 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 						"simulation.slave",
 						config.getProperty("simulation.slave", extractionDatesForConfig.getKey().getProperty("simulation.slave"))
 					);
-					String waitingSomeoneForGenerationTimeout = config.getProperty("waiting-someone-for-generation.timeout");
-					if (waitingSomeoneForGenerationTimeout != null) {
-						extractionDatesForConfig.getKey().setProperty(
-							"waiting-someone-for-generation.timeout",
-							config.getProperty("waiting-someone-for-generation.timeout", waitingSomeoneForGenerationTimeout)
-						);
-					}
+					extractionDatesForConfig.getKey().setProperty(
+						"waiting-someone-for-generation.timeout",
+						config.getProperty("waiting-someone-for-generation.timeout", extractionDatesForConfig.getKey().getProperty("waiting-someone-for-generation.timeout"))
+					);
 				}
 				prepareAndProcess(futures, SELotteryMatrixGeneratorEngine::new, simpleConfigurations);
 				if (nextAfterLatest != null) {
