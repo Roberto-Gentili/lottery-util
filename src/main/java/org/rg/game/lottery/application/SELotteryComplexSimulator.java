@@ -95,6 +95,13 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 						"simulation.slave",
 						config.getProperty("simulation.slave", extractionDatesForConfig.getKey().getProperty("simulation.slave"))
 					);
+					String waitingSomeoneForGenerationTimeout = config.getProperty("waiting-someone-for-generation.timeout");
+					if (waitingSomeoneForGenerationTimeout != null) {
+						extractionDatesForConfig.getKey().setProperty(
+							"waiting-someone-for-generation.timeout",
+							config.getProperty("waiting-someone-for-generation.timeout", waitingSomeoneForGenerationTimeout)
+						);
+					}
 				}
 				prepareAndProcess(futures, SELotteryMatrixGeneratorEngine::new, simpleConfigurations);
 				if (nextAfterLatest != null) {
@@ -102,6 +109,7 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 					nextAfterLatestConfiguration.putAll(simpleConfigurations.get(configurationIndexIterator.get()));
 					nextAfterLatestConfiguration.put("competition", TimeUtils.defaultLocalDateFormat.format(nextAfterLatest));
 					nextAfterLatestConfiguration.setProperty("storage", "filesystem");
+					nextAfterLatestConfiguration.setProperty("overwrite-if-exists", "1");
 					String simulationGroup = nextAfterLatestConfiguration.getProperty("simulation.group");
 					if (simulationGroup != null) {
 						nextAfterLatestConfiguration.setProperty("simulation.group", simulationGroup + File.separator + "generated");
