@@ -623,6 +623,7 @@ public class SELotterySimpleSimulator {
 			data.put("premiumCounters",((Map<String, Integer>)objectMapper.readValue(premiumCountersFile, Map.class).get("premiumCounters")).entrySet().stream()
 				.collect(Collectors.toMap(entry -> Integer.parseInt(entry.getKey()), Map.Entry::getValue, (x, y) -> y, LinkedHashMap::new)));
 		} catch (IOException exc) {
+			LogUtils.error("Unable to read file " + premiumCountersFile.getAbsolutePath());
 			Throwables.sneakyThrow(exc);
 		}
 		return data;
