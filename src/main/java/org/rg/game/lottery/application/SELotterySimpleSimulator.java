@@ -247,6 +247,7 @@ public class SELotterySimpleSimulator {
 				excelFileName, configFileName, redundancy, competitionDates
 			);
 		}
+		boolean isSlave = Boolean.parseBoolean(configuration.getProperty("simulation.slave"));
 		readOrCreateExcel(
 			excelFileName,
 			workBook -> {
@@ -270,8 +271,8 @@ public class SELotterySimpleSimulator {
 			workBook ->
 				createWorkbook(workBook, excelFileName),
 			workBook ->
-				store(excelFileName, workBook),
-			Boolean.parseBoolean(configuration.getProperty("simulation.slave"))
+				store(excelFileName, workBook, isSlave),
+			isSlave
 		);
 		LogUtils.info(competitionDates.size() + " dates will be processed, " + (initialSize - competitionDates.size()) + " already processed");
 	}
@@ -282,6 +283,7 @@ public class SELotterySimpleSimulator {
 				new ArrayList<>(competitionDatesFlat),
 				redundancy
 			).stream().reduce((prev, next) -> next).orElse(null);
+		boolean isSlave = Boolean.parseBoolean(configuration.getProperty("simulation.slave", "false"));
 		readOrCreateExcel(
 			excelFileName,
 			workBook -> {
@@ -318,8 +320,8 @@ public class SELotterySimpleSimulator {
 			workBook ->
 				createWorkbook(workBook, excelFileName),
 			workBook ->
-				store(excelFileName, workBook),
-			Boolean.parseBoolean(configuration.getProperty("simulation.slave"))
+				store(excelFileName, workBook, isSlave),
+			isSlave
 		);
 	}
 
@@ -403,12 +405,12 @@ public class SELotterySimpleSimulator {
 				},
 				null,
 				workBook -> {
-					store(excelFileName, workBook);
+					store(excelFileName, workBook, isSlave);
 				},
 				Boolean.parseBoolean(configuration.getProperty("simulation.slave"))
 			);
 		}
-		backup(new File(PersistentStorage.buildWorkingPath() + File.separator + excelFileName));
+		backup(new File(PersistentStorage.buildWorkingPath() + File.separator + excelFileName), isSlave);
 		LogUtils.info("Processing of " + configuration.getProperty("file.name") + " succesfully finished");
 	}
 
@@ -583,7 +585,7 @@ public class SELotterySimpleSimulator {
 						},
 						null,
 						workBook -> {
-							store(excelFileName, workBook);
+							store(excelFileName, workBook, isSlave);
 							Row row = workBook.getSheet("Risultati").getRow(rowIndex);
 							LogUtils.info(
 								"Aggiornamento storico completato per " +
@@ -591,7 +593,7 @@ public class SELotterySimpleSimulator {
 								row.getCell(fileColIndex.get()).getStringCellValue()
 							);
 						},
-						Boolean.parseBoolean(configuration.getProperty("simulation.slave"))
+						isSlave
 					);
 				}
 			}
@@ -654,6 +656,7 @@ public class SELotterySimpleSimulator {
 	private static Function<LocalDate, Consumer<List<Storage>>> buildSystemProcessor(Properties configuration, String excelFileName) {
 		AtomicBoolean rowAddedFlag = new AtomicBoolean(false);
 		AtomicBoolean fileCreatedFlag = new AtomicBoolean(false);
+		boolean isSlave = Boolean.parseBoolean(configuration.getProperty("simulation.slave", "false"));
 		return extractionDate -> storages -> {
 			readOrCreateExcel(
 				excelFileName,
@@ -677,10 +680,10 @@ public class SELotterySimpleSimulator {
 				workBook -> {
 					SEStats.clear();
 					if (fileCreatedFlag.get() || rowAddedFlag.get()) {
-						store(excelFileName, workBook);
+						store(excelFileName, workBook, isSlave);
 					}
 				},
-				Boolean.parseBoolean(configuration.getProperty("simulation.slave"))
+				isSlave
 			);
 		};
 	}
@@ -755,6 +758,7 @@ public class SELotterySimpleSimulator {
 		AtomicInteger redundantCounter
 	) {
 		String configurationName = configuration.getProperty("nameSuffix");
+		boolean isSlave = Boolean.parseBoolean(configuration.getProperty("simulation.slave", "false"));
 		return extractionDate -> storages -> {
 			AtomicReference<Integer> checkResult = new AtomicReference<Integer>();
 			readOrCreateExcel(
@@ -765,7 +769,7 @@ public class SELotterySimpleSimulator {
 					createWorkbook(workBook, excelFileName)
 				,
 				workBook ->
-					store(excelFileName, workBook),
+					store(excelFileName, workBook, isSlave),
 				Boolean.parseBoolean(configuration.getProperty("simulation.slave"))
 			);
 			if (redundant != null) {
@@ -947,12 +951,12 @@ public class SELotterySimpleSimulator {
 		}
 	}
 
-	protected static void store(String excelFileName, Workbook workBook) {
+	protected static void store(String excelFileName, Workbook workBook, boolean isSlave) {
 		Integer savingCounterForFile = savingOperationCounters.computeIfAbsent(excelFileName, key -> 0) + 1;
 		File file = new File(PersistentStorage.buildWorkingPath() + File.separator + excelFileName);
 		savingOperationCounters.put(excelFileName, savingCounterForFile);
 		if (savingCounterForFile % 100 == 0) {
-			backup(file);
+			backup(file, isSlave);
 		}
 		try (OutputStream destFileOutputStream = new FileOutputStream(file)){
 			BaseFormulaEvaluator.evaluateAllFormulaCells(workBook);
@@ -962,13 +966,13 @@ public class SELotterySimpleSimulator {
 		}
 	}
 
-	protected static void backup(File file) {
+	protected static void backup(File file, boolean isSlave) {
 		ResourceUtils.INSTANCE.backup(
 			file,
 			file.getParentFile().getAbsolutePath()
 		);
 		List<File> backupFiles = ResourceUtils.INSTANCE.findOrdered("report - ", "xlsx", file.getParentFile().getAbsolutePath());
-		if (backupFiles.size() > 4) {
+		if (backupFiles.size() > 4 && !isSlave) {
 			Iterator<File> backupFileIterator = backupFiles.iterator();
 			while (backupFiles.size() > 4) {
 				File backupFile = backupFileIterator.next();
