@@ -63,6 +63,8 @@ import org.rg.game.lottery.engine.SEStats;
 import org.rg.game.lottery.engine.SimpleWorkbookTemplate;
 import org.rg.game.lottery.engine.Storage;
 
+import com.fasterxml.jackson.core.exc.StreamReadException;
+import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 
@@ -531,7 +533,16 @@ public class SELotterySimpleSimulator {
 					if (!premiumCountersFile.exists()) {
 						return computePremiumCountersData(sEStats, storage, premiumCountersFile);
 					} else {
-						Map<String, Object> data = readPremiumCountersData(premiumCountersFile);
+						Map<String, Object> data = null;
+						try {
+							data = readPremiumCountersData(premiumCountersFile);
+						} catch (IOException exc) {
+							LogUtils.error("Unable to read file " + premiumCountersFile.getAbsolutePath() + ": it will be deleted and recreated");
+							if (!premiumCountersFile.delete()) {
+								Throwables.sneakyThrow(exc);
+							}
+							return computePremiumCountersData(sEStats, storage, premiumCountersFile);
+						}
 						if (LocalDate.parse(
 							(String)data.get("referenceDate"),
 							TimeUtils.defaultLocalDateFormat
@@ -616,16 +627,10 @@ public class SELotterySimpleSimulator {
 		);
 	}
 
-	protected static Map<String, Object> readPremiumCountersData(File premiumCountersFile) {
-		Map<String, Object> data = null;
-		try {
-			data = objectMapper.readValue(premiumCountersFile, Map.class);
-			data.put("premiumCounters",((Map<String, Integer>)objectMapper.readValue(premiumCountersFile, Map.class).get("premiumCounters")).entrySet().stream()
-				.collect(Collectors.toMap(entry -> Integer.parseInt(entry.getKey()), Map.Entry::getValue, (x, y) -> y, LinkedHashMap::new)));
-		} catch (IOException exc) {
-			LogUtils.error("Unable to read file " + premiumCountersFile.getAbsolutePath());
-			Throwables.sneakyThrow(exc);
-		}
+	protected static Map<String, Object> readPremiumCountersData(File premiumCountersFile) throws StreamReadException, DatabindException, IOException {
+		Map<String, Object> data = objectMapper.readValue(premiumCountersFile, Map.class);
+		data.put("premiumCounters",((Map<String, Integer>)objectMapper.readValue(premiumCountersFile, Map.class).get("premiumCounters")).entrySet().stream()
+			.collect(Collectors.toMap(entry -> Integer.parseInt(entry.getKey()), Map.Entry::getValue, (x, y) -> y, LinkedHashMap::new)));
 		return data;
 	}
 
