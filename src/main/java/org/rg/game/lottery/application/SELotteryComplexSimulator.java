@@ -102,7 +102,6 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 					nextAfterLatestConfiguration.putAll(simpleConfigurations.get(configurationIndexIterator.get()));
 					nextAfterLatestConfiguration.put("competition", TimeUtils.defaultLocalDateFormat.format(nextAfterLatest));
 					nextAfterLatestConfiguration.setProperty("storage", "filesystem");
-					nextAfterLatestConfiguration.setProperty("overwrite-if-exists", "1");
 					String simulationGroup = nextAfterLatestConfiguration.getProperty("simulation.group");
 					if (simulationGroup != null) {
 						nextAfterLatestConfiguration.setProperty("simulation.group", simulationGroup + File.separator + "generated");
