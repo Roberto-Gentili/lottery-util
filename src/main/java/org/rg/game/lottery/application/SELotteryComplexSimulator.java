@@ -88,6 +88,10 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 						)
 					);
 					extractionDatesForConfig.getKey().setProperty("simulation.group", config.getProperty("simulation.group"));
+					extractionDatesForConfig.getKey().setProperty(
+						"simulation.slave",
+						config.getProperty("simulation.slave", extractionDatesForConfig.getKey().getProperty("simulation.slave"))
+					);
 				}
 				prepareAndProcess(futures, SELotteryMatrixGeneratorEngine::new, simpleConfigurations);
 				if (nextAfterLatest != null) {
