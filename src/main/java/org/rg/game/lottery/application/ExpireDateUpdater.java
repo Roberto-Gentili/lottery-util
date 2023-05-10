@@ -91,9 +91,7 @@ public class ExpireDateUpdater {
 						if (expiryCell != null) {
 							Date expiryDate = expiryCell.getDateCellValue();
 							if (expiryDate != null) {
-								LocalDate expiryLocalDate = expiryDate.toInstant()
-								      .atZone(ZoneId.systemDefault())
-								      .toLocalDate();
+								LocalDate expiryLocalDate = TimeUtils.toLocalDate(expiryDate);
 								LocalDate startExpiryDate = expiryLocalDate;
 								if (LocalDate.now().compareTo(expiryLocalDate) > 0) {
 									if (name.equalsIgnoreCase("all")) {
@@ -125,6 +123,36 @@ public class ExpireDateUpdater {
 				XSSFFormulaEvaluator.evaluateAllFormulaCells(workbook);
 				workbook.write(outputStream);
 			}
+			rowIterator = sheet.rowIterator();
+			rowIterator.next();
+			double extractionCost = workbook.getSheet("Informazioni varie").getRow(3).getCell(1).getNumericCellValue() / 3;
+			double total = 0;
+			int displaySize = 70;
+			while (rowIterator.hasNext()) {
+				Row row = rowIterator.next();
+				String name = row.getCell(0).getStringCellValue();
+				if (name.equals("Gentili Roberto")) {
+					continue;
+				}
+				Cell expiryCell = row.getCell(expiryColumnIndex);
+				Date expiryDate = expiryCell.getDateCellValue();
+				if (expiryDate != null) {
+					LocalDate expiryLocalDate = TimeUtils.toLocalDate(expiryDate);
+					LocalDate today = LocalDate.now();
+					if (today.compareTo(expiryLocalDate) <= 0) {
+						int extractionDateCounter = 0;
+						while ((today = today.plus(getIncrementDays(today, true), ChronoUnit.DAYS)).compareTo(expiryLocalDate) <= 0) {
+							extractionDateCounter++;
+						}
+						String label = name + " " + extractionDateCounter + " estrazioni rimaste. Importo credito: ";
+						LogUtils.info(label + Shared.rightAlignedString(Shared.decimalFormat.format(extractionCost * extractionDateCounter), displaySize - label.length()) + "€");
+						total += extractionCost * extractionDateCounter;
+					}
+				}
+			}
+			LogUtils.info();
+			String label = "Importo debito: ";
+			LogUtils.info(label + Shared.rightAlignedString(Shared.decimalFormat.format(total), displaySize - label.length()) + "€");
 		} catch (Throwable exc) {
 			exc.printStackTrace();
 		}

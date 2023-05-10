@@ -30,6 +30,7 @@ import org.rg.game.lottery.engine.SEStats;
 
 class Shared {
 
+	static DecimalFormat decimalFormat = new DecimalFormat( "#,##0.##" );
 	static DecimalFormat integerFormat = new DecimalFormat( "#,##0" );
 	static String sEStatsDefaultDate = System.getenv("competition.archive.start-date") != null ?
 		System.getenv("competition.archive.start-date"):
@@ -205,6 +206,10 @@ class Shared {
 			inClauses.add("in " + ComboHandler.toString(winningCombo, ",") + ":" + bound + "," + 6);
 		}
 		LogUtils.info("(" + String.join("|", inClauses) + ")");
+	}
+
+	static String rightAlignedString(String value, int emptySpacesCount) {
+		return String.format("%" + emptySpacesCount + "s", value);
 	}
 
 }
