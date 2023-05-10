@@ -35,7 +35,8 @@ public class ExpireDateUpdater {
 	static List<Map.Entry<List<String>, Integer>> updateInfos = Arrays.asList(
 		//addUpdateInfo(computeIncrementationOfDays(1), "all")
 		//addUpdateInfo(computeIncrementationOfWeeks(4), "Barella Roberta")
-		//addUpdateInfo(computeIncrementationOfWeeks(4), "Bellacanzone Emanuele")
+		//addUpdateInfo(computeIncrementationOfWeeks(4), "Bellacanzone Emanuele"),
+		//addUpdateInfo(computeIncrementationOfWeeks(10), "Ingegneri Giuseppe")
 		//addUpdateInfo(computeIncrementationOfWeeks(4), "Berni Valentina")
 		//addUpdateInfo(computeIncrementationOfWeeks(2), "Corinti Massimo")
 		//addUpdateInfo(computeIncrementationOfWeeks(4), "Fusi Francesco")
