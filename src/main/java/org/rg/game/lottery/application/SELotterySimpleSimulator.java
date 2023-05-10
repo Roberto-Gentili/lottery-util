@@ -54,6 +54,7 @@ import org.rg.game.core.LogUtils;
 import org.rg.game.core.NetworkUtils;
 import org.rg.game.core.ResourceUtils;
 import org.rg.game.core.Synchronizer;
+import org.rg.game.core.Synchronizer.Mutex;
 import org.rg.game.core.Throwables;
 import org.rg.game.core.ThrowingConsumer;
 import org.rg.game.core.TimeUtils;
@@ -932,11 +933,14 @@ public class SELotterySimpleSimulator {
 			});
 		} catch (POIXMLException | EmptyFileException | XmlValueDisconnectedException exc) {
 			if (isSlave) {
-				LogUtils.error("Error in Excel file '" + excelFileAbsolutePath + "'. Wating for restore by master");
-				try {
-					Thread.sleep(5000);
-				} catch (InterruptedException e) {
-					Throwables.sneakyThrow(e);
+				Mutex mutex = Synchronizer.INSTANCE.getMutex(excelFileName);
+				synchronized(mutex) {
+					LogUtils.error("Error in Excel file '" + excelFileAbsolutePath + "'. Wating for restore by master");
+					try {
+						mutex.wait(5000);
+					} catch (InterruptedException e) {
+						Throwables.sneakyThrow(e);
+					}
 				}
 			} else {
 				String excelFileParentPath = excelFileAbsolutePath.substring(0, excelFileAbsolutePath.lastIndexOf(File.separator));
