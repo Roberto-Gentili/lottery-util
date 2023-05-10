@@ -124,6 +124,7 @@ public class ExpireDateUpdater {
 				XSSFFormulaEvaluator.evaluateAllFormulaCells(workbook);
 				workbook.write(outputStream);
 			}
+			LogUtils.info();
 			rowIterator = sheet.rowIterator();
 			rowIterator.next();
 			double extractionCost = workbook.getSheet("Informazioni varie").getRow(3).getCell(1).getNumericCellValue() / 3;
