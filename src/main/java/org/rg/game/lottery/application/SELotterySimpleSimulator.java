@@ -201,6 +201,8 @@ public class SELotterySimpleSimulator {
 					taskOperation.run();
 				}
 				ConcurrentUtils.waitUntil(futures, ft -> ft.size() >= 5);
+			} else {
+				LogUtils.info("File " + configuration.getProperty("file.name") + " already processed");
 			}
 		}
 	}
