@@ -15,6 +15,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
@@ -36,8 +37,9 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 	public static void main(String[] args) throws IOException {
 		hostName = NetworkUtils.INSTANCE.thisHostName();
 		ZipSecureFile.setMinInflateRatio(0);
-		Collection<CompletableFuture<Void>> futures = new ArrayList<>();
+		Collection<CompletableFuture<Void>> futures = new CopyOnWriteArrayList<>();
 		execute("se", futures);
+		Iterator<CompletableFuture<Void>> futuresIterator = futures.iterator();
 		futures.stream().forEach(future -> {
 			if (future != null) {
 				future.join();
