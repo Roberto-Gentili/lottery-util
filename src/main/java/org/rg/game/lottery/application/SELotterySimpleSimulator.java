@@ -189,7 +189,11 @@ public class SELotterySimpleSimulator {
 					new ArrayList<>(competitionDatesFlat),
 					redundantConfigValue != null? Integer.valueOf(redundantConfigValue) : 10
 				);
-			Runnable taskOperation = () -> process(configuration, excelFileName, engine, competitionDates);
+			Runnable taskOperation = () -> {
+				LogUtils.info("Processing of " + configuration.getProperty("file.name") + " started");
+				process(configuration, excelFileName, engine, competitionDates);
+				LogUtils.info("Processing of " + configuration.getProperty("file.name") + " succesfully finished");
+			};
 			if (Boolean.parseBoolean(configuration.getProperty("async", "false"))) {
 				ConcurrentUtils.addTask(futures, taskOperation);
 			} else {
@@ -405,7 +409,6 @@ public class SELotterySimpleSimulator {
 			);
 		}
 		backup(new File(PersistentStorage.buildWorkingPath() + File.separator + excelFileName), isSlave);
-		LogUtils.info("Processing of " + configuration.getProperty("file.name") + " succesfully finished");
 	}
 
 	private static CompletableFuture<Void> startHistoryUpdateTask(

@@ -22,7 +22,6 @@ public class ConcurrentUtils {
 						}
 					}
 					futures.add(taskWrapper.get());
-					LogUtils.info("Launching task " + taskOperation);
 					taskOperation.run();
 					futures.remove(taskWrapper.get());
 					synchronized(futures) {
