@@ -39,7 +39,6 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 		ZipSecureFile.setMinInflateRatio(0);
 		Collection<CompletableFuture<Void>> futures = new CopyOnWriteArrayList<>();
 		execute("se", futures);
-		Iterator<CompletableFuture<Void>> futuresIterator = futures.iterator();
 		futures.stream().forEach(future -> {
 			if (future != null) {
 				future.join();
