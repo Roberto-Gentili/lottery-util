@@ -189,17 +189,19 @@ public class SELotterySimpleSimulator {
 					new ArrayList<>(competitionDatesFlat),
 					redundantConfigValue != null? Integer.valueOf(redundantConfigValue) : 10
 				);
-			Runnable taskOperation = () -> {
-				LogUtils.info("Processing of " + configuration.getProperty("file.name") + " started");
-				process(configuration, excelFileName, engine, competitionDates);
-				LogUtils.info("Processing of " + configuration.getProperty("file.name") + " succesfully finished");
-			};
-			if (Boolean.parseBoolean(configuration.getProperty("async", "false"))) {
-				ConcurrentUtils.addTask(futures, taskOperation);
-			} else {
-				taskOperation.run();
+			if (!competitionDates.isEmpty()) {
+				Runnable taskOperation = () -> {
+					LogUtils.info("Computation of " + configuration.getProperty("file.name") + " started");
+					process(configuration, excelFileName, engine, competitionDates);
+					LogUtils.info("Computation of " + configuration.getProperty("file.name") + " succesfully finished");
+				};
+				if (Boolean.parseBoolean(configuration.getProperty("async", "false"))) {
+					ConcurrentUtils.addTask(futures, taskOperation);
+				} else {
+					taskOperation.run();
+				}
+				ConcurrentUtils.waitUntil(futures, ft -> ft.size() >= 5);
 			}
-			ConcurrentUtils.waitUntil(futures, ft -> ft.size() >= 5);
 		}
 	}
 
