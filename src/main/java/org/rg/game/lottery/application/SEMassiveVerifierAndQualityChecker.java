@@ -209,7 +209,10 @@ public class SEMassiveVerifierAndQualityChecker {
 				Iterator<Row> rowIterator = sheet.rowIterator();
 				Font normalFont = null;
 				Font boldFont = null;
-				CellStyle valueStyle = null;
+				CellStyle valueStyle = workbook.createCellStyle();
+				valueStyle.setFont(normalFont);
+				valueStyle.setAlignment(HorizontalAlignment.RIGHT);
+				valueStyle.setDataFormat(workbook.createDataFormat().getFormat("#,##0"));
 				int rowIndex = 0;
 				Row header;
 				if (rowIterator.hasNext()) {
@@ -235,10 +238,6 @@ public class SEMassiveVerifierAndQualityChecker {
 						headerCell.setCellStyle(headerStyle);
 						headerCell.setCellValue(premiumLabel);
 					}
-					valueStyle = workbook.createCellStyle();
-					valueStyle.setFont(normalFont);
-					valueStyle.setAlignment(HorizontalAlignment.RIGHT);
-					valueStyle.setDataFormat(workbook.createDataFormat().getFormat("#,##0"));
 				}
 				rowIndex++;
 				for (Map.Entry<String, Map<Integer, Integer>> monthWinningInfo : dataForMonth.entrySet()) {
@@ -246,29 +245,36 @@ public class SEMassiveVerifierAndQualityChecker {
 					LogUtils.info("\t\t" + month + ":");
 					Map<Integer, Integer> winningInfo = monthWinningInfo.getValue();
 					Row row = rowIterator.hasNext() ? rowIterator.next() : sheet.createRow(rowIndex);
-					if (row.getCell(0) == null) {
-						Cell labelCell = row.createCell(0);
+					Cell labelCell = row.getCell(0);
+					if (labelCell == null) {
+						labelCell = row.createCell(0);
 						labelCell.getCellStyle().setFont(boldFont);
 						labelCell.getCellStyle().setAlignment(HorizontalAlignment.LEFT);
-						labelCell.setCellValue(month);
 					}
-					for (Map.Entry<Integer, Integer> typeAndCounter : winningInfo.entrySet()) {
-						Integer type = typeAndCounter.getKey();
-						Integer counter = typeAndCounter.getValue();
+					labelCell.setCellValue(month);
+					for (Integer type : SEStats.allPremiums().keySet()) {
+						Integer counter = winningInfo.getOrDefault(type, 0);
 						String label = SEStats.toPremiumLabel(type);
 						int labelIndex = Shared.getCellIndex(sheet, label);
-						LogUtils.info("\t\t\t" + label + ":" + SEStats.rightAlignedString(Shared.integerFormat.format(counter), 21 - label.length()));
+						if (counter > 0) {
+							LogUtils.info("\t\t\t" + label + ":" + SEStats.rightAlignedString(Shared.integerFormat.format(counter), 21 - label.length()));
+						}
 						Cell valueCell = row.getCell(labelIndex);
 						if (valueCell == null) {
 							valueCell = row.createCell(labelIndex);
-							valueCell.setCellStyle(valueStyle);
 						}
-						valueCell.setCellValue(counter);
+						valueCell.removeFormula();
+						valueCell.setCellStyle(valueStyle);
+						if (counter > 0) {
+							valueCell.setCellValue(counter);
+						} else {
+							valueCell.setCellValue((String)null);
+						}
 						if (rowIndex == dataForMonth.entrySet().size()) {
 							Row summaryRow = sheet.getRow(rowIndex + 1) != null ?
 								sheet.getRow(rowIndex + 1) : sheet.createRow(rowIndex + 1);
 							if (summaryRow.getCell(0) == null) {
-								Cell labelCell = summaryRow.createCell(0);
+								labelCell = summaryRow.createCell(0);
 								labelCell.getCellStyle().setFont(boldFont);
 								labelCell.getCellStyle().setAlignment(HorizontalAlignment.LEFT);
 								labelCell.setCellValue("Totale");
@@ -276,8 +282,8 @@ public class SEMassiveVerifierAndQualityChecker {
 							valueCell = summaryRow.getCell(labelIndex);
 							if (valueCell == null) {
 								valueCell = summaryRow.createCell(labelIndex);
-								valueCell.setCellStyle(valueStyle);
 							}
+							valueCell.setCellStyle(valueStyle);
 							String columnName = CellReference.convertNumToColString(labelIndex);
 							valueCell.setCellFormula("SUM(" + columnName + "2:"+ columnName + (rowIndex + 1) +")");
 						}
