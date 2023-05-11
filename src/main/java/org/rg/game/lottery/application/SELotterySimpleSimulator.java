@@ -50,6 +50,7 @@ import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.xmlbeans.impl.values.XmlValueDisconnectedException;
 import org.rg.game.core.CollectionUtils;
+import org.rg.game.core.ConcurrentUtils;
 import org.rg.game.core.LogUtils;
 import org.rg.game.core.NetworkUtils;
 import org.rg.game.core.ResourceUtils;
@@ -188,45 +189,13 @@ public class SELotterySimpleSimulator {
 					new ArrayList<>(competitionDatesFlat),
 					redundantConfigValue != null? Integer.valueOf(redundantConfigValue) : 10
 				);
+			Runnable taskOperation = () -> process(configuration, excelFileName, engine, competitionDates);
 			if (Boolean.parseBoolean(configuration.getProperty("async", "false"))) {
-				AtomicReference<CompletableFuture<Void>> taskWrapper = new AtomicReference<>();
-				taskWrapper.set(
-					CompletableFuture.runAsync(
-						() -> {
-							synchronized (taskWrapper) {
-								while (taskWrapper.get() == null) {
-									try {
-										taskWrapper.wait();
-									} catch (InterruptedException exc) {
-										Throwables.sneakyThrow(exc);
-									}
-								}
-							}
-							futures.add(taskWrapper.get());
-							process(configuration, excelFileName, engine, competitionDates);
-							futures.remove(taskWrapper.get());
-							synchronized(futures) {
-								futures.notifyAll();
-							}
-						}
-					)
-				);
-				synchronized(taskWrapper) {
-					taskWrapper.notify();
-				}
-
+				ConcurrentUtils.addTask(futures, taskOperation);
 			} else {
-				process(configuration, excelFileName, engine, competitionDates);
+				taskOperation.run();
 			}
-			while (futures.size() >= 5) {
-				synchronized(futures) {
-					try {
-						futures.wait();
-					} catch (InterruptedException exc) {
-						Throwables.sneakyThrow(exc);
-					}
-				}
-			}
+			ConcurrentUtils.waitUntil(futures, ft -> ft.size() >= 5);
 		}
 	}
 
