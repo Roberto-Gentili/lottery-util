@@ -120,6 +120,12 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 					LotteryMatrixGenerator.process(futures, SELotteryMatrixGeneratorEngine::new, nextAfterLatestConfiguration);
 				}
 			}
+			backup(
+				new File(
+					PersistentStorage.buildWorkingPath() + File.separator + retrieveExcelFileName(config)
+				),
+				Boolean.parseBoolean(config.getProperty("simulation.slave"))
+			);
 		}
 
 	}
