@@ -201,8 +201,6 @@ public class SELotterySimpleSimulator {
 					taskOperation.run();
 				}
 				ConcurrentUtils.waitUntil(futures, ft -> ft.size() >= 5);
-			} else {
-				LogUtils.info("File " + configuration.getProperty("file.name") + " already processed");
 			}
 		}
 	}
@@ -276,7 +274,7 @@ public class SELotterySimpleSimulator {
 				store(excelFileName, workBook, isSlave),
 			isSlave
 		);
-		LogUtils.info(competitionDates.size() + " dates will be processed, " + (initialSize - competitionDates.size()) + " already processed");
+		LogUtils.info(competitionDates.size() + " dates will be processed, " + (initialSize - competitionDates.size()) + " already processed for file " + configuration.getProperty("file.name"));
 	}
 
 	private static void cleanupRedundant(Properties configuration, String excelFileName, String configFileName, Integer redundancy, Collection<LocalDate> competitionDatesFlat) {
