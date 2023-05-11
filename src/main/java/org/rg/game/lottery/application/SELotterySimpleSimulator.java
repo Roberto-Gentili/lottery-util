@@ -189,20 +189,42 @@ public class SELotterySimpleSimulator {
 					redundantConfigValue != null? Integer.valueOf(redundantConfigValue) : 10
 				);
 			if (Boolean.parseBoolean(configuration.getProperty("async", "false"))) {
-				futures.add(
+				AtomicReference<CompletableFuture<Void>> taskWrapper = new AtomicReference<>();
+				taskWrapper.set(
 					CompletableFuture.runAsync(
-						() ->
-							process(configuration, excelFileName, engine, competitionDates)
+						() -> {
+							synchronized (taskWrapper) {
+								while (taskWrapper.get() == null) {
+									try {
+										taskWrapper.wait();
+									} catch (InterruptedException exc) {
+										Throwables.sneakyThrow(exc);
+									}
+								}
+							}
+							futures.add(taskWrapper.get());
+							process(configuration, excelFileName, engine, competitionDates);
+							futures.remove(taskWrapper.get());
+							synchronized(futures) {
+								futures.notifyAll();
+							}
+						}
 					)
 				);
+				synchronized(taskWrapper) {
+					taskWrapper.notify();
+				}
+
 			} else {
 				process(configuration, excelFileName, engine, competitionDates);
 			}
-			if (futures.size() >= 5) {
-				Iterator<CompletableFuture<Void>> futuresIterator = futures.iterator();
-				while(futuresIterator.hasNext()) {
-					futuresIterator.next().join();
-					futuresIterator.remove();
+			while (futures.size() >= 5) {
+				synchronized(futures) {
+					try {
+						futures.wait();
+					} catch (InterruptedException exc) {
+						Throwables.sneakyThrow(exc);
+					}
 				}
 			}
 		}
