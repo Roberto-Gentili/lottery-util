@@ -21,9 +21,8 @@ import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import org.apache.poi.openxml4j.util.ZipSecureFile;
-import org.rg.game.core.NetworkUtils;
 import org.rg.game.core.ResourceUtils;
+import org.rg.game.core.Throwables;
 import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.PersistentStorage;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
@@ -35,21 +34,14 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 
 
 	public static void main(String[] args) throws IOException {
-		hostName = NetworkUtils.INSTANCE.thisHostName();
-		ZipSecureFile.setMinInflateRatio(0);
 		Collection<CompletableFuture<Void>> futures = new CopyOnWriteArrayList<>();
-		execute("se", futures);
-		futures.stream().forEach(future -> {
-			if (future != null) {
-				future.join();
-			}
-		});
+		executeRecursive(SELotteryComplexSimulator::execute, futures);
 	}
 
-	protected static void execute(
+	protected static Collection<CompletableFuture<Void>> execute(
 		String configFilePrefix,
 		Collection<CompletableFuture<Void>> futures
-	) throws IOException {
+	) {
 		SEStats.forceLoadingFromExcel = false;
 		allTimeStats = SEStats.get("03/12/1997", TimeUtils.getDefaultDateFormat().format(new Date()));
 		SEStats.get("02/07/2009", TimeUtils.getDefaultDateFormat().format(new Date()));
@@ -61,73 +53,77 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 				ResourceUtils.INSTANCE.getResource("simulations").getAbsolutePath()
 			);
 		List<Properties> simpleConfigurations = new ArrayList<>();
-		for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(simpleConfigurationFiles)) {
-			if (Boolean.parseBoolean(config.getProperty("simulation.enabled", "false"))) {
-				simpleConfigurations.add(config);
+		try {
+			for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(simpleConfigurationFiles)) {
+				if (Boolean.parseBoolean(config.getProperty("simulation.enabled", "false"))) {
+					simpleConfigurations.add(config);
+				}
 			}
-		}
-		for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(
-			ResourceUtils.INSTANCE.find(
-				configFilePrefix + "-complex-simulation", "properties",
-				Shared.pathsFromSystemEnv(
-					"working-path.complex-simulations.folder",
-					"resources.complex-simulations.folder"
+			for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(
+				ResourceUtils.INSTANCE.find(
+					configFilePrefix + "-complex-simulation", "properties",
+					Shared.pathsFromSystemEnv(
+						"working-path.complex-simulations.folder",
+						"resources.complex-simulations.folder"
+					)
 				)
-			)
-		)) {
-			List<LocalDate> extractionDates = new ArrayList<>(new SELotteryMatrixGeneratorEngine().computeExtractionDates(config.getProperty("simulation.dates")));
-			LocalDate nextAfterLatest = removeNextOfLatestExtractionDate(config, extractionDates);
-			if (!extractionDates.isEmpty()) {
+			)) {
+				List<LocalDate> extractionDates = new ArrayList<>(new SELotteryMatrixGeneratorEngine().computeExtractionDates(config.getProperty("simulation.dates")));
+				LocalDate nextAfterLatest = removeNextOfLatestExtractionDate(config, extractionDates);
+				if (!extractionDates.isEmpty()) {
 
-				Supplier<Integer> configurationIndexIterator = indexIterator(config, extractionDates, simpleConfigurations);
-				Map<Properties, Set<LocalDate>> extractionDatesForConfigs = new LinkedHashMap<>();
-				for (int i = 0; i < extractionDates.size(); i++) {
-					Properties simpleConfiguration = simpleConfigurations.get(configurationIndexIterator.get());
-					Set<LocalDate> extractionDatesForConfig=
-							extractionDatesForConfigs.computeIfAbsent(simpleConfiguration, key -> new TreeSet<>());
-					extractionDatesForConfig.add(extractionDates.get(i));
-				}
-				for (Map.Entry<Properties, Set<LocalDate>> extractionDatesForConfig : extractionDatesForConfigs.entrySet()) {
-					extractionDatesForConfig.getKey().setProperty(
-						"simulation.dates",
-						String.join(
-							",",
-							extractionDatesForConfig.getValue().stream().map(TimeUtils.defaultLocalDateFormat::format).collect(Collectors.toList())
-						)
-					);
-					extractionDatesForConfig.getKey().setProperty("simulation.group", config.getProperty("simulation.group"));
-					extractionDatesForConfig.getKey().setProperty(
-						"simulation.slave",
-						config.getProperty("simulation.slave", extractionDatesForConfig.getKey().getProperty("simulation.slave"))
-					);
-					extractionDatesForConfig.getKey().setProperty(
-						"waiting-someone-for-generation.timeout",
-						config.getProperty("waiting-someone-for-generation.timeout", extractionDatesForConfig.getKey().getProperty("waiting-someone-for-generation.timeout"))
-					);
-				}
-				prepareAndProcess(futures, SELotteryMatrixGeneratorEngine::new, simpleConfigurations);
-				if (nextAfterLatest != null) {
-					Properties nextAfterLatestConfiguration = new Properties();
-					nextAfterLatestConfiguration.putAll(simpleConfigurations.get(configurationIndexIterator.get()));
-					nextAfterLatestConfiguration.put("competition", TimeUtils.defaultLocalDateFormat.format(nextAfterLatest));
-					nextAfterLatestConfiguration.setProperty("storage", "filesystem");
-					nextAfterLatestConfiguration.setProperty("overwrite-if-exists", "1");
-					String simulationGroup = nextAfterLatestConfiguration.getProperty("simulation.group");
-					if (simulationGroup != null) {
-						nextAfterLatestConfiguration.setProperty("simulation.group", simulationGroup + File.separator + "generated");
+					Supplier<Integer> configurationIndexIterator = indexIterator(config, extractionDates, simpleConfigurations);
+					Map<Properties, Set<LocalDate>> extractionDatesForConfigs = new LinkedHashMap<>();
+					for (int i = 0; i < extractionDates.size(); i++) {
+						Properties simpleConfiguration = simpleConfigurations.get(configurationIndexIterator.get());
+						Set<LocalDate> extractionDatesForConfig=
+								extractionDatesForConfigs.computeIfAbsent(simpleConfiguration, key -> new TreeSet<>());
+						extractionDatesForConfig.add(extractionDates.get(i));
 					}
-					setGroup(nextAfterLatestConfiguration);
-					LotteryMatrixGenerator.process(futures, SELotteryMatrixGeneratorEngine::new, nextAfterLatestConfiguration);
+					for (Map.Entry<Properties, Set<LocalDate>> extractionDatesForConfig : extractionDatesForConfigs.entrySet()) {
+						extractionDatesForConfig.getKey().setProperty(
+							"simulation.dates",
+							String.join(
+								",",
+								extractionDatesForConfig.getValue().stream().map(TimeUtils.defaultLocalDateFormat::format).collect(Collectors.toList())
+							)
+						);
+						extractionDatesForConfig.getKey().setProperty("simulation.group", config.getProperty("simulation.group"));
+						extractionDatesForConfig.getKey().setProperty(
+							"simulation.slave",
+							config.getProperty("simulation.slave", extractionDatesForConfig.getKey().getProperty("simulation.slave"))
+						);
+						extractionDatesForConfig.getKey().setProperty(
+							"waiting-someone-for-generation.timeout",
+							config.getProperty("waiting-someone-for-generation.timeout", extractionDatesForConfig.getKey().getProperty("waiting-someone-for-generation.timeout"))
+						);
+					}
+					prepareAndProcess(futures, SELotteryMatrixGeneratorEngine::new, simpleConfigurations);
+					if (nextAfterLatest != null) {
+						Properties nextAfterLatestConfiguration = new Properties();
+						nextAfterLatestConfiguration.putAll(simpleConfigurations.get(configurationIndexIterator.get()));
+						nextAfterLatestConfiguration.put("competition", TimeUtils.defaultLocalDateFormat.format(nextAfterLatest));
+						nextAfterLatestConfiguration.setProperty("storage", "filesystem");
+						nextAfterLatestConfiguration.setProperty("overwrite-if-exists", "1");
+						String simulationGroup = nextAfterLatestConfiguration.getProperty("simulation.group");
+						if (simulationGroup != null) {
+							nextAfterLatestConfiguration.setProperty("simulation.group", simulationGroup + File.separator + "generated");
+						}
+						setGroup(nextAfterLatestConfiguration);
+						LotteryMatrixGenerator.process(futures, SELotteryMatrixGeneratorEngine::new, nextAfterLatestConfiguration);
+					}
 				}
+				backup(
+					new File(
+						PersistentStorage.buildWorkingPath() + File.separator + retrieveExcelFileName(config)
+					),
+					Boolean.parseBoolean(config.getProperty("simulation.slave"))
+				);
 			}
-			backup(
-				new File(
-					PersistentStorage.buildWorkingPath() + File.separator + retrieveExcelFileName(config)
-				),
-				Boolean.parseBoolean(config.getProperty("simulation.slave"))
-			);
+		} catch (IOException exc) {
+			Throwables.sneakyThrow(exc);
 		}
-
+		return futures;
 	}
 
 	protected static Supplier<Integer> indexIterator(Properties configuration, List<LocalDate> extractionDates, List<Properties> simpleConfigurations) {

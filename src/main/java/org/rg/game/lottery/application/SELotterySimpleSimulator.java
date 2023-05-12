@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -90,6 +91,8 @@ public class SELotterySimpleSimulator {
 	static SEStats allTimeStats;
 
 	static {
+		ZipSecureFile.setMinInflateRatio(0);
+		hostName = NetworkUtils.INSTANCE.thisHostName();
 		excelHeaderLabels = new ArrayList<>();
 		excelHeaderLabels.add(DATA_LABEL);
 		Collection<String> allPremiumLabels = SEStats.allPremiumLabels();
@@ -107,17 +110,29 @@ public class SELotterySimpleSimulator {
 	}
 
 	public static void main(String[] args) throws IOException {
-		hostName = NetworkUtils.INSTANCE.thisHostName();
-		ZipSecureFile.setMinInflateRatio(0);
 		Collection<CompletableFuture<Void>> futures = new ArrayList<>();
-		execute("se", futures);
-		futures.stream().forEach(CompletableFuture::join);
+		executeRecursive(SELotterySimpleSimulator::execute, futures);
 	}
 
-	protected static void execute(
+	protected static void executeRecursive(
+		BiFunction<
+			String,
+			Collection<CompletableFuture<Void>>,
+			Collection<CompletableFuture<Void>>
+		> executor,
+		Collection<CompletableFuture<Void>> futures
+	) {
+		try {
+			executor.apply("se", futures).stream().forEach(CompletableFuture::join);
+		} catch (Throwable exc) {
+			executeRecursive(executor, futures);
+		}
+	}
+
+	protected static Collection<CompletableFuture<Void>> execute(
 		String configFilePrefix,
 		Collection<CompletableFuture<Void>> futures
-	) throws IOException {
+	) {
 		SEStats.forceLoadingFromExcel = false;
 		allTimeStats = SEStats.get("03/12/1997", TimeUtils.getDefaultDateFormat().format(new Date()));
 		SEStats.get("02/07/2009", TimeUtils.getDefaultDateFormat().format(new Date()));
@@ -131,7 +146,12 @@ public class SELotterySimpleSimulator {
 					"resources.simulations.folder"
 				)
 			);
-		prepareAndProcess(futures, engineSupplier, ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles));
+		try {
+			prepareAndProcess(futures, engineSupplier, ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles));
+		} catch (IOException exc) {
+			Throwables.sneakyThrow(exc);
+		}
+		return futures;
 	}
 
 

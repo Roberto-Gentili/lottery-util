@@ -22,10 +22,13 @@ public class ConcurrentUtils {
 						}
 					}
 					futures.add(taskWrapper.get());
-					taskOperation.run();
-					futures.remove(taskWrapper.get());
-					synchronized(futures) {
-						futures.notifyAll();
+					try {
+						taskOperation.run();
+					} finally {
+						futures.remove(taskWrapper.get());
+						synchronized(futures) {
+							futures.notifyAll();
+						}
 					}
 				}
 			)
