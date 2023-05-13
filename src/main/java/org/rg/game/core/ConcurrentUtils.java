@@ -44,10 +44,12 @@ public class ConcurrentUtils {
 	) {
 		while (futuresPredicate.test(futures)) {
 			synchronized(futures) {
-				try {
-					futures.wait();
-				} catch (InterruptedException exc) {
-					Throwables.sneakyThrow(exc);
+				if (futuresPredicate.test(futures)) {
+					try {
+						futures.wait();
+					} catch (InterruptedException exc) {
+						Throwables.sneakyThrow(exc);
+					}
 				}
 			}
 		}
