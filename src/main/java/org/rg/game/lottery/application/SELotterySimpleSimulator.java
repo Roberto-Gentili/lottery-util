@@ -185,7 +185,7 @@ public class SELotterySimpleSimulator {
 			if (info != null) {
 				LogUtils.info(info);
 			}
-			String excelFileName = retrieveExcelFileName(configuration);
+			String excelFileName = retrieveExcelFileName(configuration, "simulation.group");
 			SELotteryMatrixGeneratorEngine engine = engineSupplier.get();
 			String configFileName = configuration.getProperty("file.name").replace("." + configuration.getProperty("file.extension"), "");
 			configuration.setProperty(
@@ -220,8 +220,8 @@ public class SELotterySimpleSimulator {
 		}
 	}
 
-	protected static String retrieveExcelFileName(Properties configuration) {
-		return Optional.ofNullable(configuration.getProperty("simulation.group")).map(groupName -> {
+	protected static String retrieveExcelFileName(Properties configuration, String groupKey) {
+		return Optional.ofNullable(configuration.getProperty(groupKey)).map(groupName -> {
 			PersistentStorage.buildWorkingPath(groupName);
 			return groupName + File.separator + "report.xlsx";
 		}).orElseGet(() -> configuration.getProperty("file.name").replace("." + configuration.getProperty("file.extension"), "") + "-sim.xlsx");

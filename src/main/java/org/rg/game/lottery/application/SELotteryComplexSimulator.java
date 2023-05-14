@@ -104,11 +104,13 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 								extractionDatesForSimpleConfig.getValue().stream().map(TimeUtils.defaultLocalDateFormat::format).collect(Collectors.toList())
 							)
 						);
+						if (complexSimulationConfig.getProperty("simulation.children.group") == null) {
+							complexSimulationConfig.setProperty("simulation.children.group", complexSimulationConfig.getProperty("file.name").replace(".properties", ""));
+						}
 						extractionDatesForSimpleConfig.getKey().setProperty(
 							"simulation.group",
 							complexSimulationConfig.getProperty(
-								"simulation.children.group",
-								complexSimulationConfig.getProperty("file.name").replace(".properties", "")
+								"simulation.children.group"
 							)
 						);
 						extractionDatesForSimpleConfig.getKey().setProperty(
@@ -150,7 +152,7 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 				}
 				backup(
 					new File(
-						PersistentStorage.buildWorkingPath() + File.separator + retrieveExcelFileName(complexSimulationConfig)
+						PersistentStorage.buildWorkingPath() + File.separator + retrieveExcelFileName(complexSimulationConfig, "simulation.children.group")
 					),
 					Boolean.parseBoolean(complexSimulationConfig.getProperty("simulation.slave"))
 				);
