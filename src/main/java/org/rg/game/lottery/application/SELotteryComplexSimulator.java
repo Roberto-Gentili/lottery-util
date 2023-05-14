@@ -46,20 +46,8 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 		allTimeStats = SEStats.get("03/12/1997", TimeUtils.getDefaultDateFormat().format(new Date()));
 		SEStats.get("02/07/2009", TimeUtils.getDefaultDateFormat().format(new Date()));
 		SEStats.forceLoadingFromExcel = true;
-		List<File> simpleConfigurationFiles =
-			ResourceUtils.INSTANCE.find(
-				configFilePrefix + "-simple-simulation", "properties",
-				PersistentStorage.buildWorkingPath(),
-				ResourceUtils.INSTANCE.getResource("simulations").getAbsolutePath()
-			);
-		List<Properties> simpleConfigurations = new ArrayList<>();
 		try {
-			for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(simpleConfigurationFiles)) {
-				if (Boolean.parseBoolean(config.getProperty("simulation.enabled", "false"))) {
-					simpleConfigurations.add(config);
-				}
-			}
-			for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(
+			for (Properties complexSimulationConfig : ResourceUtils.INSTANCE.toOrderedProperties(
 				ResourceUtils.INSTANCE.find(
 					configFilePrefix + "-complex-simulation", "properties",
 					Shared.pathsFromSystemEnv(
@@ -68,34 +56,81 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 					)
 				)
 			)) {
-				List<LocalDate> extractionDates = new ArrayList<>(new SELotteryMatrixGeneratorEngine().computeExtractionDates(config.getProperty("simulation.dates")));
-				LocalDate nextAfterLatest = removeNextOfLatestExtractionDate(config, extractionDates);
+				List<LocalDate> extractionDates = new ArrayList<>(new SELotteryMatrixGeneratorEngine().computeExtractionDates(complexSimulationConfig.getProperty("simulation.children.dates")));
+				LocalDate nextAfterLatest = removeNextOfLatestExtractionDate(complexSimulationConfig, extractionDates);
 				if (!extractionDates.isEmpty()) {
-
-					Supplier<Integer> configurationIndexIterator = indexIterator(config, extractionDates, simpleConfigurations);
-					Map<Properties, Set<LocalDate>> extractionDatesForConfigs = new LinkedHashMap<>();
+					String[] childrenSimulationsFilters = complexSimulationConfig.getProperty("simulation.children", "allEnabledInSameFolder").replaceAll("\\s+","").split(",");
+					List<File> simpleConfigurationFiles = new ArrayList<>();
+					for (String childrenSimulationsFilter : childrenSimulationsFilters) {
+						if (childrenSimulationsFilter.equals("allInSameFolder") || childrenSimulationsFilter.equals("allEnabledInSameFolder")) {
+							simpleConfigurationFiles.addAll(
+								ResourceUtils.INSTANCE.find(
+									configFilePrefix + "-simple-simulation", "properties",
+									Shared.pathsFromSystemEnv(
+										"working-path.complex-simulations.folder",
+										"resources.complex-simulations.folder"
+									)
+								)
+							);
+							if (childrenSimulationsFilter.equals("allEnabledInSameFolder")) {
+								Iterator<File> simpleConfigFileIterator = simpleConfigurationFiles.iterator();
+								while (simpleConfigFileIterator.hasNext()) {
+									if (!Boolean.parseBoolean(ResourceUtils.INSTANCE.toProperties(simpleConfigFileIterator.next()).getProperty("simulation.enabled", "false"))) {
+										simpleConfigFileIterator.remove();
+									}
+								}
+							}
+						} else {
+							simpleConfigurationFiles.add(ResourceUtils.INSTANCE.toFile(complexSimulationConfig.getProperty("file.parent.absolutePath"), childrenSimulationsFilter));
+						}
+					}
+					List<Properties> simpleConfigurations = ResourceUtils.INSTANCE.toOrderedProperties(simpleConfigurationFiles);
+					for (Properties simpleConfiguration : simpleConfigurations) {
+						simpleConfiguration.setProperty("simulation.enabled", "true");
+					}
+					Supplier<Integer> configurationIndexIterator = indexIterator(complexSimulationConfig, extractionDates, simpleConfigurations);
+					Map<Properties, Set<LocalDate>> extractionDatesForSimpleConfigs = new LinkedHashMap<>();
 					for (int i = 0; i < extractionDates.size(); i++) {
 						Properties simpleConfiguration = simpleConfigurations.get(configurationIndexIterator.get());
 						Set<LocalDate> extractionDatesForConfig=
-								extractionDatesForConfigs.computeIfAbsent(simpleConfiguration, key -> new TreeSet<>());
+								extractionDatesForSimpleConfigs.computeIfAbsent(simpleConfiguration, key -> new TreeSet<>());
 						extractionDatesForConfig.add(extractionDates.get(i));
 					}
-					for (Map.Entry<Properties, Set<LocalDate>> extractionDatesForConfig : extractionDatesForConfigs.entrySet()) {
-						extractionDatesForConfig.getKey().setProperty(
+					for (Map.Entry<Properties, Set<LocalDate>> extractionDatesForSimpleConfig : extractionDatesForSimpleConfigs.entrySet()) {
+						extractionDatesForSimpleConfig.getKey().setProperty(
 							"simulation.dates",
 							String.join(
 								",",
-								extractionDatesForConfig.getValue().stream().map(TimeUtils.defaultLocalDateFormat::format).collect(Collectors.toList())
+								extractionDatesForSimpleConfig.getValue().stream().map(TimeUtils.defaultLocalDateFormat::format).collect(Collectors.toList())
 							)
 						);
-						extractionDatesForConfig.getKey().setProperty("simulation.group", config.getProperty("simulation.group"));
-						extractionDatesForConfig.getKey().setProperty(
-							"simulation.slave",
-							config.getProperty("simulation.slave", extractionDatesForConfig.getKey().getProperty("simulation.slave"))
+						extractionDatesForSimpleConfig.getKey().setProperty(
+							"simulation.group",
+							complexSimulationConfig.getProperty(
+								"simulation.children.group",
+								complexSimulationConfig.getProperty("file.name").replace(".properties", "")
+							)
 						);
-						extractionDatesForConfig.getKey().setProperty(
+						extractionDatesForSimpleConfig.getKey().setProperty(
+							"simulation.slave",
+							complexSimulationConfig.getProperty(
+								"simulation.children.slave",
+								extractionDatesForSimpleConfig.getKey().getProperty("slave")
+							)
+						);
+						extractionDatesForSimpleConfig.getKey().setProperty(
 							"waiting-someone-for-generation.timeout",
-							config.getProperty("waiting-someone-for-generation.timeout", extractionDatesForConfig.getKey().getProperty("waiting-someone-for-generation.timeout"))
+							complexSimulationConfig.getProperty(
+								"simulation.children.waiting-someone-for-generation.timeout",
+								extractionDatesForSimpleConfig.getKey().getProperty("waiting-someone-for-generation.timeout")
+							)
+						);
+						extractionDatesForSimpleConfig.getKey().setProperty(
+							"async",
+							complexSimulationConfig.getProperty(
+								"simulation.children.async",
+								extractionDatesForSimpleConfig.getKey().getProperty("async")
+							)
 						);
 					}
 					prepareAndProcess(futures, SELotteryMatrixGeneratorEngine::new, simpleConfigurations);
@@ -115,9 +150,9 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 				}
 				backup(
 					new File(
-						PersistentStorage.buildWorkingPath() + File.separator + retrieveExcelFileName(config)
+						PersistentStorage.buildWorkingPath() + File.separator + retrieveExcelFileName(complexSimulationConfig)
 					),
-					Boolean.parseBoolean(config.getProperty("simulation.slave"))
+					Boolean.parseBoolean(complexSimulationConfig.getProperty("simulation.slave"))
 				);
 			}
 		} catch (IOException exc) {
@@ -126,8 +161,8 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 		return futures;
 	}
 
-	protected static Supplier<Integer> indexIterator(Properties configuration, List<LocalDate> extractionDates, List<Properties> simpleConfigurations) {
-		String simulationsOrder = configuration.getProperty("simulation.order", "random");
+	protected static Supplier<Integer> indexIterator(Properties complexSimulationConfiguration, List<LocalDate> extractionDates, List<Properties> simpleConfigurations) {
+		String simulationsOrder = complexSimulationConfiguration.getProperty("simulation.children.order", "sequence");
 		if (simulationsOrder.startsWith("random")) {
 			IntSupplier stepSupplier = buildStepSupplier(extractionDates, simulationsOrder);
 			Supplier<Integer> randomItr = randomIterator(extractionDates, 0, simpleConfigurations.size())::next;

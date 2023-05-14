@@ -101,7 +101,7 @@ public class ResourceUtils {
 		return propertiesColl;
 	}
 
-	private Properties toProperties(File file) throws IOException {
+	public Properties toProperties(File file) throws IOException {
 		try (InputStream configIS = new FileInputStream(file)) {
 			Properties properties = new Properties() {
 
@@ -124,11 +124,8 @@ public class ResourceUtils {
 			String baseProps = properties.getProperty("base");
 			if (baseProps != null) {
 				for (String base : baseProps.split(";")) {
-					if (!(base.startsWith("./") || base.startsWith("../"))) {
-						base = "./" + base;
-					}
 					Properties parentProperties = toProperties(
-						Paths.get(file.getParentFile().getAbsolutePath() + File.separator + base).normalize().toFile()
+						toFile(file.getParentFile().getAbsolutePath(), base)
 					);
 					parentProperties.putAll(properties);
 					properties = parentProperties;
@@ -137,6 +134,13 @@ public class ResourceUtils {
 			}
 			return properties;
 		}
+	}
+
+	public File toFile(String parentAbsolutePath, String childPath) {
+		if (!(childPath.startsWith("./") || childPath.startsWith("../"))) {
+			childPath = "./" + childPath;
+		}
+		return Paths.get(parentAbsolutePath + File.separator + childPath).normalize().toFile();
 	}
 
 	public File backup(
