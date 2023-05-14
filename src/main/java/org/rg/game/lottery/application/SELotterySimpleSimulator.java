@@ -125,6 +125,7 @@ public class SELotterySimpleSimulator {
 		try {
 			executor.apply("se", futures).stream().forEach(CompletableFuture::join);
 		} catch (Throwable exc) {
+			exc.printStackTrace();
 			executeRecursive(executor, futures);
 		}
 	}
@@ -916,7 +917,7 @@ public class SELotterySimpleSimulator {
 		excelFileName = excelFileName.replace("/", File.separator).replace("\\", File.separator);
 		String excelFileAbsolutePath = (PersistentStorage.buildWorkingPath() + File.separator + excelFileName).replace("/", File.separator).replace("\\", File.separator);
 		try {
-			Synchronizer.INSTANCE.execute(excelFileName, () -> {
+			Synchronizer.INSTANCE.executeThrower(excelFileName, () -> {
 				Workbook workBook = null;
 				try {
 					try (InputStream inputStream = new FileInputStream(excelFileAbsolutePath)) {
@@ -929,8 +930,6 @@ public class SELotterySimpleSimulator {
 						workBook = new XSSFWorkbook();
 						createAction.accept(workBook);
 					}
-				} catch (Throwable exc) {
-					Throwables.sneakyThrow(exc);
 				} finally {
 					if (workBook != null) {
 						if (finallyAction!= null) {
@@ -948,7 +947,11 @@ public class SELotterySimpleSimulator {
 					}
 				}
 			});
-		} catch (POIXMLException | EmptyFileException | XmlValueDisconnectedException exc) {
+		} catch (Throwable exc) {
+			if (!(exc instanceof POIXMLException || exc instanceof EmptyFileException ||
+				exc instanceof XmlValueDisconnectedException || (exc instanceof IOException && exc.getMessage().equalsIgnoreCase("Truncated ZIP file")))) {
+				Throwables.sneakyThrow(exc);
+			}
 			if (isSlave) {
 				Mutex mutex = Synchronizer.INSTANCE.getMutex(excelFileName);
 				synchronized(mutex) {
@@ -969,14 +972,14 @@ public class SELotterySimpleSimulator {
 				}
 				if (backups.isEmpty()) {
 					LogUtils.error("Error in Excel file '" + excelFileAbsolutePath + "'. No backup found");
-					throw exc;
+					Throwables.sneakyThrow(exc);
 				}
 				Iterator<File> backupsIterator = backups.iterator();
 				File backup = backupsIterator.next();
 				LogUtils.warn("Error in Excel file '" + excelFileAbsolutePath + "'.\nTrying to restore previous backup: '" + backup.getAbsolutePath() + "'");
 				File processedFile = new File(excelFileAbsolutePath);
 				if (!processedFile.delete() || !backup.renameTo(processedFile)) {
-					throw exc;
+					Throwables.sneakyThrow(exc);
 				}
 				backupsIterator.remove();
 			}
