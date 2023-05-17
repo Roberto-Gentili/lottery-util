@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -110,7 +111,7 @@ public class SELotterySimpleSimulator {
 	}
 
 	public static void main(String[] args) throws IOException {
-		Collection<CompletableFuture<Void>> futures = new ArrayList<>();
+		Collection<CompletableFuture<Void>> futures = new CopyOnWriteArrayList<>();
 		executeRecursive(SELotterySimpleSimulator::execute, futures);
 	}
 
