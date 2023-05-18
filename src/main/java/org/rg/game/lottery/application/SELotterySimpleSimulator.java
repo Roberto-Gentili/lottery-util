@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -73,19 +74,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 public class SELotterySimpleSimulator {
-	private static final Map<String, Integer> savingOperationCounters = new ConcurrentHashMap<>();
-	private static final String SALDO_LABEL = "Saldo";
-	private static final String RITORNO_LABEL = "Ritorno";
-	private static final String COSTO_LABEL = "Costo";
-	private static final String DATA_LABEL = "Data";
-	private static final String SALDO_STORICO_LABEL = "Saldo (storico)";
-	private static final String RITORNO_STORICO_LABEL = "Ritorno (storico)";
-	private static final String COSTO_STORICO_LABEL = "Costo (storico)";
-	private static final String FILE_LABEL = "File";
-	private static final String DATA_AGGIORNAMENTO_STORICO_LABEL = "Data agg. storico";
-	private static final List<String> excelHeaderLabels;
+	static final Map<String, Integer> savingOperationCounters = new ConcurrentHashMap<>();
+	static final String SALDO_LABEL = "Saldo";
+	static final String RITORNO_LABEL = "Ritorno";
+	static final String COSTO_LABEL = "Costo";
+	static final String DATA_LABEL = "Data";
+	static final String SALDO_STORICO_LABEL = "Saldo (storico)";
+	static final String RITORNO_STORICO_LABEL = "Ritorno (storico)";
+	static final String COSTO_STORICO_LABEL = "Costo (storico)";
+	static final String FILE_LABEL = "File";
+	static final String DATA_AGGIORNAMENTO_STORICO_LABEL = "Data agg. storico";
+	static final List<String> excelHeaderLabels;
 
-	private static final ObjectMapper objectMapper = new ObjectMapper();
+	static final ObjectMapper objectMapper = new ObjectMapper();
 	static Pattern regexForExtractConfigFileName = Pattern.compile("\\[.*?\\]\\[.*?\\]\\[.*?\\](.*)\\.txt");
 	static String hostName;
 	static SEStats allTimeStats;
@@ -110,7 +111,7 @@ public class SELotterySimpleSimulator {
 	}
 
 	public static void main(String[] args) throws IOException {
-		Collection<CompletableFuture<Void>> futures = new ArrayList<>();
+		Collection<CompletableFuture<Void>> futures = new CopyOnWriteArrayList<>();
 		executeRecursive(SELotterySimpleSimulator::execute, futures);
 	}
 
