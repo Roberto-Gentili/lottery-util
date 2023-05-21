@@ -37,12 +37,13 @@ public class ExpireDateUpdater {
 		//addUpdateInfo(computeIncrementationOfWeeks(4), "Barella Roberta")
 		//addUpdateInfo(computeIncrementationOfWeeks(4), "Bellacanzone Emanuele"),
 		//addUpdateInfo(computeIncrementationOfWeeks(10), "Ingegneri Giuseppe")
+		//addUpdateInfo(computeIncrementationOfWeeks(10), "Berni Riccardo"),
 		//addUpdateInfo(computeIncrementationOfWeeks(4), "Berni Valentina")
-		//addUpdateInfo(computeIncrementationOfWeeks(2), "Corinti Massimo")
+		//addUpdateInfo(computeIncrementationOfWeeks(1), "Corinti Massimo"),
 		//addUpdateInfo(computeIncrementationOfWeeks(6), "Dante Marco")
 		//addUpdateInfo(computeIncrementationOfWeeks(4), "Fusi Francesco")
 		//addUpdateInfo(computeIncrementationOfWeeks(1), "Pistella Maria Anna")
-		/*addUpdateInfo(computeIncrementationOfWeeks(1),
+		/*addUpdateInfo(computeIncrementationOfWeeks(3),
 			"Carrazza Alessandro",
 			"Coletta Antonello",
 			"Coletta Giuseppe",
