@@ -134,6 +134,13 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 								extractionDatesForSimpleConfig.getKey().getProperty("async")
 							)
 						);
+						extractionDatesForSimpleConfig.getKey().setProperty(
+							"simulation.redundancy",
+							complexSimulationConfig.getProperty(
+								"simulation.children.redundancy",
+								extractionDatesForSimpleConfig.getKey().getProperty("simulation.redundancy")
+							)
+						);
 					}
 					prepareAndProcess(futures, SELotteryMatrixGeneratorEngine::new, simpleConfigurations);
 					if (nextAfterLatest != null) {
