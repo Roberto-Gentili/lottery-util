@@ -90,8 +90,20 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 					}
 					Supplier<Integer> configurationIndexIterator = indexIterator(complexSimulationConfig, extractionDates, simpleConfigurations);
 					Map<Properties, Set<LocalDate>> extractionDatesForSimpleConfigs = new LinkedHashMap<>();
+					Integer initialRedundancyValue = Integer.valueOf(complexSimulationConfig.getProperty("simulation.children.redundancy", "-1"));
+					Integer currentRedundancyValue = initialRedundancyValue;
+					Integer configurationIndex = null;
 					for (int i = 0; i < extractionDates.size(); i++) {
-						Properties simpleConfiguration = simpleConfigurations.get(configurationIndexIterator.get());
+						if (currentRedundancyValue <= 0) {
+							currentRedundancyValue = initialRedundancyValue - 1;
+							configurationIndex = configurationIndexIterator.get();
+						} else {
+							currentRedundancyValue--;
+							if (configurationIndex == null) {
+								configurationIndex = configurationIndexIterator.get();
+							}
+						}
+						Properties simpleConfiguration = simpleConfigurations.get(configurationIndex);
 						Set<LocalDate> extractionDatesForConfig=
 								extractionDatesForSimpleConfigs.computeIfAbsent(simpleConfiguration, key -> new TreeSet<>());
 						extractionDatesForConfig.add(extractionDates.get(i));
@@ -134,13 +146,11 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 								extractionDatesForSimpleConfig.getKey().getProperty("async")
 							)
 						);
-						extractionDatesForSimpleConfig.getKey().setProperty(
-							"simulation.redundancy",
-							complexSimulationConfig.getProperty(
-								"simulation.children.redundancy",
-								extractionDatesForSimpleConfig.getKey().getProperty("simulation.redundancy")
-							)
-						);
+						if (complexSimulationConfig.getProperty("simulation.children.redundancy") != null) {
+							extractionDatesForSimpleConfig.getKey().remove(
+									"simulation.redundancy"
+							);
+						}
 					}
 					prepareAndProcess(futures, SELotteryMatrixGeneratorEngine::new, simpleConfigurations);
 					if (nextAfterLatest != null) {
