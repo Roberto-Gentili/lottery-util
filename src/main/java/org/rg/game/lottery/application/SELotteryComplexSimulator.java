@@ -72,11 +72,14 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 									)
 								)
 							);
-							if (childrenSimulationsFilter.equals("allEnabledInSameFolder")) {
+							if (childrenSimulationsFilter.equals("allEnabledInSameFolder") || childrenSimulationsFilter.equals("allInSameFolder")) {
 								Iterator<File> simpleConfigFileIterator = simpleConfigurationFiles.iterator();
 								while (simpleConfigFileIterator.hasNext()) {
-									if (!Boolean.parseBoolean(ResourceUtils.INSTANCE.toProperties(simpleConfigFileIterator.next()).getProperty("simulation.enabled", "false"))) {
+									Properties simpleConfig = ResourceUtils.INSTANCE.toProperties(simpleConfigFileIterator.next());
+									if (childrenSimulationsFilter.equals("allEnabledInSameFolder") && !Boolean.parseBoolean(simpleConfig.getProperty("simulation.enabled", "false"))) {
 										simpleConfigFileIterator.remove();
+									} else if (childrenSimulationsFilter.equals("allInSameFolder")) {
+										simpleConfig.setProperty("simulation.enabled", "true");
 									}
 								}
 							}
