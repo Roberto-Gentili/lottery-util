@@ -904,7 +904,7 @@ public class SELotterySimpleSimulator {
 		ThrowingConsumer<Workbook, Throwable> finallyAction,
 		boolean isSlave
 	) {
-		readOrCreateExcelOrComputeBackups(excelFileName, null, action, createAction, finallyAction,isSlave);
+		readOrCreateExcelOrComputeBackups(excelFileName, null, action, createAction, finallyAction, 5, isSlave);
 	}
 
 	protected static void readOrCreateExcelOrComputeBackups(
@@ -913,6 +913,7 @@ public class SELotterySimpleSimulator {
 		ThrowingConsumer<Workbook, Throwable> action,
 		ThrowingConsumer<Workbook, Throwable> createAction,
 		ThrowingConsumer<Workbook, Throwable> finallyAction,
+		int slaveReadingAttemptCounter,
 		boolean isSlave
 	) {
 		excelFileName = excelFileName.replace("/", File.separator).replace("\\", File.separator);
@@ -958,7 +959,12 @@ public class SELotterySimpleSimulator {
 				synchronized(mutex) {
 					LogUtils.error("Error in Excel file '" + excelFileAbsolutePath + "'. Wating for restore by master");
 					try {
-						mutex.wait(5000);
+						if (slaveReadingAttemptCounter-- > 0) {
+							mutex.wait(5000);
+						} else {
+							LogUtils.error("Error in Excel file '" + excelFileAbsolutePath + "'. The file will be skipped");
+							return;
+						}
 					} catch (InterruptedException e) {
 						Throwables.sneakyThrow(e);
 					}
@@ -984,7 +990,7 @@ public class SELotterySimpleSimulator {
 				}
 				backupsIterator.remove();
 			}
-			readOrCreateExcelOrComputeBackups(excelFileName, backups, action, createAction, finallyAction, isSlave);
+			readOrCreateExcelOrComputeBackups(excelFileName, backups, action, createAction, finallyAction, slaveReadingAttemptCounter, isSlave);
 		}
 	}
 
