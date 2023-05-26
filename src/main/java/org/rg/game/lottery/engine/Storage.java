@@ -3,7 +3,6 @@ package org.rg.game.lottery.engine;
 import java.time.LocalDate;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public interface Storage extends AutoCloseable {
 	static final String END_LINE_PREFIX = "Mr. Random suggerisce";
@@ -31,24 +30,6 @@ public interface Storage extends AutoCloseable {
 	void addUnindexedCombo(List<Integer> selectedCombo);
 
 	void printAll();
-
-	default String toSimpleString(List<Integer> combo) {
-		return String.join(
-			",",
-			combo.stream()
-		    .map(Object::toString)
-		    .collect(Collectors.toList())
-		);
-	}
-
-	default String toRawString(List<Integer> combo) {
-		return String.join(
-			"",
-			combo.stream()
-		    .map(Object::toString)
-		    .collect(Collectors.toList())
-		);
-	}
 
 	boolean addLine();
 

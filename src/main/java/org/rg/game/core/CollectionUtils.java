@@ -14,7 +14,6 @@ public class CollectionUtils {
                     .collect(Collectors.groupingBy((s -> counter.getAndIncrement()/size), LinkedHashMap::new, Collectors.toList()))
                     .values());
         return subLists;
-
 	}
 
 }

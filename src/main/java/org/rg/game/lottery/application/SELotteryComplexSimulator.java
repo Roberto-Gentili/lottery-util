@@ -93,20 +93,8 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 					}
 					Supplier<Integer> configurationIndexIterator = indexIterator(complexSimulationConfig, extractionDates, simpleConfigurations);
 					Map<Properties, Set<LocalDate>> extractionDatesForSimpleConfigs = new LinkedHashMap<>();
-					Integer initialRedundancyValue = Integer.valueOf(complexSimulationConfig.getProperty("simulation.children.redundancy", "-1"));
-					Integer currentRedundancyValue = initialRedundancyValue;
-					Integer configurationIndex = null;
 					for (int i = 0; i < extractionDates.size(); i++) {
-						if (currentRedundancyValue <= 0) {
-							currentRedundancyValue = initialRedundancyValue - 1;
-							configurationIndex = configurationIndexIterator.get();
-						} else {
-							currentRedundancyValue--;
-							if (configurationIndex == null) {
-								configurationIndex = configurationIndexIterator.get();
-							}
-						}
-						Properties simpleConfiguration = simpleConfigurations.get(configurationIndex);
+						Properties simpleConfiguration = simpleConfigurations.get(configurationIndexIterator.get());
 						Set<LocalDate> extractionDatesForConfig=
 								extractionDatesForSimpleConfigs.computeIfAbsent(simpleConfiguration, key -> new TreeSet<>());
 						extractionDatesForConfig.add(extractionDates.get(i));
@@ -150,8 +138,12 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 							)
 						);
 						if (complexSimulationConfig.getProperty("simulation.children.redundancy") != null) {
-							extractionDatesForSimpleConfig.getKey().remove(
-									"simulation.redundancy"
+							extractionDatesForSimpleConfig.getKey().setProperty(
+								"simulation.redundancy",
+								complexSimulationConfig.getProperty(
+									"simulation.children.redundancy",
+									extractionDatesForSimpleConfig.getKey().getProperty("simulation.redundancy")
+								)
 							);
 						}
 					}

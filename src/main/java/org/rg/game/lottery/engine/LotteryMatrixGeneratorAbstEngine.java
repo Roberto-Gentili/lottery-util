@@ -531,8 +531,8 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 				(numberOfCombosRequested == null ? ", richiesta: " + decimalFormat.format(occurrencesNumberRequested) : "") + ") " : "") +
 				"e' composto da " + integerFormat.format(storage.size()) + " combinazioni " + "scelte su " + integerFormat.format(comboHandler.getSizeAsInt()) + " totali" +
 					(fromFilterDiscardedComboCounter.get() > 0 ? " (scartate dal filtro: " + integerFormat.format(fromFilterDiscardedComboCounter.get()) + ")": "") + "." +
-				"\nIl sistema e' composto da " + numbers.size() + " numeri: " + storage.toSimpleString(numbers) +
-				(notSelectedNumbersToBePlayed.isEmpty() ? "" : "\nAttenzione: i seguenti numeri non sono stati inclusi nel sistema: " + storage.toSimpleString(notSelectedNumbersToBePlayed))
+				"\nIl sistema e' composto da " + numbers.size() + " numeri:\n" +  NumberProcessor.groupedForTenAsString(numbers, ", ", ",\n") +
+				(notSelectedNumbersToBePlayed.isEmpty() ? "" : "\nAttenzione: i seguenti numeri non sono stati inclusi nel sistema: " + NumberProcessor.toSimpleString(notSelectedNumbersToBePlayed))
 			;
 			boolean shouldBePlayed = random.nextBoolean();
 			boolean shouldBePlayedAbsolutely = random.nextBoolean() && shouldBePlayed;

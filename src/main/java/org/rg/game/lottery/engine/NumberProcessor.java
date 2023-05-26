@@ -10,6 +10,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.rg.game.core.TimeUtils;
 
@@ -283,6 +284,58 @@ public class NumberProcessor {
 			chosenNumbers.addAll(context.allDiscardedNumbers.get(context.elaborationIndex - Integer.valueOf(numbersAsString[i])).get(TimeUtils.defaultLocalDateFormat.format(extractionDate)));
 		}
 		return chosenNumbers;
+	}
+
+	public static String groupedForTenAsString(List<Integer> numbers, String numberSeparator, String tenSeparator) {
+		return String.join(
+			tenSeparator,
+			groupedForTen(numbers).stream()
+			.map(grp -> String.join(numberSeparator, grp.stream().map(Object::toString).collect(Collectors.toList())))
+			.collect(Collectors.toList())
+		);
+	}
+
+	public static List<List<Integer>> groupedForTen(List<Integer> numbers) {
+		List<List<Integer>> grouped = new ArrayList<>();
+		numbers = new ArrayList<>(numbers);
+		Collections.sort(numbers);
+		int min = 1;
+		int max = 9;
+		List<Integer> groupedForTen = null;
+		for (Integer number : numbers) {
+			while (!(number >= min && number <= max)) {
+				min += 10;
+				max += 10;
+				if (groupedForTen == null || !groupedForTen.isEmpty()) {
+					groupedForTen = new ArrayList<>();
+					grouped.add(groupedForTen);
+				}
+			}
+			if (groupedForTen == null) {
+				groupedForTen = new ArrayList<>();
+				grouped.add(groupedForTen);
+			}
+			groupedForTen.add(number);
+		}
+		return grouped;
+	}
+
+	public static String toSimpleString(List<Integer> numbers) {
+		return String.join(
+			",",
+			numbers.stream()
+		    .map(Object::toString)
+		    .collect(Collectors.toList())
+		);
+	}
+
+	public static String toRawString(List<Integer> numbers) {
+		return String.join(
+			"",
+			numbers.stream()
+		    .map(Object::toString)
+		    .collect(Collectors.toList())
+		);
 	}
 
 	static class Context {
