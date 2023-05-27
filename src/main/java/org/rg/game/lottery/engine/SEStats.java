@@ -568,7 +568,7 @@ public class SEStats {
 		}
 		data.put("report.detail", report.toString());
 		report = new StringBuffer("");
-		report.append("Riepilogo risultati storici dal " + TimeUtils.getDefaultDateFormat().format(allWinningCombosReversed.size() > 0 ? allWinningCombosReversed.get(0).getKey() : startDate) +
+		report.append("Riepilogo risultati storici sistema dal " + TimeUtils.getDefaultDateFormat().format(allWinningCombosReversed.size() > 0 ? allWinningCombosReversed.get(0).getKey() : startDate) +
 			" al " + TimeUtils.getDefaultDateFormat().format(allWinningCombos.size() > 0 ? this.allWinningCombos.entrySet().stream().collect(Collectors.toList()).get(0).getKey() : endDate) + ":\n\n"
 		);
 		Integer returns = 0;
