@@ -299,7 +299,7 @@ public class NumberProcessor {
 		List<List<Integer>> grouped = new ArrayList<>();
 		numbers = new ArrayList<>(numbers);
 		Collections.sort(numbers);
-		int min = 1;
+		int min = 0;
 		int max = 9;
 		List<Integer> groupedForTen = null;
 		for (Integer number : numbers) {
