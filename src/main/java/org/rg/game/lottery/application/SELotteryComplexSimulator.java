@@ -167,7 +167,7 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 					new File(
 						PersistentStorage.buildWorkingPath() + File.separator + retrieveExcelFileName(complexSimulationConfig, "simulation.children.group")
 					),
-					CollectionUtils.retrieveBoolean(complexSimulationConfig, "simulation.slave")
+					CollectionUtils.retrieveBoolean(complexSimulationConfig, "simulation.slave", "false")
 				);
 			}
 		} catch (IOException exc) {
