@@ -20,8 +20,9 @@ public class ConcurrentUtils {
 								Throwables.sneakyThrow(exc);
 							}
 						}
+						futures.add(taskWrapper.get());
+						taskWrapper.notify();
 					}
-					futures.add(taskWrapper.get());
 					try {
 						taskOperation.run();
 					} finally {
@@ -35,6 +36,11 @@ public class ConcurrentUtils {
 		);
 		synchronized(taskWrapper) {
 			taskWrapper.notify();
+			try {
+				taskWrapper.wait();
+			} catch (InterruptedException exc) {
+				Throwables.sneakyThrow(exc);
+			}
 		}
 	}
 
