@@ -16,7 +16,7 @@ public class LogUtils {
 		log(System.err, reports);
 	}
 
-	private static void log(PrintStream stream, String... reports) {
+	private static synchronized void log(PrintStream stream, String... reports) {
 		if (reports == null || reports.length == 0) {
 			stream.println();
 			return;
