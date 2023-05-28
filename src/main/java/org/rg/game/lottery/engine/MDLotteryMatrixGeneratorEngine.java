@@ -94,7 +94,7 @@ public class MDLotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	@Override
-	protected Map<String, Object> testEffectiveness(String combinationFilterRaw, List<Integer> numbers, boolean parseBoolean) {
+	protected Map<String, Object> testEffectiveness(String combinationFilterRaw, List<Integer> numbers, boolean fineLog) {
 		throw new UnsupportedOperationException("Effectiveness test");
 
 	}

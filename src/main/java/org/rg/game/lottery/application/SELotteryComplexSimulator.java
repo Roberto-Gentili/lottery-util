@@ -21,6 +21,7 @@ import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.rg.game.core.CollectionUtils;
 import org.rg.game.core.ResourceUtils;
 import org.rg.game.core.Throwables;
 import org.rg.game.core.TimeUtils;
@@ -76,7 +77,7 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 								Iterator<File> simpleConfigFileIterator = simpleConfigurationFiles.iterator();
 								while (simpleConfigFileIterator.hasNext()) {
 									Properties simpleConfig = ResourceUtils.INSTANCE.toProperties(simpleConfigFileIterator.next());
-									if (childrenSimulationsFilter.equals("allEnabledInSameFolder") && !Boolean.parseBoolean(simpleConfig.getProperty("simulation.enabled", "false"))) {
+									if (childrenSimulationsFilter.equals("allEnabledInSameFolder") && !CollectionUtils.retrieveBoolean(simpleConfig, "simulation.enabled", "false")) {
 										simpleConfigFileIterator.remove();
 									} else if (childrenSimulationsFilter.equals("allInSameFolder")) {
 										simpleConfig.setProperty("simulation.enabled", "true");
@@ -166,7 +167,7 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 					new File(
 						PersistentStorage.buildWorkingPath() + File.separator + retrieveExcelFileName(complexSimulationConfig, "simulation.children.group")
 					),
-					Boolean.parseBoolean(complexSimulationConfig.getProperty("simulation.slave"))
+					CollectionUtils.retrieveBoolean(complexSimulationConfig, "simulation.slave")
 				);
 			}
 		} catch (IOException exc) {

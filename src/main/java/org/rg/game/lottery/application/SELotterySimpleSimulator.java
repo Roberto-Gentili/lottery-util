@@ -166,13 +166,13 @@ public class SELotterySimpleSimulator {
 		List<Properties> configurations = new ArrayList<>();
 		for (Properties config : configurationProperties) {
 			String simulationDates = config.getProperty("simulation.dates");
-			if (Boolean.parseBoolean(config.getProperty("simulation.enabled", "false"))) {
+			if (CollectionUtils.retrieveBoolean(config, "simulation.enabled", "false")) {
 				if (simulationDates != null) {
 					config.setProperty("competition", simulationDates);
 				}
 				setGroup(config);
 				config.setProperty("storage", "filesystem");
-				config.setProperty("overwrite-if-exists", String.valueOf(Boolean.parseBoolean(config.getProperty("simulation.slave", "false"))? -1 : 0));
+				config.setProperty("overwrite-if-exists", String.valueOf(CollectionUtils.retrieveBoolean(config, "simulation.slave", "false")? -1 : 0));
 				configurations.add(config);
 			}
 		}
@@ -180,7 +180,7 @@ public class SELotterySimpleSimulator {
 		for (Properties configuration : configurations) {
 			LogUtils.info(
 				"Processing file '" + configuration.getProperty("file.name") + "' located in '" + configuration.getProperty("file.parent.absolutePath") + "' in " +
-					(Boolean.parseBoolean(configuration.getProperty("simulation.slave")) ? "slave" : "master") + " mode"
+					(CollectionUtils.retrieveBoolean(configuration, "simulation.slave") ? "slave" : "master") + " mode"
 			);
 			String info = configuration.getProperty("info");
 			if (info != null) {
@@ -212,7 +212,7 @@ public class SELotterySimpleSimulator {
 				process(configuration, excelFileName, engine, competitionDates);
 				LogUtils.info("Computation of " + configuration.getProperty("file.name") + " succesfully finished");
 			};
-			if (Boolean.parseBoolean(configuration.getProperty("async", "false"))) {
+			if (CollectionUtils.retrieveBoolean(configuration, "async", "false")) {
 				ConcurrentUtils.addTask(futures, taskOperation);
 			} else {
 				taskOperation.run();
@@ -270,7 +270,7 @@ public class SELotterySimpleSimulator {
 				excelFileName, configFileName, redundancy, competitionDates
 			);
 		}
-		boolean isSlave = Boolean.parseBoolean(configuration.getProperty("simulation.slave"));
+		boolean isSlave = CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false");
 		readOrCreateExcel(
 			excelFileName,
 			workBook -> {
@@ -306,7 +306,7 @@ public class SELotterySimpleSimulator {
 				new ArrayList<>(competitionDatesFlat),
 				redundancy
 			).stream().reduce((prev, next) -> next).orElse(null);
-		boolean isSlave = Boolean.parseBoolean(configuration.getProperty("simulation.slave", "false"));
+		boolean isSlave = CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false");
 		readOrCreateExcel(
 			excelFileName,
 			workBook -> {
@@ -362,7 +362,7 @@ public class SELotterySimpleSimulator {
 		List<List<LocalDate>> competitionDates
 	) {
 		String redundantConfigValue = configuration.getProperty("simulation.redundancy");
-		boolean isSlave = Boolean.parseBoolean(configuration.getProperty("simulation.slave", "false"));
+		boolean isSlave = CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false");
 		Function<LocalDate, Function<List<Storage>, Integer>> extractionDatePredicate = null;
 		Function<LocalDate, Consumer<List<Storage>>> systemProcessor = null;
 		AtomicInteger redundantCounter = new AtomicInteger(0);
@@ -430,7 +430,7 @@ public class SELotterySimpleSimulator {
 				workBook -> {
 					store(excelFileName, workBook, isSlave);
 				},
-				Boolean.parseBoolean(configuration.getProperty("simulation.slave"))
+				CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false")
 			);
 		}
 		backup(new File(PersistentStorage.buildWorkingPath() + File.separator + excelFileName), isSlave);
@@ -444,7 +444,7 @@ public class SELotterySimpleSimulator {
 		AtomicBoolean simulatorFinished
 	) {
 		return CompletableFuture.runAsync(() -> {
-			boolean isSlave = Boolean.parseBoolean(configuration.getProperty("simulation.slave", "false"));
+			boolean isSlave = CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false");
 			int initialPriority = Thread.currentThread().getPriority();
 			if (!isSlave) {
 				if (!simulatorFinished.get()) {
@@ -484,7 +484,7 @@ public class SELotterySimpleSimulator {
 		Map<String, Map<Integer, Integer>> premiumCountersForFile,
 		AtomicBoolean simulatorFinished
 	) {
-		boolean isSlave = Boolean.parseBoolean(configuration.getProperty("simulation.slave", "false"));
+		boolean isSlave = CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false");
 		SEStats sEStats = getSEStats(configuration);
 		Map<Integer, String> allPremiums = SEStats.allPremiums();
 		AtomicInteger dataAggStoricoColIndex = new AtomicInteger(0);
@@ -510,7 +510,7 @@ public class SELotterySimpleSimulator {
 			},
 			null,
 			null,
-			Boolean.parseBoolean(configuration.getProperty("simulation.slave"))
+			CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false")
 		);
 		if (isSlave) {
 			Collections.shuffle(excelRecordsToBeUpdated);
@@ -544,7 +544,7 @@ public class SELotterySimpleSimulator {
 				},
 				null,
 				null,
-				Boolean.parseBoolean(configuration.getProperty("simulation.slave"))
+				CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false")
 			);
 			if (storageWrapper.get() != null) {
 				Map<Integer, Integer> premiumCounters = premiumCountersForFile.computeIfAbsent(storageWrapper.get().getName(), key -> {
@@ -682,7 +682,7 @@ public class SELotterySimpleSimulator {
 	private static Function<LocalDate, Consumer<List<Storage>>> buildSystemProcessor(Properties configuration, String excelFileName) {
 		AtomicBoolean rowAddedFlag = new AtomicBoolean(false);
 		AtomicBoolean fileCreatedFlag = new AtomicBoolean(false);
-		boolean isSlave = Boolean.parseBoolean(configuration.getProperty("simulation.slave", "false"));
+		boolean isSlave = CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false");
 		return extractionDate -> storages -> {
 			readOrCreateExcel(
 				excelFileName,
@@ -784,7 +784,7 @@ public class SELotterySimpleSimulator {
 		AtomicInteger redundantCounter
 	) {
 		String configurationName = configuration.getProperty("nameSuffix");
-		boolean isSlave = Boolean.parseBoolean(configuration.getProperty("simulation.slave", "false"));
+		boolean isSlave = CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false");
 		return extractionDate -> storages -> {
 			AtomicReference<Integer> checkResult = new AtomicReference<Integer>();
 			readOrCreateExcel(
@@ -796,7 +796,7 @@ public class SELotterySimpleSimulator {
 				,
 				workBook ->
 					store(excelFileName, workBook, isSlave),
-				Boolean.parseBoolean(configuration.getProperty("simulation.slave"))
+					CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false")
 			);
 			if (redundant != null) {
 				Integer redundantCounterValue = redundantCounter.getAndIncrement();

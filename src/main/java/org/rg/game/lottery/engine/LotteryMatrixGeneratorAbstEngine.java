@@ -34,6 +34,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.rg.game.core.CollectionUtils;
 import org.rg.game.core.LogUtils;
 import org.rg.game.core.NetworkUtils;
 import org.rg.game.core.Throwables;
@@ -96,7 +97,6 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 				);
 			}
 			Map<String, Object> data = adjustSeed();
-			String numbersOrdered = config.getProperty("numbers.ordered");
 			NumberProcessor.Context numberProcessorContext = new NumberProcessor.Context(
 				getNumberGeneratorFactory(), engineIndex, getAllChosenNumbers(), getAllDiscardedNumbers()
 			);
@@ -104,7 +104,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 				numberProcessorContext,
 				config.getProperty("numbers", getDefaultNumberRange()),
 				extractionDate,
-				numbersOrdered != null && Boolean.parseBoolean(numbersOrdered)
+				CollectionUtils.retrieveBoolean(config, "numbers.ordered", "false")
 			);
 			SEStats.clear();
 			data.put("chosenNumbers", chosenNumbers);
@@ -116,7 +116,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 					config.getProperty("numbers.discard"),
 					extractionDate,
 					numbersToBePlayed,
-					numbersOrdered != null && Boolean.parseBoolean(numbersOrdered)
+					CollectionUtils.retrieveBoolean(config, "numbers.ordered", "false")
 				)
 			);
 			data.put("numbersToBePlayed", numbersToBePlayed);
@@ -142,8 +142,8 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 				(List<Integer>)basicData.get("numbersToBeDiscarded")
 			);
 		}
-		reportEnabled = Boolean.parseBoolean(config.getProperty("report.enabled", "true"));
-		reportDetailEnabled = Boolean.parseBoolean(config.getProperty("report.detail.enabled", "false"));
+		reportEnabled = CollectionUtils.retrieveBoolean(config, "report.enabled", "true");
+		reportDetailEnabled = CollectionUtils.retrieveBoolean(config, "report.detail.enabled", "false");
 		String group = config.getProperty("group") != null ?
 			config.getProperty("group").replace("${localhost.name}", NetworkUtils.INSTANCE.thisHostName()):
 			null;
@@ -162,8 +162,8 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 				Storage storage = generate(
 					basicDataSupplier,
 					combinationFilterRaw,
-					Boolean.parseBoolean(config.getProperty("combination.filter.test", "true")),
-					Boolean.parseBoolean(config.getProperty("combination.filter.test.fine-info", "true")),
+					CollectionUtils.retrieveBoolean(config, "combination.filter.test", "true"),
+					CollectionUtils.retrieveBoolean(config, "combination.filter.test.fine-info", "true"),
 					Integer.valueOf(config.getProperty("combination.components")),
 					Optional.ofNullable(config.getProperty("numbers.occurrences")).map(Double::parseDouble).orElseGet(() -> null),
 					Optional.ofNullable(config.getProperty("combination.count")).map(Integer::parseInt).orElseGet(() -> null),
@@ -176,20 +176,19 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 						return random.nextBoolean();
 					},
 					extractionDate,
-					Boolean.parseBoolean(config.getProperty("combination.magic.enabled", "true")) ?
+					CollectionUtils.retrieveBoolean(config, "combination.magic.enabled", "true") ?
 						Integer.valueOf(Optional.ofNullable(config.getProperty("combination.magic.min-number")).orElseGet(() -> "1"))
 						:null,
-					Boolean.parseBoolean(config.getProperty("combination.magic.enabled", "true")) ?
+						CollectionUtils.retrieveBoolean(config, "combination.magic.enabled", "true") ?
 						Integer.valueOf(Optional.ofNullable(config.getProperty("combination.magic.max-number")).orElseGet(() -> "90"))
 						:null,
 					group,
 					config.getProperty("nameSuffix"),
-					Boolean.parseBoolean(
-						config.getProperty(
+					CollectionUtils.retrieveBoolean(
+						config,
 							"combination.not-equilibrate.at-least-one-number-among-those-chosen",
 							String.valueOf(!"sequence".equals(comboIndexSelectorType))
-						)
-					),
+						),
 					Integer.parseInt(
 						config.getProperty(
 							"overwrite-if-exists",
@@ -311,7 +310,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		throw new UnsupportedOperationException("Expression is not supported: " + expression);
 	}
 
-	protected abstract Map<String, Object> testEffectiveness(String combinationFilterRaw, List<Integer> numbers, boolean parseBoolean);
+	protected abstract Map<String, Object> testEffectiveness(String combinationFilterRaw, List<Integer> numbers, boolean fineLog);
 
 	private List<LocalDate> forThisWeek() {
 		return forWeekOf(LocalDate.now());

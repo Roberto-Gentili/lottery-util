@@ -9,6 +9,7 @@ import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
+import org.rg.game.core.CollectionUtils;
 import org.rg.game.core.LogUtils;
 import org.rg.game.core.ResourceUtils;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
@@ -45,7 +46,7 @@ public class LotteryMatrixGenerator {
 		List<Properties> configurations = new ArrayList<>();
 		for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles)) {
 			String simulationDates = config.getProperty("simulation.dates");
-			if (Boolean.parseBoolean(config.getProperty("enabled", "false"))) {
+			if (CollectionUtils.retrieveBoolean(config, "enabled", "false")) {
 				configurations.add(config);
 			}
 		}
@@ -70,7 +71,7 @@ public class LotteryMatrixGenerator {
 		configuration.setProperty("nameSuffix", configuration.getProperty("file.name")
 			.replace("." + configuration.getProperty("file.extension"), ""));
 		engine.setup(configuration);
-		if (Boolean.parseBoolean(configuration.getProperty("async", "false"))) {
+		if (CollectionUtils.retrieveBoolean(configuration, "async", "false")) {
 			futures.add(CompletableFuture.runAsync(() -> engine.getExecutor().apply(null).apply(null)));
 		} else {
 			engine.getExecutor().apply(null).apply(null);
