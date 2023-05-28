@@ -416,11 +416,10 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 			AtomicLong indexGeneratorCallsCounter = new AtomicLong(0L);
 			AtomicInteger uniqueIndexCounter = new AtomicInteger(0);
 			Integer ratioAsInt = null;
-			Integer remainder = null;
+			//Integer remainder = null;
 			try {
 				if (equilibrate) {
 					Map<Integer, AtomicInteger> occurrences = new LinkedHashMap<>();
-					remainder = (combinationComponents * numberOfCombos) % numbers.size();
 					ratioAsInt = ratio.intValue();
 					while (storage.size() < numberOfCombos) {
 						List<Integer> underRatioNumbers = new ArrayList<>(numbers);
@@ -525,7 +524,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 			}
 			String systemGeneralInfo =
 				"Per il concorso numero " + data.get("seed") + " del " + ((LocalDate)data.get("seedStartDate")).format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG)) + " " +
-				"il sistema " + (equilibrate ? "bilanciato " + (remainder == 0 ? "perfetto " : "") +
+				"il sistema " + (equilibrate ? "bilanciato " + ((combinationComponents * storage.size()) % numbers.size() == 0 ? "perfetto " : "") +
 				"(occorrenza effettiva: " + decimalFormat.format((combinationComponents * storage.size()) / (double)numbers.size()) +
 				(numberOfCombosRequested == null ? ", richiesta: " + decimalFormat.format(occurrencesNumberRequested) : "") + ") " : "") +
 				"e' composto da " + integerFormat.format(storage.size()) + " combinazioni " + "scelte su " + integerFormat.format(comboHandler.getSizeAsInt()) + " totali" +
