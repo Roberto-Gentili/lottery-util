@@ -376,12 +376,20 @@ public class PersistentStorage implements Storage {
 
 	@Override
 	public Integer getMinOccurence() {
-		return new TreeSet<>(occurrences.values()).iterator().next();
+		TreeSet<Integer> occurrencesCounter = new TreeSet<>(occurrences.values());
+		if (occurrencesCounter.isEmpty()) {
+			return 0;
+		}
+		return occurrencesCounter.iterator().next();
 	}
 
 	@Override
 	public Integer getMaxOccurence() {
-		return new TreeSet<>(occurrences.values()).descendingIterator().next();
+		TreeSet<Integer> occurrencesCounter = new TreeSet<>(occurrences.values());
+		if (occurrencesCounter.isEmpty()) {
+			return 0;
+		}
+		return occurrencesCounter.descendingIterator().next();
 	}
 
 }
