@@ -42,6 +42,10 @@ public interface Storage extends AutoCloseable {
 
 	public Iterator<List<Integer>> iterator();
 
+	Integer getMinOccurence();
+
+	Integer getMaxOccurence();
+
 	void delete();
 
 }

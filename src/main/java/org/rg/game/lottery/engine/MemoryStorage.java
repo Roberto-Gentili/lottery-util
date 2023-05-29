@@ -3,7 +3,10 @@ package org.rg.game.lottery.engine;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeSet;
 
 import org.rg.game.core.LogUtils;
 
@@ -13,6 +16,7 @@ public class MemoryStorage implements Storage {
 	String output;
 	String name;
 	boolean isClosed;
+	Map<Integer, Integer> occurrences;
 
 	MemoryStorage(
 		LocalDate extractionDate,
@@ -25,6 +29,7 @@ public class MemoryStorage implements Storage {
 				"[" + numberOfCombos + "]" + /*"[" + toRawString(numbers) + "]" +*/ suffix + ".txt";
 		combos = new ArrayList<>();
 		output = "";
+		occurrences = new LinkedHashMap<>();
 	}
 
 	@Override
@@ -43,10 +48,14 @@ public class MemoryStorage implements Storage {
 	}
 
 	@Override
-	public boolean addCombo(List<Integer> selectedCombo) {
-		if (!contains(selectedCombo)) {
-			output += ComboHandler.toString(selectedCombo) + "\n";
-			return combos.add(selectedCombo);
+	public boolean addCombo(List<Integer> combo) {
+		if (!contains(combo)) {
+			output += ComboHandler.toString(combo) + "\n";
+			for (Integer number : combo) {
+				Integer counter = occurrences.computeIfAbsent(number, key -> 0) + 1;
+				occurrences.put(number, counter);
+			}
+			return combos.add(combo);
 		}
 		return false;
 	}
@@ -119,6 +128,16 @@ public class MemoryStorage implements Storage {
 	@Override
 	public boolean isClosed() {
 		return isClosed;
+	}
+
+	@Override
+	public Integer getMinOccurence() {
+		return new TreeSet<>(occurrences.values()).iterator().next();
+	}
+
+	@Override
+	public Integer getMaxOccurence() {
+		return new TreeSet<>(occurrences.values()).descendingIterator().next();
 	}
 
 }

@@ -522,10 +522,15 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 			} catch (AllRandomNumbersHaveBeenGeneratedException exc) {
 				LogUtils.info("\n" + exc.getMessage());
 			}
+			Integer minOccurrences = storage.getMinOccurence();
+			Integer maxOccurrences = storage.getMaxOccurence();
 			String systemGeneralInfo =
 				"Per il concorso numero " + data.get("seed") + " del " + ((LocalDate)data.get("seedStartDate")).format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG)) + " " +
-				"il sistema " + (equilibrate ? "bilanciato " + ((combinationComponents * storage.size()) % numbers.size() == 0 ? "perfetto " : "") +
-				"(occorrenza effettiva: " + decimalFormat.format((combinationComponents * storage.size()) / (double)numbers.size()) +
+				"il sistema " + (equilibrate ? "bilanciato " + (minOccurrences.compareTo(maxOccurrences) == 0 ? "perfetto " : "") +
+				(minOccurrences.compareTo(maxOccurrences) == 0 ?
+					"(occorrenza: " + minOccurrences :
+					"(occorrenza minima: " + minOccurrences + ", occorrenza massima: " + maxOccurrences
+				)+
 				(numberOfCombosRequested == null ? ", richiesta: " + decimalFormat.format(occurrencesNumberRequested) : "") + ") " : "") +
 				"e' composto da " + integerFormat.format(storage.size()) + " combinazioni " + "scelte su " + integerFormat.format(comboHandler.getSizeAsInt()) + " totali" +
 					(fromFilterDiscardedComboCounter.get() > 0 ? " (scartate dal filtro: " + integerFormat.format(fromFilterDiscardedComboCounter.get()) + ")": "") +

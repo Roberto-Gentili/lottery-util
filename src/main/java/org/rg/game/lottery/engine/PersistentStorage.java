@@ -12,8 +12,11 @@ import java.nio.channels.FileChannel;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.TreeSet;
 
 import org.rg.game.core.LogUtils;
 import org.rg.game.core.Throwables;
@@ -26,6 +29,7 @@ public class PersistentStorage implements Storage {
 	String name;
 	int size;
 	Boolean isClosed;
+	Map<Integer, Integer> occurrences;
 
 	public PersistentStorage(
 		LocalDate extractionDate,
@@ -46,6 +50,7 @@ public class PersistentStorage implements Storage {
 		} catch (IOException exc) {
 			Throwables.sneakyThrow(exc);
 		}
+		occurrences = new LinkedHashMap<>();
 	}
 
 	private PersistentStorage(String group, String fileName) {
@@ -245,12 +250,16 @@ public class PersistentStorage implements Storage {
 	}*/
 
 	@Override
-	public boolean addCombo(List<Integer> selectedCombo) {
-		if (!contains(selectedCombo)) {
+	public boolean addCombo(List<Integer> combo) {
+		if (!contains(combo)) {
 			try {
-				bufferedWriter.write(ComboHandler.toString(selectedCombo) + "\n");
+				bufferedWriter.write(ComboHandler.toString(combo) + "\n");
 				bufferedWriter.flush();
 				++size;
+				for (Integer number : combo) {
+					Integer counter = occurrences.computeIfAbsent(number, key -> 0) + 1;
+					occurrences.put(number, counter);
+				}
 			} catch (IOException exc) {
 				Throwables.sneakyThrow(exc);
 			}
@@ -363,6 +372,16 @@ public class PersistentStorage implements Storage {
 			Throwables.sneakyThrow(e);
 		}
 		new File(absolutePath).delete();
+	}
+
+	@Override
+	public Integer getMinOccurence() {
+		return new TreeSet<>(occurrences.values()).iterator().next();
+	}
+
+	@Override
+	public Integer getMaxOccurence() {
+		return new TreeSet<>(occurrences.values()).descendingIterator().next();
 	}
 
 }
