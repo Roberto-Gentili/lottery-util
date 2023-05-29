@@ -56,6 +56,7 @@ public class PersistentStorage implements Storage {
 	private PersistentStorage(String group, String fileName) {
 		absolutePath = (parentPath = buildWorkingPath(group)) + File.separator + fileName;
 		name = fileName;
+		occurrences = new LinkedHashMap<>();
 	}
 
 	public static PersistentStorage restore(String group, String fileName) {
@@ -376,20 +377,38 @@ public class PersistentStorage implements Storage {
 
 	@Override
 	public Integer getMinOccurence() {
-		TreeSet<Integer> occurrencesCounter = new TreeSet<>(occurrences.values());
-		if (occurrencesCounter.isEmpty()) {
+		if (size() == 0) {
 			return 0;
 		}
+		loadOccurrencesIfNeeded();
+		TreeSet<Integer> occurrencesCounter = new TreeSet<>(occurrences.values());
 		return occurrencesCounter.iterator().next();
 	}
 
 	@Override
 	public Integer getMaxOccurence() {
-		TreeSet<Integer> occurrencesCounter = new TreeSet<>(occurrences.values());
-		if (occurrencesCounter.isEmpty()) {
+		if (size() == 0) {
 			return 0;
 		}
+		loadOccurrencesIfNeeded();
+		TreeSet<Integer> occurrencesCounter = new TreeSet<>(occurrences.values());
 		return occurrencesCounter.descendingIterator().next();
+	}
+
+	private void loadOccurrencesIfNeeded() {
+		if (occurrences.isEmpty()) {
+			synchronized(occurrences) {
+				if (occurrences.isEmpty()) {
+					Iterator<List<Integer>> comboItr = iterator();
+					while (comboItr.hasNext()) {
+						for (Integer number : comboItr.next()) {
+							Integer counter = occurrences.computeIfAbsent(number, key -> 0) + 1;
+							occurrences.put(number, counter);
+						}
+					}
+				}
+			}
+		}
 	}
 
 }

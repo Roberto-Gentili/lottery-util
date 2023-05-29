@@ -132,19 +132,19 @@ public class MemoryStorage implements Storage {
 
 	@Override
 	public Integer getMinOccurence() {
-		TreeSet<Integer> occurrencesCounter = new TreeSet<>(occurrences.values());
-		if (occurrencesCounter.isEmpty()) {
+		if (size() == 0) {
 			return 0;
 		}
+		TreeSet<Integer> occurrencesCounter = new TreeSet<>(occurrences.values());
 		return occurrencesCounter.iterator().next();
 	}
 
 	@Override
 	public Integer getMaxOccurence() {
-		TreeSet<Integer> occurrencesCounter = new TreeSet<>(occurrences.values());
-		if (occurrencesCounter.isEmpty()) {
+		if (size() == 0) {
 			return 0;
 		}
+		TreeSet<Integer> occurrencesCounter = new TreeSet<>(occurrences.values());
 		return occurrencesCounter.descendingIterator().next();
 	}
 
