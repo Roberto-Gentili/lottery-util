@@ -1,109 +1,40 @@
 package org.rg.game.lottery.application;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.rg.game.core.LogUtils;
-import org.rg.game.core.TimeUtils;
-import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
-import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
+import org.rg.game.lottery.engine.PersistentStorage;
+import org.rg.game.lottery.engine.Storage;
 
 public class SEQualityChecker {
 
 	public static void main(String[] args) throws IOException {
+		Map<String, Boolean> systemToBeChecked = new LinkedHashMap<>();
+		//systemToBeChecked.put("Simulazioni/smallest-abs-rec-45\\[2014-12-06][6][34]se-simple-simulation[1a]smallest-absence-record-45.txt", true);
+		//systemToBeChecked.put("Simulazioni/smallest-abs-rec-45\\[2021-05-06][6][34]se-simple-simulation[1a]smallest-absence-record-45.txt", true);
+		systemToBeChecked.put("Simulazioni/our-way-of-playing\\[2020-08-20][6][34]se-simple-simulation[1a].txt", true);
+
 		check(
-			forDate(
-				Shared.getSystemEnv(
-					"startDate", "14/02/2023"
-				), Shared.getSystemEnv(
-					"endDate", "next+0"
-				),
-				true
-			)
+			systemToBeChecked
 		);
 	}
 
-	static List<Map.Entry<LocalDate, Object>> forDate(
-		String startDateAsString,
-		String endDateAsString,
-		Boolean printReportDetail
-	) {
-		LotteryMatrixGeneratorAbstEngine engine = new SELotteryMatrixGeneratorEngine();
-		LocalDate startDate = Shared.convert(startDateAsString);
-		LocalDate endDate =  Shared.convert(endDateAsString);
-		List<Map.Entry<LocalDate, Object>> dates = new ArrayList<>();
-		while (startDate.compareTo(endDate) <= 0) {
-			startDate = engine.computeNextExtractionDate(startDate, false);
-			dates.add(new AbstractMap.SimpleEntry<LocalDate, Object>(startDate, printReportDetail));
-			startDate =  engine.computeNextExtractionDate(startDate.plus(1, ChronoUnit.DAYS), false);
-		}
-		return dates;
-	}
-
-	private static void check(List<Map.Entry<LocalDate, Object>>... dateGroupsList) throws IOException {
-		for (List<Map.Entry<LocalDate, Object>> dateGroup: dateGroupsList) {
-			for (Map.Entry<LocalDate, Object> dateInfo : dateGroup) {
-				String extractionDate = TimeUtils.defaultLocalDateFormat.format(dateInfo.getKey());
-				String extractionYear = extractionDate.split("\\/")[2];
-				String extractionMonth = Shared.getMonth(extractionDate);
-				String extractionDay = extractionDate.split("\\/")[0];
-				File mainFile =
-					Shared.getSystemsFile(extractionYear);
-				List<List<Integer>> system = new ArrayList<>();
-				try (InputStream srcFileInputStream = new FileInputStream(mainFile); Workbook workbook = new XSSFWorkbook(srcFileInputStream);) {
-					Sheet sheet = workbook.getSheet(extractionMonth);
-					if (sheet == null) {
-						LogUtils.warn("No sheet named '" + extractionMonth + "' to test for date " + extractionDate);
-						continue;
-					}
-					int offset = Shared.getCellIndex(sheet, extractionDay);
-					if (offset < 0) {
-						LogUtils.warn("No combination to test for date " + extractionDate);
-						continue;
-					}
-					Iterator<Row> rowIterator = sheet.rowIterator();
-					rowIterator.next();
-					while (rowIterator.hasNext()) {
-						Row row = rowIterator.next();
-						List<Integer> currentCombo = new ArrayList<>();
-						for (int i = 0; i < 6; i++) {
-							Cell cell = row.getCell(offset + i);
-							if (cell == null) {
-								break;
-							}
-							Integer currentNumber = Integer.valueOf((int)cell.getNumericCellValue());
-							currentCombo.add(currentNumber);
-						}
-						if (currentCombo.isEmpty() || currentCombo.get(0) == 0) {
-							break;
-						}
-						system.add(currentCombo);
-					}
-					LogUtils.info("\nAnalisi del sistema del " + extractionDate + ":" );
-					Map<String, Object> report = Shared.getSEStats().checkQuality(system::iterator);
-					if ((boolean)dateInfo.getValue()) {
-						LogUtils.info("\t" + ((String)report.get("report.detail")).replace("\n", "\n\t"));
-					}
-					LogUtils.info("\t" + ((String)report.get("report.summary")).replace("\n", "\n\t"));
-				} catch (Throwable exc) {
-					exc.printStackTrace();
+	private static void check(Map<String, Boolean> dateInfos) throws IOException {
+		for (Map.Entry<String, Boolean> dateInfo : dateInfos.entrySet()) {
+			try {
+				String[] dataInfoSplitted = dateInfo.getKey().split("\\\\");
+				Storage storage = PersistentStorage.restore(dataInfoSplitted[0], dataInfoSplitted[dataInfoSplitted.length - 1]);
+				storage.printAll();
+				Map<String, Object> report = Shared.getSEStats().checkQuality(storage::iterator);
+				if ((boolean)dateInfo.getValue()) {
+					LogUtils.info("\t" + ((String)report.get("report.detail")).replace("\n", "\n\t"));
 				}
+				LogUtils.info("\t" + ((String)report.get("report.summary")).replace("\n", "\n\t"));
+			} catch (Throwable exc) {
+				exc.printStackTrace();
 			}
 		}
 	}
-
 }
