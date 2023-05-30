@@ -457,6 +457,10 @@ public class SELotterySimpleSimulator {
 			);
 		}
 		backup(new File(PersistentStorage.buildWorkingPath() + File.separator + excelFileName), isSlave);
+		//Puliamo file txt duplicati da google drive
+		for (File file : ResourceUtils.INSTANCE.find("(1)", "txt", retrieveBasePath(configuration))) {
+			file.delete();
+		}
 	}
 
 	private static CompletableFuture<Void> startHistoryUpdateTask(
@@ -661,14 +665,17 @@ public class SELotterySimpleSimulator {
 				}
 			}
 		}
-		String basePath = Optional.ofNullable(configuration.getProperty("simulation.group")).map(groupName -> {
-			return PersistentStorage.buildWorkingPath(groupName);
-		}).orElseGet(() -> PersistentStorage.buildWorkingPath());
 		//Puliamo file json duplicati da google drive
-		for (File file : ResourceUtils.INSTANCE.find("(1)", "json", basePath)) {
+		for (File file : ResourceUtils.INSTANCE.find("(1)", "json", retrieveBasePath(configuration))) {
 			file.delete();
 		}
 		return 1;
+	}
+
+	protected static String retrieveBasePath(Properties configuration) {
+		return Optional.ofNullable(configuration.getProperty("simulation.group")).map(groupName -> {
+			return PersistentStorage.buildWorkingPath(groupName);
+		}).orElseGet(() -> PersistentStorage.buildWorkingPath());
 	}
 
 	protected static SEStats getSEStats(Properties configuration) {
