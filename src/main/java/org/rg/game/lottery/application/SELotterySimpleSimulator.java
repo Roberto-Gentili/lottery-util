@@ -477,9 +477,10 @@ public class SELotterySimpleSimulator {
 				}
 			}
 			Map<String, Map<Integer, Integer>> premiumCountersForFile = new LinkedHashMap<>();
-			while (!simulatorFinished.get()) {
+			Integer updateHistoryResult = null;
+			while ((!simulatorFinished.get()) && (updateHistoryResult == null || updateHistoryResult.compareTo(-1) != 0)) {
 				historyUpdateTaskStarted.set(true);
-				updateHistory(configuration, excelFileName, configurationName, premiumCountersForFile, simulatorFinished);
+				updateHistoryResult = updateHistory(configuration, excelFileName, configurationName, premiumCountersForFile, simulatorFinished);
 				try {
 					Thread.sleep(1000);
 				} catch (InterruptedException exc) {
@@ -487,7 +488,9 @@ public class SELotterySimpleSimulator {
 				}
 			}
 			setThreadPriorityToMax();
-			updateHistory(configuration, excelFileName, configurationName, premiumCountersForFile, simulatorFinished);
+			if (updateHistoryResult == null || updateHistoryResult.compareTo(-1) != 0) {
+				updateHistory(configuration, excelFileName, configurationName, premiumCountersForFile, simulatorFinished);
+			}
 			Thread.currentThread().setPriority(initialPriority);
 		});
 
@@ -500,7 +503,7 @@ public class SELotterySimpleSimulator {
 		}
 	}
 
-	private static void updateHistory(
+	private static Integer updateHistory(
 		Properties configuration,
 		String excelFileName,
 		String configurationName,
@@ -515,7 +518,7 @@ public class SELotterySimpleSimulator {
 		AtomicReference<CellStyle> numberCellStyle = new AtomicReference<>();
 		AtomicReference<CellStyle> dateCellStyle = new AtomicReference<>();
 		List<Integer> excelRecordsToBeUpdated = new ArrayList<>();
-		readOrCreateExcel(
+		Integer result = readOrCreateExcel(
 			excelFileName,
 			workBook -> {
 				Sheet sheet = workBook.getSheet("Risultati");
@@ -536,6 +539,9 @@ public class SELotterySimpleSimulator {
 			CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false")
 		);
 		if (isSlave) {
+			if (result.compareTo(-1) == 0) {
+				return result;
+			}
 			Collections.shuffle(excelRecordsToBeUpdated);
 		}
 		int rowProcessedCounter = 0;
@@ -549,7 +555,7 @@ public class SELotterySimpleSimulator {
 					LogUtils.info("History update is going to finish: " + remainedRecords + " records remained");
 				}
 			}
-			readOrCreateExcel(
+			result = readOrCreateExcel(
 				excelFileName,
 				workBook -> {
 					Sheet sheet = workBook.getSheet("Risultati");
@@ -569,6 +575,9 @@ public class SELotterySimpleSimulator {
 				null,
 				CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false")
 			);
+			if (isSlave) {
+				return result;
+			}
 			if (storageWrapper.get() != null) {
 				Map<Integer, Integer> premiumCounters = premiumCountersForFile.computeIfAbsent(storageWrapper.get().getName(), key -> {
 					PersistentStorage storage = storageWrapper.get();
@@ -659,6 +668,7 @@ public class SELotterySimpleSimulator {
 		for (File file : ResourceUtils.INSTANCE.find("(1)", "json", basePath)) {
 			file.delete();
 		}
+		return 1;
 	}
 
 	protected static SEStats getSEStats(Properties configuration) {
@@ -920,17 +930,17 @@ public class SELotterySimpleSimulator {
 		//LogUtils.logInfo(PersistentStorage.buildWorkingPath() + File.separator + excelFileName + " succesfully created");
 	}
 
-	protected static void readOrCreateExcel(
+	protected static Integer readOrCreateExcel(
 		String excelFileName,
 		ThrowingConsumer<Workbook, Throwable> action,
 		ThrowingConsumer<Workbook, Throwable> createAction,
 		ThrowingConsumer<Workbook, Throwable> finallyAction,
 		boolean isSlave
 	) {
-		readOrCreateExcelOrComputeBackups(excelFileName, null, action, createAction, finallyAction, 5, isSlave);
+		return readOrCreateExcelOrComputeBackups(excelFileName, null, action, createAction, finallyAction, 5, isSlave);
 	}
 
-	protected static void readOrCreateExcelOrComputeBackups(
+	protected static Integer readOrCreateExcelOrComputeBackups(
 		String excelFileName,
 		Collection<File> backups,
 		ThrowingConsumer<Workbook, Throwable> action,
@@ -987,7 +997,7 @@ public class SELotterySimpleSimulator {
 							mutex.wait(5000);
 						} else {
 							LogUtils.error("Error in Excel file '" + excelFileAbsolutePath + "'. The file will be skipped");
-							return;
+							return -1;
 						}
 					} catch (InterruptedException e) {
 						Throwables.sneakyThrow(e);
@@ -1014,8 +1024,9 @@ public class SELotterySimpleSimulator {
 				}
 				backupsIterator.remove();
 			}
-			readOrCreateExcelOrComputeBackups(excelFileName, backups, action, createAction, finallyAction, slaveAdditionalReadingMaxAttempts, isSlave);
+			return readOrCreateExcelOrComputeBackups(excelFileName, backups, action, createAction, finallyAction, slaveAdditionalReadingMaxAttempts, isSlave);
 		}
+		return 1;
 	}
 
 	protected static void store(String excelFileName, Workbook workBook, boolean isSlave) {
