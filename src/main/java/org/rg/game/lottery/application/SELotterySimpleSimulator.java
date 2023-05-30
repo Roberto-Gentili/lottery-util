@@ -151,11 +151,31 @@ public class SELotterySimpleSimulator {
 				configurationFileFolders
 			);
 		try {
-			prepareAndProcess(futures, engineSupplier, ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles));
+			prepareAndProcess(
+				futures,
+				engineSupplier,
+				toConfigurations(
+					configurationFiles,
+					"simulation.slave"
+				)
+			);
 		} catch (IOException exc) {
 			Throwables.sneakyThrow(exc);
 		}
 		return futures;
+	}
+
+	protected static List<Properties> toConfigurations(List<File> configurationFiles, String key) throws IOException {
+		String forceSlave = System.getenv("forceSlave");
+		String forceMaster = System.getenv("forceMaster");
+		List<Properties> configurations = ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles);
+		if (forceMaster != null && Boolean.valueOf(forceMaster.replaceAll("\\s+",""))) {
+			configurations.stream().forEach(config -> config.setProperty(key, "false"));
+		}
+		if (forceSlave != null && Boolean.valueOf(forceSlave.replaceAll("\\s+",""))) {
+			configurations.stream().forEach(config -> config.setProperty(key, "true"));
+		}
+		return configurations;
 	}
 
 

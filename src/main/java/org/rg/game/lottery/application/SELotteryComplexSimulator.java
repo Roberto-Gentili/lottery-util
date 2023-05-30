@@ -54,11 +54,12 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 		);
 		LogUtils.info("Set configuration files folder to " + String.join(", ", configurationFileFolders) + "\n");
 		try {
-			for (Properties complexSimulationConfig : ResourceUtils.INSTANCE.toOrderedProperties(
+			for (Properties complexSimulationConfig : toConfigurations(
 				ResourceUtils.INSTANCE.find(
 					configFilePrefix + "-complex-simulation", "properties",
 					configurationFileFolders
-				)
+				),
+				"simulation.children.slave"
 			)) {
 				List<LocalDate> extractionDates = new ArrayList<>(new SELotteryMatrixGeneratorEngine().computeExtractionDates(complexSimulationConfig.getProperty("simulation.children.dates")));
 				LocalDate nextAfterLatest = removeNextOfLatestExtractionDate(complexSimulationConfig, extractionDates);
