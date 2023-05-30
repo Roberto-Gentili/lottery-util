@@ -144,7 +144,7 @@ public class SELotterySimpleSimulator {
 			"working-path.simulations.folder",
 			"resources.simulations.folder"
 		);
-		LogUtils.info("Set configuration files folder to " + String.join(", ", configurationFileFolders));
+		LogUtils.info("Set configuration files folder to " + String.join(", ", configurationFileFolders) + "\n");
 		List<File> configurationFiles =
 			ResourceUtils.INSTANCE.find(
 				configFilePrefix + "-simple-simulation", "properties",

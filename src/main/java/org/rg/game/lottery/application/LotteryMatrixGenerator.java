@@ -38,7 +38,7 @@ public class LotteryMatrixGenerator {
 			"working-path.generations.folder",
 			"resources.generations.folder"
 		);
-		LogUtils.info("Set configuration files folder to " + String.join(", ", configurationFileFolders));
+		LogUtils.info("Set configuration files folder to " + String.join(", ", configurationFileFolders) + "\n");
 		List<File> configurationFiles =
 			ResourceUtils.INSTANCE.find(
 				configFilePrefix + "-matrix-generator", "properties",
