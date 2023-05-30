@@ -59,125 +59,147 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 					configFilePrefix + "-complex-simulation", "properties",
 					configurationFileFolders
 				),
-				"simulation.children.slave"
+				"simulation.slave"
 			)) {
-				List<LocalDate> extractionDates = new ArrayList<>(new SELotteryMatrixGeneratorEngine().computeExtractionDates(complexSimulationConfig.getProperty("simulation.children.dates")));
-				LocalDate nextAfterLatest = removeNextOfLatestExtractionDate(complexSimulationConfig, extractionDates);
-				if (!extractionDates.isEmpty()) {
-					String[] childrenSimulationsFilters = complexSimulationConfig.getProperty("simulation.children", "allEnabledInSameFolder").replaceAll("\\s+","").split(",");
-					List<File> simpleConfigurationFiles = new ArrayList<>();
-					for (String childrenSimulationsFilter : childrenSimulationsFilters) {
-						if (childrenSimulationsFilter.equals("allInSameFolder") || childrenSimulationsFilter.equals("allEnabledInSameFolder")) {
-							simpleConfigurationFiles.addAll(
-								ResourceUtils.INSTANCE.find(
-									configFilePrefix + "-simple-simulation", "properties",
-									Shared.pathsFromSystemEnv(
-										"working-path.complex-simulations.folder",
-										"resources.complex-simulations.folder"
-									)
+				if (!CollectionUtils.retrieveBoolean(complexSimulationConfig, "simulation.enabled")) {
+					continue;
+				}
+				String[] childrenSimulationsFilters = complexSimulationConfig.getProperty("simulation.children", "allEnabledInSameFolder").replaceAll("\\s+","").split(",");
+				List<File> simpleConfigurationFiles = new ArrayList<>();
+				for (String childrenSimulationsFilter : childrenSimulationsFilters) {
+					if (childrenSimulationsFilter.equals("allInSameFolder") || childrenSimulationsFilter.equals("allEnabledInSameFolder")) {
+						simpleConfigurationFiles.addAll(
+							ResourceUtils.INSTANCE.find(
+								configFilePrefix + "-simple-simulation", "properties",
+								Shared.pathsFromSystemEnv(
+									"working-path.complex-simulations.folder",
+									"resources.complex-simulations.folder"
 								)
-							);
-							if (childrenSimulationsFilter.equals("allEnabledInSameFolder") || childrenSimulationsFilter.equals("allInSameFolder")) {
-								Iterator<File> simpleConfigFileIterator = simpleConfigurationFiles.iterator();
-								while (simpleConfigFileIterator.hasNext()) {
-									Properties simpleConfig = ResourceUtils.INSTANCE.toProperties(simpleConfigFileIterator.next());
-									if (childrenSimulationsFilter.equals("allEnabledInSameFolder") && !CollectionUtils.retrieveBoolean(simpleConfig, "simulation.enabled", "false")) {
-										simpleConfigFileIterator.remove();
-									} else if (childrenSimulationsFilter.equals("allInSameFolder")) {
-										simpleConfig.setProperty("simulation.enabled", "true");
-									}
+							)
+						);
+						if (childrenSimulationsFilter.equals("allEnabledInSameFolder") || childrenSimulationsFilter.equals("allInSameFolder")) {
+							Iterator<File> simpleConfigFileIterator = simpleConfigurationFiles.iterator();
+							while (simpleConfigFileIterator.hasNext()) {
+								Properties simpleConfig = ResourceUtils.INSTANCE.toProperties(simpleConfigFileIterator.next());
+								if (childrenSimulationsFilter.equals("allEnabledInSameFolder") && !CollectionUtils.retrieveBoolean(simpleConfig, "simulation.enabled", "false")) {
+									simpleConfigFileIterator.remove();
+								} else if (childrenSimulationsFilter.equals("allInSameFolder")) {
+									simpleConfig.setProperty("simulation.enabled", "true");
 								}
 							}
-						} else {
-							simpleConfigurationFiles.add(ResourceUtils.INSTANCE.toFile(complexSimulationConfig.getProperty("file.parent.absolutePath"), childrenSimulationsFilter));
+						}
+					} else {
+						simpleConfigurationFiles.add(ResourceUtils.INSTANCE.toFile(complexSimulationConfig.getProperty("file.parent.absolutePath"), childrenSimulationsFilter));
+					}
+				}
+				if (complexSimulationConfig.getProperty("simulation.group") == null) {
+					complexSimulationConfig.setProperty("simulation.group", complexSimulationConfig.getProperty("file.name").replace(".properties", ""));
+				}
+				List<Properties> simpleConfigurations = ResourceUtils.INSTANCE.toOrderedProperties(simpleConfigurationFiles);
+				for (Properties simpleConfiguration : simpleConfigurations) {
+					for (String propertyName : complexSimulationConfig.stringPropertyNames()) {
+						if (!propertyName.contains("children")) {
+							simpleConfiguration.setProperty(propertyName, complexSimulationConfig.getProperty(propertyName));
+						} else if (propertyName.equals("simulation.children.async")) {
+							simpleConfiguration.setProperty("simulation.async", complexSimulationConfig.getProperty("simulation.children.async"));
 						}
 					}
-					List<Properties> simpleConfigurations = ResourceUtils.INSTANCE.toOrderedProperties(simpleConfigurationFiles);
+					simpleConfiguration.setProperty("simulation.enabled", "true");
+				}
+				String extractionDatesExpression = complexSimulationConfig.getProperty("simulation.children.dates");
+				if (extractionDatesExpression != null) {
+					List<LocalDate> extractionDates = new ArrayList<>(
+						new SELotteryMatrixGeneratorEngine().computeExtractionDates(extractionDatesExpression)
+					);
+					if (!extractionDates.isEmpty()) {
+						LocalDate nextAfterLatest = removeNextOfLatestExtractionDate(complexSimulationConfig, extractionDates);
+						Supplier<Integer> configurationIndexIterator = indexIterator(complexSimulationConfig, extractionDates, simpleConfigurations);
+						Map<Properties, Set<LocalDate>> extractionDatesForSimpleConfigs = new LinkedHashMap<>();
+						for (int i = 0; i < extractionDates.size(); i++) {
+							Properties simpleConfiguration = simpleConfigurations.get(configurationIndexIterator.get());
+							Set<LocalDate> extractionDatesForConfig=
+									extractionDatesForSimpleConfigs.computeIfAbsent(simpleConfiguration, key -> new TreeSet<>());
+							extractionDatesForConfig.add(extractionDates.get(i));
+						}
+						for (Map.Entry<Properties, Set<LocalDate>> extractionDatesForSimpleConfig : extractionDatesForSimpleConfigs.entrySet()) {
+							extractionDatesForSimpleConfig.getKey().setProperty(
+								"simulation.dates",
+								String.join(
+									",",
+									extractionDatesForSimpleConfig.getValue().stream().map(TimeUtils.defaultLocalDateFormat::format).collect(Collectors.toList())
+								)
+							);
+						}
+						prepareAndProcess(futures, SELotteryMatrixGeneratorEngine::new, simpleConfigurations);
+						if (nextAfterLatest != null) {
+							generateSystem(futures, simpleConfigurations.get(configurationIndexIterator.get()), nextAfterLatest);
+						}
+						backup(
+							new File(
+								PersistentStorage.buildWorkingPath() + File.separator + retrieveExcelFileName(complexSimulationConfig, "simulation.group")
+							),
+							CollectionUtils.retrieveBoolean(complexSimulationConfig, "simulation.slave", "false")
+						);
+					}
+				} else {
+					extractionDatesExpression = complexSimulationConfig.getProperty("simulation.dates");
+					if (extractionDatesExpression != null) {
+						for (Properties simpleConfiguration : simpleConfigurations) {
+							simpleConfiguration.setProperty("simulation.dates", extractionDatesExpression);
+						}
+					}
+					Map<LocalDate, List<Properties>> configurationsOfNextAfterLatest = new LinkedHashMap<>();
 					for (Properties simpleConfiguration : simpleConfigurations) {
-						simpleConfiguration.setProperty("simulation.enabled", "true");
-					}
-					Supplier<Integer> configurationIndexIterator = indexIterator(complexSimulationConfig, extractionDates, simpleConfigurations);
-					Map<Properties, Set<LocalDate>> extractionDatesForSimpleConfigs = new LinkedHashMap<>();
-					for (int i = 0; i < extractionDates.size(); i++) {
-						Properties simpleConfiguration = simpleConfigurations.get(configurationIndexIterator.get());
-						Set<LocalDate> extractionDatesForConfig=
-								extractionDatesForSimpleConfigs.computeIfAbsent(simpleConfiguration, key -> new TreeSet<>());
-						extractionDatesForConfig.add(extractionDates.get(i));
-					}
-					for (Map.Entry<Properties, Set<LocalDate>> extractionDatesForSimpleConfig : extractionDatesForSimpleConfigs.entrySet()) {
-						extractionDatesForSimpleConfig.getKey().setProperty(
+						Collection<LocalDate> extractionDates = new SELotteryMatrixGeneratorEngine().computeExtractionDates(simpleConfiguration.getProperty("simulation.dates"));
+						LocalDate nextAfterLatest = removeNextOfLatestExtractionDate(complexSimulationConfig, extractionDates);
+						if (nextAfterLatest != null ) {
+							configurationsOfNextAfterLatest.computeIfAbsent(nextAfterLatest, key -> new ArrayList<>())
+							.add(simpleConfiguration);
+						}
+						simpleConfiguration.setProperty(
 							"simulation.dates",
 							String.join(
 								",",
-								extractionDatesForSimpleConfig.getValue().stream().map(TimeUtils.defaultLocalDateFormat::format).collect(Collectors.toList())
+								extractionDates.stream().map(TimeUtils.defaultLocalDateFormat::format).collect(Collectors.toList())
 							)
 						);
-						if (complexSimulationConfig.getProperty("simulation.children.group") == null) {
-							complexSimulationConfig.setProperty("simulation.children.group", complexSimulationConfig.getProperty("file.name").replace(".properties", ""));
-						}
-						extractionDatesForSimpleConfig.getKey().setProperty(
-							"simulation.group",
-							complexSimulationConfig.getProperty(
-								"simulation.children.group"
-							)
-						);
-						extractionDatesForSimpleConfig.getKey().setProperty(
-							"simulation.slave",
-							complexSimulationConfig.getProperty(
-								"simulation.children.slave",
-								extractionDatesForSimpleConfig.getKey().getProperty("slave")
-							)
-						);
-						extractionDatesForSimpleConfig.getKey().setProperty(
-							"waiting-someone-for-generation.timeout",
-							complexSimulationConfig.getProperty(
-								"simulation.children.waiting-someone-for-generation.timeout",
-								extractionDatesForSimpleConfig.getKey().getProperty("waiting-someone-for-generation.timeout")
-							)
-						);
-						extractionDatesForSimpleConfig.getKey().setProperty(
-							"async",
-							complexSimulationConfig.getProperty(
-								"simulation.children.async",
-								extractionDatesForSimpleConfig.getKey().getProperty("async")
-							)
-						);
-						if (complexSimulationConfig.getProperty("simulation.children.redundancy") != null) {
-							extractionDatesForSimpleConfig.getKey().setProperty(
-								"simulation.redundancy",
-								complexSimulationConfig.getProperty(
-									"simulation.children.redundancy",
-									extractionDatesForSimpleConfig.getKey().getProperty("simulation.redundancy")
-								)
-							);
-						}
 					}
 					prepareAndProcess(futures, SELotteryMatrixGeneratorEngine::new, simpleConfigurations);
-					if (nextAfterLatest != null) {
-						Properties nextAfterLatestConfiguration = new Properties();
-						nextAfterLatestConfiguration.putAll(simpleConfigurations.get(configurationIndexIterator.get()));
-						nextAfterLatestConfiguration.put("competition", TimeUtils.defaultLocalDateFormat.format(nextAfterLatest));
-						nextAfterLatestConfiguration.setProperty("storage", "filesystem");
-						nextAfterLatestConfiguration.setProperty("overwrite-if-exists", "1");
-						String simulationGroup = nextAfterLatestConfiguration.getProperty("simulation.group");
-						if (simulationGroup != null) {
-							nextAfterLatestConfiguration.setProperty("simulation.group", simulationGroup + File.separator + "generated");
+					for (Map.Entry<LocalDate, List<Properties>> configurationsOfNextAfterLatestEntry : configurationsOfNextAfterLatest.entrySet()) {
+						for (Properties simpleConfiguration : configurationsOfNextAfterLatestEntry.getValue()) {
+							generateSystem(futures, simpleConfiguration, configurationsOfNextAfterLatestEntry.getKey());
 						}
-						setGroup(nextAfterLatestConfiguration);
-						LotteryMatrixGenerator.process(futures, SELotteryMatrixGeneratorEngine::new, nextAfterLatestConfiguration);
 					}
+					backup(
+						new File(
+							PersistentStorage.buildWorkingPath() + File.separator + retrieveExcelFileName(complexSimulationConfig, "simulation.group")
+						),
+						CollectionUtils.retrieveBoolean(complexSimulationConfig, "simulation.slave", "false")
+					);
 				}
-				backup(
-					new File(
-						PersistentStorage.buildWorkingPath() + File.separator + retrieveExcelFileName(complexSimulationConfig, "simulation.children.group")
-					),
-					CollectionUtils.retrieveBoolean(complexSimulationConfig, "simulation.slave", "false")
-				);
 			}
 		} catch (IOException exc) {
 			Throwables.sneakyThrow(exc);
 		}
 		return futures;
+	}
+
+	protected static void generateSystem(
+		Collection<CompletableFuture<Void>> futures,
+		Properties configuration,
+		LocalDate date
+	) {
+		Properties nextAfterLatestConfiguration = new Properties();
+		nextAfterLatestConfiguration.putAll(configuration);
+		nextAfterLatestConfiguration.put("competition", TimeUtils.defaultLocalDateFormat.format(date));
+		nextAfterLatestConfiguration.setProperty("storage", "filesystem");
+		nextAfterLatestConfiguration.setProperty("overwrite-if-exists", "1");
+		String simulationGroup = nextAfterLatestConfiguration.getProperty("simulation.group");
+		if (simulationGroup != null) {
+			nextAfterLatestConfiguration.setProperty("simulation.group", simulationGroup + File.separator + "generated");
+		}
+		setGroup(nextAfterLatestConfiguration);
+		LotteryMatrixGenerator.process(futures, SELotteryMatrixGeneratorEngine::new, nextAfterLatestConfiguration);
 	}
 
 	protected static Supplier<Integer> indexIterator(Properties complexSimulationConfiguration, List<LocalDate> extractionDates, List<Properties> simpleConfigurations) {
