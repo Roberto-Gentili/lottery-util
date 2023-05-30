@@ -22,6 +22,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.rg.game.core.CollectionUtils;
+import org.rg.game.core.LogUtils;
 import org.rg.game.core.ResourceUtils;
 import org.rg.game.core.Throwables;
 import org.rg.game.core.TimeUtils;
@@ -47,14 +48,16 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 		allTimeStats = SEStats.get("03/12/1997", TimeUtils.getDefaultDateFormat().format(new Date()));
 		SEStats.get("02/07/2009", TimeUtils.getDefaultDateFormat().format(new Date()));
 		SEStats.forceLoadingFromExcel = true;
+		String[] configurationFileFolders = Shared.pathsFromSystemEnv(
+			"working-path.complex-simulations.folder",
+			"resources.complex-simulations.folder"
+		);
+		LogUtils.info("Set configuration files folder to " + String.join(", ", configurationFileFolders));
 		try {
 			for (Properties complexSimulationConfig : ResourceUtils.INSTANCE.toOrderedProperties(
 				ResourceUtils.INSTANCE.find(
 					configFilePrefix + "-complex-simulation", "properties",
-					Shared.pathsFromSystemEnv(
-						"working-path.complex-simulations.folder",
-						"resources.complex-simulations.folder"
-					)
+					configurationFileFolders
 				)
 			)) {
 				List<LocalDate> extractionDates = new ArrayList<>(new SELotteryMatrixGeneratorEngine().computeExtractionDates(complexSimulationConfig.getProperty("simulation.children.dates")));

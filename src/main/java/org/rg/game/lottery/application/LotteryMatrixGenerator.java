@@ -34,14 +34,15 @@ public class LotteryMatrixGenerator {
 		Supplier<LotteryMatrixGeneratorAbstEngine> engineSupplier =
 			configFilePrefix.equals("se") ? SELotteryMatrixGeneratorEngine::new :
 				configFilePrefix.equals("md") ? MDLotteryMatrixGeneratorEngine::new : null;
-
+		String[] configurationFileFolders = Shared.pathsFromSystemEnv(
+			"working-path.generations.folder",
+			"resources.generations.folder"
+		);
+		LogUtils.info("Set configuration files folder to " + String.join(", ", configurationFileFolders));
 		List<File> configurationFiles =
 			ResourceUtils.INSTANCE.find(
 				configFilePrefix + "-matrix-generator", "properties",
-				Shared.pathsFromSystemEnv(
-					"working-path.generations.folder",
-					"resources.generations.folder"
-				)
+				configurationFileFolders
 			);
 		List<Properties> configurations = new ArrayList<>();
 		for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles)) {

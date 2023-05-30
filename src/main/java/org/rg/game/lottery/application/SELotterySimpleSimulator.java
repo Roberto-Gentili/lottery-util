@@ -140,13 +140,15 @@ public class SELotterySimpleSimulator {
 		SEStats.get("02/07/2009", TimeUtils.getDefaultDateFormat().format(new Date()));
 		SEStats.forceLoadingFromExcel = true;
 		Supplier<SELotteryMatrixGeneratorEngine> engineSupplier = SELotteryMatrixGeneratorEngine::new;
+		String[] configurationFileFolders = Shared.pathsFromSystemEnv(
+			"working-path.simulations.folder",
+			"resources.simulations.folder"
+		);
+		LogUtils.info("Set configuration files folder to " + String.join(", ", configurationFileFolders));
 		List<File> configurationFiles =
 			ResourceUtils.INSTANCE.find(
 				configFilePrefix + "-simple-simulation", "properties",
-				Shared.pathsFromSystemEnv(
-					"working-path.simulations.folder",
-					"resources.simulations.folder"
-				)
+				configurationFileFolders
 			);
 		try {
 			prepareAndProcess(futures, engineSupplier, ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles));
