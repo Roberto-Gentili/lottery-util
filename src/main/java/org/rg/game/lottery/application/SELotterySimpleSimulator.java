@@ -35,6 +35,7 @@ import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.zip.ZipException;
 
 import org.apache.poi.EmptyFileException;
 import org.apache.poi.common.usermodel.HyperlinkType;
@@ -972,8 +973,9 @@ public class SELotterySimpleSimulator {
 				}
 			});
 		} catch (Throwable exc) {
-			if (!(exc instanceof POIXMLException || exc instanceof EmptyFileException ||
+			if (!(exc instanceof POIXMLException || exc instanceof EmptyFileException || exc instanceof ZipException ||
 				exc instanceof XmlValueDisconnectedException || (exc instanceof IOException && exc.getMessage().equalsIgnoreCase("Truncated ZIP file")))) {
+				LogUtils.error("Unable to process file " + excelFileName);
 				Throwables.sneakyThrow(exc);
 			}
 			if (isSlave) {
