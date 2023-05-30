@@ -40,6 +40,7 @@ import java.util.zip.ZipException;
 import org.apache.poi.EmptyFileException;
 import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ooxml.POIXMLException;
+import org.apache.poi.openxml4j.exceptions.PartAlreadyExistsException;
 import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.poi.ss.formula.BaseFormulaEvaluator;
 import org.apache.poi.ss.usermodel.Cell;
@@ -990,7 +991,7 @@ public class SELotterySimpleSimulator {
 				}
 			});
 		} catch (Throwable exc) {
-			if (!(exc instanceof POIXMLException || exc instanceof EmptyFileException || exc instanceof ZipException ||
+			if (!(exc instanceof POIXMLException || exc instanceof EmptyFileException || exc instanceof ZipException || exc instanceof PartAlreadyExistsException ||
 				exc instanceof XmlValueDisconnectedException || (exc instanceof IOException && exc.getMessage().equalsIgnoreCase("Truncated ZIP file")))) {
 				LogUtils.error("Unable to process file " + excelFileName);
 				Throwables.sneakyThrow(exc);
