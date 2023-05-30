@@ -9,6 +9,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -107,6 +108,7 @@ public class PersistentStorage implements Storage {
 						System.getProperty("user.home") + File.separator +
 						"Desktop" + File.separator +
 						"Combos";
+					workingPath = Paths.get(workingPath).normalize().toFile().getAbsolutePath();
 					LogUtils.info("Set working path to: " + workingPath);
 					PersistentStorage.workingPath = workingPath;
 				}
