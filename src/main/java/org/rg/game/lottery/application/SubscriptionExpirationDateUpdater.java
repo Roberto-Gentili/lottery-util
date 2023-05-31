@@ -12,11 +12,13 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.AbstractMap;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -29,7 +31,7 @@ import org.rg.game.core.LogUtils;
 import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.PersistentStorage;
 
-public class ExpireDateUpdater {
+public class SubscriptionExpirationDateUpdater {
 	static DateTimeFormatter datePattern = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
 
 	static List<Map.Entry<List<String>, Integer>> updateInfos = Arrays.asList(
@@ -65,6 +67,15 @@ public class ExpireDateUpdater {
 	);
 
 	public static void main(String[] args) {
+		if (args.length > 0) {
+			updateInfos = new ArrayList<>();
+			for (String updateInfoRaw : args[0].split(";")) {
+				String[] updateInfo = updateInfoRaw.split(",");
+				updateInfos.add(
+					addUpdateInfo(parseIncrementation(updateInfo[1]).get(), updateInfo[0])
+				);
+			}
+		}
 		String destFileAbsolutePath = PersistentStorage.buildWorkingPath() + "\\Abbonamenti e altre informazioni.xlsx";
 		File srcFile = new File(destFileAbsolutePath);
 		File history = new File(srcFile.getParentFile() + "\\Storico abbonamenti");
@@ -166,6 +177,15 @@ public class ExpireDateUpdater {
 		} catch (Throwable exc) {
 			exc.printStackTrace();
 		}
+	}
+
+	private static Supplier<Integer> parseIncrementation(String value) {
+		if (value.charAt(value.length() - 1) == 'D' || value.charAt(value.length() - 1) == 'd') {
+			return () -> computeIncrementationOfDays(Integer.valueOf(value.split("d|D")[0]));
+		} else if (value.charAt(value.length() - 1) == 'W' || value.charAt(value.length() - 1) == 'w') {
+			return () -> computeIncrementationOfWeeks(Integer.valueOf(value.split("w|W")[0]));
+		}
+		throw new IllegalArgumentException("Unvalid incrementation type: " + value.charAt(value.length() - 1));
 	}
 
 	private static int getCellIndex(Sheet sheet, String name) {
