@@ -1,5 +1,3 @@
-@echo off
-
 set CURRENT_DIR=%~dp0
 if "%CURRENT_DIR:~-1%" == "\" set "CURRENT_DIR_NAME_TEMP=%CURRENT_DIR:~0,-1%"
 
@@ -17,9 +15,4 @@ for /R "%CURRENT_DIR%lib" %%a in (*.jar) do (
 )
 set LIBS=!LIBS!"
 
-set working-path.generations.folder=%CURRENT_DIR_NAME%\config\generations
-
-call "%JAVA_HOME%\bin\java.exe" -cp %classPath%;%LIBS%;"%CURRENT_DIR%binaries.jar"; org.rg.game.lottery.application.LotteryMatrixGenerator
-echo: 
-echo:
-pause
+call  "%JAVA_HOME%\bin\java.exe" -cp %classPath%;%LIBS%;"%CURRENT_DIR%binaries.jar"; org.rg.game.lottery.application.SubscriptionExpirationDateUpdater all-1d;
