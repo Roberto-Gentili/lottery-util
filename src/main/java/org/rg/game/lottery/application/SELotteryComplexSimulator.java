@@ -102,7 +102,8 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 								propertyName.contains("children") ||
 								propertyName.equals("file.name") ||
 								propertyName.equals("file.extension") ||
-								propertyName.equals("file.parent.absolutePath")
+								propertyName.equals("file.parent.absolutePath") ||
+								propertyName.equals("simulation.dates")
 							)
 						) {
 							simpleConfiguration.setProperty(propertyName, complexSimulationConfig.getProperty(propertyName));
