@@ -84,9 +84,9 @@ public class SESimulationSummaryGenerator {
 				BaseFormulaEvaluator.evaluateAllFormulaCells(workBookTemplate.getWorkbook());
 				workBookTemplate.getWorkbook().write(destFileOutputStream);
 			}
-			LogUtils.info("Summary file succesfully generated");
+			LogUtils.info("\n\nSummary file succesfully generated");
 		} catch (Throwable exc) {
-			LogUtils.error("Unable to generate summary file");
+			LogUtils.error("\n\nUnable to generate summary file");
 			exc.printStackTrace();
 		}
 	}
