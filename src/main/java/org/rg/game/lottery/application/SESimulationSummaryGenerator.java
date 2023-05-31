@@ -35,14 +35,16 @@ public class SESimulationSummaryGenerator {
 		String simulationSummaryFile = simulationSummaryFolder + File.separator + "Summary.xlsx";
 		SimpleWorkbookTemplate workBookTemplate = new SimpleWorkbookTemplate(true);
 		Sheet summarySheet = workBookTemplate.getOrCreateSheet("Riepilogo", true);
-		List<String> headerLabels = new ArrayList<>(SELotterySimpleSimulator.excelHeaderLabels);
+		List<String> headerLabels = new ArrayList<>();
+		List<String> headerLabelsTemp = new ArrayList<>(SELotterySimpleSimulator.excelHeaderLabels);
 		List<String> headersToBeSkipped = Arrays.asList(
 			SELotterySimpleSimulator.DATA_AGGIORNAMENTO_STORICO_LABEL,
 			SELotterySimpleSimulator.FILE_LABEL
 		);
-
-		headerLabels.remove(SELotterySimpleSimulator.DATA_AGGIORNAMENTO_STORICO_LABEL);
-		headerLabels.set(0, "Conteggio estrazioni");
+		headerLabelsTemp.removeAll(headersToBeSkipped);
+		headerLabels.add(SELotterySimpleSimulator.FILE_LABEL);
+		headerLabels.addAll(headerLabelsTemp);
+		headerLabels.set(headerLabels.indexOf(SELotterySimpleSimulator.DATA_LABEL), "Conteggio estrazioni");
 		workBookTemplate.createHeader(true, headerLabels);
 		int reportCounter = 0;
 		for (File singleSimFolder : new File(simulationSummaryFolder).listFiles((file, name) -> new File(file, name).isDirectory())) {
@@ -54,6 +56,12 @@ public class SESimulationSummaryGenerator {
 					FormulaEvaluator evaluator = workBook.getCreationHelper().createFormulaEvaluator();
 					Sheet resultSheet = workBook.getSheet("Risultati");
 					workBookTemplate.addRow();
+					Cell cellName = workBookTemplate.addCell(report.getName()).get(0);
+					workBookTemplate.setLinkForCell(
+						HyperlinkType.FILE,
+						cellName,
+						URLEncoder.encode(singleSimFolder.getName() + "/" + report.getName(), "UTF-8")
+					);
 					for (String cellLabel : SELotterySimpleSimulator.excelHeaderLabels) {
 						if (!headersToBeSkipped.contains(cellLabel)) {
 							Cell cell = resultSheet.getRow(1).getCell(Shared.getCellIndex(resultSheet, cellLabel));
@@ -65,18 +73,14 @@ public class SESimulationSummaryGenerator {
 							}
 						}
 					}
-					Cell cellName = workBookTemplate.addCell(singleSimFolder.getName() + "/" + report.getName()).get(0);
-					workBookTemplate.setLinkForCell(
-						HyperlinkType.FILE,
-						cellName,
-						URLEncoder.encode(cellName.getStringCellValue(), "UTF-8")
-					);
 				} catch (Throwable exc) {
 					LogUtils.error("Unable to open file " + report.getAbsolutePath() + ": " + exc.getMessage());
 				}
 			}
 		}
-		summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.FILE_LABEL), 12000);
+		summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.FILE_LABEL), 15000);
+		summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.COSTO_STORICO_LABEL), 3000);
+		summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.RITORNO_STORICO_LABEL), 3000);
 		try (OutputStream destFileOutputStream = new FileOutputStream(simulationSummaryFile)){
 			workBookTemplate.setAutoFilter(0, reportCounter, 0, headerLabels.size() - 1);
 			BaseFormulaEvaluator.evaluateAllFormulaCells(workBookTemplate.getWorkbook());
