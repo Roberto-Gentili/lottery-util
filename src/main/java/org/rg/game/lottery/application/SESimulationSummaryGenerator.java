@@ -42,9 +42,11 @@ public class SESimulationSummaryGenerator {
 		headerLabels.remove(SELotterySimpleSimulator.DATA_AGGIORNAMENTO_STORICO_LABEL);
 		headerLabels.set(0, "Conteggio estrazioni");
 		workBookTemplate.createHeader(true, headerLabels);
+		int reportCounter = 0;
 		for (File singleSimFolder : new File(simulationSummaryFolder).listFiles((file, name) -> new File(file, name).isDirectory())) {
 			File report = Arrays.stream(singleSimFolder.listFiles((file, name) -> name.endsWith("report.xlsx"))).findFirst().orElseGet(() -> null);
 			if (report != null) {
+				reportCounter++;
 				try (InputStream inputStream = new FileInputStream(report.getAbsolutePath())) {
 					Workbook workBook = new XSSFWorkbook(inputStream);
 					FormulaEvaluator evaluator = workBook.getCreationHelper().createFormulaEvaluator();
@@ -67,6 +69,7 @@ public class SESimulationSummaryGenerator {
 			}
 		}
 		try (OutputStream destFileOutputStream = new FileOutputStream(simulationSummaryFile)){
+			workBookTemplate.setAutoFilter(0, reportCounter, 0, headerLabels.size() - 1);
 			BaseFormulaEvaluator.evaluateAllFormulaCells(workBookTemplate.getWorkbook());
 			workBookTemplate.getWorkbook().write(destFileOutputStream);
 		} catch (IOException e) {
