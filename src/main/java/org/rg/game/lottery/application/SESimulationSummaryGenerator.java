@@ -3,6 +3,7 @@ package org.rg.game.lottery.application;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLEncoder;
@@ -20,6 +21,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.rg.game.core.LogUtils;
+import org.rg.game.core.ResourceUtils;
 import org.rg.game.lottery.engine.SimpleWorkbookTemplate;
 
 public class SESimulationSummaryGenerator {
@@ -51,29 +53,27 @@ public class SESimulationSummaryGenerator {
 				File report = Arrays.stream(singleSimFolder.listFiles((file, name) -> name.endsWith("report.xlsx"))).findFirst().orElseGet(() -> null);
 				if (report != null) {
 					reportCounter++;
-					try (InputStream inputStream = new FileInputStream(report.getAbsolutePath());Workbook workBook = new XSSFWorkbook(inputStream);) {
-						FormulaEvaluator evaluator = workBook.getCreationHelper().createFormulaEvaluator();
-						Sheet resultSheet = workBook.getSheet("Risultati");
-						workBookTemplate.addRow();
-						Cell cellName = workBookTemplate.addCell(report.getName()).get(0);
-						workBookTemplate.setLinkForCell(
-							HyperlinkType.FILE,
-							cellName,
-							URLEncoder.encode(singleSimFolder.getName() + "/" + report.getName(), "UTF-8")
-						);
-						for (String cellLabel : SELotterySimpleSimulator.excelHeaderLabels) {
-							if (!headersToBeSkipped.contains(cellLabel)) {
-								Cell cell = resultSheet.getRow(1).getCell(Shared.getCellIndex(resultSheet, cellLabel));
-								CellValue cellValue = evaluator.evaluate(cell);
-								if (cellValue.getCellType().equals(CellType.NUMERIC)) {
-									workBookTemplate.addCell(cellValue.getNumberValue(), "#,##0");
-								} else if (cellValue.getCellType().equals(CellType.STRING)) {
-									workBookTemplate.addCell(cellValue.getStringValue());
+					try {
+						process(workBookTemplate, headersToBeSkipped, singleSimFolder, report);
+					} catch (Throwable exc) {
+						LogUtils.warn("Unable to process " + report.getAbsolutePath() + ": " + exc.getMessage());
+						List<File> backupFiles = ResourceUtils.INSTANCE.findReverseOrdered("report - ", "xlsx", report.getParentFile().getAbsolutePath());
+						boolean processed = false;
+						if (backupFiles.size() > 0) {
+							LogUtils.info("Trying to process its backups");
+							for (File backup : backupFiles) {
+								try {
+									process(workBookTemplate, headersToBeSkipped, singleSimFolder, backup);
+									processed = true;
+									break;
+								} catch (Throwable e) {
+
 								}
 							}
 						}
-					} catch (Throwable exc) {
-						LogUtils.error("Unable to open file " + report.getAbsolutePath() + ": " + exc.getMessage());
+						if (!processed) {
+							LogUtils.error("Unable to process backups of " + report.getAbsolutePath());
+						}
 					}
 				}
 			}
@@ -89,6 +89,36 @@ public class SESimulationSummaryGenerator {
 		} catch (Throwable exc) {
 			LogUtils.error("\n\nUnable to generate summary file");
 			exc.printStackTrace();
+		}
+	}
+
+	protected static void process(
+		SimpleWorkbookTemplate workBookTemplate,
+		List<String> headersToBeSkipped,
+		File singleSimFolder,
+		File report
+	) throws IOException {
+		try (InputStream inputStream = new FileInputStream(report.getAbsolutePath());Workbook workBook = new XSSFWorkbook(inputStream);) {
+			FormulaEvaluator evaluator = workBook.getCreationHelper().createFormulaEvaluator();
+			Sheet resultSheet = workBook.getSheet("Risultati");
+			workBookTemplate.addRow();
+			Cell cellName = workBookTemplate.addCell(report.getName()).get(0);
+			workBookTemplate.setLinkForCell(
+				HyperlinkType.FILE,
+				cellName,
+				URLEncoder.encode(singleSimFolder.getName() + "/" + report.getName(), "UTF-8")
+			);
+			for (String cellLabel : SELotterySimpleSimulator.excelHeaderLabels) {
+				if (!headersToBeSkipped.contains(cellLabel)) {
+					Cell cell = resultSheet.getRow(1).getCell(Shared.getCellIndex(resultSheet, cellLabel));
+					CellValue cellValue = evaluator.evaluate(cell);
+					if (cellValue.getCellType().equals(CellType.NUMERIC)) {
+						workBookTemplate.addCell(cellValue.getNumberValue(), "#,##0");
+					} else if (cellValue.getCellType().equals(CellType.STRING)) {
+						workBookTemplate.addCell(cellValue.getStringValue());
+					}
+				}
+			}
 		}
 	}
 

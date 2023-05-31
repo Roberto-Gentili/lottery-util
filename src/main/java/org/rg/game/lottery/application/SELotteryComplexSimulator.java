@@ -98,7 +98,13 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 				List<Properties> simpleConfigurations = ResourceUtils.INSTANCE.toOrderedProperties(simpleConfigurationFiles);
 				for (Properties simpleConfiguration : simpleConfigurations) {
 					for (String propertyName : complexSimulationConfig.stringPropertyNames()) {
-						if (!propertyName.contains("children")) {
+						if (!(
+								propertyName.contains("children") ||
+								propertyName.equals("file.name") ||
+								propertyName.equals("file.extension") ||
+								propertyName.equals("file.parent.absolutePath")
+							)
+						) {
 							simpleConfiguration.setProperty(propertyName, complexSimulationConfig.getProperty(propertyName));
 						} else if (propertyName.equals("simulation.children.async")) {
 							simpleConfiguration.setProperty("simulation.async", complexSimulationConfig.getProperty("simulation.children.async"));
