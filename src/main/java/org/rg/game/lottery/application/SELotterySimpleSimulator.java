@@ -802,7 +802,7 @@ public class SELotterySimpleSimulator {
 			workBookTemplate.setLinkForCell(
 				HyperlinkType.FILE,
 				cellName,
-				URLEncoder.encode(persistentStorage.getName(), "UTF-8")
+				URLEncoder.encode(persistentStorage.getName(), "UTF-8").replace("+", "%20")
 			);
 			return true;
 		}

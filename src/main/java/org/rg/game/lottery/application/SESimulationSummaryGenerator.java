@@ -106,7 +106,7 @@ public class SESimulationSummaryGenerator {
 			workBookTemplate.setLinkForCell(
 				HyperlinkType.FILE,
 				cellName,
-				URLEncoder.encode(singleSimFolder.getName() + "/" + report.getName(), "UTF-8")
+				URLEncoder.encode(singleSimFolder.getName() + "/" + report.getName(), "UTF-8").replace("+", "%20")
 			);
 			for (String cellLabel : SELotterySimpleSimulator.excelHeaderLabels) {
 				if (!headersToBeSkipped.contains(cellLabel)) {
