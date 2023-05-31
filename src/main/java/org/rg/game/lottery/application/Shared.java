@@ -95,16 +95,16 @@ class Shared {
 		return -1;
 	}
 
-	static int getCellIndex(Sheet sheet, String localDate) {
-		return getCellIndex(sheet, 0, localDate);
+	static int getCellIndex(Sheet sheet, String label) {
+		return getCellIndex(sheet, 0, label);
 	}
 
-	static int getCellIndex(Sheet sheet, int headerIndex, String value) {
+	static int getCellIndex(Sheet sheet, int headerIndex, String label) {
 		Row header = sheet.getRow(headerIndex);
 		Iterator<Cell> cellIterator = header.cellIterator();
 		while (cellIterator.hasNext()) {
 			Cell cell = cellIterator.next();
-			if (CellType.STRING.equals(cell.getCellType()) && value.equals(cell.getStringCellValue())) {
+			if (CellType.STRING.equals(cell.getCellType()) && label.equals(cell.getStringCellValue())) {
 				return cell.getColumnIndex();
 			}
 		}

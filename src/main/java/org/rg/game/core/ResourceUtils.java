@@ -67,7 +67,6 @@ public class ResourceUtils {
 
 	public List<File> find(String filePrefix, String extension, String... paths) {
 		Collection<File> files = new TreeSet<>(buildFileComparator());
-
 		for (String path : paths) {
 			files.addAll(
 				Arrays.asList(
