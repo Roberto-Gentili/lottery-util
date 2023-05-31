@@ -31,6 +31,7 @@ public class SESimulationSummaryGenerator {
 						"working-path.simulations.folder"
 					)
 				).findFirst().orElseGet(() -> null);
+			LogUtils.info("\n\n");
 			String simulationSummaryFile = simulationSummaryFolder + File.separator + "Summary.xlsx";
 			SimpleWorkbookTemplate workBookTemplate = new SimpleWorkbookTemplate(true);
 			Sheet summarySheet = workBookTemplate.getOrCreateSheet("Riepilogo", true);
