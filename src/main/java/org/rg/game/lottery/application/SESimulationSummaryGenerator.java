@@ -51,8 +51,7 @@ public class SESimulationSummaryGenerator {
 			File report = Arrays.stream(singleSimFolder.listFiles((file, name) -> name.endsWith("report.xlsx"))).findFirst().orElseGet(() -> null);
 			if (report != null) {
 				reportCounter++;
-				try (InputStream inputStream = new FileInputStream(report.getAbsolutePath())) {
-					Workbook workBook = new XSSFWorkbook(inputStream);
+				try (InputStream inputStream = new FileInputStream(report.getAbsolutePath());Workbook workBook = new XSSFWorkbook(inputStream);) {
 					FormulaEvaluator evaluator = workBook.getCreationHelper().createFormulaEvaluator();
 					Sheet resultSheet = workBook.getSheet("Risultati");
 					workBookTemplate.addRow();
