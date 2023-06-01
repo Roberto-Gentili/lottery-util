@@ -16,10 +16,14 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.rg.game.core.LogUtils;
 import org.rg.game.core.ResourceUtils;
 import org.rg.game.core.TimeUtils;
@@ -210,6 +214,18 @@ class Shared {
 
 	static String rightAlignedString(String value, int emptySpacesCount) {
 		return String.format("%" + emptySpacesCount + "s", value);
+	}
+
+	static Cell toHighlightedBoldedCell(Workbook workbook, Cell cell, IndexedColors color) {
+		CellStyle highLightedBoldedNumberCellStyle = workbook.createCellStyle();
+		highLightedBoldedNumberCellStyle.cloneStyleFrom(cell.getCellStyle());
+		XSSFFont boldFont = (XSSFFont) workbook.createFont();
+		boldFont.setBold(true);
+		highLightedBoldedNumberCellStyle.setFont(boldFont);
+		highLightedBoldedNumberCellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+		highLightedBoldedNumberCellStyle.setFillForegroundColor(color.getIndex());
+		cell.setCellStyle(highLightedBoldedNumberCellStyle);
+		return cell;
 	}
 
 }

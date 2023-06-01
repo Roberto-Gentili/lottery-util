@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.poi.common.usermodel.HyperlinkType;
@@ -17,11 +18,14 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.CellValue;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.rg.game.core.LogUtils;
 import org.rg.game.core.ResourceUtils;
+import org.rg.game.lottery.engine.Premium;
 import org.rg.game.lottery.engine.SimpleWorkbookTemplate;
 
 public class SESimulationSummaryGenerator {
@@ -93,29 +97,46 @@ public class SESimulationSummaryGenerator {
 	}
 
 	protected static void process(
-		SimpleWorkbookTemplate workBookTemplate,
+		SimpleWorkbookTemplate summaryWorkBookTemplate,
 		List<String> headersToBeSkipped,
 		File singleSimFolder,
 		File report
 	) throws IOException {
-		try (InputStream inputStream = new FileInputStream(report.getAbsolutePath());Workbook workBook = new XSSFWorkbook(inputStream);) {
-			FormulaEvaluator evaluator = workBook.getCreationHelper().createFormulaEvaluator();
-			Sheet resultSheet = workBook.getSheet("Risultati");
-			workBookTemplate.addRow();
-			Cell cellName = workBookTemplate.addCell(report.getName()).get(0);
-			workBookTemplate.setLinkForCell(
+		try (InputStream inputStream = new FileInputStream(report.getAbsolutePath());Workbook simulationWorkBook = new XSSFWorkbook(inputStream);) {
+			FormulaEvaluator evaluator = simulationWorkBook.getCreationHelper().createFormulaEvaluator();
+			Sheet resultSheet = simulationWorkBook.getSheet("Risultati");
+			summaryWorkBookTemplate.addRow();
+			Cell cellName = summaryWorkBookTemplate.addCell(report.getName()).get(0);
+			summaryWorkBookTemplate.setLinkForCell(
 				HyperlinkType.FILE,
 				cellName,
 				URLEncoder.encode(singleSimFolder.getName() + "/" + report.getName(), "UTF-8").replace("+", "%20")
 			);
+			String historicalTombolaLabel = SELotterySimpleSimulator.getHistoryPremiumLabel(Premium.LABEL_TOMBOLA);
 			for (String cellLabel : SELotterySimpleSimulator.excelHeaderLabels) {
 				if (!headersToBeSkipped.contains(cellLabel)) {
-					Cell cell = resultSheet.getRow(1).getCell(Shared.getCellIndex(resultSheet, cellLabel));
-					CellValue cellValue = evaluator.evaluate(cell);
-					if (cellValue.getCellType().equals(CellType.NUMERIC)) {
-						workBookTemplate.addCell(cellValue.getNumberValue(), "#,##0");
-					} else if (cellValue.getCellType().equals(CellType.STRING)) {
-						workBookTemplate.addCell(cellValue.getStringValue());
+					Cell simulationCell = resultSheet.getRow(1).getCell(Shared.getCellIndex(resultSheet, cellLabel));
+					CellValue simulationCellValue = evaluator.evaluate(simulationCell);
+					if (simulationCellValue.getCellType().equals(CellType.NUMERIC)) {
+						Cell summaryCurrentCell = summaryWorkBookTemplate.addCell(simulationCellValue.getNumberValue(), "#,##0");
+						if (cellLabel.equals(Premium.LABEL_CINQUINA) && simulationCellValue.getNumberValue() > 0) {
+							Shared.toHighlightedBoldedCell(summaryWorkBookTemplate.getWorkbook(), summaryCurrentCell, IndexedColors.YELLOW);
+						} else if (cellLabel.equals(Premium.LABEL_TOMBOLA) && simulationCellValue.getNumberValue() > 0) {
+							Shared.toHighlightedBoldedCell(summaryWorkBookTemplate.getWorkbook(), summaryCurrentCell, IndexedColors.RED);
+						} else if (cellLabel.equals(historicalTombolaLabel) && simulationCellValue.getNumberValue() > 0) {
+							Iterator<Row> rowIterator = resultSheet.rowIterator();
+							rowIterator.next();
+							rowIterator.next();
+							while (rowIterator.hasNext()) {
+								Cell historicalTombolaCell = rowIterator.next().getCell(Shared.getCellIndex(resultSheet, historicalTombolaLabel));
+								if (historicalTombolaCell.getCellStyle().getFillForegroundColor() == IndexedColors.RED.getIndex()) {
+									Shared.toHighlightedBoldedCell(summaryWorkBookTemplate.getWorkbook(), summaryCurrentCell, IndexedColors.RED);
+									break;
+								}
+							}
+						}
+					} else if (simulationCellValue.getCellType().equals(CellType.STRING)) {
+						summaryWorkBookTemplate.addCell(simulationCellValue.getStringValue());
 					}
 				}
 			}
