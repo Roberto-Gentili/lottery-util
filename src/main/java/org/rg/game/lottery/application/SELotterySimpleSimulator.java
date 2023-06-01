@@ -42,6 +42,7 @@ import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ooxml.POIXMLException;
 import org.apache.poi.openxml4j.exceptions.PartAlreadyExistsException;
 import org.apache.poi.openxml4j.util.ZipSecureFile;
+import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.formula.BaseFormulaEvaluator;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -454,7 +455,7 @@ public class SELotterySimpleSimulator {
 				workBook -> {
 					SimpleWorkbookTemplate workBookTemplate = new SimpleWorkbookTemplate(workBook);
 					workBookTemplate.getOrCreateSheet("Risultati", true);
-					workBookTemplate.setAutoFilter(1, Shared.getSEStats().getAllWinningCombos().size() * 2, 0, excelHeaderLabels.size() - 1);
+					workBookTemplate.setAutoFilter(1, getLatestRowIndex(), 0, excelHeaderLabels.size() - 1);
 				},
 				null,
 				workBook -> {
@@ -468,6 +469,11 @@ public class SELotterySimpleSimulator {
 		for (File file : ResourceUtils.INSTANCE.find("(1)", "txt", retrieveBasePath(configuration))) {
 			file.delete();
 		}
+	}
+
+	private static int getLatestRowIndex() {
+		return SpreadsheetVersion.EXCEL2007.getMaxRows() -1;
+		//return Shared.getSEStats().getAllWinningCombos().size() * 2;
 	}
 
 	private static CompletableFuture<Void> startHistoryUpdateTask(
@@ -892,11 +898,11 @@ public class SELotterySimpleSimulator {
 
 		List<String> summaryFormulas = new ArrayList<>();
 		String columnName = CellReference.convertNumToColString(0);
-		summaryFormulas.add("FORMULA_COUNTA(" + columnName + "3:"+ columnName + allTimeStats.getAllWinningCombos().size() * 2 +")");
+		summaryFormulas.add("FORMULA_COUNTA(" + columnName + "3:"+ columnName + getLatestRowIndex() +")");
 		for (int i = 1; i < excelHeaderLabels.size()-2; i++) {
 			columnName = CellReference.convertNumToColString(i);
 			summaryFormulas.add(
-				"FORMULA_SUM(" + columnName + "3:"+ columnName + allTimeStats.getAllWinningCombos().size() * 2 +")"
+				"FORMULA_SUM(" + columnName + "3:"+ columnName + getLatestRowIndex() +")"
 			);
 		}
 		summaryFormulas.add("");
@@ -917,7 +923,7 @@ public class SELotterySimpleSimulator {
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, SALDO_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, SALDO_LABEL)).setCellFormula(
 			"TEXT((SUM(" + CellReference.convertNumToColString(excelHeaderLabels.indexOf(SALDO_LABEL)) + "3:" +
-			CellReference.convertNumToColString(excelHeaderLabels.indexOf(SALDO_LABEL)) + allTimeStats.getAllWinningCombos().size() * 2 +
+			CellReference.convertNumToColString(excelHeaderLabels.indexOf(SALDO_LABEL)) + getLatestRowIndex() +
 			")/" + CellReference.convertNumToColString(excelHeaderLabels.indexOf(COSTO_LABEL)) + "2),\"###,00%\")"
 		);
 		for (String label : Premium.allLabels()) {
@@ -929,7 +935,7 @@ public class SELotterySimpleSimulator {
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, SALDO_STORICO_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, SALDO_STORICO_LABEL)).setCellFormula(
 			"TEXT((SUM(" + CellReference.convertNumToColString(excelHeaderLabels.indexOf(SALDO_STORICO_LABEL)) + "3:" +
-			CellReference.convertNumToColString(excelHeaderLabels.indexOf(SALDO_STORICO_LABEL)) + allTimeStats.getAllWinningCombos().size() * 2 +
+			CellReference.convertNumToColString(excelHeaderLabels.indexOf(SALDO_STORICO_LABEL)) + getLatestRowIndex() +
 			")/" + CellReference.convertNumToColString(excelHeaderLabels.indexOf(COSTO_STORICO_LABEL)) + "2),\"###,00%\")"
 		);
 		sheet.setColumnWidth(Shared.getCellIndex(sheet, DATA_LABEL), 3800);
