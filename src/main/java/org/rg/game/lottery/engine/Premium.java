@@ -7,6 +7,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public class Premium {
+	public static final Integer TYPE_TOMBOLA = 6;
+	public static final Integer TYPE_CINQUINA = 5;
+
 	private static final Map<Integer, String> all;
 	private static final List<String> allLabels;
 	static {
@@ -14,8 +17,8 @@ public class Premium {
 		all.put(2, "Ambo");
 		all.put(3, "Terno");
 		all.put(4, "Quaterna");
-		all.put(5, "Cinquina");
-		all.put(6, "Tombola");
+		all.put(TYPE_CINQUINA, "Cinquina");
+		all.put(TYPE_TOMBOLA, "Tombola");
 		allLabels = new ArrayList<>(all.values());
 	}
 

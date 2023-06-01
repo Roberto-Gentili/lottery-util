@@ -47,11 +47,14 @@ import org.apache.poi.ss.formula.BaseFormulaEvaluator;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellReference;
+import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.xmlbeans.impl.values.XmlValueDisconnectedException;
 import org.rg.game.core.CollectionUtils;
@@ -642,17 +645,32 @@ public class SELotterySimpleSimulator {
 								);
 							}
 							Row row = sheet.getRow(rowIndex);
-							if (storageWrapper.get().getName().equals(row.getCell(fileColIndex.get()).getStringCellValue())) {
+							Storage storage = storageWrapper.get();
+							if (storage.getName().equals(row.getCell(fileColIndex.get()).getStringCellValue())) {
 								Cell dataAggStoricoCell = row.getCell(dataAggStoricoColIndex.get());
 								for (Map.Entry<Integer, String> premiumData : allPremiums.entrySet()) {
 									Cell cell = row.getCell(Shared.getCellIndex(sheet, getHistoryPremiumLabel(premiumData.getValue())));
 									Integer premiumCounter = premiumCounters.get(premiumData.getKey());
-									cell.setCellStyle(numberCellStyle.get());
 									if (premiumCounter != null) {
 										cell.setCellValue(premiumCounter.doubleValue());
+										if (premiumData.getKey().compareTo(Premium.TYPE_TOMBOLA) == 0 && premiumCounter > 0) {
+											Integer historicalTombolaCounter = storage.getHistoricalPremiums().get(Premium.TYPE_TOMBOLA);
+											if (historicalTombolaCounter == null || premiumCounter > historicalTombolaCounter) {
+												CellStyle highLightedBoldedNumberCellStyle = workBook.createCellStyle();
+												highLightedBoldedNumberCellStyle.cloneStyleFrom(numberCellStyle.get());
+												XSSFFont boldFont = (XSSFFont) workBook.createFont();
+												boldFont.setBold(true);
+												highLightedBoldedNumberCellStyle.setFont(boldFont);
+												highLightedBoldedNumberCellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+												highLightedBoldedNumberCellStyle.setFillForegroundColor(IndexedColors.RED.getIndex());
+												cell.setCellStyle(highLightedBoldedNumberCellStyle);
+												continue;
+											}
+										}
 									} else {
 										cell.setCellValue(0d);
 									}
+									cell.setCellStyle(numberCellStyle.get());
 								}
 								Cell cell = row.getCell(Shared.getCellIndex(sheet, COSTO_STORICO_LABEL));
 								cell.setCellStyle(numberCellStyle.get());
