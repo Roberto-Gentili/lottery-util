@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ss.formula.BaseFormulaEvaluator;
@@ -52,40 +53,13 @@ public class SESimulationSummaryGenerator {
 			headerLabels.addAll(headerLabelsTemp);
 			headerLabels.set(headerLabels.indexOf(SELotterySimpleSimulator.DATA_LABEL), "Conteggio estrazioni");
 			workBookTemplate.createHeader(true, headerLabels);
-			int reportCounter = 0;
-			for (File singleSimFolder : new File(simulationSummaryFolder).listFiles((file, name) -> new File(file, name).isDirectory())) {
-				File report = Arrays.stream(singleSimFolder.listFiles((file, name) -> name.endsWith("report.xlsx"))).findFirst().orElseGet(() -> null);
-				if (report != null) {
-					reportCounter++;
-					try {
-						process(workBookTemplate, headersToBeSkipped, singleSimFolder, report);
-					} catch (Throwable exc) {
-						LogUtils.warn("Unable to process " + report.getAbsolutePath() + ": " + exc.getMessage());
-						List<File> backupFiles = ResourceUtils.INSTANCE.findReverseOrdered("report - ", "xlsx", report.getParentFile().getAbsolutePath());
-						boolean processed = false;
-						if (backupFiles.size() > 0) {
-							LogUtils.info("Trying to process its backups");
-							for (File backup : backupFiles) {
-								try {
-									process(workBookTemplate, headersToBeSkipped, singleSimFolder, backup);
-									processed = true;
-									break;
-								} catch (Throwable e) {
-
-								}
-							}
-						}
-						if (!processed) {
-							LogUtils.error("Unable to process backups of " + report.getAbsolutePath());
-						}
-					}
-				}
-			}
+			AtomicInteger reportCounter = new AtomicInteger(0);
+			process(simulationSummaryFolder, workBookTemplate, headersToBeSkipped, reportCounter);
 			summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.FILE_LABEL), 15000);
 			summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.COSTO_STORICO_LABEL), 3000);
 			summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.RITORNO_STORICO_LABEL), 3000);
 			try (OutputStream destFileOutputStream = new FileOutputStream(simulationSummaryFile)){
-				workBookTemplate.setAutoFilter(0, reportCounter, 0, headerLabels.size() - 1);
+				workBookTemplate.setAutoFilter(0, reportCounter.get(), 0, headerLabels.size() - 1);
 				BaseFormulaEvaluator.evaluateAllFormulaCells(workBookTemplate.getWorkbook());
 				workBookTemplate.getWorkbook().write(destFileOutputStream);
 			}
@@ -93,6 +67,49 @@ public class SESimulationSummaryGenerator {
 		} catch (Throwable exc) {
 			LogUtils.error("\n\nUnable to generate summary file");
 			exc.printStackTrace();
+		}
+	}
+
+	protected static void process(
+		String folderAbsolutePath,
+		SimpleWorkbookTemplate workBookTemplate,
+		List<String> headersToBeSkipped,
+		AtomicInteger reportCounter
+	) {
+		for (File singleSimFolder : new File(folderAbsolutePath).listFiles(
+			(file, name) -> {
+				File currentIteratedFile = new File(file, name);
+				return currentIteratedFile.isDirectory() && !currentIteratedFile.getName().equals(SELotteryComplexSimulator.GENERATED_FOLDER_NAME);
+			})
+		) {
+			LogUtils.info("Scanning " + singleSimFolder.getAbsolutePath());
+			File report = Arrays.stream(singleSimFolder.listFiles((file, name) -> name.endsWith("report.xlsx"))).findFirst().orElseGet(() -> null);
+			if (report != null) {
+				reportCounter.incrementAndGet();
+				try {
+					process(workBookTemplate, headersToBeSkipped, singleSimFolder, report);
+				} catch (Throwable exc) {
+					LogUtils.warn("Unable to process " + report.getAbsolutePath() + ": " + exc.getMessage());
+					List<File> backupFiles = ResourceUtils.INSTANCE.findReverseOrdered("report - ", "xlsx", report.getParentFile().getAbsolutePath());
+					boolean processed = false;
+					if (backupFiles.size() > 0) {
+						LogUtils.info("Trying to process its backups");
+						for (File backup : backupFiles) {
+							try {
+								process(workBookTemplate, headersToBeSkipped, singleSimFolder, backup);
+								processed = true;
+								break;
+							} catch (Throwable e) {
+
+							}
+						}
+					}
+					if (!processed) {
+						LogUtils.error("Unable to process backups of " + report.getAbsolutePath());
+					}
+				}
+			}
+			process(singleSimFolder.getAbsolutePath(), workBookTemplate, headersToBeSkipped,reportCounter);
 		}
 	}
 

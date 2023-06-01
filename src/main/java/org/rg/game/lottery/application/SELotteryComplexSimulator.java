@@ -35,6 +35,8 @@ import org.rg.game.lottery.engine.SEStats;
 public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 
 
+	static final String GENERATED_FOLDER_NAME = "generated";
+
 	public static void main(String[] args) throws IOException {
 		Collection<CompletableFuture<Void>> futures = new CopyOnWriteArrayList<>();
 		executeRecursive(SELotteryComplexSimulator::execute, futures);
@@ -203,7 +205,7 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 		nextAfterLatestConfiguration.setProperty("overwrite-if-exists", "1");
 		String simulationGroup = nextAfterLatestConfiguration.getProperty("simulation.group");
 		if (simulationGroup != null) {
-			nextAfterLatestConfiguration.setProperty("simulation.group", simulationGroup + File.separator + "generated");
+			nextAfterLatestConfiguration.setProperty("simulation.group", simulationGroup + File.separator + GENERATED_FOLDER_NAME);
 		}
 		setGroup(nextAfterLatestConfiguration);
 		LotteryMatrixGenerator.process(futures, SELotteryMatrixGeneratorEngine::new, nextAfterLatestConfiguration);
