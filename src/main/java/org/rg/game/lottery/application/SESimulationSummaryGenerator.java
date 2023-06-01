@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.poi.common.usermodel.HyperlinkType;
@@ -54,7 +55,13 @@ public class SESimulationSummaryGenerator {
 			headerLabels.set(headerLabels.indexOf(SELotterySimpleSimulator.DATA_LABEL), "Conteggio estrazioni");
 			workBookTemplate.createHeader(true, headerLabels);
 			AtomicInteger reportCounter = new AtomicInteger(0);
-			process(simulationSummaryFolder, workBookTemplate, headersToBeSkipped, reportCounter);
+			process(
+				null,
+				simulationSummaryFolder,
+				workBookTemplate,
+				headersToBeSkipped,
+				reportCounter
+			);
 			summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.FILE_LABEL), 15000);
 			summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.COSTO_STORICO_LABEL), 3000);
 			summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.RITORNO_STORICO_LABEL), 3000);
@@ -71,6 +78,7 @@ public class SESimulationSummaryGenerator {
 	}
 
 	protected static void process(
+		String currentRelativePath,
 		String folderAbsolutePath,
 		SimpleWorkbookTemplate workBookTemplate,
 		List<String> headersToBeSkipped,
@@ -82,12 +90,18 @@ public class SESimulationSummaryGenerator {
 				return currentIteratedFile.isDirectory() && !currentIteratedFile.getName().equals(SELotteryComplexSimulator.GENERATED_FOLDER_NAME);
 			})
 		) {
+			String singleSimFolderRelPath = Optional.ofNullable(currentRelativePath).map(cRP -> cRP + "/").orElseGet(() -> "") + singleSimFolder.getName();
 			LogUtils.info("Scanning " + singleSimFolder.getAbsolutePath());
 			File report = Arrays.stream(singleSimFolder.listFiles((file, name) -> name.endsWith("report.xlsx"))).findFirst().orElseGet(() -> null);
 			if (report != null) {
 				reportCounter.incrementAndGet();
 				try {
-					process(workBookTemplate, headersToBeSkipped, singleSimFolder, report);
+					process(
+						singleSimFolderRelPath,
+						workBookTemplate,
+						headersToBeSkipped,
+						singleSimFolder, report
+					);
 				} catch (Throwable exc) {
 					LogUtils.warn("Unable to process " + report.getAbsolutePath() + ": " + exc.getMessage());
 					List<File> backupFiles = ResourceUtils.INSTANCE.findReverseOrdered("report - ", "xlsx", report.getParentFile().getAbsolutePath());
@@ -96,7 +110,13 @@ public class SESimulationSummaryGenerator {
 						LogUtils.info("Trying to process its backups");
 						for (File backup : backupFiles) {
 							try {
-								process(workBookTemplate, headersToBeSkipped, singleSimFolder, backup);
+								process(
+									singleSimFolderRelPath,
+									workBookTemplate,
+									headersToBeSkipped,
+									singleSimFolder,
+									backup
+								);
 								processed = true;
 								break;
 							} catch (Throwable e) {
@@ -109,11 +129,18 @@ public class SESimulationSummaryGenerator {
 					}
 				}
 			}
-			process(singleSimFolder.getAbsolutePath(), workBookTemplate, headersToBeSkipped,reportCounter);
+			process(
+				singleSimFolderRelPath,
+				singleSimFolder.getAbsolutePath(),
+				workBookTemplate,
+				headersToBeSkipped,
+				reportCounter
+			);
 		}
 	}
 
 	protected static void process(
+		String singleSimFolderRelPath,
 		SimpleWorkbookTemplate summaryWorkBookTemplate,
 		List<String> headersToBeSkipped,
 		File singleSimFolder,
@@ -127,7 +154,7 @@ public class SESimulationSummaryGenerator {
 			summaryWorkBookTemplate.setLinkForCell(
 				HyperlinkType.FILE,
 				cellName,
-				URLEncoder.encode(singleSimFolder.getName() + "/" + report.getName(), "UTF-8").replace("+", "%20")
+				URLEncoder.encode(singleSimFolderRelPath + "/" + report.getName(), "UTF-8").replace("+", "%20")
 			);
 			String historicalTombolaLabel = SELotterySimpleSimulator.getHistoryPremiumLabel(Premium.LABEL_TOMBOLA);
 			for (String cellLabel : SELotterySimpleSimulator.excelHeaderLabels) {
