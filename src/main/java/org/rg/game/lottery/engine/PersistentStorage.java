@@ -20,6 +20,8 @@ import java.util.NoSuchElementException;
 import java.util.TreeSet;
 
 import org.rg.game.core.LogUtils;
+import org.rg.game.core.MathUtils;
+import org.rg.game.core.Synchronizer;
 import org.rg.game.core.Throwables;
 
 public class PersistentStorage implements Storage {
@@ -31,6 +33,7 @@ public class PersistentStorage implements Storage {
 	int size;
 	Boolean isClosed;
 	Map<Integer, Integer> occurrences;
+	Map<Integer, Integer> historicalPremiums;
 
 	public PersistentStorage(
 		LocalDate extractionDate,
@@ -399,18 +402,54 @@ public class PersistentStorage implements Storage {
 
 	private void loadOccurrencesIfNeeded() {
 		if (occurrences.isEmpty()) {
-			synchronized(occurrences) {
+			Synchronizer.INSTANCE.execute(absolutePath + "_computeOccurrences", () -> {
 				if (occurrences.isEmpty()) {
 					Iterator<List<Integer>> comboItr = iterator();
+					Map<Integer, Integer> occurrences = new LinkedHashMap<>();
 					while (comboItr.hasNext()) {
 						for (Integer number : comboItr.next()) {
 							Integer counter = occurrences.computeIfAbsent(number, key -> 0) + 1;
 							occurrences.put(number, counter);
 						}
 					}
+					this.occurrences = occurrences;
 				}
-			}
+			});
 		}
+	}
+
+	@Override
+	public Map<Integer, Integer> getHistoricalPremiums() {
+		if (this.historicalPremiums == null) {
+			Synchronizer.INSTANCE.execute(absolutePath + "_computeHistoricalPremiums", () -> {
+				if (this.historicalPremiums == null) {
+					Map<Integer, Integer> historicalPremiums = new LinkedHashMap<>();
+					try (BufferedReader br = new BufferedReader(new FileReader(absolutePath))) {
+				        String line;
+				        boolean startToCollect = false;
+				        while ((line = br.readLine()) != null) {
+				           if (line.contains("Riepilogo risultati storici sistema dal")) {
+				        	   startToCollect = true;
+				        	   continue;
+				           } else if (line.contains("Costo:")) {
+				        	  break;
+				           }
+				           if (startToCollect && !(line = line.replaceAll("\\s+","")).isEmpty()) {
+				        	   String[] premiumLabelAndCounter = line.split(":");
+				        	   historicalPremiums.put(
+			        			   Premium.toType(premiumLabelAndCounter[0]),
+			        			   MathUtils.INSTANCE.integerFormat.parse(premiumLabelAndCounter[1]).intValue()
+		        			   );
+				           }
+				        }
+				    } catch (Throwable e) {
+						Throwables.sneakyThrow(e);
+					}
+					this.historicalPremiums = historicalPremiums;
+				}
+			});
+		}
+		return historicalPremiums;
 	}
 
 }

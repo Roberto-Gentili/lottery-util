@@ -10,6 +10,9 @@ public class MathUtils {
 
 	public static final MathUtils INSTANCE = new MathUtils();
 
+	public DecimalFormat decimalFormat = new DecimalFormat( "#,##0.##" );
+	public DecimalFormat integerFormat = new DecimalFormat( "#,##0" );
+
 	public DecimalFormat getNewDecimalFormat() {
 		DecimalFormatSymbols symbols = new DecimalFormatSymbols();
 		symbols.setGroupingSeparator(',');

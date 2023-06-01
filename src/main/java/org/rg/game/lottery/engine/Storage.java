@@ -3,6 +3,7 @@ package org.rg.game.lottery.engine;
 import java.time.LocalDate;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 public interface Storage extends AutoCloseable {
 	static final String END_LINE_PREFIX = "Mr. Random suggerisce";
@@ -47,5 +48,7 @@ public interface Storage extends AutoCloseable {
 	Integer getMaxOccurence();
 
 	void delete();
+
+	public  Map<Integer, Integer> getHistoricalPremiums();
 
 }

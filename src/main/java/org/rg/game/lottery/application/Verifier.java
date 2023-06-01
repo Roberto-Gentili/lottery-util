@@ -29,7 +29,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.rg.game.core.LogUtils;
 import org.rg.game.core.TimeUtils;
-import org.rg.game.lottery.engine.SEStats;
+import org.rg.game.lottery.engine.Premium;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -116,7 +116,7 @@ public class Verifier {
 				LogUtils.info("\n\nNumeri estratti per il *" + competionName + "* del " + extractionDate +": " + Shared.toWAString(winningCombo, ", ", hitNumbers));
 				if (!winningCombos.isEmpty()) {
 					for (Map.Entry<Integer, List<List<Integer>>> combos: winningCombos.entrySet()) {
-						LogUtils.info("\t*Combinazioni con " + SEStats.toPremiumLabel(combos.getKey()).toLowerCase() + "*:");
+						LogUtils.info("\t*Combinazioni con " + Premium.toLabel(combos.getKey()).toLowerCase() + "*:");
 						for (List<Integer> combo : combos.getValue()) {
 							LogUtils.info("\t\t" +
 								Shared.toWAString(combo, "\t", winningCombo)

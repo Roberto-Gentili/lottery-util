@@ -8,7 +8,6 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DateFormat;
-import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
@@ -50,6 +49,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.rg.game.core.LogUtils;
+import org.rg.game.core.MathUtils;
 import org.rg.game.core.Throwables;
 import org.rg.game.core.TimeUtils;
 
@@ -57,8 +57,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class SEStats {
 	private static final Map<String, SEStats> INSTANCES;
-	private static final Map<Integer, String> allPremiums;
-	private static final List<String> allPremiumLabels;
 	static final String FIRST_EXTRACTION_DATE_AS_STRING = "03/12/1997";
 	static final LocalDate FIRST_EXTRACTION_LOCAL_DATE = LocalDate.parse(FIRST_EXTRACTION_DATE_AS_STRING, TimeUtils.defaultLocalDateFormat);
 	static final Date FIRST_EXTRACTION_DATE = TimeUtils.toDate(FIRST_EXTRACTION_LOCAL_DATE);
@@ -68,19 +66,10 @@ public class SEStats {
 		SEStats.forceLoadingFromExcel =
 				Boolean.parseBoolean(System.getenv().getOrDefault("se-stats.force-loading-from excel", "false"));
 		INSTANCES = new LinkedHashMap<>();
-		allPremiums = new LinkedHashMap<>();
-		allPremiums.put(2, "Ambo");
-		allPremiums.put(3, "Terno");
-		allPremiums.put(4, "Quaterna");
-		allPremiums.put(5, "Cinquina");
-		allPremiums.put(6, "Tombola");
-		allPremiumLabels = new ArrayList<>(allPremiums.values());
 	}
 
 	private boolean global;
 
-	protected DecimalFormat decimalFormat = new DecimalFormat( "#,##0.##" );
-	protected DecimalFormat integerFormat = new DecimalFormat( "#,##0" );
 	protected Date startDate;
 	protected Date endDate;
 
@@ -511,7 +500,7 @@ public class SEStats {
 				}
 			}
 			if (hit > 1) {
-				String premiumLabel = toPremiumLabel(hit);
+				String premiumLabel = Premium.toLabel(hit);
 				results.put(premiumLabel, results.computeIfAbsent(premiumLabel, label -> 0) + 1);
 			}
 		}
@@ -555,7 +544,7 @@ public class SEStats {
 			Map.Entry<Date, Map<Integer, List<List<Integer>>>> winningCombosInfo = winningsCombosDataItr.next();
 			report.append("\t" + TimeUtils.getDefaultDateFormat().format(winningCombosInfo.getKey()) + ":\n");
 			for (Map.Entry<Integer, List<List<Integer>>> winningCombos : winningCombosInfo.getValue().entrySet()) {
-				report.append("\t\t" + toPremiumLabel(winningCombos.getKey()) + ":\n");
+				report.append("\t\t" + Premium.toLabel(winningCombos.getKey()) + ":\n");
 				for (List<Integer> combo : winningCombos.getValue()) {
 					Integer counter = premiumCounters.computeIfAbsent(winningCombos.getKey(), key -> 0);
 					premiumCounters.put(winningCombos.getKey(), ++counter);
@@ -574,13 +563,13 @@ public class SEStats {
 		Integer returns = 0;
 		for (Map.Entry<Integer, Integer> winningInfo : premiumCounters.entrySet()) {
 			Integer type = winningInfo.getKey();
-			String label = toPremiumLabel(type);
+			String label = Premium.toLabel(type);
 			returns += premiumPrice(type) * winningInfo.getValue();
-			report.append("\t" + label + ":" + rightAlignedString(integerFormat.format(winningInfo.getValue()), 21 - label.length()) + "\n");
+			report.append("\t" + label + ":" + rightAlignedString(MathUtils.INSTANCE.integerFormat.format(winningInfo.getValue()), 21 - label.length()) + "\n");
 		}
-		report.append("\n\tCosto:" + rightAlignedString(integerFormat.format(allWinningCombosReversed.size() * systemSize), 15) + "€\n");
-		report.append("\tRitorno:" + rightAlignedString(integerFormat.format(returns), 13) + "€\n");
-		report.append("\tRapporto:" + rightAlignedString(decimalFormat.format(((returns * 100d) / (allWinningCombosReversed.size() * systemSize)) - 100d), 12) + "%\n");
+		report.append("\n\tCosto:" + rightAlignedString(MathUtils.INSTANCE.integerFormat.format(allWinningCombosReversed.size() * systemSize), 15) + "€\n");
+		report.append("\tRitorno:" + rightAlignedString(MathUtils.INSTANCE.integerFormat.format(returns), 13) + "€\n");
+		report.append("\tRapporto:" + rightAlignedString(MathUtils.INSTANCE.decimalFormat.format(((returns * 100d) / (allWinningCombosReversed.size() * systemSize)) - 100d), 12) + "%\n");
 		data.put("report.summary", report.toString());
 		data.put("premium.counters", premiumCounters);
 		Date referenceDate = getLatestExtractionDate();
@@ -592,7 +581,7 @@ public class SEStats {
 	}
 
 	public static Integer premiumPrice(String label) {
-		for (Map.Entry<Integer, String> premiumEntry : allPremiums().entrySet()) {
+		for (Map.Entry<Integer, String> premiumEntry : Premium.all().entrySet()) {
 			if (premiumEntry.getValue().equals(label)) {
 				return premiumPrice(premiumEntry.getKey());
 			}
@@ -612,21 +601,6 @@ public class SEStats {
 		return String.format("%" + emptySpacesCount + "s", value);
 	}
 
-	public static String toPremiumLabel(Integer hit) {
-		String label = allPremiums().get(hit);
-		if (label != null) {
-			return label;
-		}
-		throw new IllegalArgumentException();
-	}
-
-	public static List<String> allPremiumLabels() {
-		return allPremiumLabels;
-	}
-
-	public static Map<Integer, String> allPremiums() {
-		return allPremiums;
-	}
 
 	private static interface DataLoader {
 

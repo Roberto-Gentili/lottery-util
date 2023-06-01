@@ -64,6 +64,7 @@ import org.rg.game.core.Throwables;
 import org.rg.game.core.ThrowingConsumer;
 import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.PersistentStorage;
+import org.rg.game.lottery.engine.Premium;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.SEStats;
 import org.rg.game.lottery.engine.SimpleWorkbookTemplate;
@@ -98,7 +99,7 @@ public class SELotterySimpleSimulator {
 		hostName = NetworkUtils.INSTANCE.thisHostName();
 		excelHeaderLabels = new ArrayList<>();
 		excelHeaderLabels.add(DATA_LABEL);
-		Collection<String> allPremiumLabels = SEStats.allPremiumLabels();
+		Collection<String> allPremiumLabels = Premium.allLabels();
 		excelHeaderLabels.addAll(allPremiumLabels);
 		excelHeaderLabels.add(COSTO_LABEL);
 		excelHeaderLabels.add(RITORNO_LABEL);
@@ -522,7 +523,7 @@ public class SELotterySimpleSimulator {
 	) {
 		boolean isSlave = CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false");
 		SEStats sEStats = getSEStats(configuration);
-		Map<Integer, String> allPremiums = SEStats.allPremiums();
+		Map<Integer, String> allPremiums = Premium.all();
 		AtomicInteger dataAggStoricoColIndex = new AtomicInteger(0);
 		AtomicInteger fileColIndex = new AtomicInteger(0);
 		AtomicReference<CellStyle> numberCellStyle = new AtomicReference<>();
@@ -631,7 +632,7 @@ public class SELotterySimpleSimulator {
 								Row previousRow = sheet.getRow(rowIndex -1);
 								dateCellStyle.set(previousRow.getCell(dataAggStoricoColIndex.get()).getCellStyle());
 								numberCellStyle.set(
-									previousRow.getCell(Shared.getCellIndex(sheet, getHistoryPremiumLabel(SEStats.allPremiumLabels().get(0)))).getCellStyle()
+									previousRow.getCell(Shared.getCellIndex(sheet, getHistoryPremiumLabel(Premium.allLabels().get(0)))).getCellStyle()
 								);
 							}
 							Row row = sheet.getRow(rowIndex);
@@ -769,7 +770,7 @@ public class SELotterySimpleSimulator {
 		if (storage != null) {
 			Map<String, Integer> results = allTimeStats.check(extractionDate, storage::iterator);
 			workBookTemplate.addCell(TimeUtils.toDate(extractionDate)).getCellStyle().setAlignment(HorizontalAlignment.CENTER);
-			List<String> allPremiumLabels = SEStats.allPremiumLabels();
+			List<String> allPremiumLabels = Premium.allLabels();
 			for (int i = 0; i < allPremiumLabels.size();i++) {
 				Integer result = results.get(allPremiumLabels.get(i));
 				if (result == null) {
@@ -781,16 +782,16 @@ public class SELotterySimpleSimulator {
 			cell.getCellStyle().setAlignment(HorizontalAlignment.CENTER);
 			int currentRowNum = cell.getRow().getRowNum()+1;
 			Sheet sheet = workBookTemplate.getOrCreateSheet("Risultati");
-			List<String> allFormulas = SEStats.allPremiumLabels().stream().map(
+			List<String> allFormulas = Premium.allLabels().stream().map(
 				label -> generatePremiumFormula(sheet, currentRowNum, label, lb -> lb)).collect(Collectors.toList());
 			String formula = String.join("+", allFormulas);
 			workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
 			formula = generateSaldoFormula(currentRowNum, sheet, Arrays.asList(RITORNO_LABEL, COSTO_LABEL));
 			workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
-			workBookTemplate.addCell(Collections.nCopies(SEStats.allPremiums().size(), null));
+			workBookTemplate.addCell(Collections.nCopies(Premium.all().size(), null));
 			workBookTemplate.addCell(0, "#,##0");
 			cell.getCellStyle().setAlignment(HorizontalAlignment.CENTER);
-			allFormulas = SEStats.allPremiumLabels().stream().map(
+			allFormulas = Premium.allLabels().stream().map(
 					label -> generatePremiumFormula(sheet, currentRowNum, label, SELotterySimpleSimulator::getHistoryPremiumLabel)).collect(Collectors.toList());
 			formula = String.join("+", allFormulas);
 			workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
@@ -919,7 +920,7 @@ public class SELotterySimpleSimulator {
 			CellReference.convertNumToColString(excelHeaderLabels.indexOf(SALDO_LABEL)) + allTimeStats.getAllWinningCombos().size() * 2 +
 			")/" + CellReference.convertNumToColString(excelHeaderLabels.indexOf(COSTO_LABEL)) + "2),\"###,00%\")"
 		);
-		for (String label : SEStats.allPremiumLabels()) {
+		for (String label : Premium.allLabels()) {
 			sheet.getRow(1).getCell(Shared.getCellIndex(sheet, label)).setCellStyle(headerNumberStyle);
 			sheet.getRow(1).getCell(Shared.getCellIndex(sheet, getHistoryPremiumLabel(label))).setCellStyle(headerNumberStyle);
 		}

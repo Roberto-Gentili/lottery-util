@@ -38,6 +38,7 @@ import org.rg.game.core.LogUtils;
 import org.rg.game.core.ResourceUtils;
 import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
+import org.rg.game.lottery.engine.Premium;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.SEStats;
 
@@ -233,7 +234,7 @@ public class SEMassiveVerifierAndQualityChecker {
 					monthLabel.setCellValue("Mese");
 					monthLabel.setCellStyle(headerStyle);
 					int columnIndex = 1;
-					for (String premiumLabel : SEStats.allPremiumLabels()) {
+					for (String premiumLabel : Premium.allLabels()) {
 						Cell headerCell = header.createCell(columnIndex++);
 						headerCell.setCellStyle(headerStyle);
 						headerCell.setCellValue(premiumLabel);
@@ -252,9 +253,9 @@ public class SEMassiveVerifierAndQualityChecker {
 						labelCell.getCellStyle().setAlignment(HorizontalAlignment.LEFT);
 					}
 					labelCell.setCellValue(month);
-					for (Integer type : SEStats.allPremiums().keySet()) {
+					for (Integer type : Premium.all().keySet()) {
 						Integer counter = winningInfo.getOrDefault(type, 0);
-						String label = SEStats.toPremiumLabel(type);
+						String label = Premium.toLabel(type);
 						int labelIndex = Shared.getCellIndex(sheet, label);
 						if (counter > 0) {
 							LogUtils.info("\t\t\t" + label + ":" + SEStats.rightAlignedString(Shared.integerFormat.format(counter), 21 - label.length()));
@@ -301,7 +302,7 @@ public class SEMassiveVerifierAndQualityChecker {
 
 		LogUtils.info("\nRisultati globali:");
 		globalData.forEach((key, combos) -> {
-			String label = SEStats.toPremiumLabel(key);
+			String label = Premium.toLabel(key);
 			LogUtils.info("\t" + label + ":" + SEStats.rightAlignedString(Shared.integerFormat.format(combos.size()), 21 - label.length()));
 		});
 	}
@@ -356,7 +357,7 @@ public class SEMassiveVerifierAndQualityChecker {
 			if (!winningCombos.isEmpty()) {
 				result.append("Numeri estratti per il *superenalotto* del " + TimeUtils.defaultLocalDateFormat.format(extractionDate) +": " + Shared.toWAString(winningCombo, ", ", hitNumbers) + "\n");
 				for (Map.Entry<Integer, List<List<Integer>>> combos: winningCombos.entrySet()) {
-					result.append("\t*Combinazioni con " + SEStats.toPremiumLabel(combos.getKey()).toLowerCase() + "*:" + "\n");
+					result.append("\t*Combinazioni con " + Premium.toLabel(combos.getKey()).toLowerCase() + "*:" + "\n");
 					for (List<Integer> combo : combos.getValue()) {
 						result.append("\t\t" +
 							Shared.toWAString(combo, "\t", winningCombo) + "\n"
@@ -400,7 +401,7 @@ public class SEMassiveVerifierAndQualityChecker {
 		Map<Integer, List<List<Integer>>> winningCombos
 	) {
 		for (Map.Entry<Integer, List<List<Integer>>> combos: winningCombos.entrySet()) {
-			results.append("    " + SEStats.toPremiumLabel(combos.getKey()), boldFont);
+			results.append("    " + Premium.toLabel(combos.getKey()), boldFont);
 			results.append(":" + "\n");
 			Iterator<List<Integer>> combosIterator = combos.getValue().iterator();
 			while (combosIterator.hasNext()) {
@@ -434,7 +435,7 @@ public class SEMassiveVerifierAndQualityChecker {
 		Iterator<Map.Entry<Integer, List<List<Integer>>>> winningAndCombosIterator = winningCombos.entrySet().iterator();
 		while (winningAndCombosIterator.hasNext()) {
 			Map.Entry<Integer, List<List<Integer>>> combos = winningAndCombosIterator.next();
-			results.append("    " + SEStats.toPremiumLabel(combos.getKey()), boldFont);
+			results.append("    " + Premium.toLabel(combos.getKey()), boldFont);
 			results.append(": " + combos.getValue().size());
 			if (winningAndCombosIterator.hasNext()) {
 				results.append("\n");
@@ -474,7 +475,7 @@ public class SEMassiveVerifierAndQualityChecker {
 			Iterator<Map.Entry<Integer, List<List<Integer>>>> systemResultsInHistoryItr = systemResultsInHistory.entrySet().iterator();
 			while (systemResultsInHistoryItr.hasNext()) {
 				Map.Entry<Integer, List<List<Integer>>> singleHistoryResult = systemResultsInHistoryItr.next();
-				String label = SEStats.toPremiumLabel(singleHistoryResult.getKey());
+				String label = Premium.toLabel(singleHistoryResult.getKey());
 				results.append("    ");
 				results.append(label, boldFont);
 				results.append(": " + Shared.integerFormat.format(singleHistoryResult.getValue().size()));
