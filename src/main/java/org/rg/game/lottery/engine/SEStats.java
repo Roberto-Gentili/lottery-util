@@ -64,7 +64,7 @@ public class SEStats {
 	public static boolean forceLoadingFromExcel;
 	static {
 		SEStats.forceLoadingFromExcel =
-				Boolean.parseBoolean(System.getenv().getOrDefault("se-stats.force-loading-from excel", "false"));
+				Boolean.parseBoolean(System.getenv().getOrDefault("se-stats.force-loading-from-excel", "false"));
 		INSTANCES = new LinkedHashMap<>();
 	}
 
