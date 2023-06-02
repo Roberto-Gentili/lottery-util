@@ -653,9 +653,15 @@ public class SELotterySimpleSimulator {
 									if (premiumCounter != null) {
 										cell.setCellValue(premiumCounter.doubleValue());
 										if (premiumData.getKey().compareTo(Premium.TYPE_TOMBOLA) == 0 && premiumCounter > 0) {
-											Integer historicalTombolaCounter = storage.getHistoricalPremiums().get(Premium.TYPE_TOMBOLA);
-											if (historicalTombolaCounter == null || premiumCounter > historicalTombolaCounter) {
+											Integer historicalPremiumCounter = storage.getHistoricalPremiums().get(Premium.TYPE_TOMBOLA);
+											if (historicalPremiumCounter == null || premiumCounter > historicalPremiumCounter) {
 												Shared.toHighlightedBoldedCell(workBook, cell, IndexedColors.RED);
+												continue;
+											}
+										} else if (premiumData.getKey().compareTo(Premium.TYPE_CINQUINA) == 0 && premiumCounter > 0) {
+											Integer historicalPremiumCounter = storage.getHistoricalPremiums().get(Premium.TYPE_CINQUINA);
+											if (historicalPremiumCounter == null || premiumCounter > historicalPremiumCounter) {
+												Shared.toHighlightedBoldedCell(workBook, cell, IndexedColors.ORANGE);
 												continue;
 											}
 										}
