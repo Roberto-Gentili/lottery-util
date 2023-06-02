@@ -174,8 +174,8 @@ public class SESimulationSummaryGenerator {
 							rowIterator.next();
 							while (rowIterator.hasNext()) {
 								Cell historicalPremiumCell = rowIterator.next().getCell(Shared.getCellIndex(resultSheet, historicalTombolaLabel));
-								if (historicalPremiumCell.getCellStyle().getFillForegroundColor() == IndexedColors.RED.getIndex()) {
-									Shared.toHighlightedBoldedCell(summaryWorkBookTemplate.getWorkbook(), summaryCurrentCell, IndexedColors.RED);
+								if (historicalPremiumCell.getCellStyle().getFillForegroundColor() == IndexedColors.ORANGE.getIndex()) {
+									Shared.toHighlightedBoldedCell(summaryWorkBookTemplate.getWorkbook(), summaryCurrentCell, IndexedColors.ORANGE);
 									break;
 								}
 							}
@@ -185,8 +185,8 @@ public class SESimulationSummaryGenerator {
 							rowIterator.next();
 							while (rowIterator.hasNext()) {
 								Cell historicalPremiumCell = rowIterator.next().getCell(Shared.getCellIndex(resultSheet, historicalTombolaLabel));
-								if (historicalPremiumCell.getCellStyle().getFillForegroundColor() == IndexedColors.ORANGE.getIndex()) {
-									Shared.toHighlightedBoldedCell(summaryWorkBookTemplate.getWorkbook(), summaryCurrentCell, IndexedColors.ORANGE);
+								if (historicalPremiumCell.getCellStyle().getFillForegroundColor() == IndexedColors.RED.getIndex()) {
+									Shared.toHighlightedBoldedCell(summaryWorkBookTemplate.getWorkbook(), summaryCurrentCell, IndexedColors.RED);
 									break;
 								}
 							}
