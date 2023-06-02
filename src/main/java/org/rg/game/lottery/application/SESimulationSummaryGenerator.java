@@ -9,7 +9,6 @@ import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -21,7 +20,6 @@ import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.CellValue;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.IndexedColors;
-import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -63,6 +61,8 @@ public class SESimulationSummaryGenerator {
 				reportCounter
 			);
 			summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.FILE_LABEL), 15000);
+			summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.COSTO_STORICO_PROGRESSIVO_ANTERIORE_LABEL), 3000);
+			summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.RITORNO_STORICO_PROGRESSIVO_ANTERIORE_LABEL), 3000);
 			summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.COSTO_STORICO_LABEL), 3000);
 			summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.RITORNO_STORICO_LABEL), 3000);
 			try (OutputStream destFileOutputStream = new FileOutputStream(simulationSummaryFile)){
@@ -156,8 +156,8 @@ public class SESimulationSummaryGenerator {
 				cellName,
 				URLEncoder.encode(singleSimFolderRelPath + "/" + report.getName(), "UTF-8").replace("+", "%20")
 			);
-			String historicalCinquinaLabel = SELotterySimpleSimulator.getHistoryPremiumLabel(Premium.LABEL_CINQUINA);
-			String historicalTombolaLabel = SELotterySimpleSimulator.getHistoryPremiumLabel(Premium.LABEL_TOMBOLA);
+			String historicalCinquinaLabel = SELotterySimpleSimulator.getFollowingProgressiveHistoryPremiumLabel(Premium.LABEL_CINQUINA);
+			String historicalTombolaLabel = SELotterySimpleSimulator.getFollowingProgressiveHistoryPremiumLabel(Premium.LABEL_TOMBOLA);
 			for (String cellLabel : SELotterySimpleSimulator.excelHeaderLabels) {
 				if (!headersToBeSkipped.contains(cellLabel)) {
 					Cell simulationCell = resultSheet.getRow(1).getCell(Shared.getCellIndex(resultSheet, cellLabel));
@@ -169,27 +169,9 @@ public class SESimulationSummaryGenerator {
 						} else if (cellLabel.equals(Premium.LABEL_TOMBOLA) && simulationCellValue.getNumberValue() > 0) {
 							Shared.toHighlightedBoldedCell(summaryWorkBookTemplate.getWorkbook(), summaryCurrentCell, IndexedColors.RED);
 						} else if (cellLabel.equals(historicalCinquinaLabel) && simulationCellValue.getNumberValue() > 0) {
-							Iterator<Row> rowIterator = resultSheet.rowIterator();
-							rowIterator.next();
-							rowIterator.next();
-							while (rowIterator.hasNext()) {
-								Cell historicalPremiumCell = rowIterator.next().getCell(Shared.getCellIndex(resultSheet, historicalCinquinaLabel));
-								if (historicalPremiumCell.getCellStyle().getFillForegroundColor() == IndexedColors.ORANGE.getIndex()) {
-									Shared.toHighlightedBoldedCell(summaryWorkBookTemplate.getWorkbook(), summaryCurrentCell, IndexedColors.ORANGE);
-									break;
-								}
-							}
+							Shared.toHighlightedBoldedCell(summaryWorkBookTemplate.getWorkbook(), summaryCurrentCell, IndexedColors.ORANGE);
 						} else if (cellLabel.equals(historicalTombolaLabel) && simulationCellValue.getNumberValue() > 0) {
-							Iterator<Row> rowIterator = resultSheet.rowIterator();
-							rowIterator.next();
-							rowIterator.next();
-							while (rowIterator.hasNext()) {
-								Cell historicalPremiumCell = rowIterator.next().getCell(Shared.getCellIndex(resultSheet, historicalTombolaLabel));
-								if (historicalPremiumCell.getCellStyle().getFillForegroundColor() == IndexedColors.RED.getIndex()) {
-									Shared.toHighlightedBoldedCell(summaryWorkBookTemplate.getWorkbook(), summaryCurrentCell, IndexedColors.RED);
-									break;
-								}
-							}
+							Shared.toHighlightedBoldedCell(summaryWorkBookTemplate.getWorkbook(), summaryCurrentCell, IndexedColors.RED);
 						}
 					} else if (simulationCellValue.getCellType().equals(CellType.STRING)) {
 						summaryWorkBookTemplate.addCell(simulationCellValue.getStringValue());

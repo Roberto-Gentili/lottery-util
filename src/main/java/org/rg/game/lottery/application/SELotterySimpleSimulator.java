@@ -49,7 +49,6 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
-import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -679,11 +678,6 @@ public class SELotterySimpleSimulator {
 									premiumCounter = ((Map<Integer,Integer>)premiumCountersData.get("premiumCounters.fromExtractionDate")).get(premiumData.getKey());
 									if (premiumCounter != null) {
 										historyDataCell.setCellValue(premiumCounter.doubleValue());
-										if (premiumData.getKey().compareTo(Premium.TYPE_TOMBOLA) == 0 && premiumCounter > 0) {
-											Shared.toHighlightedBoldedCell(workBook, historyDataCell, IndexedColors.RED);
-										} else if (premiumData.getKey().compareTo(Premium.TYPE_CINQUINA) == 0 && premiumCounter > 0) {
-											Shared.toHighlightedBoldedCell(workBook, historyDataCell, IndexedColors.ORANGE);
-										}
 									} else {
 										historyDataCell.setCellValue(0d);
 									}
