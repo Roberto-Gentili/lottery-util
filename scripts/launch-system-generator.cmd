@@ -18,6 +18,7 @@ for /R "%CURRENT_DIR%lib" %%a in (*.jar) do (
 set LIBS=!LIBS!"
 
 set working-path.generations.folder=%CURRENT_DIR_NAME%\config\generations
+set report.detail.enabled=true
 
 call "%JAVA_HOME%\bin\java.exe" -cp %classPath%;%LIBS%;"%CURRENT_DIR%binaries.jar"; org.rg.game.lottery.application.LotteryMatrixGenerator
 echo: 
