@@ -173,7 +173,7 @@ public class SESimulationSummaryGenerator {
 							rowIterator.next();
 							rowIterator.next();
 							while (rowIterator.hasNext()) {
-								Cell historicalPremiumCell = rowIterator.next().getCell(Shared.getCellIndex(resultSheet, historicalTombolaLabel));
+								Cell historicalPremiumCell = rowIterator.next().getCell(Shared.getCellIndex(resultSheet, historicalCinquinaLabel));
 								if (historicalPremiumCell.getCellStyle().getFillForegroundColor() == IndexedColors.ORANGE.getIndex()) {
 									Shared.toHighlightedBoldedCell(summaryWorkBookTemplate.getWorkbook(), summaryCurrentCell, IndexedColors.ORANGE);
 									break;
