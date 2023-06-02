@@ -88,7 +88,7 @@ public class SELotterySimpleSimulator {
 	static final String SALDO_STORICO_LABEL = "Saldo " + STORICO_SUFFIX;
 	static final String RITORNO_STORICO_LABEL = "Ritorno " + STORICO_SUFFIX;
 	static final String COSTO_STORICO_LABEL = "Costo " + STORICO_SUFFIX;
-	static final String STORICO_PROGRESSIVO_ANTERIORE_SUFFIX = "(storico progressivo anteriore)";
+	static final String STORICO_PROGRESSIVO_ANTERIORE_SUFFIX = "(st. prg. ant.)";
 	static final String SALDO_STORICO_PROGRESSIVO_ANTERIORE_LABEL = "Saldo " + STORICO_PROGRESSIVO_ANTERIORE_SUFFIX;
 	static final String RITORNO_STORICO_PROGRESSIVO_ANTERIORE_LABEL = "Ritorno " + STORICO_PROGRESSIVO_ANTERIORE_SUFFIX;
 	static final String COSTO_STORICO_PROGRESSIVO_ANTERIORE_LABEL = "Costo " + STORICO_PROGRESSIVO_ANTERIORE_SUFFIX;
