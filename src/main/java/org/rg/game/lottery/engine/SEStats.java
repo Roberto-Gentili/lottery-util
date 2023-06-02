@@ -484,7 +484,7 @@ public class SEStats {
 		return allWinningCombosWithJollyAndSuperstar;
 	}
 
-	public Map<String, Integer> check(LocalDate extractionDate, Supplier<Iterator<List<Integer>>> systemIteratorSupplier) {
+	public Map<String, Integer> checkFor(LocalDate extractionDate, Supplier<Iterator<List<Integer>>> systemIteratorSupplier) {
 		List<Integer> winningCombo = getWinningComboOf(extractionDate);
 		Map<String, Integer> results = new TreeMap<>();
 		if (winningCombo == null) {
@@ -508,6 +508,10 @@ public class SEStats {
 	}
 
 	public Map<String, Object> checkQuality(Supplier<Iterator<List<Integer>>> systemIteratorSupplier) {
+		return checkQuality(startDate, systemIteratorSupplier);
+	}
+
+	public Map<String, Object> checkQuality(Date startDate, Supplier<Iterator<List<Integer>>> systemIteratorSupplier) {
 		Map<String, Object> data = new LinkedHashMap<>();
 		Iterator<List<Integer>> systemItearator = systemIteratorSupplier.get();
 		long systemSize = 0;
@@ -519,18 +523,20 @@ public class SEStats {
 		List<Map.Entry<Date, List<Integer>>> allWinningCombosReversed = this.allWinningCombos.entrySet().stream().collect(Collectors.toList());
 		Collections.reverse(allWinningCombosReversed);
 		for (Map.Entry<Date, List<Integer>> winningComboInfo : allWinningCombosReversed) {
-			Map<Integer,List<List<Integer>>> winningCombosForExtraction = new TreeMap<>();
-			List<Integer> winningCombo = winningComboInfo.getValue();
-			systemItearator = systemIteratorSupplier.get();
-			while (systemItearator.hasNext()) {
-				List<Integer> currentCombo = systemItearator.next();
-				long hit = currentCombo.stream().filter(winningCombo::contains).count();
-				if (hit > 1) {
-					winningCombosForExtraction.computeIfAbsent((int)hit, ht -> new ArrayList<>()).add(currentCombo);
+			if (winningComboInfo.getKey().compareTo(startDate) >= 0) {
+				Map<Integer,List<List<Integer>>> winningCombosForExtraction = new TreeMap<>();
+				List<Integer> winningCombo = winningComboInfo.getValue();
+				systemItearator = systemIteratorSupplier.get();
+				while (systemItearator.hasNext()) {
+					List<Integer> currentCombo = systemItearator.next();
+					long hit = currentCombo.stream().filter(winningCombo::contains).count();
+					if (hit > 1) {
+						winningCombosForExtraction.computeIfAbsent((int)hit, ht -> new ArrayList<>()).add(currentCombo);
+					}
 				}
-			}
-			if (!winningCombosForExtraction.isEmpty()) {
-				winningsCombosData.put(winningComboInfo.getKey(), winningCombosForExtraction);
+				if (!winningCombosForExtraction.isEmpty()) {
+					winningsCombosData.put(winningComboInfo.getKey(), winningCombosForExtraction);
+				}
 			}
 		}
 		data.put("winningCombos", winningsCombosData);
