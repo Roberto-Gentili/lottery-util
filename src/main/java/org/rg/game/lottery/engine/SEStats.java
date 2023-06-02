@@ -597,7 +597,7 @@ public class SEStats {
 			Integer type = winningInfo.getKey();
 			String label = Premium.toLabel(type);
 			returns += premiumPrice(type) * winningInfo.getValue();
-			report.append("\t" + label + ":" + rightAlignedString(MathUtils.INSTANCE.integerFormat.format(winningInfo.getValue()), 29 - label.length()) + "\n");
+			report.append("\t" + label + ":" + rightAlignedString(MathUtils.INSTANCE.integerFormat.format(winningInfo.getValue()), 28 - label.length()) + "\n");
 		}
 		if (processedExtractionDateCounter > 0) {
 			report.append("\n\tCosto storico:" + rightAlignedString(MathUtils.INSTANCE.integerFormat.format(processedExtractionDateCounter * systemSize), 15) + "€\n");
