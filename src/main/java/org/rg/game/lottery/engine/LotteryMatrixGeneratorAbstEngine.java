@@ -142,8 +142,16 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 				(List<Integer>)basicData.get("numbersToBeDiscarded")
 			);
 		}
-		reportEnabled = CollectionUtils.retrieveBoolean(config, "report.enabled", "true");
-		reportDetailEnabled = CollectionUtils.retrieveBoolean(config, "report.detail.enabled", "false");
+		reportEnabled = CollectionUtils.retrieveBoolean(
+			config,
+			"report.enabled",
+			Optional.ofNullable(System.getenv("report.enabled")).orElseGet(() -> "true")
+		);
+		reportDetailEnabled = CollectionUtils.retrieveBoolean(
+			config,
+			"report.detail.enabled",
+			Optional.ofNullable(System.getenv("report.detail.enabled")).orElseGet(() -> "false")
+		);
 		String group = config.getProperty("group") != null ?
 			config.getProperty("group").replace("${localhost.name}", NetworkUtils.INSTANCE.thisHostName()):
 			null;

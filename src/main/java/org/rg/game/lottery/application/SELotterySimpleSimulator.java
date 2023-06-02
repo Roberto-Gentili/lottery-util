@@ -234,6 +234,7 @@ public class SELotterySimpleSimulator {
 					new ArrayList<>(competitionDatesFlat),
 					redundantConfigValue != null? Integer.valueOf(redundantConfigValue) : 10
 				);
+			configuration.setProperty("report.enabled", "true");
 			Runnable taskOperation = () -> {
 				LogUtils.info("Computation of " + configuration.getProperty("file.name") + " started");
 				process(configuration, excelFileName, engine, competitionDates);
