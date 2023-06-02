@@ -508,18 +508,18 @@ public class SEStats {
 	}
 
 	public Map<String, Object> checkQuality(Supplier<Iterator<List<Integer>>> systemIteratorSupplier) {
-		return checkQuality(startDate, endDate, systemIteratorSupplier);
+		return checkQuality(systemIteratorSupplier, startDate, endDate);
 	}
 
-	public Map<String, Object> checkQualityFrom(Date startDate, Supplier<Iterator<List<Integer>>> systemIteratorSupplier) {
-		return checkQuality(startDate, endDate, systemIteratorSupplier);
+	public Map<String, Object> checkQualityFrom(Supplier<Iterator<List<Integer>>> systemIteratorSupplier, Date startDate) {
+		return checkQuality(systemIteratorSupplier, startDate, endDate);
 	}
 
-	public Map<String, Object> checkQualityTo(Date endDate, Supplier<Iterator<List<Integer>>> systemIteratorSupplier) {
-		return checkQuality(startDate, endDate, systemIteratorSupplier);
+	public Map<String, Object> checkQualityTo(Supplier<Iterator<List<Integer>>> systemIteratorSupplier, Date endDate) {
+		return checkQuality(systemIteratorSupplier, startDate, endDate);
 	}
 
-	public Map<String, Object> checkQuality(Date startDate, Date endDate, Supplier<Iterator<List<Integer>>> systemIteratorSupplier) {
+	public Map<String, Object> checkQuality(Supplier<Iterator<List<Integer>>> systemIteratorSupplier, Date startDate, Date endDate) {
 		Map<String, Object> data = new LinkedHashMap<>();
 		Iterator<List<Integer>> systemItearator = systemIteratorSupplier.get();
 		long systemSize = 0;
@@ -606,6 +606,7 @@ public class SEStats {
 			referenceDate = this.endDate.compareTo(this.startDate) >= 0 ? this.endDate : this.startDate;
 		}
 		data.put("referenceDate", TimeUtils.getDefaultDateFormat().format(referenceDate));
+		data.put("processedExtractionDateCounter", processedExtractionDateCounter);
 		return data;
 	}
 

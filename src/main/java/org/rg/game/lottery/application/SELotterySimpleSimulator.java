@@ -10,6 +10,7 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.time.LocalDate;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -48,7 +49,6 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
-import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -84,9 +84,14 @@ public class SELotterySimpleSimulator {
 	static final String RITORNO_LABEL = "Ritorno";
 	static final String COSTO_LABEL = "Costo";
 	static final String DATA_LABEL = "Data";
-	static final String SALDO_STORICO_LABEL = "Saldo (storico)";
-	static final String RITORNO_STORICO_LABEL = "Ritorno (storico)";
-	static final String COSTO_STORICO_LABEL = "Costo (storico)";
+	static final String STORICO_SUFFIX = "(storico)";
+	static final String SALDO_STORICO_LABEL = "Saldo " + STORICO_SUFFIX;
+	static final String RITORNO_STORICO_LABEL = "Ritorno " + STORICO_SUFFIX;
+	static final String COSTO_STORICO_LABEL = "Costo " + STORICO_SUFFIX;
+	static final String STORICO_PROGRESSIVO_ANTERIORE_SUFFIX = "(storico progressivo anteriore)";
+	static final String SALDO_STORICO_PROGRESSIVO_ANTERIORE_LABEL = "Saldo " + STORICO_PROGRESSIVO_ANTERIORE_SUFFIX;
+	static final String RITORNO_STORICO_PROGRESSIVO_ANTERIORE_LABEL = "Ritorno " + STORICO_PROGRESSIVO_ANTERIORE_SUFFIX;
+	static final String COSTO_STORICO_PROGRESSIVO_ANTERIORE_LABEL = "Costo " + STORICO_PROGRESSIVO_ANTERIORE_SUFFIX;
 	static final String FILE_LABEL = "File";
 	static final String DATA_AGGIORNAMENTO_STORICO_LABEL = "Data agg. storico";
 	static final List<String> excelHeaderLabels;
@@ -106,7 +111,12 @@ public class SELotterySimpleSimulator {
 		excelHeaderLabels.add(COSTO_LABEL);
 		excelHeaderLabels.add(RITORNO_LABEL);
 		excelHeaderLabels.add(SALDO_LABEL);
-		List<String> historyLabels = allPremiumLabels.stream().map(label -> getHistoryPremiumLabel(label)).collect(Collectors.toList());
+		List<String> historyLabels = allPremiumLabels.stream().map(label -> getFollowingProgressiveHistoryPremiumLabel(label)).collect(Collectors.toList());
+		excelHeaderLabels.addAll(historyLabels);
+		excelHeaderLabels.add(COSTO_STORICO_PROGRESSIVO_ANTERIORE_LABEL);
+		excelHeaderLabels.add(RITORNO_STORICO_PROGRESSIVO_ANTERIORE_LABEL);
+		excelHeaderLabels.add(SALDO_STORICO_PROGRESSIVO_ANTERIORE_LABEL);
+		historyLabels = allPremiumLabels.stream().map(label -> getHistoryPremiumLabel(label)).collect(Collectors.toList());
 		excelHeaderLabels.addAll(historyLabels);
 		excelHeaderLabels.add(COSTO_STORICO_LABEL);
 		excelHeaderLabels.add(RITORNO_STORICO_LABEL);
@@ -495,7 +505,7 @@ public class SELotterySimpleSimulator {
 					setThreadPriorityToMax();
 				}
 			}
-			Map<String, Map<Integer, Integer>> premiumCountersForFile = new LinkedHashMap<>();
+			Map<String, Map<String, Object>> premiumCountersForFile = new LinkedHashMap<>();
 			Integer updateHistoryResult = null;
 			while ((!simulatorFinished.get()) && (updateHistoryResult == null || updateHistoryResult.compareTo(-1) != 0)) {
 				historyUpdateTaskStarted.set(true);
@@ -526,21 +536,23 @@ public class SELotterySimpleSimulator {
 		Properties configuration,
 		String excelFileName,
 		String configurationName,
-		Map<String, Map<Integer, Integer>> premiumCountersForFile,
+		Map<String, Map<String, Object>> premiumCountersForFile,
 		AtomicBoolean simulatorFinished
 	) {
 		boolean isSlave = CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false");
 		SEStats sEStats = getSEStats(configuration);
 		Map<Integer, String> allPremiums = Premium.all();
-		AtomicInteger dataAggStoricoColIndex = new AtomicInteger(0);
-		AtomicInteger fileColIndex = new AtomicInteger(0);
+		AtomicInteger dataColIndex = new AtomicInteger(-1);
+		AtomicInteger dataAggStoricoColIndex = new AtomicInteger(-1);
+		AtomicInteger fileColIndex = new AtomicInteger(-1);
 		AtomicReference<CellStyle> numberCellStyle = new AtomicReference<>();
 		AtomicReference<CellStyle> dateCellStyle = new AtomicReference<>();
-		List<Integer> excelRecordsToBeUpdated = new ArrayList<>();
+		List<Map.Entry<Integer, Date>> excelRecordsToBeUpdated = new ArrayList<>();
 		Integer result = readOrCreateExcel(
 			excelFileName,
 			workBook -> {
 				Sheet sheet = workBook.getSheet("Risultati");
+				dataColIndex.set(Shared.getCellIndex(sheet, DATA_LABEL));
 				dataAggStoricoColIndex.set(Shared.getCellIndex(sheet, DATA_AGGIORNAMENTO_STORICO_LABEL));
 				fileColIndex.set(Shared.getCellIndex(sheet, FILE_LABEL));
 				for (int i = 2; i < sheet.getPhysicalNumberOfRows(); i++) {
@@ -548,7 +560,7 @@ public class SELotterySimpleSimulator {
 					if (rowRefersTo(row, configurationName)) {
 						Date dataAggStor = row.getCell(dataAggStoricoColIndex.get()).getDateCellValue();
 						if (dataAggStor == null || dataAggStor.compareTo(sEStats.getLatestExtractionDate()) < 0) {
-							excelRecordsToBeUpdated.add(i);
+							excelRecordsToBeUpdated.add(new AbstractMap.SimpleEntry<>(i, row.getCell(dataColIndex.get()).getDateCellValue()));
 						}
 					}
 				}
@@ -564,7 +576,7 @@ public class SELotterySimpleSimulator {
 			Collections.shuffle(excelRecordsToBeUpdated);
 		}
 		int rowProcessedCounter = 0;
-		for (Integer rowIndex : excelRecordsToBeUpdated) {
+		for (Map.Entry<Integer, Date> rowIndexAndExtractionDate : excelRecordsToBeUpdated) {
 			++rowProcessedCounter;
 			AtomicReference<PersistentStorage> storageWrapper = new AtomicReference<>();
 			if (simulatorFinished.get()) {
@@ -578,7 +590,7 @@ public class SELotterySimpleSimulator {
 				excelFileName,
 				workBook -> {
 					Sheet sheet = workBook.getSheet("Risultati");
-					Row row = sheet.getRow(rowIndex);
+					Row row = sheet.getRow(rowIndexAndExtractionDate.getKey());
 					if (rowRefersTo(row, configurationName)) {
 						Date dataAggStor = row.getCell(dataAggStoricoColIndex.get()).getDateCellValue();
 						if (dataAggStor == null || dataAggStor.compareTo(sEStats.getLatestExtractionDate()) < 0) {
@@ -597,12 +609,17 @@ public class SELotterySimpleSimulator {
 			if (isSlave) {
 				return result;
 			}
+			String extractionDateFormattedForFile = TimeUtils.getDefaultDateFmtForFilePrefix().format(rowIndexAndExtractionDate.getValue());
 			if (storageWrapper.get() != null) {
-				Map<Integer, Integer> premiumCounters = premiumCountersForFile.computeIfAbsent(storageWrapper.get().getName(), key -> {
+				Map<String, Object> premiumCountersData = premiumCountersForFile.computeIfAbsent(storageWrapper.get().getName() + extractionDateFormattedForFile, key -> {
 					PersistentStorage storage = storageWrapper.get();
-					File premiumCountersFile = new File(storage.getAbsolutePathWithoutExtension() + "-historical-data.json");
+					File premiumCountersFile = new File(
+						storage.getAbsolutePathWithoutExtension() +
+						extractionDateFormattedForFile +
+						"-historical-data.json"
+					);
 					if (!premiumCountersFile.exists()) {
-						return computePremiumCountersData(sEStats, storage, premiumCountersFile);
+						return computePremiumCountersData(sEStats, storage, rowIndexAndExtractionDate.getValue(), premiumCountersFile);
 					} else {
 						Map<String, Object> data = null;
 						try {
@@ -612,16 +629,16 @@ public class SELotterySimpleSimulator {
 							if (!premiumCountersFile.delete()) {
 								Throwables.sneakyThrow(exc);
 							}
-							return computePremiumCountersData(sEStats, storage, premiumCountersFile);
+							return computePremiumCountersData(sEStats, storage, rowIndexAndExtractionDate.getValue(), premiumCountersFile);
 						}
 						if (LocalDate.parse(
 							(String)data.get("referenceDate"),
 							TimeUtils.defaultLocalDateFormat
 							).compareTo(TimeUtils.toLocalDate(sEStats.getLatestExtractionDate())) < 0
 						) {
-							return computePremiumCountersData(sEStats, storage, premiumCountersFile);
+							return computePremiumCountersData(sEStats, storage, rowIndexAndExtractionDate.getValue(), premiumCountersFile);
 						}
-						return (Map<Integer, Integer>)data.get("premiumCounters");
+						return data;
 					}
 				});
 				if (!isSlave) {
@@ -629,7 +646,7 @@ public class SELotterySimpleSimulator {
 						excelFileName,
 						workBook -> {
 							Sheet sheet = workBook.getSheet("Risultati");
-							if (rowIndex == 2) {
+							if (rowIndexAndExtractionDate.getKey() == 2) {
 								numberCellStyle.set(workBook.createCellStyle());
 								numberCellStyle.get().setAlignment(HorizontalAlignment.RIGHT);
 								numberCellStyle.get().setDataFormat(workBook.createDataFormat().getFormat("#,##0"));
@@ -637,22 +654,23 @@ public class SELotterySimpleSimulator {
 								dateCellStyle.get().setAlignment(HorizontalAlignment.CENTER);
 								dateCellStyle.get().setDataFormat(workBook.createDataFormat().getFormat("dd/MM/yyyy"));
 							} else {
-								Row previousRow = sheet.getRow(rowIndex -1);
+								Row previousRow = sheet.getRow(rowIndexAndExtractionDate.getKey() -1);
 								dateCellStyle.set(previousRow.getCell(dataAggStoricoColIndex.get()).getCellStyle());
 								numberCellStyle.set(
 									previousRow.getCell(Shared.getCellIndex(sheet, getHistoryPremiumLabel(Premium.allLabels().get(0)))).getCellStyle()
 								);
 							}
-							Row row = sheet.getRow(rowIndex);
+							Row row = sheet.getRow(rowIndexAndExtractionDate.getKey());
 							Storage storage = storageWrapper.get();
 							if (storage.getName().equals(row.getCell(fileColIndex.get()).getStringCellValue())) {
 								Cell dataAggStoricoCell = row.getCell(dataAggStoricoColIndex.get());
 								for (Map.Entry<Integer, String> premiumData : allPremiums.entrySet()) {
-									Cell cell = row.getCell(Shared.getCellIndex(sheet, getHistoryPremiumLabel(premiumData.getValue())));
-									Integer premiumCounter = premiumCounters.get(premiumData.getKey());
+									Cell historyDataCell =
+										row.getCell(Shared.getCellIndex(sheet, getHistoryPremiumLabel(premiumData.getValue())));
+									Integer premiumCounter = ((Map<Integer,Integer>)premiumCountersData.get("premiumCounters.all")).get(premiumData.getKey());
 									if (premiumCounter != null) {
-										cell.setCellValue(premiumCounter.doubleValue());
-										if (premiumData.getKey().compareTo(Premium.TYPE_TOMBOLA) == 0 && premiumCounter > 0) {
+										historyDataCell.setCellValue(premiumCounter.doubleValue());
+										/*if (premiumData.getKey().compareTo(Premium.TYPE_TOMBOLA) == 0 && premiumCounter > 0) {
 											Integer historicalPremiumCounter = storage.getHistoricalPremiums().get(Premium.TYPE_TOMBOLA);
 											if (historicalPremiumCounter == null || premiumCounter > historicalPremiumCounter) {
 												Shared.toHighlightedBoldedCell(workBook, cell, IndexedColors.RED);
@@ -664,16 +682,29 @@ public class SELotterySimpleSimulator {
 												Shared.toHighlightedBoldedCell(workBook, cell, IndexedColors.ORANGE);
 												continue;
 											}
-										}
+										}*/
 									} else {
-										cell.setCellValue(0d);
+										historyDataCell.setCellValue(0d);
 									}
-									cell.setCellStyle(numberCellStyle.get());
+									historyDataCell =
+										row.getCell(Shared.getCellIndex(sheet, getFollowingProgressiveHistoryPremiumLabel(premiumData.getValue())));
+									premiumCounter = ((Map<Integer,Integer>)premiumCountersData.get("premiumCounters.fromExtractionDate")).get(premiumData.getKey());
+									if (premiumCounter != null) {
+										historyDataCell.setCellValue(premiumCounter.doubleValue());
+									} else {
+										historyDataCell.setCellValue(0d);
+									}
+									historyDataCell.setCellStyle(numberCellStyle.get());
 								}
 								Cell cell = row.getCell(Shared.getCellIndex(sheet, COSTO_STORICO_LABEL));
 								cell.setCellStyle(numberCellStyle.get());
 								cell.setCellValue(
-									sEStats.getAllWinningCombos().size() * row.getCell(Shared.getCellIndex(sheet, COSTO_LABEL)).getNumericCellValue()
+									(Integer)premiumCountersData.get("premiumCounters.all.processedExtractionDateCounter") * row.getCell(Shared.getCellIndex(sheet, COSTO_LABEL)).getNumericCellValue()
+								);
+								cell = row.getCell(Shared.getCellIndex(sheet, COSTO_STORICO_PROGRESSIVO_ANTERIORE_LABEL));
+								cell.setCellStyle(numberCellStyle.get());
+								cell.setCellValue(
+									(Integer)premiumCountersData.get("premiumCounters.fromExtractionDate.processedExtractionDateCounter") * row.getCell(Shared.getCellIndex(sheet, COSTO_STORICO_PROGRESSIVO_ANTERIORE_LABEL)).getNumericCellValue()
 								);
 								dataAggStoricoCell.setCellStyle(dateCellStyle.get());
 								dataAggStoricoCell.setCellValue(sEStats.getLatestExtractionDate());
@@ -682,7 +713,7 @@ public class SELotterySimpleSimulator {
 						null,
 						workBook -> {
 							store(excelFileName, workBook, isSlave);
-							Row row = workBook.getSheet("Risultati").getRow(rowIndex);
+							Row row = workBook.getSheet("Risultati").getRow(rowIndexAndExtractionDate.getKey());
 							LogUtils.info(
 								"Aggiornamento storico completato per " +
 								TimeUtils.getDefaultDateFormat().format(row.getCell(0).getDateCellValue()) + " - " +
@@ -718,26 +749,33 @@ public class SELotterySimpleSimulator {
 
 	protected static Map<String, Object> readPremiumCountersData(File premiumCountersFile) throws StreamReadException, DatabindException, IOException {
 		Map<String, Object> data = objectMapper.readValue(premiumCountersFile, Map.class);
-		data.put("premiumCounters",((Map<String, Integer>)objectMapper.readValue(premiumCountersFile, Map.class).get("premiumCounters")).entrySet().stream()
+		data.put("premiumCounters.all",((Map<String, Integer>)objectMapper.readValue(premiumCountersFile, Map.class).get("premiumCounters")).entrySet().stream()
 			.collect(Collectors.toMap(entry -> Integer.parseInt(entry.getKey()), Map.Entry::getValue, (x, y) -> y, LinkedHashMap::new)));
+		data.put("premiumCounters.all.processedExtractionDateCounter", Integer.valueOf((String)data.get("premiumCounters.all.processedExtractionDateCounter")));
+		data.put("premiumCounters.fromExtractionDate",((Map<String, Integer>)objectMapper.readValue(premiumCountersFile, Map.class).get("premiumCountersFromExtractionDate")).entrySet().stream()
+				.collect(Collectors.toMap(entry -> Integer.parseInt(entry.getKey()), Map.Entry::getValue, (x, y) -> y, LinkedHashMap::new)));
+		data.put("premiumCounters.fromExtractionDate.processedExtractionDateCounter", Integer.valueOf((String)data.get("premiumCounters.fromExtractionDate.processedExtractionDateCounter")));
 		return data;
 	}
 
-	protected static Map<Integer, Integer> computePremiumCountersData(
+	protected static Map<String, Object> computePremiumCountersData(
 		SEStats sEStats,
 		PersistentStorage storage,
+		Date extractionDate,
 		File premiumCountersFile
 	) {
 		LogUtils.info("Computing historycal data of " + storage.getName());
 		Map<String, Object> qualityCheckResult = sEStats.checkQuality(storage::iterator);
+		Map<String, Object> qualityCheckResultFromExtractionDate = sEStats.checkQualityFrom(storage::iterator, extractionDate);
 		LogUtils.info("Computed historycal data of " + storage.getName());
-		Map<Integer, Integer> pC =
-			(Map<Integer, Integer>)qualityCheckResult.get("premium.counters");
 		Map<String, Object> data = new LinkedHashMap<>();
-		data.put("premiumCounters", pC);
+		data.put("premiumCounters.all", qualityCheckResult.get("premium.counters"));
+		data.put("premiumCounters.all.processedExtractionDateCounter", qualityCheckResult.get("processedExtractionDateCounter"));
+		data.put("premiumCounters.fromExtractionDate", qualityCheckResultFromExtractionDate.get("premium.counters"));
+		data.put("premiumCounters.fromExtractionDate.processedExtractionDateCounter", qualityCheckResultFromExtractionDate.get("processedExtractionDateCounter"));
 		data.put("referenceDate", qualityCheckResult.get("referenceDate"));
 		writePremiumCountersData(premiumCountersFile, data);
-		return pC;
+		return data;
 	}
 
 	private static void writePremiumCountersData(File premiumCountersFile, Map<String, Object> qualityCheckResult) {
@@ -790,7 +828,7 @@ public class SELotterySimpleSimulator {
 	) throws UnsupportedEncodingException {
 		Storage storage = !storages.isEmpty() ? storages.get(storages.size() -1) : null;
 		if (storage != null) {
-			Map<String, Integer> results = allTimeStats.check(extractionDate, storage::iterator);
+			Map<String, Integer> results = allTimeStats.checkFor(extractionDate, storage::iterator);
 			workBookTemplate.addCell(TimeUtils.toDate(extractionDate)).getCellStyle().setAlignment(HorizontalAlignment.CENTER);
 			List<String> allPremiumLabels = Premium.allLabels();
 			for (int i = 0; i < allPremiumLabels.size();i++) {
@@ -810,15 +848,25 @@ public class SELotterySimpleSimulator {
 			workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
 			formula = generateSaldoFormula(currentRowNum, sheet, Arrays.asList(RITORNO_LABEL, COSTO_LABEL));
 			workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
+
 			workBookTemplate.addCell(Collections.nCopies(Premium.all().size(), null));
 			workBookTemplate.addCell(0, "#,##0");
-			cell.getCellStyle().setAlignment(HorizontalAlignment.CENTER);
+			allFormulas = Premium.allLabels().stream().map(
+					label -> generatePremiumFormula(sheet, currentRowNum, label, SELotterySimpleSimulator::getFollowingProgressiveHistoryPremiumLabel)).collect(Collectors.toList());
+			formula = String.join("+", allFormulas);
+			workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
+			formula = generateSaldoFormula(currentRowNum, sheet, Arrays.asList(RITORNO_STORICO_PROGRESSIVO_ANTERIORE_LABEL, COSTO_STORICO_PROGRESSIVO_ANTERIORE_LABEL));
+			workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
+
+			workBookTemplate.addCell(Collections.nCopies(Premium.all().size(), null));
+			workBookTemplate.addCell(0, "#,##0");
 			allFormulas = Premium.allLabels().stream().map(
 					label -> generatePremiumFormula(sheet, currentRowNum, label, SELotterySimpleSimulator::getHistoryPremiumLabel)).collect(Collectors.toList());
 			formula = String.join("+", allFormulas);
 			workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
 			formula = generateSaldoFormula(currentRowNum, sheet, Arrays.asList(RITORNO_STORICO_LABEL, COSTO_STORICO_LABEL));
 			workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
+
 			workBookTemplate.addCell((Date)null);
 			Cell cellName = workBookTemplate.addCell(storage.getName()).get(0);
 			PersistentStorage persistentStorage = (PersistentStorage)storage;
@@ -843,7 +891,11 @@ public class SELotterySimpleSimulator {
 	}
 
 	protected static String getHistoryPremiumLabel(String label) {
-		return "Totale " + label.toLowerCase() + " (storico)";
+		return "Totale " + label.toLowerCase() + " " + STORICO_SUFFIX;
+	}
+
+	protected static String getFollowingProgressiveHistoryPremiumLabel(String label) {
+		return "Totale " + label.toLowerCase() + " " + STORICO_PROGRESSIVO_ANTERIORE_SUFFIX;
 	}
 
 	protected static Function<LocalDate, Function<List<Storage>, Integer>> buildExtractionDatePredicate(
@@ -934,6 +986,11 @@ public class SELotterySimpleSimulator {
 		CellStyle headerNumberStyle = workBook.createCellStyle();
 		headerNumberStyle.cloneStyleFrom(sheet.getRow(1).getCell(Shared.getCellIndex(sheet, COSTO_LABEL)).getCellStyle());
 		headerNumberStyle.setDataFormat(workBook.createDataFormat().getFormat("#,##0"));
+		for (String label : Premium.allLabels()) {
+			sheet.getRow(1).getCell(Shared.getCellIndex(sheet, label)).setCellStyle(headerNumberStyle);
+			sheet.getRow(1).getCell(Shared.getCellIndex(sheet, getFollowingProgressiveHistoryPremiumLabel(label))).setCellStyle(headerNumberStyle);
+			sheet.getRow(1).getCell(Shared.getCellIndex(sheet, getHistoryPremiumLabel(label))).setCellStyle(headerNumberStyle);
+		}
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, COSTO_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, RITORNO_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, SALDO_LABEL)).setCellStyle(headerNumberStyle);
@@ -942,10 +999,14 @@ public class SELotterySimpleSimulator {
 			CellReference.convertNumToColString(excelHeaderLabels.indexOf(SALDO_LABEL)) + getLatestRowIndex() +
 			")/" + CellReference.convertNumToColString(excelHeaderLabels.indexOf(COSTO_LABEL)) + "2),\"###,00%\")"
 		);
-		for (String label : Premium.allLabels()) {
-			sheet.getRow(1).getCell(Shared.getCellIndex(sheet, label)).setCellStyle(headerNumberStyle);
-			sheet.getRow(1).getCell(Shared.getCellIndex(sheet, getHistoryPremiumLabel(label))).setCellStyle(headerNumberStyle);
-		}
+		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, COSTO_STORICO_PROGRESSIVO_ANTERIORE_LABEL)).setCellStyle(headerNumberStyle);
+		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, RITORNO_STORICO_PROGRESSIVO_ANTERIORE_LABEL)).setCellStyle(headerNumberStyle);
+		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, SALDO_STORICO_PROGRESSIVO_ANTERIORE_LABEL)).setCellStyle(headerNumberStyle);
+		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, SALDO_STORICO_PROGRESSIVO_ANTERIORE_LABEL)).setCellFormula(
+			"TEXT((SUM(" + CellReference.convertNumToColString(excelHeaderLabels.indexOf(SALDO_STORICO_PROGRESSIVO_ANTERIORE_LABEL)) + "3:" +
+			CellReference.convertNumToColString(excelHeaderLabels.indexOf(SALDO_STORICO_PROGRESSIVO_ANTERIORE_LABEL)) + getLatestRowIndex() +
+			")/" + CellReference.convertNumToColString(excelHeaderLabels.indexOf(COSTO_STORICO_PROGRESSIVO_ANTERIORE_LABEL)) + "2),\"###,00%\")"
+		);
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, COSTO_STORICO_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, RITORNO_STORICO_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(Shared.getCellIndex(sheet, SALDO_STORICO_LABEL)).setCellStyle(headerNumberStyle);
@@ -958,6 +1019,9 @@ public class SELotterySimpleSimulator {
 		sheet.setColumnWidth(Shared.getCellIndex(sheet, COSTO_LABEL), 3000);
 		sheet.setColumnWidth(Shared.getCellIndex(sheet, RITORNO_LABEL), 3000);
 		sheet.setColumnWidth(Shared.getCellIndex(sheet, SALDO_LABEL), 3000);
+		sheet.setColumnWidth(Shared.getCellIndex(sheet, COSTO_STORICO_PROGRESSIVO_ANTERIORE_LABEL), 3000);
+		sheet.setColumnWidth(Shared.getCellIndex(sheet, RITORNO_STORICO_PROGRESSIVO_ANTERIORE_LABEL), 3000);
+		sheet.setColumnWidth(Shared.getCellIndex(sheet, SALDO_STORICO_PROGRESSIVO_ANTERIORE_LABEL), 3000);
 		sheet.setColumnWidth(Shared.getCellIndex(sheet, COSTO_STORICO_LABEL), 3000);
 		sheet.setColumnWidth(Shared.getCellIndex(sheet, RITORNO_STORICO_LABEL), 3000);
 		sheet.setColumnWidth(Shared.getCellIndex(sheet, SALDO_STORICO_LABEL), 3000);
