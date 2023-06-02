@@ -537,7 +537,7 @@ public class SEStats {
 			Date referenceDate = winningComboInfo.getKey();
 			if (referenceDate.compareTo(startDate) >= 0 && referenceDate.compareTo(endDate) <= 0) {
 				if (effectiveStartDate == null) {
-					effectiveEndDate = referenceDate;
+					effectiveStartDate = referenceDate;
 				}
 				++processedExtractionDateCounter;
 				Map<Integer,List<List<Integer>>> winningCombosForExtraction = new TreeMap<>();
