@@ -597,12 +597,12 @@ public class SEStats {
 			Integer type = winningInfo.getKey();
 			String label = Premium.toLabel(type);
 			returns += premiumPrice(type) * winningInfo.getValue();
-			report.append("\t" + label + ":" + rightAlignedString(MathUtils.INSTANCE.integerFormat.format(winningInfo.getValue()), 21 - label.length()) + "\n");
+			report.append("\t" + label + ":" + rightAlignedString(MathUtils.INSTANCE.integerFormat.format(winningInfo.getValue()), 29 - label.length()) + "\n");
 		}
 		if (processedExtractionDateCounter > 0) {
 			report.append("\n\tCosto storico:" + rightAlignedString(MathUtils.INSTANCE.integerFormat.format(processedExtractionDateCounter * systemSize), 15) + "€\n");
 			report.append("\tRitorno storico:" + rightAlignedString(MathUtils.INSTANCE.integerFormat.format(returns), 13) + "€\n");
-			report.append("\tRapporto:" + rightAlignedString(MathUtils.INSTANCE.decimalFormat.format(((returns * 100d) / (processedExtractionDateCounter * systemSize)) - 100d), 12) + "%\n");
+			report.append("\tRapporto:" + rightAlignedString(MathUtils.INSTANCE.decimalFormat.format(((returns * 100d) / (processedExtractionDateCounter * systemSize)) - 100d), 20) + "%\n");
 		}
 		data.put("report.summary", report.toString());
 		data.put("premium.counters", premiumCounters);
