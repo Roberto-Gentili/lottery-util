@@ -586,8 +586,11 @@ public class SEStats {
 		}
 		data.put("report.detail", report.toString());
 		report = new StringBuffer("");
-		report.append("Riepilogo risultati storici sistema dal " + TimeUtils.getDefaultDateFormat().format(effectiveStartDate) +
-			" al " + TimeUtils.getDefaultDateFormat().format(effectiveEndDate) + ":\n\n"
+		report.append(
+			processedExtractionDateCounter > 0 ?
+				"Riepilogo risultati storici sistema dal " + TimeUtils.getDefaultDateFormat().format(effectiveStartDate) +
+					" al " + TimeUtils.getDefaultDateFormat().format(effectiveEndDate) + ":\n\n":
+				"Riepilogo risultati storici sistema non disponibile\n"
 		);
 		Integer returns = 0;
 		for (Map.Entry<Integer, Integer> winningInfo : premiumCounters.entrySet()) {
@@ -596,9 +599,11 @@ public class SEStats {
 			returns += premiumPrice(type) * winningInfo.getValue();
 			report.append("\t" + label + ":" + rightAlignedString(MathUtils.INSTANCE.integerFormat.format(winningInfo.getValue()), 21 - label.length()) + "\n");
 		}
-		report.append("\n\tCosto:" + rightAlignedString(MathUtils.INSTANCE.integerFormat.format(processedExtractionDateCounter * systemSize), 15) + "€\n");
-		report.append("\tRitorno:" + rightAlignedString(MathUtils.INSTANCE.integerFormat.format(returns), 13) + "€\n");
-		report.append("\tRapporto:" + rightAlignedString(MathUtils.INSTANCE.decimalFormat.format(((returns * 100d) / (processedExtractionDateCounter * systemSize)) - 100d), 12) + "%\n");
+		if (processedExtractionDateCounter > 0) {
+			report.append("\n\tCosto storico:" + rightAlignedString(MathUtils.INSTANCE.integerFormat.format(processedExtractionDateCounter * systemSize), 15) + "€\n");
+			report.append("\tRitorno storico:" + rightAlignedString(MathUtils.INSTANCE.integerFormat.format(returns), 13) + "€\n");
+			report.append("\tRapporto:" + rightAlignedString(MathUtils.INSTANCE.decimalFormat.format(((returns * 100d) / (processedExtractionDateCounter * systemSize)) - 100d), 12) + "%\n");
+		}
 		data.put("report.summary", report.toString());
 		data.put("premium.counters", premiumCounters);
 		Date referenceDate = getLatestExtractionDate();
