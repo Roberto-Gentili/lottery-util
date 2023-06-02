@@ -704,7 +704,7 @@ public class SELotterySimpleSimulator {
 								cell = row.getCell(Shared.getCellIndex(sheet, COSTO_STORICO_PROGRESSIVO_ANTERIORE_LABEL));
 								cell.setCellStyle(numberCellStyle.get());
 								cell.setCellValue(
-									(Integer)premiumCountersData.get("premiumCounters.fromExtractionDate.processedExtractionDateCounter") * row.getCell(Shared.getCellIndex(sheet, COSTO_STORICO_PROGRESSIVO_ANTERIORE_LABEL)).getNumericCellValue()
+									(Integer)premiumCountersData.get("premiumCounters.fromExtractionDate.processedExtractionDateCounter") * row.getCell(Shared.getCellIndex(sheet, COSTO_LABEL)).getNumericCellValue()
 								);
 								dataAggStoricoCell.setCellStyle(dateCellStyle.get());
 								dataAggStoricoCell.setCellValue(sEStats.getLatestExtractionDate());
