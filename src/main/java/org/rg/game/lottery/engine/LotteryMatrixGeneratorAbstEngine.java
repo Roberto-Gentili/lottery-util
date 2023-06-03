@@ -643,8 +643,11 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		return null;
 	}
 
-	private void moveRandomizerToLast(BooleanSupplier equilibrateFlagSupplier, AtomicInteger effectiveRandomCounter,
-			ComboHandler comboHandler) {
+	private void moveRandomizerToLast(
+		BooleanSupplier equilibrateFlagSupplier,
+		AtomicInteger effectiveRandomCounter,
+		ComboHandler comboHandler
+	) {
 		equilibrateFlagSupplier.getAsBoolean();
 		long browsedCombo = effectiveRandomCounter.get();
 		while (browsedCombo-- > 0) {

@@ -245,9 +245,10 @@ public class SELotterySimpleSimulator {
 					redundantConfigValue != null? Integer.valueOf(redundantConfigValue) : 10
 				);
 			configuration.setProperty("report.enabled", "true");
+			AtomicBoolean firstSetupExecuted = new AtomicBoolean(false);
 			Runnable taskOperation = () -> {
 				LogUtils.info("Computation of " + configuration.getProperty("file.name") + " started");
-				process(configuration, excelFileName, engine, competitionDates);
+				process(configuration, excelFileName, engine, competitionDates, firstSetupExecuted);
 				LogUtils.info("Computation of " + configuration.getProperty("file.name") + " succesfully finished");
 			};
 			if (CollectionUtils.retrieveBoolean(configuration, "async", "false")) {
@@ -256,6 +257,17 @@ public class SELotterySimpleSimulator {
 				taskOperation.run();
 			}
 			ConcurrentUtils.waitUntil(futures, ft -> ft.size() >= 5);
+			if (!firstSetupExecuted.get()) {
+				synchronized (firstSetupExecuted) {
+					if (!firstSetupExecuted.get()) {
+						try {
+							firstSetupExecuted.wait();
+						} catch (InterruptedException exc) {
+							Throwables.sneakyThrow(exc);
+						}
+					}
+				}
+			}
 		}
 	}
 
@@ -402,7 +414,8 @@ public class SELotterySimpleSimulator {
 		Properties configuration,
 		String excelFileName,
 		SELotteryMatrixGeneratorEngine engine,
-		List<List<LocalDate>> competitionDates
+		List<List<LocalDate>> competitionDates,
+		AtomicBoolean firstSetupExecuted
 	) {
 		String redundantConfigValue = configuration.getProperty("simulation.redundancy");
 		boolean isSlave = CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false");
@@ -446,12 +459,14 @@ public class SELotterySimpleSimulator {
 				)
 			);
 			engine.setup(configuration);
+			checkAndNotifyExecutionOfFirstSetupForConfiguration(firstSetupExecuted);
 			engine.getExecutor().apply(
 				extractionDatePredicate
 			).apply(
 				systemProcessor
 			);
 		}
+		checkAndNotifyExecutionOfFirstSetupForConfiguration(firstSetupExecuted);
 		while (!historyUpdateTaskStarted.get()) {
 			try {
 				Thread.sleep(1000);
@@ -480,6 +495,15 @@ public class SELotterySimpleSimulator {
 		//Puliamo file txt duplicati da google drive
 		for (File file : ResourceUtils.INSTANCE.find("(1)", "txt", retrieveBasePath(configuration))) {
 			file.delete();
+		}
+	}
+
+	protected static void checkAndNotifyExecutionOfFirstSetupForConfiguration(AtomicBoolean firstSetupExecuted) {
+		if (!firstSetupExecuted.get()) {
+			firstSetupExecuted.set(true);
+			synchronized(firstSetupExecuted) {
+				firstSetupExecuted.notify();
+			}
 		}
 	}
 
