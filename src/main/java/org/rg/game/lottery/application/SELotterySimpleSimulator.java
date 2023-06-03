@@ -10,6 +10,7 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -572,6 +573,7 @@ public class SELotterySimpleSimulator {
 		AtomicReference<CellStyle> numberCellStyle = new AtomicReference<>();
 		AtomicReference<CellStyle> dateCellStyle = new AtomicReference<>();
 		List<Map.Entry<Integer, Date>> excelRecordsToBeUpdated = new ArrayList<>();
+		Function<Date, Date> dateOffsetComputer = dateOffsetComputer(configuration);
 		Integer result = readOrCreateExcel(
 			excelFileName,
 			workBook -> {
@@ -582,7 +584,7 @@ public class SELotterySimpleSimulator {
 				for (int i = 2; i < sheet.getPhysicalNumberOfRows(); i++) {
 					Row row = sheet.getRow(i);
 					if (rowRefersTo(row, configurationName)) {
-						Date dataAggStor = row.getCell(dataAggStoricoColIndex.get()).getDateCellValue();
+						Date dataAggStor = dateOffsetComputer.apply(row.getCell(dataAggStoricoColIndex.get()).getDateCellValue());
 						if (dataAggStor == null || dataAggStor.compareTo(sEStats.getLatestExtractionDate()) < 0) {
 							excelRecordsToBeUpdated.add(new AbstractMap.SimpleEntry<>(i, row.getCell(dataColIndex.get()).getDateCellValue()));
 						}
@@ -616,7 +618,7 @@ public class SELotterySimpleSimulator {
 					Sheet sheet = workBook.getSheet("Risultati");
 					Row row = sheet.getRow(rowIndexAndExtractionDate.getKey());
 					if (rowRefersTo(row, configurationName)) {
-						Date dataAggStor = row.getCell(dataAggStoricoColIndex.get()).getDateCellValue();
+						Date dataAggStor = dateOffsetComputer.apply(row.getCell(dataAggStoricoColIndex.get()).getDateCellValue()) ;
 						if (dataAggStor == null || dataAggStor.compareTo(sEStats.getLatestExtractionDate()) < 0) {
 							PersistentStorage storage = PersistentStorage.restore(
 								configuration.getProperty("group"),
@@ -741,6 +743,25 @@ public class SELotterySimpleSimulator {
 			file.delete();
 		}
 		return 1;
+	}
+
+	private static Function<Date, Date> dateOffsetComputer(Properties configuration) {
+		String offsetRaw = configuration.getProperty("history.validity", "0d");
+		String offsetAsString = offsetRaw.replaceAll("\\s+","").split("d|D|w|W|m|M")[0];
+		Integer offset = Integer.valueOf(offsetAsString);
+		if (offset.compareTo(0) == 0) {
+			return date -> date;
+		}
+		String incrementationType = String.valueOf(offsetRaw.charAt(offsetRaw.length()-1));
+		if (incrementationType.equalsIgnoreCase("w")) {
+			return date ->
+				TimeUtils.increment(date, offset, ChronoUnit.WEEKS);
+		} else if (incrementationType.equalsIgnoreCase("m")) {
+			return date ->
+				TimeUtils.increment(date, offset, ChronoUnit.MONTHS);
+		}
+		return date ->
+			TimeUtils.increment(date, offset, ChronoUnit.DAYS);
 	}
 
 	protected static String retrieveBasePath(Properties configuration) {

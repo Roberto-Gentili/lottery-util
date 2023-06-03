@@ -48,4 +48,8 @@ public class TimeUtils {
 		return defaultDateFmtForFilePrefix.get();
 	}
 
+	public static Date increment(Date dateCellValue, Integer daysOffset, ChronoUnit chronoUnit) {
+		return toDate(toLocalDate(dateCellValue).plus(daysOffset, chronoUnit));
+	}
+
 }
