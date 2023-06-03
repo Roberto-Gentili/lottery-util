@@ -755,13 +755,19 @@ public class SELotterySimpleSimulator {
 		String incrementationType = String.valueOf(offsetRaw.charAt(offsetRaw.length()-1));
 		if (incrementationType.equalsIgnoreCase("w")) {
 			return date ->
-				TimeUtils.increment(date, offset, ChronoUnit.WEEKS);
+				date != null ?
+					TimeUtils.increment(date, offset, ChronoUnit.WEEKS) :
+					null;
 		} else if (incrementationType.equalsIgnoreCase("m")) {
 			return date ->
-				TimeUtils.increment(date, offset, ChronoUnit.MONTHS);
+				date != null ?
+					TimeUtils.increment(date, offset, ChronoUnit.MONTHS) :
+					null;
 		}
 		return date ->
-			TimeUtils.increment(date, offset, ChronoUnit.DAYS);
+			date != null ?
+				TimeUtils.increment(date, offset, ChronoUnit.DAYS) :
+				null;
 	}
 
 	protected static String retrieveBasePath(Properties configuration) {
