@@ -787,12 +787,10 @@ public class SELotterySimpleSimulator {
 
 	protected static Map<String, Object> readPremiumCountersData(File premiumCountersFile) throws StreamReadException, DatabindException, IOException {
 		Map<String, Object> data = objectMapper.readValue(premiumCountersFile, Map.class);
-		data.put("premiumCounters.all",((Map<String, Integer>)objectMapper.readValue(premiumCountersFile, Map.class).get("premiumCounters")).entrySet().stream()
+		data.put("premiumCounters.all",((Map<String, Integer>)data.get("premiumCounters.all")).entrySet().stream()
 			.collect(Collectors.toMap(entry -> Integer.parseInt(entry.getKey()), Map.Entry::getValue, (x, y) -> y, LinkedHashMap::new)));
-		data.put("premiumCounters.all.processedExtractionDateCounter", Integer.valueOf((String)data.get("premiumCounters.all.processedExtractionDateCounter")));
-		data.put("premiumCounters.fromExtractionDate",((Map<String, Integer>)objectMapper.readValue(premiumCountersFile, Map.class).get("premiumCountersFromExtractionDate")).entrySet().stream()
+		data.put("premiumCounters.fromExtractionDate",((Map<String, Integer>)data.get("premiumCounters.fromExtractionDate")).entrySet().stream()
 				.collect(Collectors.toMap(entry -> Integer.parseInt(entry.getKey()), Map.Entry::getValue, (x, y) -> y, LinkedHashMap::new)));
-		data.put("premiumCounters.fromExtractionDate.processedExtractionDateCounter", Integer.valueOf((String)data.get("premiumCounters.fromExtractionDate.processedExtractionDateCounter")));
 		return data;
 	}
 
