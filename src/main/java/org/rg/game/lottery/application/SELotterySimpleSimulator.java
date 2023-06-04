@@ -522,29 +522,33 @@ public class SELotterySimpleSimulator {
 		AtomicBoolean simulatorFinished
 	) {
 		return CompletableFuture.runAsync(() -> {
-			boolean isSlave = CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false");
 			int initialPriority = Thread.currentThread().getPriority();
-			if (!isSlave) {
-				if (!simulatorFinished.get()) {
-					Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
-				} else{
-					setThreadPriorityToMax();
+			try {
+				boolean isSlave = CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false");
+				if (!isSlave) {
+					if (!simulatorFinished.get()) {
+						Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
+					} else{
+						setThreadPriorityToMax();
+					}
 				}
-			}
-			Map<String, Map<String, Object>> premiumCountersForFile = new LinkedHashMap<>();
-			Integer updateHistoryResult = null;
-			while ((!simulatorFinished.get()) && (updateHistoryResult == null || updateHistoryResult.compareTo(-1) != 0)) {
-				historyUpdateTaskStarted.set(true);
-				updateHistoryResult = updateHistory(configuration, excelFileName, configurationName, premiumCountersForFile, simulatorFinished);
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException exc) {
-					Throwables.sneakyThrow(exc);
+				Map<String, Map<String, Object>> premiumCountersForFile = new LinkedHashMap<>();
+				Integer updateHistoryResult = null;
+				while ((!simulatorFinished.get()) && (updateHistoryResult == null || updateHistoryResult.compareTo(-1) != 0)) {
+					historyUpdateTaskStarted.set(true);
+					updateHistoryResult = updateHistory(configuration, excelFileName, configurationName, premiumCountersForFile, simulatorFinished);
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException exc) {
+						Throwables.sneakyThrow(exc);
+					}
 				}
-			}
-			setThreadPriorityToMax();
-			if (updateHistoryResult == null || updateHistoryResult.compareTo(-1) != 0) {
-				updateHistory(configuration, excelFileName, configurationName, premiumCountersForFile, simulatorFinished);
+				setThreadPriorityToMax();
+				if (updateHistoryResult == null || updateHistoryResult.compareTo(-1) != 0) {
+					updateHistory(configuration, excelFileName, configurationName, premiumCountersForFile, simulatorFinished);
+				}
+			} catch (Throwable exc) {
+				exc.printStackTrace();
 			}
 			Thread.currentThread().setPriority(initialPriority);
 		});
