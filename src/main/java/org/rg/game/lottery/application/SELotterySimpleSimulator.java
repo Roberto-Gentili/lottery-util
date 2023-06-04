@@ -633,7 +633,7 @@ public class SELotterySimpleSimulator {
 				null,
 				CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false")
 			);
-			if (isSlave) {
+			if (isSlave && result.compareTo(-1) == 0) {
 				return result;
 			}
 			String extractionDateFormattedForFile = TimeUtils.getDefaultDateFmtForFilePrefix().format(rowIndexAndExtractionDate.getValue());
