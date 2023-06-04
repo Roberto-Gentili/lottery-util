@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.AbstractMap;
@@ -657,12 +658,14 @@ public class SELotterySimpleSimulator {
 							}
 							return computePremiumCountersData(sEStats, storage, rowIndexAndExtractionDate.getValue(), premiumCountersFile);
 						}
-						if (LocalDate.parse(
-							(String)data.get("referenceDate"),
-							TimeUtils.defaultLocalDateFormat
-							).compareTo(TimeUtils.toLocalDate(sEStats.getLatestExtractionDate())) < 0
-						) {
-							return computePremiumCountersData(sEStats, storage, rowIndexAndExtractionDate.getValue(), premiumCountersFile);
+						try {
+							if (dateOffsetComputer.apply(TimeUtils.getDefaultDateFormat().parse((String)data.get("referenceDate")))
+								.compareTo(sEStats.getLatestExtractionDate()) < 0
+							) {
+								return computePremiumCountersData(sEStats, storage, rowIndexAndExtractionDate.getValue(), premiumCountersFile);
+							}
+						} catch (ParseException exc) {
+							Throwables.sneakyThrow(exc);
 						}
 						return data;
 					}
