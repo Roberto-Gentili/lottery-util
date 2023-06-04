@@ -665,7 +665,7 @@ public class SELotterySimpleSimulator {
 								return computePremiumCountersData(sEStats, storage, rowIndexAndExtractionDate.getValue(), premiumCountersFile);
 							}
 						} catch (ParseException exc) {
-							Throwables.sneakyThrow(exc);
+							return Throwables.sneakyThrow(exc);
 						}
 						return data;
 					}
