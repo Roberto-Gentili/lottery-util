@@ -614,7 +614,7 @@ public class SELotterySimpleSimulator {
 				setThreadPriorityToMax();
 				int remainedRecords = (excelRecordsToBeUpdated.size() - (rowProcessedCounter + 1));
 				if (remainedRecords % 100 == 0) {
-					LogUtils.info("History update is going to finish: " + remainedRecords + " records remained");
+					LogUtils.info("Historical update is going to finish: " + remainedRecords + " records remained");
 				}
 			}
 			result = readOrCreateExcel(
@@ -735,7 +735,7 @@ public class SELotterySimpleSimulator {
 							store(excelFileName, workBook, isSlave);
 							Row row = workBook.getSheet("Risultati").getRow(rowIndexAndExtractionDate.getKey());
 							LogUtils.info(
-								"Aggiornamento storico completato per " +
+								"Historical update completed for " +
 								TimeUtils.getDefaultDateFormat().format(row.getCell(0).getDateCellValue()) + " - " +
 								row.getCell(fileColIndex.get()).getStringCellValue()
 							);
