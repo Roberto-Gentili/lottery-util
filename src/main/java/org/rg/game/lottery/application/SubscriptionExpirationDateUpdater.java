@@ -35,6 +35,7 @@ public class SubscriptionExpirationDateUpdater {
 	static DateTimeFormatter datePattern = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
 
 	static List<Map.Entry<List<String>, Integer>> updateInfos = Arrays.asList(
+		//addUpdateInfo(computeIncrementationOfWeeks(12), "Tomarelli Gianluca")
 		//addUpdateInfo(computeIncrementationOfDays(1), "all")
 		//addUpdateInfo(computeIncrementationOfWeeks(4), "Barella Roberta")
 		//addUpdateInfo(computeIncrementationOfWeeks(4), "Bellacanzone Emanuele"),
