@@ -162,7 +162,7 @@ public class SEStats {
 		}
 
 		loadStats();
-		LogUtils.info("\nAll extraction data have been succesfully loaded for period " + startDate + " -> " + endDate + "\n\n");
+		LogUtils.info("\nAll extraction data have been succesfully loaded for period " + startDate + " -> " + endDate);
 		for (DataStorer dataStorer : dataStorers) {
 			try {
 				if (dataStorer.store()) {
