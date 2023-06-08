@@ -447,7 +447,7 @@ public class SELotterySimpleSimulator {
 		}
 		AtomicBoolean simulatorFinished = new AtomicBoolean(false);
 		AtomicBoolean historyUpdateTaskStarted = new AtomicBoolean(false);
-		CompletableFuture<Void> historyUpdateTask = startHistoryUpdateTask(
+		CompletableFuture<Void> historyUpdateTask = startHistoricalUpdateTask(
 			configuration, excelFileName, configuration.getProperty("nameSuffix"), historyUpdateTaskStarted, simulatorFinished
 		);
 
@@ -514,7 +514,7 @@ public class SELotterySimpleSimulator {
 		//return Shared.getSEStats().getAllWinningCombos().size() * 2;
 	}
 
-	private static CompletableFuture<Void> startHistoryUpdateTask(
+	private static CompletableFuture<Void> startHistoricalUpdateTask(
 		Properties configuration,
 		String excelFileName,
 		String configurationName,
@@ -536,7 +536,7 @@ public class SELotterySimpleSimulator {
 				Integer updateHistoryResult = null;
 				while ((!simulatorFinished.get()) && (updateHistoryResult == null || updateHistoryResult.compareTo(-1) != 0)) {
 					historyUpdateTaskStarted.set(true);
-					updateHistoryResult = updateHistory(configuration, excelFileName, configurationName, premiumCountersForFile, simulatorFinished);
+					updateHistoryResult = updateHistorical(configuration, excelFileName, configurationName, premiumCountersForFile, simulatorFinished);
 					try {
 						Thread.sleep(1000);
 					} catch (InterruptedException exc) {
@@ -545,7 +545,7 @@ public class SELotterySimpleSimulator {
 				}
 				setThreadPriorityToMax();
 				if (updateHistoryResult == null || updateHistoryResult.compareTo(-1) != 0) {
-					updateHistory(configuration, excelFileName, configurationName, premiumCountersForFile, simulatorFinished);
+					updateHistorical(configuration, excelFileName, configurationName, premiumCountersForFile, simulatorFinished);
 				}
 			} catch (Throwable exc) {
 				exc.printStackTrace();
@@ -562,7 +562,7 @@ public class SELotterySimpleSimulator {
 		}
 	}
 
-	private static Integer updateHistory(
+	private static Integer updateHistorical(
 		Properties configuration,
 		String excelFileName,
 		String configurationName,
@@ -598,7 +598,7 @@ public class SELotterySimpleSimulator {
 			},
 			null,
 			null,
-			CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false")
+			isSlave
 		);
 		if (isSlave) {
 			if (result.compareTo(-1) == 0) {
