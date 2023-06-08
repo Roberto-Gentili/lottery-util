@@ -490,10 +490,10 @@ public class SELotterySimpleSimulator {
 				workBook -> {
 					store(excelFileName, workBook, isSlave);
 				},
-				CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false")
+				isSlave
 			);
+			backup(new File(PersistentStorage.buildWorkingPath() + File.separator + excelFileName), isSlave);
 		}
-		backup(new File(PersistentStorage.buildWorkingPath() + File.separator + excelFileName), isSlave);
 		//Puliamo file txt duplicati da google drive
 		for (File file : ResourceUtils.INSTANCE.find("(1)", "txt", retrieveBasePath(configuration))) {
 			file.delete();
@@ -1173,32 +1173,36 @@ public class SELotterySimpleSimulator {
 	}
 
 	protected static void store(String excelFileName, Workbook workBook, boolean isSlave) {
-		Integer savingCounterForFile = savingOperationCounters.computeIfAbsent(excelFileName, key -> 0) + 1;
-		File file = new File(PersistentStorage.buildWorkingPath() + File.separator + excelFileName);
-		savingOperationCounters.put(excelFileName, savingCounterForFile);
-		if (savingCounterForFile % 100 == 0) {
-			backup(file, isSlave);
-		}
-		try (OutputStream destFileOutputStream = new FileOutputStream(file)){
-			BaseFormulaEvaluator.evaluateAllFormulaCells(workBook);
-			workBook.write(destFileOutputStream);
-		} catch (IOException e) {
-			Throwables.sneakyThrow(e);
+		if (!isSlave) {
+			Integer savingCounterForFile = savingOperationCounters.computeIfAbsent(excelFileName, key -> 0) + 1;
+			File file = new File(PersistentStorage.buildWorkingPath() + File.separator + excelFileName);
+			savingOperationCounters.put(excelFileName, savingCounterForFile);
+			if (savingCounterForFile % 100 == 0) {
+				backup(file, isSlave);
+			}
+			try (OutputStream destFileOutputStream = new FileOutputStream(file)){
+				BaseFormulaEvaluator.evaluateAllFormulaCells(workBook);
+				workBook.write(destFileOutputStream);
+			} catch (IOException e) {
+				Throwables.sneakyThrow(e);
+			}
 		}
 	}
 
 	protected static void backup(File file, boolean isSlave) {
-		ResourceUtils.INSTANCE.backup(
-			file,
-			file.getParentFile().getAbsolutePath()
-		);
-		List<File> backupFiles = ResourceUtils.INSTANCE.findOrdered("report - ", "xlsx", file.getParentFile().getAbsolutePath());
-		if (backupFiles.size() > 4 && !isSlave) {
-			Iterator<File> backupFileIterator = backupFiles.iterator();
-			while (backupFiles.size() > 4) {
-				File backupFile = backupFileIterator.next();
-				backupFile.delete();
-				backupFileIterator.remove();
+		if (!isSlave) {
+			ResourceUtils.INSTANCE.backup(
+				file,
+				file.getParentFile().getAbsolutePath()
+			);
+			List<File> backupFiles = ResourceUtils.INSTANCE.findOrdered("report - ", "xlsx", file.getParentFile().getAbsolutePath());
+			if (backupFiles.size() > 4) {
+				Iterator<File> backupFileIterator = backupFiles.iterator();
+				while (backupFiles.size() > 4) {
+					File backupFile = backupFileIterator.next();
+					backupFile.delete();
+					backupFileIterator.remove();
+				}
 			}
 		}
 	}

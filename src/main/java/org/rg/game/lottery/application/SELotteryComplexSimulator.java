@@ -26,7 +26,6 @@ import org.rg.game.core.LogUtils;
 import org.rg.game.core.ResourceUtils;
 import org.rg.game.core.Throwables;
 import org.rg.game.core.TimeUtils;
-import org.rg.game.lottery.engine.PersistentStorage;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.SEStats;
 
@@ -143,12 +142,12 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 						if (nextAfterLatest != null) {
 							generateSystem(futures, simpleConfigurations.get(configurationIndexIterator.get()), nextAfterLatest);
 						}
-						backup(
+						/*backup(
 							new File(
 								PersistentStorage.buildWorkingPath() + File.separator + retrieveExcelFileName(complexSimulationConfig, "simulation.group")
 							),
 							CollectionUtils.retrieveBoolean(complexSimulationConfig, "simulation.slave", "false")
-						);
+						);*/
 					}
 				} else {
 					extractionDatesExpression = complexSimulationConfig.getProperty("simulation.dates");
@@ -179,12 +178,12 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 							generateSystem(futures, simpleConfiguration, configurationsOfNextAfterLatestEntry.getKey());
 						}
 					}
-					backup(
+					/*backup(
 						new File(
 							PersistentStorage.buildWorkingPath() + File.separator + retrieveExcelFileName(complexSimulationConfig, "simulation.group")
 						),
 						CollectionUtils.retrieveBoolean(complexSimulationConfig, "simulation.slave", "false")
-					);
+					);*/
 				}
 			}
 		} catch (IOException exc) {

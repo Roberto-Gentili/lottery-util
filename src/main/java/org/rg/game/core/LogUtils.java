@@ -4,6 +4,10 @@ import java.io.PrintStream;
 
 public class LogUtils {
 
+	public static void debug(String... reports) {
+		log(System.out, reports);
+	}
+
 	public static void info(String... reports) {
 		log(System.out, reports);
 	}
