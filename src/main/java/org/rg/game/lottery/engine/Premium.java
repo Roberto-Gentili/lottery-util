@@ -7,9 +7,16 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public class Premium {
+	public static final Integer TYPE_AMBO = 2;
+	public static final Integer TYPE_TERNO = 3;
+	public static final Integer TYPE_QUATERNA = 3;
 	public static final Integer TYPE_CINQUINA = 5;
 	public static final Integer TYPE_TOMBOLA = 6;
 
+
+	public static final String LABEL_AMBO = "Ambo";
+	public static final String LABEL_TERNO = "Terno";
+	public static final String LABEL_QUATERNA = "Quaterna";
 	public static final String LABEL_CINQUINA = "Cinquina";
 	public static final String LABEL_TOMBOLA = "Tombola";
 
@@ -17,9 +24,9 @@ public class Premium {
 	private static final List<String> allLabels;
 	static {
 		all = new LinkedHashMap<>();
-		all.put(2, "Ambo");
-		all.put(3, "Terno");
-		all.put(4, "Quaterna");
+		all.put(TYPE_AMBO, LABEL_AMBO);
+		all.put(TYPE_TERNO, LABEL_TERNO);
+		all.put(TYPE_QUATERNA, LABEL_QUATERNA);
 		all.put(TYPE_CINQUINA, LABEL_CINQUINA);
 		all.put(TYPE_TOMBOLA, LABEL_TOMBOLA);
 		allLabels = new ArrayList<>(all.values());
