@@ -654,11 +654,12 @@ public class SEStats {
 	public static Integer premiumPrice(Number type) {
 		return type.intValue() == Premium.TYPE_TWO.intValue() ? 5 :
 			type.intValue() == Premium.TYPE_THREE.intValue() ? 25 :
-				type.intValue() == Premium.TYPE_FOUR.intValue() ? 300:
-					type.intValue() == Premium.TYPE_FIVE.intValue() ? 32000:
-						type.doubleValue() == Premium.TYPE_FIVE_PLUS.doubleValue() ?
-							620000 :
-							type.intValue() == 6 ? 10000000: 0;
+				type.intValue() == Premium.TYPE_FOUR.intValue() ? 300 :
+					type.doubleValue() == Premium.TYPE_FIVE_PLUS.doubleValue() ? 620000 :
+						type.intValue() == Premium.TYPE_FIVE.intValue() ? 32000:
+							type.intValue() == 6 ?
+								10000000 :
+								0;
 	}
 
 	public static String rightAlignedString(String value, int emptySpacesCount) {

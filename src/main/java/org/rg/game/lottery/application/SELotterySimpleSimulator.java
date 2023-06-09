@@ -887,7 +887,7 @@ public class SELotterySimpleSimulator {
 				label -> generatePremiumFormula(sheet, currentRowNum, label, lb -> lb)).collect(Collectors.toList());
 			String formula = String.join("+", allFormulas);
 			workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
-			formula = generateSaldoFormula(currentRowNum, sheet, Arrays.asList(RETURN_LABEL, COST_LABEL));
+			formula = generateBalanceFormula(currentRowNum, sheet, Arrays.asList(RETURN_LABEL, COST_LABEL));
 			workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
 
 			workBookTemplate.addCell(Collections.nCopies(Premium.all().size(), null));
@@ -896,7 +896,7 @@ public class SELotterySimpleSimulator {
 					label -> generatePremiumFormula(sheet, currentRowNum, label, SELotterySimpleSimulator::getFollowingProgressiveHistoricalPremiumLabel)).collect(Collectors.toList());
 			formula = String.join("+", allFormulas);
 			workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
-			formula = generateSaldoFormula(currentRowNum, sheet, Arrays.asList(FOLLOWING_PROGRESSIVE_HISTORICAL_RETURN_LABEL, FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL));
+			formula = generateBalanceFormula(currentRowNum, sheet, Arrays.asList(FOLLOWING_PROGRESSIVE_HISTORICAL_RETURN_LABEL, FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL));
 			workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
 
 			workBookTemplate.addCell(Collections.nCopies(Premium.all().size(), null));
@@ -905,7 +905,7 @@ public class SELotterySimpleSimulator {
 					label -> generatePremiumFormula(sheet, currentRowNum, label, SELotterySimpleSimulator::getHistoryPremiumLabel)).collect(Collectors.toList());
 			formula = String.join("+", allFormulas);
 			workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
-			formula = generateSaldoFormula(currentRowNum, sheet, Arrays.asList(HISTORICAL_RETURN_LABEL, HISTORICAL_COST_LABEL));
+			formula = generateBalanceFormula(currentRowNum, sheet, Arrays.asList(HISTORICAL_RETURN_LABEL, HISTORICAL_COST_LABEL));
 			workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
 
 			workBookTemplate.addCell((Date)null);
@@ -921,7 +921,7 @@ public class SELotterySimpleSimulator {
 		return false;
 	}
 
-	protected static String generateSaldoFormula(int currentRowNum, Sheet sheet, List<String> labels) {
+	protected static String generateBalanceFormula(int currentRowNum, Sheet sheet, List<String> labels) {
 		return String.join("-", labels.stream().map(label ->
 			"(" + CellReference.convertNumToColString(Shared.getCellIndex(sheet, label))  + currentRowNum + ")"
 		).collect(Collectors.toList()));
