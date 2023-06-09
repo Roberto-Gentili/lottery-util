@@ -155,7 +155,7 @@ public class SELotterySimpleSimulator {
 		SEStats.get("02/07/2009", TimeUtils.getDefaultDateFormat().format(new Date()));
 		SEStats.forceLoadingFromExcel = true;
 		Supplier<SELotteryMatrixGeneratorEngine> engineSupplier = SELotteryMatrixGeneratorEngine::new;
-		String[] configurationFileFolders = Shared.pathsFromSystemEnv(
+		String[] configurationFileFolders = ResourceUtils.INSTANCE.pathsFromSystemEnv(
 			"working-path.simulations.folder",
 			"resources.simulations.folder"
 		);

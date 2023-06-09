@@ -33,7 +33,7 @@ public class SESimulationSummaryGenerator {
 	public static void main(String[] args) {
 		try {
 			String simulationSummaryFolder = Arrays.stream(
-				Shared.pathsFromSystemEnv(
+				ResourceUtils.INSTANCE.pathsFromSystemEnv(
 						"working-path.simulations.folder"
 					)
 				).findFirst().orElseGet(() -> null);

@@ -49,7 +49,7 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 		allTimeStats = SEStats.get("03/12/1997", TimeUtils.getDefaultDateFormat().format(new Date()));
 		SEStats.get("02/07/2009", TimeUtils.getDefaultDateFormat().format(new Date()));
 		SEStats.forceLoadingFromExcel = true;
-		String[] configurationFileFolders = Shared.pathsFromSystemEnv(
+		String[] configurationFileFolders = ResourceUtils.INSTANCE.pathsFromSystemEnv(
 			"working-path.complex-simulations.folder",
 			"resources.complex-simulations.folder"
 		);
@@ -72,7 +72,7 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 						simpleConfigurationFiles.addAll(
 							ResourceUtils.INSTANCE.find(
 								configFilePrefix + "-simple-simulation", "properties",
-								Shared.pathsFromSystemEnv(
+								ResourceUtils.INSTANCE.pathsFromSystemEnv(
 									"working-path.complex-simulations.folder",
 									"resources.complex-simulations.folder"
 								)

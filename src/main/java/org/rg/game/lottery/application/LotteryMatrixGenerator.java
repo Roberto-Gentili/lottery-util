@@ -34,7 +34,7 @@ public class LotteryMatrixGenerator {
 		Supplier<LotteryMatrixGeneratorAbstEngine> engineSupplier =
 			configFilePrefix.equals("se") ? SELotteryMatrixGeneratorEngine::new :
 				configFilePrefix.equals("md") ? MDLotteryMatrixGeneratorEngine::new : null;
-		String[] configurationFileFolders = Shared.pathsFromSystemEnv(
+		String[] configurationFileFolders = ResourceUtils.INSTANCE.pathsFromSystemEnv(
 			"working-path.generations.folder",
 			"resources.generations.folder"
 		);

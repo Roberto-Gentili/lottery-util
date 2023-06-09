@@ -21,6 +21,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.rg.game.lottery.engine.PersistentStorage;
+
 public class ResourceUtils {
 	public static final ResourceUtils INSTANCE = new ResourceUtils();
 
@@ -197,6 +199,27 @@ public class ResourceUtils {
 
 	public List<File> toOrderedList(Object files) {
 		return toOrderedList(files, false);
+	}
+
+	public String[] pathsFromSystemEnv(String... keys) {
+		return pathsFromSystemEnv(null, keys);
+	}
+
+	public String[] pathsFromSystemEnv(List<String> values, String... keys) {
+		if (values == null) {
+			values = new ArrayList<>();
+		}
+		for (String key : keys) {
+			String value = System.getenv(key);
+			if (value != null) {
+				if (key.startsWith("working-path.")) {
+					values.add(PersistentStorage.buildWorkingPath(value));
+				} else if (key.startsWith("resources.")) {
+					values.add(ResourceUtils.INSTANCE.getResource(value).getAbsolutePath());
+				}
+			}
+		}
+		return values.stream().toArray(String[]::new);
 	}
 
 }

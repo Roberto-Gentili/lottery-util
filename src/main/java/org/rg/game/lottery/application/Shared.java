@@ -22,7 +22,6 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.rg.game.core.LogUtils;
-import org.rg.game.core.ResourceUtils;
 import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.ComboHandler;
 import org.rg.game.lottery.engine.PersistentStorage;
@@ -34,27 +33,6 @@ class Shared {
 	static String sEStatsDefaultDate = System.getenv("competition.archive.start-date") != null ?
 		System.getenv("competition.archive.start-date"):
 		new SELotteryMatrixGeneratorEngine().getExtractionArchiveStartDate();
-
-	static String[] pathsFromSystemEnv(String... keys) {
-		return pathsFromSystemEnv(null, keys);
-	}
-
-	static String[] pathsFromSystemEnv(List<String> values, String... keys) {
-		if (values == null) {
-			values = new ArrayList<>();
-		}
-		for (String key : keys) {
-			String value = System.getenv(key);
-			if (value != null) {
-				if (key.startsWith("working-path.")) {
-					values.add(PersistentStorage.buildWorkingPath(value));
-				} else if (key.startsWith("resources.")) {
-					values.add(ResourceUtils.INSTANCE.getResource(value).getAbsolutePath());
-				}
-			}
-		}
-		return values.stream().toArray(String[]::new);
-	}
 
 	static String capitalizeFirstCharacter(String value) {
 		return Character.toString(value.charAt(0)).toUpperCase()
