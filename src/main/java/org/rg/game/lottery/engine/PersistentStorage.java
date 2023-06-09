@@ -33,7 +33,7 @@ public class PersistentStorage implements Storage {
 	int size;
 	Boolean isClosed;
 	Map<Integer, Integer> occurrences;
-	Map<Integer, Integer> historicalPremiums;
+	Map<Number, Integer> historicalPremiums;
 
 	public PersistentStorage(
 		LocalDate extractionDate,
@@ -419,11 +419,11 @@ public class PersistentStorage implements Storage {
 	}
 
 	@Override
-	public Map<Integer, Integer> getHistoricalPremiums() {
+	public Map<Number, Integer> getHistoricalPremiums() {
 		if (this.historicalPremiums == null) {
 			Synchronizer.INSTANCE.execute(absolutePath + "_computeHistoricalPremiums", () -> {
 				if (this.historicalPremiums == null) {
-					Map<Integer, Integer> historicalPremiums = new LinkedHashMap<>();
+					Map<Number, Integer> historicalPremiums = new LinkedHashMap<>();
 					try (BufferedReader br = new BufferedReader(new FileReader(absolutePath))) {
 				        String line;
 				        boolean startToCollect = false;

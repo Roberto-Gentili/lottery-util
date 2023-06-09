@@ -49,6 +49,6 @@ public interface Storage extends AutoCloseable {
 
 	void delete();
 
-	public  Map<Integer, Integer> getHistoricalPremiums();
+	public  Map<Number, Integer> getHistoricalPremiums();
 
 }

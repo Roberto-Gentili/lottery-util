@@ -35,6 +35,7 @@ import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.rg.game.core.LogUtils;
+import org.rg.game.core.MathUtils;
 import org.rg.game.core.ResourceUtils;
 import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
@@ -76,9 +77,9 @@ public class SEMassiveVerifierAndQualityChecker {
 	}
 
 	private static void check(List<Map.Entry<LocalDate, Object>>... dateGroupsList) throws IOException {
-		Map<String, Map<Integer,List<List<Integer>>>> historyData = new LinkedHashMap<>();
-		Map<Integer,List<List<Integer>>> globalData = new LinkedHashMap<>();
-		Map<Integer,Map<String, Map<Integer, Integer>>> dataForTime = new LinkedHashMap<>();
+		Map<String, Map<Number,List<List<Integer>>>> historyData = new LinkedHashMap<>();
+		Map<Number, List<List<Integer>>> globalData = new LinkedHashMap<>();
+		Map<Integer,Map<String, Map<Number, Integer>>> dataForTime = new LinkedHashMap<>();
 		LocalDateTime backupTime = LocalDateTime.now();
 		for (List<Map.Entry<LocalDate, Object>> dateGroup: dateGroupsList) {
 			for (Map.Entry<LocalDate, Object> dateInfo : dateGroup) {
@@ -98,14 +99,26 @@ public class SEMassiveVerifierAndQualityChecker {
 				) {
 					XSSFFont boldFont = (XSSFFont) workbook.createFont();
 					boldFont.setBold(true);
+					XSSFFont boldItalicFont = (XSSFFont) workbook.createFont();
+					boldItalicFont.setBold(true);
+					boldItalicFont.setItalic(true);
 					XSSFFont boldHighLightedFont = (XSSFFont) workbook.createFont();
 					boldHighLightedFont.setBold(true);
 					boldHighLightedFont.setColor(IndexedColors.ORANGE.getIndex());
+					XSSFFont boldHighLightedItalicFont = (XSSFFont) workbook.createFont();
+					boldHighLightedItalicFont.setBold(true);
+					boldHighLightedItalicFont.setItalic(true);
+					boldHighLightedItalicFont.setColor(IndexedColors.ORANGE.getIndex());
 					CellStyle boldAndCeneteredCellStyle = workbook.createCellStyle();
 					boldAndCeneteredCellStyle.setFont(boldFont);
 					boldAndCeneteredCellStyle.setAlignment(HorizontalAlignment.CENTER);
 					boldAndCeneteredCellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 					boldAndCeneteredCellStyle.setFillForegroundColor(IndexedColors.ORANGE.getIndex());
+					CellStyle boldItalicAndCeneteredCellStyle = workbook.createCellStyle();
+					boldItalicAndCeneteredCellStyle.setFont(boldItalicFont);
+					boldItalicAndCeneteredCellStyle.setAlignment(HorizontalAlignment.CENTER);
+					boldItalicAndCeneteredCellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+					boldItalicAndCeneteredCellStyle.setFillForegroundColor(IndexedColors.ORANGE.getIndex());
 					CellStyle normalAndCeneteredCellStyle = workbook.createCellStyle();
 					normalAndCeneteredCellStyle.setAlignment(HorizontalAlignment.CENTER);
 					Sheet sheet = workbook.getSheet(extractionMonth);
@@ -120,19 +133,27 @@ public class SEMassiveVerifierAndQualityChecker {
 					}
 					Iterator<Row> rowIterator = sheet.rowIterator();
 					rowIterator.next();
-					List<Integer> winningCombo = Shared.getSEStats().getWinningComboOf(dateInfo.getKey());
+					List<Integer> winningComboWithJollyAndSuperstar = Shared.getSEStats().getWinningComboWithJollyAndSuperstarOf(dateInfo.getKey());
+					List<Integer>  winningCombo = winningComboWithJollyAndSuperstar.subList(0, 6);
+					Integer jolly = winningComboWithJollyAndSuperstar.get(6);
+					Cell jollyCell = null;
 					while (rowIterator.hasNext()) {
 						Row row = rowIterator.next();
 						List<Integer> currentCombo = new ArrayList<>();
+						Number hit = (int)0;
 						for (int i = 0; i < 6; i++) {
 							Cell cell = row.getCell(offset + i);
 							try {
 								Integer currentNumber = Integer.valueOf((int)cell.getNumericCellValue());
 								currentCombo.add(currentNumber);
 								if (winningCombo != null && winningCombo.contains(currentNumber)) {
+									hit = hit.intValue() + 1;
 									cell.setCellStyle(boldAndCeneteredCellStyle);
 								} else {
 									cell.setCellStyle(normalAndCeneteredCellStyle);
+								}
+								if (jolly.compareTo(currentNumber) == 0) {
+									jollyCell = cell;
 								}
 							} catch (NullPointerException exc) {
 								if (cell == null) {
@@ -146,13 +167,16 @@ public class SEMassiveVerifierAndQualityChecker {
 								throw exc;
 							}
 						}
+						if (hit.intValue() == Premium.TYPE_CINQUINA.intValue() && jollyCell != null) {
+							jollyCell.setCellStyle(boldItalicAndCeneteredCellStyle);
+						}
 						if (currentCombo.isEmpty() || currentCombo.get(0) == 0) {
 							break;
 						}
 						system.add(currentCombo);
 					}
 					rowIterator = sheet.rowIterator();
-					sheet.setColumnWidth(offset + 6, 5000);
+					sheet.setColumnWidth(offset + 6, 6000);
 					rowIterator.next();
 					Cell cell = rowIterator.next().getCell(offset + 6);
 					XSSFRichTextString results = new XSSFRichTextString();
@@ -162,10 +186,12 @@ public class SEMassiveVerifierAndQualityChecker {
 							dataForTime,
 							dateInfo.getKey(),
 							system,
-							winningCombo,
+							winningComboWithJollyAndSuperstar,
 							results,
 							boldFont,
-							boldHighLightedFont
+							boldItalicFont,
+							boldHighLightedFont,
+							boldHighLightedItalicFont
 						)
 					);
 					if (results.getString() != null) {
@@ -175,7 +201,7 @@ public class SEMassiveVerifierAndQualityChecker {
 						historyData,
 						dateInfo.getKey(),
 						system,
-						Shared.getSEStats().getAllWinningCombos(),
+						Shared.getSEStats().getAllWinningCombosWithJollyAndSuperstar(),
 						results,
 						boldFont
 					);
@@ -194,13 +220,13 @@ public class SEMassiveVerifierAndQualityChecker {
 	}
 
 	private static void writeAndPrintData(
-		Map<Integer, List<List<Integer>>> globalData,
-		Map<Integer, Map<String, Map<Integer, Integer>>> dataForTime
+		Map<Number, List<List<Integer>>> globalData,
+		Map<Integer, Map<String, Map<Number, Integer>>> dataForTime
 	) throws IOException {
 		LogUtils.info("\nRisultati per tempo:");
-		for (Map.Entry<Integer, Map<String, Map<Integer, Integer>>> yearAndDataForMonth : dataForTime.entrySet()) {
+		for (Map.Entry<Integer, Map<String, Map<Number, Integer>>> yearAndDataForMonth : dataForTime.entrySet()) {
 			int year = yearAndDataForMonth.getKey();
-			Map<String, Map<Integer, Integer>> dataForMonth = yearAndDataForMonth.getValue();
+			Map<String, Map<Number, Integer>> dataForMonth = yearAndDataForMonth.getValue();
 			LogUtils.info("\t" + year + ":");
 			File mainFile = Shared.getSystemsFile(year);
 			try (InputStream srcFileInputStream = new FileInputStream(mainFile);
@@ -241,10 +267,10 @@ public class SEMassiveVerifierAndQualityChecker {
 					}
 				}
 				rowIndex++;
-				for (Map.Entry<String, Map<Integer, Integer>> monthWinningInfo : dataForMonth.entrySet()) {
+				for (Map.Entry<String, Map<Number, Integer>> monthWinningInfo : dataForMonth.entrySet()) {
 					String month = monthWinningInfo.getKey();
 					LogUtils.info("\t\t" + month + ":");
-					Map<Integer, Integer> winningInfo = monthWinningInfo.getValue();
+					Map<Number, Integer> winningInfo = monthWinningInfo.getValue();
 					Row row = rowIterator.hasNext() ? rowIterator.next() : sheet.createRow(rowIndex);
 					Cell labelCell = row.getCell(0);
 					if (labelCell == null) {
@@ -253,7 +279,7 @@ public class SEMassiveVerifierAndQualityChecker {
 						labelCell.getCellStyle().setAlignment(HorizontalAlignment.LEFT);
 					}
 					labelCell.setCellValue(month);
-					for (Integer type : Premium.all().keySet()) {
+					for (Number type : Premium.all().keySet()) {
 						Integer counter = winningInfo.getOrDefault(type, 0);
 						String label = Premium.toLabel(type);
 						int labelIndex = Shared.getCellIndex(sheet, label);
@@ -308,31 +334,41 @@ public class SEMassiveVerifierAndQualityChecker {
 	}
 
 	private static String checkCombo(
-		Map<Integer,List<List<Integer>>> globalData,
-		Map<Integer, Map<String, Map<Integer, Integer>>> dataForTime,
+		Map<Number,List<List<Integer>>> globalData,
+		Map<Integer, Map<String, Map<Number, Integer>>> dataForTime,
 		LocalDate extractionDate,
 		List<List<Integer>> combosToBeChecked,
-		List<Integer> winningCombo,
+		List<Integer> winningComboWithJollyAndSuperstar,
 		XSSFRichTextString results,
 		XSSFFont boldFont,
-		XSSFFont boldHighLightedFont
+		XSSFFont boldItalicFont,
+		XSSFFont boldHighLightedFont,
+		XSSFFont boldHighLightedItalicFont
 	) {
+		List<Integer> winningCombo = winningComboWithJollyAndSuperstar.subList(0, 6);
 		if (winningCombo == null || winningCombo.isEmpty()) {
 			return "Nessuna estrazione per il concorso del " + TimeUtils.defaultLocalDateFormat.format(extractionDate) + "\n";
 		}
-		Map<Integer,List<List<Integer>>> winningCombos = new TreeMap<>();
+		Map<Number,List<List<Integer>>> winningCombos = new TreeMap<>();
 		Collection<Integer> hitNumbers = new LinkedHashSet<>();
+		Integer jolly = winningComboWithJollyAndSuperstar.get(6);
 		for (List<Integer> currentCombo : combosToBeChecked) {
-			Integer hit = 0;
+			Number hit = 0;
 			for (Integer currentNumber : currentCombo) {
 				if (winningCombo.contains(currentNumber)) {
 					hitNumbers.add(currentNumber);
-					hit++;
+					hit = hit.intValue() + 1;
 				}
 			}
-			if (hit > 1) {
+			if (hit.intValue() > 1) {
+				if (hit.intValue() == Premium.TYPE_CINQUINA.intValue()) {
+					if (currentCombo.contains(jolly)) {
+						hit = Premium.TYPE_CINQUINA_PLUS;
+						hitNumbers.add(jolly);
+					}
+				}
 				winningCombos.computeIfAbsent(hit, ht -> new ArrayList<>()).add(currentCombo);
-				Map<Integer, Integer> winningCounter = dataForTime.computeIfAbsent(extractionDate.getYear(), year -> new LinkedHashMap<>()).computeIfAbsent(
+				Map<Number, Integer> winningCounter = dataForTime.computeIfAbsent(extractionDate.getYear(), year -> new LinkedHashMap<>()).computeIfAbsent(
 					Shared.getMonth(extractionDate), monthLabel -> new LinkedHashMap<>()
 				);
 				winningCounter.put(hit, winningCounter.computeIfAbsent(hit, key -> Integer.valueOf(0)) + 1);
@@ -341,13 +377,13 @@ public class SEMassiveVerifierAndQualityChecker {
 		}
 		results.append("Vincente", boldFont);
 		results.append(":\n    ");
-		printWinningComboWithHitHighLights(winningCombo, hitNumbers, results, boldHighLightedFont);
+		printWinningComboWithHitHighLights(winningComboWithJollyAndSuperstar, hitNumbers, results, boldHighLightedFont, boldHighLightedItalicFont);
 		results.append("\n");
 		results.append("Concorso", boldFont);
 		results.append(":\n");
 		if (!winningCombos.isEmpty()) {
-			printSummaryWinningInfo(winningCombo, results, boldFont, winningCombos);
-			//printDetailedWinningInfo(winningCombo, results, boldFont, winningCombos);
+			printSummaryWinningInfo(results, boldFont, winningCombos);
+			//printDetailedWinningInfo(winningComboWithJollyAndSuperstar, results, boldFont, boldItalicFont, winningCombos);
 		} else {
 			results.append("    nessuna vincita");
 		}
@@ -355,12 +391,12 @@ public class SEMassiveVerifierAndQualityChecker {
 		StringBuffer result = new StringBuffer();
 		if (!winningCombo.isEmpty()) {
 			if (!winningCombos.isEmpty()) {
-				result.append("Numeri estratti per il *superenalotto* del " + TimeUtils.defaultLocalDateFormat.format(extractionDate) +": " + Shared.toWAString(winningCombo, ", ", hitNumbers) + "\n");
-				for (Map.Entry<Integer, List<List<Integer>>> combos: winningCombos.entrySet()) {
+				result.append("Numeri estratti per il *superenalotto* del " + TimeUtils.defaultLocalDateFormat.format(extractionDate) +": " + Shared.toWAString(winningComboWithJollyAndSuperstar, ", ", " - ", hitNumbers) + "\n");
+				for (Map.Entry<Number, List<List<Integer>>> combos: winningCombos.entrySet()) {
 					result.append("\t*Combinazioni con " + Premium.toLabel(combos.getKey()).toLowerCase() + "*:" + "\n");
 					for (List<Integer> combo : combos.getValue()) {
 						result.append("\t\t" +
-							Shared.toWAString(combo, "\t", winningCombo) + "\n"
+							Shared.toWAString(combo, "\t", " - ", winningComboWithJollyAndSuperstar) + "\n"
 						);
 					}
 				}
@@ -372,11 +408,15 @@ public class SEMassiveVerifierAndQualityChecker {
 	}
 
 	private static void printWinningComboWithHitHighLights(
-		List<Integer> winningCombo,
+		List<Integer> winningComboWithJollyAndSuperstar,
 		Collection<Integer> hitNumbers,
 		XSSFRichTextString results,
-		XSSFFont boldHighLightedFont
+		XSSFFont boldHighLightedFont,
+		XSSFFont boldHighLightedItalicFont
 	) {
+		List<Integer> winningCombo = winningComboWithJollyAndSuperstar.subList(0, 6);
+		hitNumbers = new ArrayList<>(hitNumbers);
+		boolean jollyHit = hitNumbers.remove(winningComboWithJollyAndSuperstar.get(6));
 		Iterator<Integer> winningComboIterator = winningCombo.iterator();
 		while (winningComboIterator.hasNext()) {
 			Integer winningNumber = winningComboIterator.next();
@@ -389,18 +429,28 @@ public class SEMassiveVerifierAndQualityChecker {
 				results.append(", ");
 			}
 		}
+		Integer jolly = winningComboWithJollyAndSuperstar.get(6);
+		results.append(" - ");
+		if (hitNumbers.size() == Premium.TYPE_CINQUINA.intValue() && jollyHit) {
+			results.append("" + jolly, boldHighLightedItalicFont);
+		} else {
+			results.append("" + jolly);
+		}
 		results.append(
 			"\n"
 		);
 	}
 
 	private static void printDetailedWinningInfo(
-		List<Integer> winningCombo,
+		List<Integer> winningComboWithJollyAndSuperstar,
 		XSSFRichTextString results,
 		XSSFFont boldFont,
-		Map<Integer, List<List<Integer>>> winningCombos
+		XSSFFont boldItalicFont,
+		Map<Number, List<List<Integer>>> winningCombos
 	) {
-		for (Map.Entry<Integer, List<List<Integer>>> combos: winningCombos.entrySet()) {
+		List<Integer> winningCombo = winningComboWithJollyAndSuperstar.subList(0, 6);
+		Integer jolly = winningComboWithJollyAndSuperstar.get(6);
+		for (Map.Entry<Number, List<List<Integer>>> combos: winningCombos.entrySet()) {
 			results.append("    " + Premium.toLabel(combos.getKey()), boldFont);
 			results.append(":" + "\n");
 			Iterator<List<Integer>> combosIterator = combos.getValue().iterator();
@@ -412,6 +462,8 @@ public class SEMassiveVerifierAndQualityChecker {
 					Integer number = winningComboIterator.next();
 					if (winningCombo.contains(number)) {
 						results.append(number.toString(), boldFont);
+					} else if (combos.getKey().doubleValue() == Premium.TYPE_CINQUINA_PLUS.doubleValue() && number.compareTo(jolly) == 0) {
+						results.append(number.toString(), boldItalicFont);
 					} else {
 						results.append(number.toString());
 					}
@@ -427,14 +479,13 @@ public class SEMassiveVerifierAndQualityChecker {
 	}
 
 	private static void printSummaryWinningInfo(
-		List<Integer> winningCombo,
 		XSSFRichTextString results,
 		XSSFFont boldFont,
-		Map<Integer, List<List<Integer>>> winningCombos
+		Map<Number, List<List<Integer>>> winningCombos
 	) {
-		Iterator<Map.Entry<Integer, List<List<Integer>>>> winningAndCombosIterator = winningCombos.entrySet().iterator();
+		Iterator<Map.Entry<Number, List<List<Integer>>>> winningAndCombosIterator = winningCombos.entrySet().iterator();
 		while (winningAndCombosIterator.hasNext()) {
-			Map.Entry<Integer, List<List<Integer>>> combos = winningAndCombosIterator.next();
+			Map.Entry<Number, List<List<Integer>>> combos = winningAndCombosIterator.next();
 			results.append("    " + Premium.toLabel(combos.getKey()), boldFont);
 			results.append(": " + combos.getValue().size());
 			if (winningAndCombosIterator.hasNext()) {
@@ -444,37 +495,43 @@ public class SEMassiveVerifierAndQualityChecker {
 	}
 
 	private static void checkInHistory(
-		Map<String, Map<Integer,List<List<Integer>>>> historyData,
+		Map<String, Map<Number,List<List<Integer>>>> historyData,
 		LocalDate extractionDate,
 		List<List<Integer>> system,
-		Map<Date, List<Integer>> allWinningCombos,
+		Map<Date, List<Integer>> allWinningCombosWithJollyAndSuperstar,
 		XSSFRichTextString results,
 		XSSFFont boldFont
 	) {
 		Collection<Integer> hitNumbers = new LinkedHashSet<>();
 		String extractionDateAsString = TimeUtils.defaultLocalDateFormat.format(extractionDate);
-		for (List<Integer> winningCombo : allWinningCombos.values()) {
+		for (List<Integer> winningComboWithJollyAndSuperstar : allWinningCombosWithJollyAndSuperstar.values()) {
+			List<Integer> winningCombo = winningComboWithJollyAndSuperstar.subList(0, 6);
 			for (List<Integer> currentCombo : system) {
-				Integer hit = 0;
+				Number hit = 0;
 				for (Integer currentNumber : currentCombo) {
 					if (winningCombo.contains(currentNumber)) {
 						hitNumbers.add(currentNumber);
-						hit++;
+						hit = hit.intValue() +1;
 					}
 				}
-				if (hit > 1) {
-					historyData.computeIfAbsent(extractionDateAsString, key -> new TreeMap<>())
+				if (hit.intValue() > 1) {
+					if (hit.intValue() == Premium.TYPE_CINQUINA.intValue()) {
+						if (currentCombo.contains(winningComboWithJollyAndSuperstar.get(6))) {
+							hit = Premium.TYPE_CINQUINA_PLUS;
+						}
+					}
+					historyData.computeIfAbsent(extractionDateAsString, key -> new TreeMap<>(MathUtils.INSTANCE.numberComparator))
 					.computeIfAbsent(hit, ht -> new ArrayList<>()).add(currentCombo);
 				}
 			}
 		}
 		results.append("Storico", boldFont);
 		results.append(":\n");
-		Map<Integer,List<List<Integer>>> systemResultsInHistory = historyData.get(extractionDateAsString);
+		Map<Number,List<List<Integer>>> systemResultsInHistory = historyData.get(extractionDateAsString);
 		if (systemResultsInHistory != null) {
-			Iterator<Map.Entry<Integer, List<List<Integer>>>> systemResultsInHistoryItr = systemResultsInHistory.entrySet().iterator();
+			Iterator<Map.Entry<Number, List<List<Integer>>>> systemResultsInHistoryItr = systemResultsInHistory.entrySet().iterator();
 			while (systemResultsInHistoryItr.hasNext()) {
-				Map.Entry<Integer, List<List<Integer>>> singleHistoryResult = systemResultsInHistoryItr.next();
+				Map.Entry<Number, List<List<Integer>>> singleHistoryResult = systemResultsInHistoryItr.next();
 				String label = Premium.toLabel(singleHistoryResult.getKey());
 				results.append("    ");
 				results.append(label, boldFont);

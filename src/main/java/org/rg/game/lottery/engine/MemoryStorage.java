@@ -22,7 +22,7 @@ public class MemoryStorage implements Storage {
 	String name;
 	boolean isClosed;
 	Map<Integer, Integer> occurrences;
-	Map<Integer, Integer> historicalPremiums;
+	Map<Number, Integer> historicalPremiums;
 
 	MemoryStorage(
 		LocalDate extractionDate,
@@ -155,11 +155,11 @@ public class MemoryStorage implements Storage {
 	}
 
 	@Override
-	public Map<Integer, Integer> getHistoricalPremiums() {
+	public Map<Number, Integer> getHistoricalPremiums() {
 		if (this.historicalPremiums == null) {
 			Synchronizer.INSTANCE.execute(this + "_computeHistoricalPremiums", () -> {
 				if (this.historicalPremiums == null) {
-					Map<Integer, Integer> historicalPremiums = new LinkedHashMap<>();
+					Map<Number, Integer> historicalPremiums = new LinkedHashMap<>();
 					try (BufferedReader br = new BufferedReader(new StringReader(output))) {
 				        String line;
 				        boolean startToCollect = false;

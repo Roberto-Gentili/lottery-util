@@ -157,6 +157,7 @@ public class SESimulationSummaryGenerator {
 				URLEncoder.encode(singleSimFolderRelPath + "/" + report.getName(), "UTF-8").replace("+", "%20")
 			);
 			String historicalCinquinaLabel = SELotterySimpleSimulator.getFollowingProgressiveHistoryPremiumLabel(Premium.LABEL_CINQUINA);
+			String historicalCinquinaPlusLabel = SELotterySimpleSimulator.getFollowingProgressiveHistoryPremiumLabel(Premium.LABEL_CINQUINA_PLUS);
 			String historicalTombolaLabel = SELotterySimpleSimulator.getFollowingProgressiveHistoryPremiumLabel(Premium.LABEL_TOMBOLA);
 			for (String cellLabel : SELotterySimpleSimulator.excelHeaderLabels) {
 				if (!headersToBeSkipped.contains(cellLabel)) {
@@ -165,10 +166,14 @@ public class SESimulationSummaryGenerator {
 					if (simulationCellValue.getCellType().equals(CellType.NUMERIC)) {
 						Cell summaryCurrentCell = summaryWorkBookTemplate.addCell(simulationCellValue.getNumberValue(), "#,##0");
 						if (cellLabel.equals(Premium.LABEL_CINQUINA) && simulationCellValue.getNumberValue() > 0) {
+							Shared.toHighlightedBoldedCell(summaryWorkBookTemplate.getWorkbook(), summaryCurrentCell, IndexedColors.YELLOW);
+						} else if (cellLabel.equals(Premium.LABEL_CINQUINA_PLUS) && simulationCellValue.getNumberValue() > 0) {
 							Shared.toHighlightedBoldedCell(summaryWorkBookTemplate.getWorkbook(), summaryCurrentCell, IndexedColors.ORANGE);
 						} else if (cellLabel.equals(Premium.LABEL_TOMBOLA) && simulationCellValue.getNumberValue() > 0) {
 							Shared.toHighlightedBoldedCell(summaryWorkBookTemplate.getWorkbook(), summaryCurrentCell, IndexedColors.RED);
 						} else if (cellLabel.equals(historicalCinquinaLabel) && simulationCellValue.getNumberValue() > 0) {
+							Shared.toHighlightedBoldedCell(summaryWorkBookTemplate.getWorkbook(), summaryCurrentCell, IndexedColors.YELLOW);
+						} else if (cellLabel.equals(historicalCinquinaPlusLabel) && simulationCellValue.getNumberValue() > 0) {
 							Shared.toHighlightedBoldedCell(summaryWorkBookTemplate.getWorkbook(), summaryCurrentCell, IndexedColors.ORANGE);
 						} else if (cellLabel.equals(historicalTombolaLabel) && simulationCellValue.getNumberValue() > 0) {
 							Shared.toHighlightedBoldedCell(summaryWorkBookTemplate.getWorkbook(), summaryCurrentCell, IndexedColors.RED);

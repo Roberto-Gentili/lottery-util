@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
+import java.util.Comparator;
 
 public class MathUtils {
 
@@ -12,6 +13,12 @@ public class MathUtils {
 
 	public DecimalFormat decimalFormat = new DecimalFormat( "#,##0.##" );
 	public DecimalFormat integerFormat = new DecimalFormat( "#,##0" );
+	public Comparator<Number> numberComparator = (numberOne, numberTwo) -> {
+		double numberOneAsDouble = numberOne.doubleValue();
+		double numberTwoAsDouble = numberTwo.doubleValue();
+		return numberOneAsDouble > numberTwoAsDouble ? 1 :
+			numberOneAsDouble < numberTwoAsDouble ? -1 : 0;
+	};
 
 	public DecimalFormat getNewDecimalFormat() {
 		DecimalFormatSymbols symbols = new DecimalFormatSymbols();

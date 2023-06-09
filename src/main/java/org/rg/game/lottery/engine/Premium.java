@@ -9,8 +9,9 @@ import java.util.Map.Entry;
 public class Premium {
 	public static final Integer TYPE_AMBO = 2;
 	public static final Integer TYPE_TERNO = 3;
-	public static final Integer TYPE_QUATERNA = 3;
+	public static final Integer TYPE_QUATERNA = 4;
 	public static final Integer TYPE_CINQUINA = 5;
+	public static final Double TYPE_CINQUINA_PLUS = 5.5d;
 	public static final Integer TYPE_TOMBOLA = 6;
 
 
@@ -18,9 +19,10 @@ public class Premium {
 	public static final String LABEL_TERNO = "Terno";
 	public static final String LABEL_QUATERNA = "Quaterna";
 	public static final String LABEL_CINQUINA = "Cinquina";
+	public static final String LABEL_CINQUINA_PLUS = "Cinquina + Jolly";
 	public static final String LABEL_TOMBOLA = "Tombola";
 
-	private static final Map<Integer, String> all;
+	private static final Map<Number, String> all;
 	private static final List<String> allLabels;
 	static {
 		all = new LinkedHashMap<>();
@@ -28,6 +30,7 @@ public class Premium {
 		all.put(TYPE_TERNO, LABEL_TERNO);
 		all.put(TYPE_QUATERNA, LABEL_QUATERNA);
 		all.put(TYPE_CINQUINA, LABEL_CINQUINA);
+		all.put(TYPE_CINQUINA_PLUS, LABEL_CINQUINA_PLUS);
 		all.put(TYPE_TOMBOLA, LABEL_TOMBOLA);
 		allLabels = new ArrayList<>(all.values());
 	}
@@ -36,20 +39,30 @@ public class Premium {
 		return allLabels;
 	}
 
-	public static Map<Integer, String> all() {
+	public static Map<Number, String> all() {
 		return all;
 	}
 
-	public static String toLabel(Integer hit) {
-		String label = all.get(hit);
+	public static String toLabel(Number hit) {
+		String label = all.entrySet().stream()
+			.filter(entry -> entry.getKey().doubleValue() == hit.doubleValue())
+			.map(Map.Entry::getValue).findFirst().orElseGet(() -> null);
 		if (label != null) {
 			return label;
 		}
 		throw new IllegalArgumentException("Unvalid premium type: " + hit);
 	}
 
-	public static Integer toType(String label) {
-		for (Entry<Integer, String> entry : all.entrySet()) {
+	public static Number parseType(String typeAsString) {
+		Double type = Double.valueOf(typeAsString);
+		if (type.compareTo(TYPE_CINQUINA_PLUS) == 0) {
+			return TYPE_CINQUINA_PLUS;
+		}
+		return Integer.parseInt(typeAsString);
+	}
+
+	public static Number toType(String label) {
+		for (Entry<Number, String> entry : all.entrySet()) {
 			if (entry.getValue().equalsIgnoreCase(label)) {
 				return entry.getKey();
 			}

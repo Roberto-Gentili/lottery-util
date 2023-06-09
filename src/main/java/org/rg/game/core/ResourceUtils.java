@@ -157,7 +157,9 @@ public class ResourceUtils {
 		try {
 			String backupFileName = mainFile.getName().replace("." +  getExtension(mainFile), "") + " - [" + TimeUtils.dateTimeFormatForBackup.format(backupTime) + "]." + getExtension(mainFile);
 			String backupFilePath = destFolderAbsolutePath + File.separator + backupFileName;
-			if (!new File(backupFilePath).exists()) {
+			File backupFile = new File(backupFilePath);
+			if (!backupFile.exists()) {
+				backupFile.getParentFile().mkdirs();
 				try (InputStream inputStream = new FileInputStream(mainFile); OutputStream backupOutputStream = new FileOutputStream(backupFilePath)) {
 					IOUtils.INSTANCE.copy(
 						inputStream,

@@ -19,6 +19,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
@@ -28,6 +29,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.rg.game.core.LogUtils;
+import org.rg.game.core.MathUtils;
 import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.Premium;
 
@@ -44,16 +46,19 @@ public class Verifier {
 		check(System.getenv().get("competitionName"), null, winningNumbers);
 	}
 
-	private static void check(String competionName, String extractionDate, List<Integer> winningCombo) throws IOException {
-		if (winningCombo == null && competionName.equals("Superenalotto")) {
+	private static void check(String competionName, String extractionDate, List<Integer> winningComboWithJollyAndSuperstar) throws IOException {
+		if (winningComboWithJollyAndSuperstar == null && competionName.equals("Superenalotto")) {
 			URL url = new URL("https://www.gntn-pgd.it/gntn-info-web/rest/gioco/superenalotto/estrazioni/ultimoconcorso");
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 			connection.setRequestProperty("accept", "application/json");
 			InputStream responseStream = connection.getInputStream();
 			Map<String,Object> data = new ObjectMapper().readValue(responseStream, Map.class);
 			extractionDate = TimeUtils.getDefaultDateFormat().format(new Date((Long)data.get("dataEstrazione")));
-			winningCombo = ((List<String>)((Map<String,Object>)data.get("combinazioneVincente")).get("estratti"))
+			winningComboWithJollyAndSuperstar = ((List<String>)((Map<String,Object>)data.get("combinazioneVincente")).get("estratti"))
 				.stream().map(Integer::valueOf).collect(Collectors.toList());
+			winningComboWithJollyAndSuperstar.add(Integer.valueOf(((String)((Map<String,Object>)data.get("combinazioneVincente")).get("numeroJolly"))));
+			Optional.ofNullable(((Map<String,Object>)data.get("combinazioneVincente")).get("superstar"))
+			.map(String.class::cast).map(Integer::valueOf).map(winningComboWithJollyAndSuperstar::add);
 			connection.disconnect();
 		}
 		if (extractionDate == null) {
@@ -84,12 +89,14 @@ public class Verifier {
 			}
 			Iterator<Row> rowIterator = sheet.rowIterator();
 			rowIterator.next();
-			Map<Integer,List<List<Integer>>> winningCombos = new TreeMap<>();
+			Map<Number,List<List<Integer>>> winningCombos = new TreeMap<>(MathUtils.INSTANCE.numberComparator);
 			Collection<Integer> hitNumbers = new LinkedHashSet<>();
 			int comboCount = 1;
+			List<Integer> winningCombo = winningComboWithJollyAndSuperstar.subList(0, 6);
+			Integer jolly = winningComboWithJollyAndSuperstar.get(6);
 			while (rowIterator.hasNext()) {
 				Row row = rowIterator.next();
-				Integer hit = 0;
+				Number hit = 0;
 				List<Integer> currentCombo = new ArrayList<>();
 				for (int i = 0; i < winningCombo.size(); i++) {
 					Cell cell = row.getCell(offset + i);
@@ -100,26 +107,32 @@ public class Verifier {
 					currentCombo.add(currentNumber);
 					if (winningCombo.contains(currentNumber)) {
 						hitNumbers.add(currentNumber);
-						hit++;
+						hit = hit.intValue() + 1;
 					}
 				}
 				if (currentCombo.isEmpty()) {
 					break;
 				}
-				if (hit > 1) {
+				if (hit.intValue() > 1) {
+					if (hit.intValue() == Premium.TYPE_CINQUINA.intValue()) {
+						if (currentCombo.contains(jolly)) {
+							hit = Premium.TYPE_CINQUINA_PLUS;
+							hitNumbers.add(jolly);
+						}
+					}
 					winningCombos.computeIfAbsent(hit, ht -> new ArrayList<>()).add(currentCombo);
 					LogUtils.info(comboCount + ") " + Shared.toString(currentCombo, "\t"));
 				}
 				comboCount++;
 			}
-			if (!winningCombo.isEmpty()) {
-				LogUtils.info("\n\nNumeri estratti per il *" + competionName + "* del " + extractionDate +": " + Shared.toWAString(winningCombo, ", ", hitNumbers));
+			if (!winningComboWithJollyAndSuperstar.isEmpty()) {
+				LogUtils.info("\n\nNumeri estratti per il *" + competionName + "* del " + extractionDate +": " + Shared.toWAString(winningComboWithJollyAndSuperstar, ", ", " - ", hitNumbers));
 				if (!winningCombos.isEmpty()) {
-					for (Map.Entry<Integer, List<List<Integer>>> combos: winningCombos.entrySet()) {
+					for (Map.Entry<Number, List<List<Integer>>> combos: winningCombos.entrySet()) {
 						LogUtils.info("\t*Combinazioni con " + Premium.toLabel(combos.getKey()).toLowerCase() + "*:");
 						for (List<Integer> combo : combos.getValue()) {
 							LogUtils.info("\t\t" +
-								Shared.toWAString(combo, "\t", winningCombo)
+								Shared.toWAString(combo, "\t", "\t\t", winningComboWithJollyAndSuperstar)
 							);
 						}
 					}

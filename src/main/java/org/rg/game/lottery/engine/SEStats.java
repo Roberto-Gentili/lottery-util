@@ -34,6 +34,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.ComparisonOperator;
@@ -63,6 +64,7 @@ public class SEStats {
 
 	public static boolean forceLoadingFromExcel;
 	static {
+		ZipSecureFile.setMinInflateRatio(0);
 		SEStats.forceLoadingFromExcel =
 				Boolean.parseBoolean(System.getenv().getOrDefault("se-stats.force-loading-from-excel", "false"));
 		INSTANCES = new LinkedHashMap<>();
@@ -456,6 +458,23 @@ public class SEStats {
 		return getWinningComboOf(Date.from(date.atStartOfDay(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE)).toInstant()));
 	}
 
+	public List<Integer> getWinningComboWithJollyAndSuperstarOf(Date date) {
+		return allWinningCombosWithJollyAndSuperstar.entrySet().stream().filter(entry ->
+			TimeUtils.getDefaultDateFormat().format(entry.getKey()).equals(TimeUtils.getDefaultDateFormat().format(date))
+		).map(Map.Entry::getValue).findAny().orElseGet(() -> null);
+	}
+
+	public List<Integer> getWinningComboWithJollyAndSuperstarOf(LocalDate date) {
+		return getWinningComboWithJollyAndSuperstarOf(Date.from(date.atStartOfDay(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE)).toInstant()));
+	}
+
+	public Integer getJollyOf(Date date) {
+		return getWinningComboWithJollyAndSuperstarOf(date).get(6);
+	}
+
+	public Integer getJollyOf(LocalDate date) {
+		return getWinningComboWithJollyAndSuperstarOf(date).get(6);
+	}
 
 	private <N extends Number> List<N> toReversed(List<N> source) {
 		List<N> reversed = new ArrayList<>(source);
@@ -493,13 +512,18 @@ public class SEStats {
 		Iterator<List<Integer>> systemIterator = systemIteratorSupplier.get();
 		while (systemIterator.hasNext()) {
 			List<Integer> currentCombo = systemIterator.next();
-			Integer hit = 0;
+			Number hit = 0;
 			for (Integer currentNumber : currentCombo) {
 				if (winningCombo.contains(currentNumber)) {
-					hit++;
+					hit = hit.intValue() + 1;
 				}
 			}
-			if (hit > 1) {
+			if (hit.intValue() > 1) {
+				if (hit.intValue() == Premium.TYPE_CINQUINA.intValue()) {
+					if (currentCombo.contains(winningCombo.get(6))) {
+						hit = Premium.TYPE_CINQUINA_PLUS;
+					}
+				}
 				String premiumLabel = Premium.toLabel(hit);
 				results.put(premiumLabel, results.computeIfAbsent(premiumLabel, label -> 0) + 1);
 			}
@@ -527,8 +551,8 @@ public class SEStats {
 			systemItearator.next();
 			systemSize++;
 		}
-		Map<Date, Map<Integer, List<List<Integer>>>> winningsCombosData = new LinkedHashMap<>();
-		List<Map.Entry<Date, List<Integer>>> allWinningCombosReversed = this.allWinningCombos.entrySet().stream().collect(Collectors.toList());
+		Map<Date, Map<Number, List<List<Integer>>>> winningsCombosData = new LinkedHashMap<>();
+		List<Map.Entry<Date, List<Integer>>> allWinningCombosReversed = this.allWinningCombosWithJollyAndSuperstar.entrySet().stream().collect(Collectors.toList());
 		Collections.reverse(allWinningCombosReversed);
 		int processedExtractionDateCounter = 0;
 		Date effectiveStartDate = null;
@@ -540,14 +564,19 @@ public class SEStats {
 					effectiveStartDate = referenceDate;
 				}
 				++processedExtractionDateCounter;
-				Map<Integer,List<List<Integer>>> winningCombosForExtraction = new TreeMap<>();
+				Map<Number,List<List<Integer>>> winningCombosForExtraction = new TreeMap<>(MathUtils.INSTANCE.numberComparator);
 				List<Integer> winningCombo = winningComboInfo.getValue();
 				systemItearator = systemIteratorSupplier.get();
 				while (systemItearator.hasNext()) {
 					List<Integer> currentCombo = systemItearator.next();
-					long hit = currentCombo.stream().filter(winningCombo::contains).count();
-					if (hit > 1) {
-						winningCombosForExtraction.computeIfAbsent((int)hit, ht -> new ArrayList<>()).add(currentCombo);
+					Number hit = (int)currentCombo.stream().filter(winningCombo.subList(0, 6)::contains).count();
+					if (hit.intValue() > 1) {
+						if (hit.intValue() == Premium.TYPE_CINQUINA.intValue()) {
+							if (currentCombo.contains(winningCombo.get(6))) {
+								hit = Premium.TYPE_CINQUINA_PLUS;
+							}
+						}
+						winningCombosForExtraction.computeIfAbsent(hit, ht -> new ArrayList<>()).add(currentCombo);
 					}
 				}
 				if (!winningCombosForExtraction.isEmpty()) {
@@ -563,16 +592,16 @@ public class SEStats {
 			effectiveEndDate = endDate;
 		}
 		data.put("winningCombos", winningsCombosData);
-		Map<Integer, Integer> premiumCounters = new TreeMap<>();
+		Map<Number, Integer> premiumCounters = new TreeMap<>(MathUtils.INSTANCE.numberComparator);
 
 		StringBuffer report = new StringBuffer("Risultati storici dal " +  TimeUtils.getDefaultDateFormat().format(
 			effectiveStartDate
 		) + ":\n\n");
-		Iterator<Map.Entry<Date, Map<Integer, List<List<Integer>>>>> winningsCombosDataItr = winningsCombosData.entrySet().iterator();
+		Iterator<Map.Entry<Date, Map<Number, List<List<Integer>>>>> winningsCombosDataItr = winningsCombosData.entrySet().iterator();
 		while (winningsCombosDataItr.hasNext()) {
-			Map.Entry<Date, Map<Integer, List<List<Integer>>>> winningCombosInfo = winningsCombosDataItr.next();
+			Map.Entry<Date, Map<Number, List<List<Integer>>>> winningCombosInfo = winningsCombosDataItr.next();
 			report.append("\t" + TimeUtils.getDefaultDateFormat().format(winningCombosInfo.getKey()) + ":\n");
-			for (Map.Entry<Integer, List<List<Integer>>> winningCombos : winningCombosInfo.getValue().entrySet()) {
+			for (Map.Entry<Number, List<List<Integer>>> winningCombos : winningCombosInfo.getValue().entrySet()) {
 				report.append("\t\t" + Premium.toLabel(winningCombos.getKey()) + ":\n");
 				for (List<Integer> combo : winningCombos.getValue()) {
 					Integer counter = premiumCounters.computeIfAbsent(winningCombos.getKey(), key -> 0);
@@ -593,8 +622,8 @@ public class SEStats {
 				"Riepilogo risultati storici sistema non disponibile\n"
 		);
 		Integer returns = 0;
-		for (Map.Entry<Integer, Integer> winningInfo : premiumCounters.entrySet()) {
-			Integer type = winningInfo.getKey();
+		for (Map.Entry<Number, Integer> winningInfo : premiumCounters.entrySet()) {
+			Number type = winningInfo.getKey();
 			String label = Premium.toLabel(type);
 			returns += premiumPrice(type) * winningInfo.getValue();
 			report.append("\t" + label + ":" + rightAlignedString(MathUtils.INSTANCE.integerFormat.format(winningInfo.getValue()), 28 - label.length()) + "\n");
@@ -616,7 +645,7 @@ public class SEStats {
 	}
 
 	public static Integer premiumPrice(String label) {
-		for (Map.Entry<Integer, String> premiumEntry : Premium.all().entrySet()) {
+		for (Map.Entry<Number, String> premiumEntry : Premium.all().entrySet()) {
 			if (premiumEntry.getValue().equals(label)) {
 				return premiumPrice(premiumEntry.getKey());
 			}
@@ -624,12 +653,14 @@ public class SEStats {
 		return null;
 	}
 
-	public static Integer premiumPrice(Integer type) {
-		return type == 2 ? 5 :
-			type == 3 ? 25 :
-				type == 4 ? 300:
-					type == 5 ? 32000:
-						type == 6 ? 10000000: 0;
+	public static Integer premiumPrice(Number type) {
+		return type.intValue() == Premium.TYPE_AMBO.intValue() ? 5 :
+			type.intValue() == Premium.TYPE_TERNO.intValue() ? 25 :
+				type.intValue() == Premium.TYPE_QUATERNA.intValue() ? 300:
+					type.intValue() == Premium.TYPE_CINQUINA.intValue() ? 32000:
+						type.doubleValue() == Premium.TYPE_CINQUINA_PLUS.doubleValue() ?
+							620000 :
+							type.intValue() == 6 ? 10000000: 0;
 	}
 
 	public static String rightAlignedString(String value, int emptySpacesCount) {

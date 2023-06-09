@@ -44,7 +44,6 @@ import org.apache.poi.EmptyFileException;
 import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ooxml.POIXMLException;
 import org.apache.poi.openxml4j.exceptions.PartAlreadyExistsException;
-import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.formula.BaseFormulaEvaluator;
 import org.apache.poi.ss.usermodel.Cell;
@@ -104,7 +103,6 @@ public class SELotterySimpleSimulator {
 	static SEStats allTimeStats;
 
 	static {
-		ZipSecureFile.setMinInflateRatio(0);
 		hostName = NetworkUtils.INSTANCE.thisHostName();
 		excelHeaderLabels = new ArrayList<>();
 		excelHeaderLabels.add(DATA_LABEL);
@@ -571,7 +569,7 @@ public class SELotterySimpleSimulator {
 	) {
 		boolean isSlave = CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false");
 		SEStats sEStats = getSEStats(configuration);
-		Map<Integer, String> allPremiums = Premium.all();
+		Map<Number, String> allPremiums = Premium.all();
 		AtomicInteger dataColIndex = new AtomicInteger(-1);
 		AtomicInteger dataAggStoricoColIndex = new AtomicInteger(-1);
 		AtomicInteger fileColIndex = new AtomicInteger(-1);
@@ -697,10 +695,10 @@ public class SELotterySimpleSimulator {
 							Storage storage = storageWrapper.get();
 							if (storage.getName().equals(row.getCell(fileColIndex.get()).getStringCellValue())) {
 								Cell dataAggStoricoCell = row.getCell(dataAggStoricoColIndex.get());
-								for (Map.Entry<Integer, String> premiumData : allPremiums.entrySet()) {
+								for (Map.Entry<Number, String> premiumData : allPremiums.entrySet()) {
 									Cell historyDataCell =
 										row.getCell(Shared.getCellIndex(sheet, getHistoryPremiumLabel(premiumData.getValue())));
-									Integer premiumCounter = ((Map<Integer,Integer>)premiumCountersData.get("premiumCounters.all")).get(premiumData.getKey());
+									Number premiumCounter = ((Map<Number,Integer>)premiumCountersData.get("premiumCounters.all")).get(premiumData.getKey());
 									if (premiumCounter != null) {
 										historyDataCell.setCellValue(premiumCounter.doubleValue());
 									} else {
@@ -708,7 +706,7 @@ public class SELotterySimpleSimulator {
 									}
 									historyDataCell =
 										row.getCell(Shared.getCellIndex(sheet, getFollowingProgressiveHistoryPremiumLabel(premiumData.getValue())));
-									premiumCounter = ((Map<Integer,Integer>)premiumCountersData.get("premiumCounters.fromExtractionDate")).get(premiumData.getKey());
+									premiumCounter = ((Map<Number,Integer>)premiumCountersData.get("premiumCounters.fromExtractionDate")).get(premiumData.getKey());
 									if (premiumCounter != null) {
 										historyDataCell.setCellValue(premiumCounter.doubleValue());
 									} else {
@@ -795,9 +793,9 @@ public class SELotterySimpleSimulator {
 	protected static Map<String, Object> readPremiumCountersData(File premiumCountersFile) throws StreamReadException, DatabindException, IOException {
 		Map<String, Object> data = objectMapper.readValue(premiumCountersFile, Map.class);
 		data.put("premiumCounters.all",((Map<String, Integer>)data.get("premiumCounters.all")).entrySet().stream()
-			.collect(Collectors.toMap(entry -> Integer.parseInt(entry.getKey()), Map.Entry::getValue, (x, y) -> y, LinkedHashMap::new)));
+			.collect(Collectors.toMap(entry -> Premium.parseType(entry.getKey()), Map.Entry::getValue, (x, y) -> y, LinkedHashMap::new)));
 		data.put("premiumCounters.fromExtractionDate",((Map<String, Integer>)data.get("premiumCounters.fromExtractionDate")).entrySet().stream()
-				.collect(Collectors.toMap(entry -> Integer.parseInt(entry.getKey()), Map.Entry::getValue, (x, y) -> y, LinkedHashMap::new)));
+			.collect(Collectors.toMap(entry ->Premium.parseType(entry.getKey()), Map.Entry::getValue, (x, y) -> y, LinkedHashMap::new)));
 		return data;
 	}
 
