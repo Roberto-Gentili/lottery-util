@@ -213,7 +213,7 @@ public class SELotterySimpleSimulator {
 				configurations.add(config);
 			}
 		}
-
+		int maxParallelTasks = Optional.ofNullable(System.getenv("simulation.tasks.max-parallel")).map(Integer::valueOf).orElseGet(() -> 2);
 		for (Properties configuration : configurations) {
 			LogUtils.info(
 				"Processing file '" + configuration.getProperty("file.name") + "' located in '" + configuration.getProperty("file.parent.absolutePath") + "' in " +
@@ -256,7 +256,7 @@ public class SELotterySimpleSimulator {
 			} else {
 				taskOperation.run();
 			}
-			ConcurrentUtils.waitUntil(futures, ft -> ft.size() >= 5);
+			ConcurrentUtils.waitUntil(futures, ft -> ft.size() >= maxParallelTasks);
 			if (!firstSetupExecuted.get()) {
 				synchronized (firstSetupExecuted) {
 					if (!firstSetupExecuted.get()) {
