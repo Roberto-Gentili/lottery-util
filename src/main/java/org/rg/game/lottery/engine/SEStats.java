@@ -519,9 +519,9 @@ public class SEStats {
 				}
 			}
 			if (hit.intValue() > 1) {
-				if (hit.intValue() == Premium.TYPE_CINQUINA.intValue()) {
+				if (hit.intValue() == Premium.TYPE_FIVE.intValue()) {
 					if (currentCombo.contains(winningCombo.get(6))) {
-						hit = Premium.TYPE_CINQUINA_PLUS;
+						hit = Premium.TYPE_FIVE_PLUS;
 					}
 				}
 				String premiumLabel = Premium.toLabel(hit);
@@ -571,9 +571,9 @@ public class SEStats {
 					List<Integer> currentCombo = systemItearator.next();
 					Number hit = (int)currentCombo.stream().filter(winningCombo.subList(0, 6)::contains).count();
 					if (hit.intValue() > 1) {
-						if (hit.intValue() == Premium.TYPE_CINQUINA.intValue()) {
+						if (hit.intValue() == Premium.TYPE_FIVE.intValue()) {
 							if (currentCombo.contains(winningCombo.get(6))) {
-								hit = Premium.TYPE_CINQUINA_PLUS;
+								hit = Premium.TYPE_FIVE_PLUS;
 							}
 						}
 						winningCombosForExtraction.computeIfAbsent(hit, ht -> new ArrayList<>()).add(currentCombo);
@@ -654,11 +654,11 @@ public class SEStats {
 	}
 
 	public static Integer premiumPrice(Number type) {
-		return type.intValue() == Premium.TYPE_AMBO.intValue() ? 5 :
-			type.intValue() == Premium.TYPE_TERNO.intValue() ? 25 :
-				type.intValue() == Premium.TYPE_QUATERNA.intValue() ? 300:
-					type.intValue() == Premium.TYPE_CINQUINA.intValue() ? 32000:
-						type.doubleValue() == Premium.TYPE_CINQUINA_PLUS.doubleValue() ?
+		return type.intValue() == Premium.TYPE_TWO.intValue() ? 5 :
+			type.intValue() == Premium.TYPE_THREE.intValue() ? 25 :
+				type.intValue() == Premium.TYPE_FOUR.intValue() ? 300:
+					type.intValue() == Premium.TYPE_FIVE.intValue() ? 32000:
+						type.doubleValue() == Premium.TYPE_FIVE_PLUS.doubleValue() ?
 							620000 :
 							type.intValue() == 6 ? 10000000: 0;
 	}

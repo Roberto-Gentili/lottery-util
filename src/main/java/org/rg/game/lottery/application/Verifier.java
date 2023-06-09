@@ -114,9 +114,9 @@ public class Verifier {
 					break;
 				}
 				if (hit.intValue() > 1) {
-					if (hit.intValue() == Premium.TYPE_CINQUINA.intValue()) {
+					if (hit.intValue() == Premium.TYPE_FIVE.intValue()) {
 						if (currentCombo.contains(jolly)) {
-							hit = Premium.TYPE_CINQUINA_PLUS;
+							hit = Premium.TYPE_FIVE_PLUS;
 							hitNumbers.add(jolly);
 						}
 					}

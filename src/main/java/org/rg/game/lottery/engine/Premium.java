@@ -7,31 +7,31 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public class Premium {
-	public static final Integer TYPE_AMBO = 2;
-	public static final Integer TYPE_TERNO = 3;
-	public static final Integer TYPE_QUATERNA = 4;
-	public static final Integer TYPE_CINQUINA = 5;
-	public static final Double TYPE_CINQUINA_PLUS = 5.5d;
-	public static final Integer TYPE_TOMBOLA = 6;
+	public static final Integer TYPE_TWO = 2;
+	public static final Integer TYPE_THREE = 3;
+	public static final Integer TYPE_FOUR = 4;
+	public static final Integer TYPE_FIVE = 5;
+	public static final Double TYPE_FIVE_PLUS = 5.5d;
+	public static final Integer TYPE_SIX = 6;
 
 
-	public static final String LABEL_AMBO = "Ambo";
-	public static final String LABEL_TERNO = "Terno";
-	public static final String LABEL_QUATERNA = "Quaterna";
-	public static final String LABEL_CINQUINA = "Cinquina";
-	public static final String LABEL_CINQUINA_PLUS = "Cinquina + Jolly";
-	public static final String LABEL_TOMBOLA = "Tombola";
+	public static final String LABEL_TWO = "Ambo";
+	public static final String LABEL_THREE = "Terno";
+	public static final String LABEL_FOUR = "Quaterna";
+	public static final String LABEL_FIVE = "Cinquina";
+	public static final String LABEL_FIVE_PLUS = "Cinquina + Jolly";
+	public static final String LABEL_SIX = "Tombola";
 
 	private static final Map<Number, String> all;
 	private static final List<String> allLabels;
 	static {
 		all = new LinkedHashMap<>();
-		all.put(TYPE_AMBO, LABEL_AMBO);
-		all.put(TYPE_TERNO, LABEL_TERNO);
-		all.put(TYPE_QUATERNA, LABEL_QUATERNA);
-		all.put(TYPE_CINQUINA, LABEL_CINQUINA);
-		all.put(TYPE_CINQUINA_PLUS, LABEL_CINQUINA_PLUS);
-		all.put(TYPE_TOMBOLA, LABEL_TOMBOLA);
+		all.put(TYPE_TWO, LABEL_TWO);
+		all.put(TYPE_THREE, LABEL_THREE);
+		all.put(TYPE_FOUR, LABEL_FOUR);
+		all.put(TYPE_FIVE, LABEL_FIVE);
+		all.put(TYPE_FIVE_PLUS, LABEL_FIVE_PLUS);
+		all.put(TYPE_SIX, LABEL_SIX);
 		allLabels = new ArrayList<>(all.values());
 	}
 
@@ -55,8 +55,8 @@ public class Premium {
 
 	public static Number parseType(String typeAsString) {
 		Double type = Double.valueOf(typeAsString);
-		if (type.compareTo(TYPE_CINQUINA_PLUS) == 0) {
-			return TYPE_CINQUINA_PLUS;
+		if (type.compareTo(TYPE_FIVE_PLUS) == 0) {
+			return TYPE_FIVE_PLUS;
 		}
 		return Integer.parseInt(typeAsString);
 	}

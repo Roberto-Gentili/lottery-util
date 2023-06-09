@@ -167,7 +167,7 @@ public class SEMassiveVerifierAndQualityChecker {
 								throw exc;
 							}
 						}
-						if (hit.intValue() == Premium.TYPE_CINQUINA.intValue() && jollyCell != null) {
+						if (hit.intValue() == Premium.TYPE_FIVE.intValue() && jollyCell != null) {
 							jollyCell.setCellStyle(boldItalicAndCeneteredCellStyle);
 						}
 						if (currentCombo.isEmpty() || currentCombo.get(0) == 0) {
@@ -361,9 +361,9 @@ public class SEMassiveVerifierAndQualityChecker {
 				}
 			}
 			if (hit.intValue() > 1) {
-				if (hit.intValue() == Premium.TYPE_CINQUINA.intValue()) {
+				if (hit.intValue() == Premium.TYPE_FIVE.intValue()) {
 					if (currentCombo.contains(jolly)) {
-						hit = Premium.TYPE_CINQUINA_PLUS;
+						hit = Premium.TYPE_FIVE_PLUS;
 						hitNumbers.add(jolly);
 					}
 				}
@@ -431,7 +431,7 @@ public class SEMassiveVerifierAndQualityChecker {
 		}
 		Integer jolly = winningComboWithJollyAndSuperstar.get(6);
 		results.append(" - ");
-		if (hitNumbers.size() == Premium.TYPE_CINQUINA.intValue() && jollyHit) {
+		if (hitNumbers.size() == Premium.TYPE_FIVE.intValue() && jollyHit) {
 			results.append("" + jolly, boldHighLightedItalicFont);
 		} else {
 			results.append("" + jolly);
@@ -462,7 +462,7 @@ public class SEMassiveVerifierAndQualityChecker {
 					Integer number = winningComboIterator.next();
 					if (winningCombo.contains(number)) {
 						results.append(number.toString(), boldFont);
-					} else if (combos.getKey().doubleValue() == Premium.TYPE_CINQUINA_PLUS.doubleValue() && number.compareTo(jolly) == 0) {
+					} else if (combos.getKey().doubleValue() == Premium.TYPE_FIVE_PLUS.doubleValue() && number.compareTo(jolly) == 0) {
 						results.append(number.toString(), boldItalicFont);
 					} else {
 						results.append(number.toString());
@@ -515,9 +515,9 @@ public class SEMassiveVerifierAndQualityChecker {
 					}
 				}
 				if (hit.intValue() > 1) {
-					if (hit.intValue() == Premium.TYPE_CINQUINA.intValue()) {
+					if (hit.intValue() == Premium.TYPE_FIVE.intValue()) {
 						if (currentCombo.contains(winningComboWithJollyAndSuperstar.get(6))) {
-							hit = Premium.TYPE_CINQUINA_PLUS;
+							hit = Premium.TYPE_FIVE_PLUS;
 						}
 					}
 					historyData.computeIfAbsent(extractionDateAsString, key -> new TreeMap<>(MathUtils.INSTANCE.numberComparator))

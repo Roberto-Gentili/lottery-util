@@ -168,7 +168,7 @@ class Shared {
 		if (jolly != null) {
 			String jollyAsString = null;
 			if (originalCombo.size() > 6) {
-				if (originalNumbers.contains(jolly) && hitCount.get() == Premium.TYPE_CINQUINA) {
+				if (originalNumbers.contains(jolly) && hitCount.get() == Premium.TYPE_FIVE) {
 					jollyAsString = "_*" + jolly + "*_";
 				} else {
 					jollyAsString = jolly.toString();
@@ -181,7 +181,7 @@ class Shared {
 					)
 				);
 			} else if (originalNumbers.size() > 6) {
-				if (originalNumbers.contains(jolly) && hitCount.get() == Premium.TYPE_CINQUINA) {
+				if (originalNumbers.contains(jolly) && hitCount.get() == Premium.TYPE_FIVE) {
 					wAString = wAString.replace(jolly.toString(), "_*" + jolly + "*_");
 				}
 			}

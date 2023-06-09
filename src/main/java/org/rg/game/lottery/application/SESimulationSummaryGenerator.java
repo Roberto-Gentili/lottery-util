@@ -42,15 +42,15 @@ public class SESimulationSummaryGenerator {
 			SimpleWorkbookTemplate workBookTemplate = new SimpleWorkbookTemplate(true);
 			Sheet summarySheet = workBookTemplate.getOrCreateSheet("Riepilogo", true);
 			List<String> headerLabels = new ArrayList<>();
-			List<String> headerLabelsTemp = new ArrayList<>(SELotterySimpleSimulator.excelHeaderLabels);
+			List<String> headerLabelsTemp = new ArrayList<>(SELotterySimpleSimulator.reportHeaderLabels);
 			List<String> headersToBeSkipped = Arrays.asList(
-				SELotterySimpleSimulator.DATA_AGGIORNAMENTO_STORICO_LABEL,
+				SELotterySimpleSimulator.HISTORICAL_UPDATE_DATE_LABEL,
 				SELotterySimpleSimulator.FILE_LABEL
 			);
 			headerLabelsTemp.removeAll(headersToBeSkipped);
 			headerLabels.add(SELotterySimpleSimulator.FILE_LABEL);
 			headerLabels.addAll(headerLabelsTemp);
-			headerLabels.set(headerLabels.indexOf(SELotterySimpleSimulator.DATA_LABEL), "Conteggio estrazioni");
+			headerLabels.set(headerLabels.indexOf(SELotterySimpleSimulator.EXTRACTION_DATE_LABEL), "Conteggio estrazioni");
 			workBookTemplate.createHeader(true, headerLabels);
 			AtomicInteger reportCounter = new AtomicInteger(0);
 			process(
@@ -61,10 +61,10 @@ public class SESimulationSummaryGenerator {
 				reportCounter
 			);
 			summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.FILE_LABEL), 15000);
-			summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.COSTO_STORICO_PROGRESSIVO_ANTERIORE_LABEL), 3000);
-			summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.RITORNO_STORICO_PROGRESSIVO_ANTERIORE_LABEL), 3000);
-			summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.COSTO_STORICO_LABEL), 3000);
-			summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.RITORNO_STORICO_LABEL), 3000);
+			summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL), 3000);
+			summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.FOLLOWING_PROGRESSIVE_HISTORICAL_RETURN_LABEL), 3000);
+			summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.HISTORICAL_COST_LABEL), 3000);
+			summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.HISTORICAL_RETURN_LABEL), 3000);
 			try (OutputStream destFileOutputStream = new FileOutputStream(simulationSummaryFile)){
 				workBookTemplate.setAutoFilter(0, reportCounter.get(), 0, headerLabels.size() - 1);
 				BaseFormulaEvaluator.evaluateAllFormulaCells(workBookTemplate.getWorkbook());
@@ -156,20 +156,20 @@ public class SESimulationSummaryGenerator {
 				cellName,
 				URLEncoder.encode(singleSimFolderRelPath + "/" + report.getName(), "UTF-8").replace("+", "%20")
 			);
-			String historicalCinquinaLabel = SELotterySimpleSimulator.getFollowingProgressiveHistoryPremiumLabel(Premium.LABEL_CINQUINA);
-			String historicalCinquinaPlusLabel = SELotterySimpleSimulator.getFollowingProgressiveHistoryPremiumLabel(Premium.LABEL_CINQUINA_PLUS);
-			String historicalTombolaLabel = SELotterySimpleSimulator.getFollowingProgressiveHistoryPremiumLabel(Premium.LABEL_TOMBOLA);
-			for (String cellLabel : SELotterySimpleSimulator.excelHeaderLabels) {
+			String historicalCinquinaLabel = SELotterySimpleSimulator.getFollowingProgressiveHistoricalPremiumLabel(Premium.LABEL_FIVE);
+			String historicalCinquinaPlusLabel = SELotterySimpleSimulator.getFollowingProgressiveHistoricalPremiumLabel(Premium.LABEL_FIVE_PLUS);
+			String historicalTombolaLabel = SELotterySimpleSimulator.getFollowingProgressiveHistoricalPremiumLabel(Premium.LABEL_SIX);
+			for (String cellLabel : SELotterySimpleSimulator.reportHeaderLabels) {
 				if (!headersToBeSkipped.contains(cellLabel)) {
 					Cell simulationCell = resultSheet.getRow(1).getCell(Shared.getCellIndex(resultSheet, cellLabel));
 					CellValue simulationCellValue = evaluator.evaluate(simulationCell);
 					if (simulationCellValue.getCellType().equals(CellType.NUMERIC)) {
 						Cell summaryCurrentCell = summaryWorkBookTemplate.addCell(simulationCellValue.getNumberValue(), "#,##0");
-						if (cellLabel.equals(Premium.LABEL_CINQUINA) && simulationCellValue.getNumberValue() > 0) {
+						if (cellLabel.equals(Premium.LABEL_FIVE) && simulationCellValue.getNumberValue() > 0) {
 							Shared.toHighlightedBoldedCell(summaryWorkBookTemplate.getWorkbook(), summaryCurrentCell, IndexedColors.YELLOW);
-						} else if (cellLabel.equals(Premium.LABEL_CINQUINA_PLUS) && simulationCellValue.getNumberValue() > 0) {
+						} else if (cellLabel.equals(Premium.LABEL_FIVE_PLUS) && simulationCellValue.getNumberValue() > 0) {
 							Shared.toHighlightedBoldedCell(summaryWorkBookTemplate.getWorkbook(), summaryCurrentCell, IndexedColors.ORANGE);
-						} else if (cellLabel.equals(Premium.LABEL_TOMBOLA) && simulationCellValue.getNumberValue() > 0) {
+						} else if (cellLabel.equals(Premium.LABEL_SIX) && simulationCellValue.getNumberValue() > 0) {
 							Shared.toHighlightedBoldedCell(summaryWorkBookTemplate.getWorkbook(), summaryCurrentCell, IndexedColors.RED);
 						} else if (cellLabel.equals(historicalCinquinaLabel) && simulationCellValue.getNumberValue() > 0) {
 							Shared.toHighlightedBoldedCell(summaryWorkBookTemplate.getWorkbook(), summaryCurrentCell, IndexedColors.YELLOW);
