@@ -8,13 +8,10 @@ import java.time.ZoneId;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -30,7 +27,6 @@ import org.rg.game.core.ResourceUtils;
 import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.ComboHandler;
 import org.rg.game.lottery.engine.PersistentStorage;
-import org.rg.game.lottery.engine.Premium;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.SEStats;
 
@@ -138,66 +134,6 @@ class Shared {
 		return sheet;
 	}
 
-	static String toWAString(Collection<Integer> combo, String separator, String jollySeparator, Collection<Integer> numbers) {
-		Integer jolly = null;
-		Collection<Integer> originalCombo = combo;
-		Collection<Integer> originalNumbers = numbers;
-		if (combo.size() > 6) {
-			combo = new ArrayList<>(combo);
-			jolly = ((List<Integer>)combo).get(6);
-			combo = new ArrayList<>(combo).subList(0, 6);
-		} else if (numbers.size() > 6) {
-			numbers = new ArrayList<>(numbers);
-			jolly = ((List<Integer>)numbers).get(6);
-			numbers = new ArrayList<>(numbers).subList(0, 6);
-		}
-		Collection<Integer> finalNumbers = numbers;
-		AtomicInteger hitCount = new AtomicInteger(0);
-		String wAString = String.join(
-			separator,
-			combo.stream()
-		    .map(val -> {
-		    	boolean hit = finalNumbers.contains(val);
-		    	if (hit) {
-		    		hitCount.incrementAndGet();
-		    	}
-		    	return (hit ? "*" : "") + val.toString() + (hit ? "*" : "");
-		    })
-		    .collect(Collectors.toList())
-		);
-		if (jolly != null) {
-			String jollyAsString = null;
-			if (originalCombo.size() > 6) {
-				if (originalNumbers.contains(jolly) && hitCount.get() == Premium.TYPE_FIVE) {
-					jollyAsString = "_*" + jolly + "*_";
-				} else {
-					jollyAsString = jolly.toString();
-				}
-				wAString = String.join(
-					jollySeparator,
-					Arrays.asList(
-						wAString,
-						jollyAsString
-					)
-				);
-			} else if (originalNumbers.size() > 6) {
-				if (originalNumbers.contains(jolly) && hitCount.get() == Premium.TYPE_FIVE) {
-					wAString = wAString.replace(jolly.toString(), "_*" + jolly + "*_");
-				}
-			}
-		}
-		return wAString;
-	}
-
-	static String toString(Collection<Integer> combo, String separator) {
-		return String.join(
-			separator,
-			combo.stream()
-		    .map(Object::toString)
-		    .collect(Collectors.toList())
-		);
-	}
-
 	static SEStats getSEStats() {
 		return SEStats.get(Shared.sEStatsDefaultDate, TimeUtils.getDefaultDateFormat().format(new Date()));
 	}
@@ -240,7 +176,7 @@ class Shared {
 			}
 			if (hit == bound) {
 				system.add(winningCombo);
-				LogUtils.info(toString(winningCombo, "\t"));
+				LogUtils.info(ComboHandler.toString(winningCombo, "\t"));
 			}
 		}
 		SELotteryMatrixGeneratorEngine engine = new SELotteryMatrixGeneratorEngine();

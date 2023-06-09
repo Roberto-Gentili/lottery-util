@@ -31,6 +31,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.rg.game.core.LogUtils;
 import org.rg.game.core.MathUtils;
 import org.rg.game.core.TimeUtils;
+import org.rg.game.lottery.engine.ComboHandler;
 import org.rg.game.lottery.engine.Premium;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -121,18 +122,18 @@ public class Verifier {
 						}
 					}
 					winningCombos.computeIfAbsent(hit, ht -> new ArrayList<>()).add(currentCombo);
-					LogUtils.info(comboCount + ") " + Shared.toString(currentCombo, "\t"));
+					LogUtils.info(comboCount + ") " + ComboHandler.toString(currentCombo, "\t"));
 				}
 				comboCount++;
 			}
 			if (!winningComboWithJollyAndSuperstar.isEmpty()) {
-				LogUtils.info("\n\nNumeri estratti per il *" + competionName + "* del " + extractionDate +": " + Shared.toWAString(winningComboWithJollyAndSuperstar, ", ", " - ", hitNumbers));
+				LogUtils.info("\n\nNumeri estratti per il *" + competionName + "* del " + extractionDate +": " + ComboHandler.toWAString(winningComboWithJollyAndSuperstar, ", ", " - ", hitNumbers));
 				if (!winningCombos.isEmpty()) {
 					for (Map.Entry<Number, List<List<Integer>>> combos: winningCombos.entrySet()) {
 						LogUtils.info("\t*Combinazioni con " + Premium.toLabel(combos.getKey()).toLowerCase() + "*:");
 						for (List<Integer> combo : combos.getValue()) {
 							LogUtils.info("\t\t" +
-								Shared.toWAString(combo, "\t", "\t\t", winningComboWithJollyAndSuperstar)
+								ComboHandler.toWAString(combo, "\t", "\t\t", winningComboWithJollyAndSuperstar)
 							);
 						}
 					}
