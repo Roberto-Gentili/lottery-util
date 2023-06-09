@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.poi.common.usermodel.HyperlinkType;
+import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.poi.ss.formula.BaseFormulaEvaluator;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -29,6 +30,10 @@ import org.rg.game.lottery.engine.Premium;
 import org.rg.game.lottery.engine.SimpleWorkbookTemplate;
 
 public class SESimulationSummaryGenerator {
+
+	static {
+		ZipSecureFile.setMinInflateRatio(0);
+	}
 
 	public static void main(String[] args) {
 		try {
