@@ -28,6 +28,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.rg.game.core.LogUtils;
+import org.rg.game.core.MathUtils;
 import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.PersistentStorage;
 
@@ -167,14 +168,14 @@ public class SubscriptionExpirationDateUpdater {
 							extractionDateCounter++;
 						}
 						String label = name + " " + extractionDateCounter + " estrazioni rimaste. Importo credito: ";
-						LogUtils.info(label + Shared.rightAlignedString(Shared.decimalFormat.format(extractionCost * extractionDateCounter), displaySize - label.length()) + "€");
+						LogUtils.info(label + Shared.rightAlignedString(MathUtils.INSTANCE.decimalFormat.format(extractionCost * extractionDateCounter), displaySize - label.length()) + "€");
 						total += extractionCost * extractionDateCounter;
 					}
 				}
 			}
 			LogUtils.info();
 			String label = "Importo debito: ";
-			LogUtils.info(label + Shared.rightAlignedString(Shared.decimalFormat.format(total), displaySize - label.length()) + "€");
+			LogUtils.info(label + Shared.rightAlignedString(MathUtils.INSTANCE.decimalFormat.format(total), displaySize - label.length()) + "€");
 		} catch (Throwable exc) {
 			exc.printStackTrace();
 		}

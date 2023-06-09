@@ -285,7 +285,7 @@ public class SEMassiveVerifierAndQualityChecker {
 						String label = Premium.toLabel(type);
 						int labelIndex = Shared.getCellIndex(sheet, label);
 						if (counter > 0) {
-							LogUtils.info("\t\t\t" + label + ":" + SEStats.rightAlignedString(Shared.integerFormat.format(counter), 21 - label.length()));
+							LogUtils.info("\t\t\t" + label + ":" + SEStats.rightAlignedString(MathUtils.INSTANCE.integerFormat.format(counter), 21 - label.length()));
 						}
 						Cell valueCell = row.getCell(labelIndex);
 						if (valueCell == null) {
@@ -330,7 +330,7 @@ public class SEMassiveVerifierAndQualityChecker {
 		LogUtils.info("\nRisultati globali:");
 		globalData.forEach((key, combos) -> {
 			String label = Premium.toLabel(key);
-			LogUtils.info("\t" + label + ":" + SEStats.rightAlignedString(Shared.integerFormat.format(combos.size()), 21 - label.length()));
+			LogUtils.info("\t" + label + ":" + SEStats.rightAlignedString(MathUtils.INSTANCE.integerFormat.format(combos.size()), 21 - label.length()));
 		});
 	}
 
@@ -536,7 +536,7 @@ public class SEMassiveVerifierAndQualityChecker {
 				String label = Premium.toLabel(singleHistoryResult.getKey());
 				results.append("    ");
 				results.append(label, boldFont);
-				results.append(": " + Shared.integerFormat.format(singleHistoryResult.getValue().size()));
+				results.append(": " + MathUtils.INSTANCE.integerFormat.format(singleHistoryResult.getValue().size()));
 				if (systemResultsInHistoryItr.hasNext()) {
 					results.append("\n");
 				}

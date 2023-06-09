@@ -1,7 +1,6 @@
 package org.rg.game.lottery.application;
 
 import java.io.File;
-import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -32,8 +31,6 @@ import org.rg.game.lottery.engine.SEStats;
 
 class Shared {
 
-	static DecimalFormat decimalFormat = new DecimalFormat( "#,##0.##" );
-	static DecimalFormat integerFormat = new DecimalFormat( "#,##0" );
 	static String sEStatsDefaultDate = System.getenv("competition.archive.start-date") != null ?
 		System.getenv("competition.archive.start-date"):
 		new SELotteryMatrixGeneratorEngine().getExtractionArchiveStartDate();
