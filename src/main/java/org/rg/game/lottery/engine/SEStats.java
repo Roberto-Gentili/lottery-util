@@ -445,9 +445,6 @@ public class SEStats {
 		);
 	}
 
-
-
-
 	public List<Integer> getWinningComboOf(Date date) {
 		return allWinningCombos.entrySet().stream().filter(entry ->
 			TimeUtils.getDefaultDateFormat().format(entry.getKey()).equals(TimeUtils.getDefaultDateFormat().format(date))
@@ -566,13 +563,14 @@ public class SEStats {
 				++processedExtractionDateCounter;
 				Map<Number,List<List<Integer>>> winningCombosForExtraction = new TreeMap<>(MathUtils.INSTANCE.numberComparator);
 				List<Integer> winningCombo = winningComboInfo.getValue();
+				Integer jolly = winningCombo.get(6);
 				systemItearator = systemIteratorSupplier.get();
 				while (systemItearator.hasNext()) {
 					List<Integer> currentCombo = systemItearator.next();
 					Number hit = (int)currentCombo.stream().filter(winningCombo.subList(0, 6)::contains).count();
 					if (hit.intValue() > 1) {
 						if (hit.intValue() == Premium.TYPE_FIVE.intValue()) {
-							if (currentCombo.contains(winningCombo.get(6))) {
+							if (currentCombo.contains(jolly)) {
 								hit = Premium.TYPE_FIVE_PLUS;
 							}
 						}
