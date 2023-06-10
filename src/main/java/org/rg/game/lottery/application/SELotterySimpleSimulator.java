@@ -839,12 +839,12 @@ public class SELotterySimpleSimulator {
 		data.put("premiumCounters.fromExtractionDate",((Map<String, Integer>)data.get("premiumCounters.fromExtractionDate")).entrySet().stream()
 			.collect(Collectors.toMap(entry ->Premium.parseType(entry.getKey()), Map.Entry::getValue, (x, y) -> y, LinkedHashMap::new)));
 		File reportDetailFile = new File(storage.getAbsolutePathWithoutExtension() + "-historical-premiums.txt");
-		File reportDetailFileFromExtractionDate = new File(storage.getAbsolutePathWithoutExtension() + "-historical-premiums" +
-			TimeUtils.getDefaultDateFmtForFilePrefix().format(extractionDate) + ".txt"
-		);
 		if (reportDetailFile.exists()) {
 			data.put("reportDetailFile.all", reportDetailFile);
 		}
+		File reportDetailFileFromExtractionDate = new File(storage.getAbsolutePathWithoutExtension() + "-historical-premiums" +
+			TimeUtils.getDefaultDateFmtForFilePrefix().format(extractionDate) + ".txt"
+		);
 		if (reportDetailFileFromExtractionDate.exists()) {
 			data.put("reportDetailFile.fromExtractionDate", reportDetailFileFromExtractionDate);
 		}
