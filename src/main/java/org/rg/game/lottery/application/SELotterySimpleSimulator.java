@@ -572,12 +572,15 @@ public class SELotterySimpleSimulator {
 		Map<Number, String> allPremiums = Premium.all();
 		AtomicInteger dataColIndex = new AtomicInteger(-1);
 		AtomicInteger dataAggStoricoColIndex = new AtomicInteger(-1);
+		AtomicInteger costColIndex = new AtomicInteger(-1);
+		AtomicInteger historicalCostColIndex = new AtomicInteger(-1);
 		AtomicInteger historicalReturnColIndex = new AtomicInteger(-1);
+		AtomicInteger followingProgressiveHistoricalCostColIndex = new AtomicInteger(-1);
 		AtomicInteger followingProgressiveHistoricalReturnColIndex = new AtomicInteger(-1);
 		AtomicInteger fileColIndex = new AtomicInteger(-1);
 		AtomicReference<CellStyle> numberCellStyle = new AtomicReference<>();
 		AtomicReference<CellStyle> dateCellStyle = new AtomicReference<>();
-		AtomicReference<CellStyle> hyperLinkCellStyle = new AtomicReference<>();
+		AtomicReference<CellStyle> hyperLinkNumberCellStyle = new AtomicReference<>();
 		List<Map.Entry<Integer, Date>> excelRecordsToBeUpdated = new ArrayList<>();
 		Function<Date, Date> dateOffsetComputer = dateOffsetComputer(configuration);
 		Integer result = readOrCreateExcel(
@@ -586,7 +589,10 @@ public class SELotterySimpleSimulator {
 				Sheet sheet = workBook.getSheet("Risultati");
 				dataColIndex.set(Shared.getCellIndex(sheet, EXTRACTION_DATE_LABEL));
 				dataAggStoricoColIndex.set(Shared.getCellIndex(sheet, HISTORICAL_UPDATE_DATE_LABEL));
+				costColIndex.set(Shared.getCellIndex(sheet, COST_LABEL));
+				historicalCostColIndex.set(Shared.getCellIndex(sheet, HISTORICAL_COST_LABEL));
 				historicalReturnColIndex.set(Shared.getCellIndex(sheet, HISTORICAL_RETURN_LABEL));
+				followingProgressiveHistoricalCostColIndex.set(Shared.getCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL));
 				followingProgressiveHistoricalReturnColIndex.set(Shared.getCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_RETURN_LABEL));
 				fileColIndex.set(Shared.getCellIndex(sheet, FILE_LABEL));
 				for (int i = 2; i < sheet.getPhysicalNumberOfRows(); i++) {
@@ -690,14 +696,17 @@ public class SELotterySimpleSimulator {
 								dateCellStyle.set(workBook.createCellStyle());
 								dateCellStyle.get().setAlignment(HorizontalAlignment.CENTER);
 								dateCellStyle.get().setDataFormat(workBook.createDataFormat().getFormat("dd/MM/yyyy"));
-								hyperLinkCellStyle.set(currentRow.getCell(fileColIndex.get()).getCellStyle());
+								hyperLinkNumberCellStyle.set(workBook.createCellStyle());
+								hyperLinkNumberCellStyle.get().cloneStyleFrom(currentRow.getCell(fileColIndex.get()).getCellStyle());
+								hyperLinkNumberCellStyle.get().setDataFormat(workBook.createDataFormat().getFormat("#,##0"));
+								currentRow.getCell(historicalReturnColIndex.get()).setCellStyle(hyperLinkNumberCellStyle.get());
 							} else {
 								Row previousRow = sheet.getRow(rowIndexAndExtractionDate.getKey() -1);
 								dateCellStyle.set(previousRow.getCell(dataAggStoricoColIndex.get()).getCellStyle());
 								numberCellStyle.set(
 									previousRow.getCell(Shared.getCellIndex(sheet, getHistoryPremiumLabel(Premium.allLabels().get(0)))).getCellStyle()
 								);
-								hyperLinkCellStyle.set(sheet.getRow(2).getCell(fileColIndex.get()).getCellStyle());
+								hyperLinkNumberCellStyle.set(sheet.getRow(2).getCell(historicalReturnColIndex.get()).getCellStyle());
 							}
 							Storage storage = storageWrapper.get();
 							if (storage.getName().equals(currentRow.getCell(fileColIndex.get()).getStringCellValue())) {
@@ -721,23 +730,23 @@ public class SELotterySimpleSimulator {
 									}
 									historyDataCell.setCellStyle(numberCellStyle.get());
 								}
-								Cell cell = currentRow.getCell(Shared.getCellIndex(sheet, HISTORICAL_COST_LABEL));
+								Cell cell = currentRow.getCell(historicalCostColIndex.get());
 								cell.setCellStyle(numberCellStyle.get());
 								cell.setCellValue(
-									(Integer)premiumCountersData.get("premiumCounters.all.processedExtractionDateCounter") * currentRow.getCell(Shared.getCellIndex(sheet, COST_LABEL)).getNumericCellValue()
+									(Integer)premiumCountersData.get("premiumCounters.all.processedExtractionDateCounter") * currentRow.getCell(costColIndex.get()).getNumericCellValue()
 								);
-								cell = currentRow.getCell(Shared.getCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL));
+								cell = currentRow.getCell(followingProgressiveHistoricalCostColIndex.get());
 								cell.setCellStyle(numberCellStyle.get());
 								cell.setCellValue(
-									(Integer)premiumCountersData.get("premiumCounters.fromExtractionDate.processedExtractionDateCounter") * currentRow.getCell(Shared.getCellIndex(sheet, COST_LABEL)).getNumericCellValue()
+									(Integer)premiumCountersData.get("premiumCounters.fromExtractionDate.processedExtractionDateCounter") * currentRow.getCell(costColIndex.get()).getNumericCellValue()
 								);
 								File reportDetailFileFromExtractionDate = (File) premiumCountersData.get("reportDetailFile.fromExtractionDate");
 								if (reportDetailFileFromExtractionDate != null) {
 									SimpleWorkbookTemplate.setLinkForCell(
 										workBook,
 										HyperlinkType.FILE,
-										currentRow.getCell(Shared.getCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_RETURN_LABEL)),
-										hyperLinkCellStyle.get(),
+										currentRow.getCell(followingProgressiveHistoricalReturnColIndex.get()),
+										hyperLinkNumberCellStyle.get(),
 										reportDetailFileFromExtractionDate.getName()
 									);
 								}
@@ -746,8 +755,8 @@ public class SELotterySimpleSimulator {
 									SimpleWorkbookTemplate.setLinkForCell(
 										workBook,
 										HyperlinkType.FILE,
-										currentRow.getCell(Shared.getCellIndex(sheet, HISTORICAL_RETURN_LABEL)),
-										hyperLinkCellStyle.get(),
+										currentRow.getCell(historicalReturnColIndex.get()),
+										hyperLinkNumberCellStyle.get(),
 										reportDetailFile.getName()
 									);
 								}
