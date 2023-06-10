@@ -213,7 +213,7 @@ public class SELotterySimpleSimulator {
 				configurations.add(config);
 			}
 		}
-		int maxParallelTasks = Optional.ofNullable(System.getenv("simulation.tasks.max-parallel")).map(Integer::valueOf).orElseGet(() -> 2);
+		int maxParallelTasks = Optional.ofNullable(System.getenv("simulation.tasks.max-parallel")).map(Integer::valueOf).orElseGet(() -> 4);
 		for (Properties configuration : configurations) {
 			LogUtils.info(
 				"Processing file '" + configuration.getProperty("file.name") + "' located in '" + configuration.getProperty("file.parent.absolutePath") + "' in " +
@@ -290,7 +290,7 @@ public class SELotterySimpleSimulator {
 			config.setProperty("simulation.group", simulationGroup);
 			config.setProperty(
 				"group",
-				simulationGroup
+				simulationGroup + "/data"
 			);
 		}
 	}
@@ -654,7 +654,7 @@ public class SELotterySimpleSimulator {
 				Map<String, Object> premiumCountersData = premiumCountersForFile.computeIfAbsent(storageWrapper.get().getName() + extractionDateFormattedForFile, key -> {
 					PersistentStorage storage = storageWrapper.get();
 					File premiumCountersFile = new File(
-						storage.getAbsolutePathWithoutExtension() +
+						new File(storage.getAbsolutePath()).getParentFile().getAbsolutePath() + File.separator + storage.getNameWithoutExtension() +
 						extractionDateFormattedForFile +
 						"-historical-data.json"
 					);
@@ -749,7 +749,7 @@ public class SELotterySimpleSimulator {
 										HyperlinkType.FILE,
 										currentRow.getCell(followingProgressiveHistoricalReturnColIndex.get()),
 										hyperLinkNumberCellStyle.get(),
-										reportDetailFileFromExtractionDate.getName()
+										reportDetailFileFromExtractionDate.getParentFile().getName() + File.separator + reportDetailFileFromExtractionDate.getName()
 									);
 								}
 								File reportDetailFile = (File) premiumCountersData.get("reportDetailFile.all");
@@ -759,7 +759,7 @@ public class SELotterySimpleSimulator {
 										HyperlinkType.FILE,
 										currentRow.getCell(historicalReturnColIndex.get()),
 										hyperLinkNumberCellStyle.get(),
-										reportDetailFile.getName()
+										reportDetailFile.getParentFile().getName() + File.separator + reportDetailFile.getName()
 									);
 								}
 								dataAggStoricoCell.setCellStyle(dateCellStyle.get());
@@ -838,11 +838,14 @@ public class SELotterySimpleSimulator {
 			.collect(Collectors.toMap(entry -> Premium.parseType(entry.getKey()), Map.Entry::getValue, (x, y) -> y, LinkedHashMap::new)));
 		data.put("premiumCounters.fromExtractionDate",((Map<String, Integer>)data.get("premiumCounters.fromExtractionDate")).entrySet().stream()
 			.collect(Collectors.toMap(entry ->Premium.parseType(entry.getKey()), Map.Entry::getValue, (x, y) -> y, LinkedHashMap::new)));
-		File reportDetailFile = new File(storage.getAbsolutePathWithoutExtension() + "-historical-premiums.txt");
+		String basePath = new File(storage.getAbsolutePath()).getParentFile().getAbsolutePath() + File.separator + storage.getNameWithoutExtension();
+
+		File reportDetailFile = new File(basePath + "-historical-premiums.txt");
 		if (reportDetailFile.exists()) {
 			data.put("reportDetailFile.all", reportDetailFile);
 		}
-		File reportDetailFileFromExtractionDate = new File(storage.getAbsolutePathWithoutExtension() + "-historical-premiums" +
+		File reportDetailFileFromExtractionDate = new File(
+			basePath + "-historical-premiums" +
 			TimeUtils.getDefaultDateFmtForFilePrefix().format(extractionDate) + ".txt"
 		);
 		if (reportDetailFileFromExtractionDate.exists()) {
@@ -862,9 +865,10 @@ public class SELotterySimpleSimulator {
 		Map<String, Object> qualityCheckResultFromExtractionDate = sEStats.checkQualityFrom(storage::iterator, extractionDate);
 		String reportDetail = (String)qualityCheckResult.get("report.detail");
 		String reportDetailFromExtractionDate = (String)qualityCheckResultFromExtractionDate.get("report.detail");
-		File reportDetailFile = IOUtils.INSTANCE.writeToNewFile(storage.getAbsolutePathWithoutExtension() + "-historical-premiums.txt", reportDetail);
+		String basePath = new File(storage.getAbsolutePath()).getParentFile().getAbsolutePath() + File.separator + storage.getNameWithoutExtension();
+		File reportDetailFile = IOUtils.INSTANCE.writeToNewFile(basePath + "-historical-premiums.txt", reportDetail);
 		File reportDetailFileFromExtractionDate = IOUtils.INSTANCE.writeToNewFile(
-			storage.getAbsolutePathWithoutExtension() + "-historical-premiums" +
+			basePath + "-historical-premiums" +
 			TimeUtils.getDefaultDateFmtForFilePrefix().format(extractionDate) + ".txt", reportDetailFromExtractionDate
 		);
 		LogUtils.info("Computed historycal data of " + storage.getName());
@@ -975,7 +979,7 @@ public class SELotterySimpleSimulator {
 			workBookTemplate.setLinkForCell(
 				HyperlinkType.FILE,
 				cellName,
-				persistentStorage.getName()
+				new File(persistentStorage.getAbsolutePath()).getParentFile().getName() + File.separator + persistentStorage.getName()
 			);
 			return true;
 		}
@@ -1236,7 +1240,7 @@ public class SELotterySimpleSimulator {
 			Integer savingCounterForFile = savingOperationCounters.computeIfAbsent(excelFileName, key -> 0) + 1;
 			File file = new File(PersistentStorage.buildWorkingPath() + File.separator + excelFileName);
 			savingOperationCounters.put(excelFileName, savingCounterForFile);
-			if (savingCounterForFile % 100 == 0) {
+			if (savingCounterForFile % 50 == 0) {
 				backup(file, isSlave);
 			}
 			try (OutputStream destFileOutputStream = new FileOutputStream(file)){

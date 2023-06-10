@@ -207,6 +207,10 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 			nextAfterLatestConfiguration.setProperty("simulation.group", simulationGroup + File.separator + GENERATED_FOLDER_NAME);
 		}
 		setGroup(nextAfterLatestConfiguration);
+		nextAfterLatestConfiguration.setProperty(
+			"group",
+			nextAfterLatestConfiguration.getProperty("simulation.group")
+		);
 		LotteryMatrixGenerator.process(futures, SELotteryMatrixGeneratorEngine::new, nextAfterLatestConfiguration);
 	}
 
