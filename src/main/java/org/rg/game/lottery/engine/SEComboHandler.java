@@ -72,7 +72,7 @@ public class SEComboHandler {
 		int index = 0;
 		while (index < 6) {
 			comboAsString = comboAsString + comboIterator.next();
-			if (++index < 5) {
+			if (++index < 6) {
 				comboAsString = comboAsString + separator;
 			}
 		}

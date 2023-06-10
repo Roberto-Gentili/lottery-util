@@ -599,7 +599,7 @@ public class SEStats {
 		Iterator<Map.Entry<Entry<Date, List<Integer>>, Map<Number, List<List<Integer>>>>> winningsCombosDataItr = winningsCombosData.entrySet().iterator();
 		while (winningsCombosDataItr.hasNext()) {
 			Map.Entry<Map.Entry<Date, List<Integer>>, Map<Number, List<List<Integer>>>> winningCombosInfo = winningsCombosDataItr.next();
-			reportDetail.append("\t" + TimeUtils.getDefaultDateFormat().format(winningCombosInfo.getKey().getKey()) + ", " +
+			reportDetail.append("\t" + TimeUtils.getDefaultDateFormat().format(winningCombosInfo.getKey().getKey()) + " -> " +
 				SEComboHandler.toString(winningCombosInfo.getKey().getValue(), ", ", " - ") + ":\n"
 			);
 			for (Map.Entry<Number, List<List<Integer>>> winningCombos : winningCombosInfo.getValue().entrySet()) {
