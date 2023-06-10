@@ -663,7 +663,7 @@ public class SELotterySimpleSimulator {
 					} else {
 						Map<String, Object> data = null;
 						try {
-							data = readPremiumCountersData(premiumCountersFile);
+							data = readPremiumCountersData(storage, rowIndexAndExtractionDate.getValue(), premiumCountersFile);
 						} catch (IOException exc) {
 							LogUtils.error("Unable to read file " + premiumCountersFile.getAbsolutePath() + ": it will be deleted and recreated");
 							if (!premiumCountersFile.delete()) {
@@ -828,12 +828,26 @@ public class SELotterySimpleSimulator {
 		);
 	}
 
-	protected static Map<String, Object> readPremiumCountersData(File premiumCountersFile) throws StreamReadException, DatabindException, IOException {
+	protected static Map<String, Object> readPremiumCountersData(
+		PersistentStorage storage,
+		Date extractionDate,
+		File premiumCountersFile
+	) throws StreamReadException, DatabindException, IOException {
 		Map<String, Object> data = objectMapper.readValue(premiumCountersFile, Map.class);
 		data.put("premiumCounters.all",((Map<String, Integer>)data.get("premiumCounters.all")).entrySet().stream()
 			.collect(Collectors.toMap(entry -> Premium.parseType(entry.getKey()), Map.Entry::getValue, (x, y) -> y, LinkedHashMap::new)));
 		data.put("premiumCounters.fromExtractionDate",((Map<String, Integer>)data.get("premiumCounters.fromExtractionDate")).entrySet().stream()
 			.collect(Collectors.toMap(entry ->Premium.parseType(entry.getKey()), Map.Entry::getValue, (x, y) -> y, LinkedHashMap::new)));
+		File reportDetailFile = new File(storage.getAbsolutePathWithoutExtension() + "-historical-premiums.txt");
+		File reportDetailFileFromExtractionDate = new File(storage.getAbsolutePathWithoutExtension() + "-historical-premiums" +
+			TimeUtils.getDefaultDateFmtForFilePrefix().format(extractionDate) + ".txt"
+		);
+		if (reportDetailFile.exists()) {
+			data.put("reportDetailFile.all", reportDetailFile);
+		}
+		if (reportDetailFileFromExtractionDate.exists()) {
+			data.put("reportDetailFile.fromExtractionDate", reportDetailFileFromExtractionDate);
+		}
 		return data;
 	}
 
@@ -849,8 +863,10 @@ public class SELotterySimpleSimulator {
 		String reportDetail = (String)qualityCheckResult.get("report.detail");
 		String reportDetailFromExtractionDate = (String)qualityCheckResultFromExtractionDate.get("report.detail");
 		File reportDetailFile = IOUtils.INSTANCE.writeToNewFile(storage.getAbsolutePathWithoutExtension() + "-historical-premiums.txt", reportDetail);
-		File reportDetailFileFromExtractionDate = IOUtils.INSTANCE.writeToNewFile(storage.getAbsolutePathWithoutExtension() + "-historical-premiums" +
-			TimeUtils.getDefaultDateFmtForFilePrefix().format(extractionDate) + ".txt", reportDetailFromExtractionDate);
+		File reportDetailFileFromExtractionDate = IOUtils.INSTANCE.writeToNewFile(
+			storage.getAbsolutePathWithoutExtension() + "-historical-premiums" +
+			TimeUtils.getDefaultDateFmtForFilePrefix().format(extractionDate) + ".txt", reportDetailFromExtractionDate
+		);
 		LogUtils.info("Computed historycal data of " + storage.getName());
 		Map<String, Object> data = new LinkedHashMap<>();
 		data.put("premiumCounters.all", qualityCheckResult.get("premium.counters"));
