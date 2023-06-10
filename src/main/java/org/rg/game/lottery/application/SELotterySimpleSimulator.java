@@ -80,6 +80,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 public class SELotterySimpleSimulator {
+
+	static final String DATA_FOLDER_NAME = "data";
+
 	static final Map<String, Integer> savingOperationCounters = new ConcurrentHashMap<>();
 	static final String BALANCE_LABEL = "Saldo";
 	static final String RETURN_LABEL = "Ritorno";
@@ -290,7 +293,7 @@ public class SELotterySimpleSimulator {
 			config.setProperty("simulation.group", simulationGroup);
 			config.setProperty(
 				"group",
-				simulationGroup + "/data"
+				simulationGroup + "/" + DATA_FOLDER_NAME
 			);
 		}
 	}
