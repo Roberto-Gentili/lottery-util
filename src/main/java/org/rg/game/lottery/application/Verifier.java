@@ -33,6 +33,7 @@ import org.rg.game.core.MathUtils;
 import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.ComboHandler;
 import org.rg.game.lottery.engine.Premium;
+import org.rg.game.lottery.engine.SEComboHandler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -127,13 +128,13 @@ public class Verifier {
 				comboCount++;
 			}
 			if (!winningComboWithJollyAndSuperstar.isEmpty()) {
-				LogUtils.info("\n\nNumeri estratti per il *" + competionName + "* del " + extractionDate +": " + ComboHandler.toWAString(winningComboWithJollyAndSuperstar, ", ", " - ", hitNumbers));
+				LogUtils.info("\n\nNumeri estratti per il *" + competionName + "* del " + extractionDate +": " + SEComboHandler.toWAString(winningComboWithJollyAndSuperstar, ", ", " - ", hitNumbers));
 				if (!winningCombos.isEmpty()) {
 					for (Map.Entry<Number, List<List<Integer>>> combos: winningCombos.entrySet()) {
 						LogUtils.info("\t*Combinazioni con " + Premium.toLabel(combos.getKey()).toLowerCase() + "*:");
 						for (List<Integer> combo : combos.getValue()) {
 							LogUtils.info("\t\t" +
-								ComboHandler.toWAString(combo, "\t", "\t\t", winningComboWithJollyAndSuperstar)
+								SEComboHandler.toWAString(combo, "\t", "\t\t", winningComboWithJollyAndSuperstar)
 							);
 						}
 					}

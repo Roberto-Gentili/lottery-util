@@ -38,9 +38,9 @@ import org.rg.game.core.LogUtils;
 import org.rg.game.core.MathUtils;
 import org.rg.game.core.ResourceUtils;
 import org.rg.game.core.TimeUtils;
-import org.rg.game.lottery.engine.ComboHandler;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.Premium;
+import org.rg.game.lottery.engine.SEComboHandler;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.SEStats;
 
@@ -392,12 +392,12 @@ public class SEMassiveVerifierAndQualityChecker {
 		StringBuffer result = new StringBuffer();
 		if (!winningCombo.isEmpty()) {
 			if (!winningCombos.isEmpty()) {
-				result.append("Numeri estratti per il *superenalotto* del " + TimeUtils.defaultLocalDateFormat.format(extractionDate) +": " + ComboHandler.toWAString(winningComboWithJollyAndSuperstar, ", ", " - ", hitNumbers) + "\n");
+				result.append("Numeri estratti per il *superenalotto* del " + TimeUtils.defaultLocalDateFormat.format(extractionDate) +": " + SEComboHandler.toWAString(winningComboWithJollyAndSuperstar, ", ", " - ", hitNumbers) + "\n");
 				for (Map.Entry<Number, List<List<Integer>>> combos: winningCombos.entrySet()) {
 					result.append("\t*Combinazioni con " + Premium.toLabel(combos.getKey()).toLowerCase() + "*:" + "\n");
 					for (List<Integer> combo : combos.getValue()) {
 						result.append("\t\t" +
-							ComboHandler.toWAString(combo, "\t", " - ", winningComboWithJollyAndSuperstar) + "\n"
+							SEComboHandler.toWAString(combo, "\t", " - ", winningComboWithJollyAndSuperstar) + "\n"
 						);
 					}
 				}

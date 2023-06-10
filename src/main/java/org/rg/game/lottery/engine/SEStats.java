@@ -27,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.TimeZone;
 import java.util.TreeMap;
@@ -548,7 +549,7 @@ public class SEStats {
 			systemItearator.next();
 			systemSize++;
 		}
-		Map<Date, Map<Number, List<List<Integer>>>> winningsCombosData = new LinkedHashMap<>();
+		Map<Map.Entry<Date, List<Integer>>, Map<Number, List<List<Integer>>>> winningsCombosData = new LinkedHashMap<>();
 		List<Map.Entry<Date, List<Integer>>> allWinningCombosReversed = this.allWinningCombosWithJollyAndSuperstar.entrySet().stream().collect(Collectors.toList());
 		Collections.reverse(allWinningCombosReversed);
 		int processedExtractionDateCounter = 0;
@@ -561,7 +562,7 @@ public class SEStats {
 					effectiveStartDate = referenceDate;
 				}
 				++processedExtractionDateCounter;
-				Map<Number,List<List<Integer>>> winningCombosForExtraction = new TreeMap<>(MathUtils.INSTANCE.numberComparator);
+				Map<Number, List<List<Integer>>> winningCombosForExtraction = new TreeMap<>(MathUtils.INSTANCE.numberComparator);
 				List<Integer> winningCombo = winningComboInfo.getValue();
 				Integer jolly = winningCombo.get(6);
 				systemItearator = systemIteratorSupplier.get();
@@ -578,7 +579,7 @@ public class SEStats {
 					}
 				}
 				if (!winningCombosForExtraction.isEmpty()) {
-					winningsCombosData.put(winningComboInfo.getKey(), winningCombosForExtraction);
+					winningsCombosData.put(new AbstractMap.SimpleEntry<>(winningComboInfo.getKey(), winningCombo), winningCombosForExtraction);
 				}
 				effectiveEndDate = referenceDate;
 			}
@@ -592,28 +593,30 @@ public class SEStats {
 		data.put("winningCombos", winningsCombosData);
 		Map<Number, Integer> premiumCounters = new TreeMap<>(MathUtils.INSTANCE.numberComparator);
 
-		StringBuffer report = new StringBuffer("Risultati storici dal " +  TimeUtils.getDefaultDateFormat().format(
+		StringBuffer reportDetail = new StringBuffer("Risultati storici dal " +  TimeUtils.getDefaultDateFormat().format(
 			effectiveStartDate
 		) + ":\n\n");
-		Iterator<Map.Entry<Date, Map<Number, List<List<Integer>>>>> winningsCombosDataItr = winningsCombosData.entrySet().iterator();
+		Iterator<Map.Entry<Entry<Date, List<Integer>>, Map<Number, List<List<Integer>>>>> winningsCombosDataItr = winningsCombosData.entrySet().iterator();
 		while (winningsCombosDataItr.hasNext()) {
-			Map.Entry<Date, Map<Number, List<List<Integer>>>> winningCombosInfo = winningsCombosDataItr.next();
-			report.append("\t" + TimeUtils.getDefaultDateFormat().format(winningCombosInfo.getKey()) + ":\n");
+			Map.Entry<Map.Entry<Date, List<Integer>>, Map<Number, List<List<Integer>>>> winningCombosInfo = winningsCombosDataItr.next();
+			reportDetail.append("\t" + TimeUtils.getDefaultDateFormat().format(winningCombosInfo.getKey().getKey()) + ", " +
+				SEComboHandler.toString(winningCombosInfo.getKey().getValue(), ", ", " - ") + ":\n"
+			);
 			for (Map.Entry<Number, List<List<Integer>>> winningCombos : winningCombosInfo.getValue().entrySet()) {
-				report.append("\t\t" + Premium.toLabel(winningCombos.getKey()) + ":\n");
+				reportDetail.append("\t\t" + Premium.toLabel(winningCombos.getKey()) + ":\n");
 				for (List<Integer> combo : winningCombos.getValue()) {
 					Integer counter = premiumCounters.computeIfAbsent(winningCombos.getKey(), key -> 0);
 					premiumCounters.put(winningCombos.getKey(), ++counter);
-					report.append("\t\t\t" + ComboHandler.toString(combo) + "\n");
+					reportDetail.append("\t\t\t" + ComboHandler.toString(combo) + "\n");
 				}
 			}
 			if (winningsCombosDataItr.hasNext()) {
-				report.append("\n");
+				reportDetail.append("\n");
 			}
 		}
-		data.put("report.detail", report.toString());
-		report = new StringBuffer("");
-		report.append(
+		data.put("report.detail", reportDetail.toString());
+		reportDetail = new StringBuffer("");
+		reportDetail.append(
 			processedExtractionDateCounter > 0 ?
 				"Riepilogo risultati storici sistema dal " + TimeUtils.getDefaultDateFormat().format(effectiveStartDate) +
 					" al " + TimeUtils.getDefaultDateFormat().format(effectiveEndDate) + ":\n\n":
@@ -624,14 +627,14 @@ public class SEStats {
 			Number type = winningInfo.getKey();
 			String label = Premium.toLabel(type);
 			returns += premiumPrice(type) * winningInfo.getValue();
-			report.append("\t" + label + ":" + rightAlignedString(MathUtils.INSTANCE.integerFormat.format(winningInfo.getValue()), 28 - label.length()) + "\n");
+			reportDetail.append("\t" + label + ":" + rightAlignedString(MathUtils.INSTANCE.integerFormat.format(winningInfo.getValue()), 28 - label.length()) + "\n");
 		}
 		if (processedExtractionDateCounter > 0) {
-			report.append("\n\tCosto storico:" + rightAlignedString(MathUtils.INSTANCE.integerFormat.format(processedExtractionDateCounter * systemSize), 15) + "€\n");
-			report.append("\tRitorno storico:" + rightAlignedString(MathUtils.INSTANCE.integerFormat.format(returns), 13) + "€\n");
-			report.append("\tRapporto:" + rightAlignedString(MathUtils.INSTANCE.decimalFormat.format(((returns * 100d) / (processedExtractionDateCounter * systemSize)) - 100d), 20) + "%\n");
+			reportDetail.append("\n\tCosto storico:" + rightAlignedString(MathUtils.INSTANCE.integerFormat.format(processedExtractionDateCounter * systemSize), 15) + "€\n");
+			reportDetail.append("\tRitorno storico:" + rightAlignedString(MathUtils.INSTANCE.integerFormat.format(returns), 13) + "€\n");
+			reportDetail.append("\tRapporto:" + rightAlignedString(MathUtils.INSTANCE.decimalFormat.format(((returns * 100d) / (processedExtractionDateCounter * systemSize)) - 100d), 20) + "%\n");
 		}
-		data.put("report.summary", report.toString());
+		data.put("report.summary", reportDetail.toString());
 		data.put("premium.counters", premiumCounters);
 		Date referenceDate = getLatestExtractionDate();
 		if (referenceDate == null) {//Nel caso lo storico non abbia dati
