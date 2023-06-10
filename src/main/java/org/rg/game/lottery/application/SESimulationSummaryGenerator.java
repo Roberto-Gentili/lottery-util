@@ -6,7 +6,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -159,7 +158,7 @@ public class SESimulationSummaryGenerator {
 			summaryWorkBookTemplate.setLinkForCell(
 				HyperlinkType.FILE,
 				cellName,
-				URLEncoder.encode(singleSimFolderRelPath + "/" + report.getName(), "UTF-8").replace("+", "%20")
+				singleSimFolderRelPath + "/" + report.getName()
 			);
 			String historicalCinquinaLabel = SELotterySimpleSimulator.getFollowingProgressiveHistoricalPremiumLabel(Premium.LABEL_FIVE);
 			String historicalCinquinaPlusLabel = SELotterySimpleSimulator.getFollowingProgressiveHistoricalPremiumLabel(Premium.LABEL_FIVE_PLUS);

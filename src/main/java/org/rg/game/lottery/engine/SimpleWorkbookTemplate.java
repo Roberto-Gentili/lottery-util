@@ -2,7 +2,9 @@ package org.rg.game.lottery.engine;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -38,6 +40,7 @@ import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.rg.game.core.Throwables;
 
 public class SimpleWorkbookTemplate implements Closeable {
 	Workbook workbook;
@@ -418,13 +421,25 @@ public class SimpleWorkbookTemplate implements Closeable {
 	}
 
 	public void setLinkForCell(HyperlinkType type, Cell cell, String address) {
-		Hyperlink hyperLink = getCreationHelper().createHyperlink(type);
-		hyperLink.setAddress(address);
+		setLinkForCell(this.workbook, type, cell, hyperLinkStyle, address);
+	}
+
+	public static void setLinkForCell(Workbook workbook, HyperlinkType type, Cell cell, CellStyle cellStyle, String address) {
+		Hyperlink hyperLink = getCreationHelper(workbook).createHyperlink(type);
+		try {
+			hyperLink.setAddress(URLEncoder.encode(address, "UTF-8").replace("+", "%20"));
+		} catch (UnsupportedEncodingException exc) {
+			Throwables.sneakyThrow(exc);
+		}
 		cell.setHyperlink(hyperLink);
-		cell.setCellStyle(hyperLinkStyle);
+		cell.setCellStyle(cellStyle);
 	}
 
 	public CreationHelper getCreationHelper() {
+		return getCreationHelper(this.workbook);
+	}
+
+	public static CreationHelper getCreationHelper(Workbook workbook) {
 		if (workbook instanceof SXSSFWorkbook) {
 			return ((SXSSFWorkbook)workbook).getCreationHelper();
 		} else if (workbook instanceof HSSFWorkbook) {

@@ -622,6 +622,9 @@ public class SEStats {
 				reportDetail.append("\n");
 			}
 		}
+		if (winningsCombosData.isEmpty()) {
+			reportDetail.append("\tnessuna vincita");
+		}
 		data.put("report.detail", reportDetail.toString());
 		reportDetail = new StringBuffer("");
 		reportDetail.append(
