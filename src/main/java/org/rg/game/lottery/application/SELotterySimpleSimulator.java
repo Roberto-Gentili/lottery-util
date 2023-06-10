@@ -692,13 +692,15 @@ public class SELotterySimpleSimulator {
 							if (rowIndexAndExtractionDate.getKey() == 2) {
 								numberCellStyle.set(workBook.createCellStyle());
 								numberCellStyle.get().setAlignment(HorizontalAlignment.RIGHT);
-								numberCellStyle.get().setDataFormat(workBook.createDataFormat().getFormat("#,##0"));
+								short numberDataFormat = workBook.createDataFormat().getFormat("#,##0");
+								numberCellStyle.get().setDataFormat(numberDataFormat);
 								dateCellStyle.set(workBook.createCellStyle());
 								dateCellStyle.get().setAlignment(HorizontalAlignment.CENTER);
 								dateCellStyle.get().setDataFormat(workBook.createDataFormat().getFormat("dd/MM/yyyy"));
 								hyperLinkNumberCellStyle.set(workBook.createCellStyle());
 								hyperLinkNumberCellStyle.get().cloneStyleFrom(currentRow.getCell(fileColIndex.get()).getCellStyle());
-								hyperLinkNumberCellStyle.get().setDataFormat(workBook.createDataFormat().getFormat("#,##0"));
+								hyperLinkNumberCellStyle.get().setDataFormat(numberDataFormat);
+								hyperLinkNumberCellStyle.get().setAlignment(HorizontalAlignment.RIGHT);
 								currentRow.getCell(historicalReturnColIndex.get()).setCellStyle(hyperLinkNumberCellStyle.get());
 							} else {
 								Row previousRow = sheet.getRow(rowIndexAndExtractionDate.getKey() -1);
