@@ -23,5 +23,3 @@ echo:
 echo:
 
 start "" /D "%~dp0" /b "%lottery-util.working-path%\%working-path.simulations.folder%\Summary.xlsx"
-
-pause
