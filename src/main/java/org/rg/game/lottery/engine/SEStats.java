@@ -593,9 +593,17 @@ public class SEStats {
 		data.put("winningCombos", winningsCombosData);
 		Map<Number, Integer> premiumCounters = new TreeMap<>(MathUtils.INSTANCE.numberComparator);
 
-		StringBuffer reportDetail = new StringBuffer("Risultati storici dal " +  TimeUtils.getDefaultDateFormat().format(
-			effectiveStartDate
-		) + ":\n\n");
+		StringBuffer reportDetail = new StringBuffer(
+			"Risultati storici dal " +
+				TimeUtils.getDefaultDateFormat().format(
+					effectiveStartDate
+				) +
+			" al " +
+				TimeUtils.getDefaultDateFormat().format(
+					effectiveEndDate
+				) +
+			":\n\n"
+		);
 		Iterator<Map.Entry<Entry<Date, List<Integer>>, Map<Number, List<List<Integer>>>>> winningsCombosDataItr = winningsCombosData.entrySet().iterator();
 		while (winningsCombosDataItr.hasNext()) {
 			Map.Entry<Map.Entry<Date, List<Integer>>, Map<Number, List<List<Integer>>>> winningCombosInfo = winningsCombosDataItr.next();
