@@ -174,7 +174,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 					CollectionUtils.retrieveBoolean(config, "combination.filter.test.fine-info", "true"),
 					Integer.valueOf(config.getProperty("combination.components")),
 					Optional.ofNullable(config.getProperty("numbers.occurrences")).map(Double::parseDouble).orElseGet(() -> null),
-					Optional.ofNullable(config.getProperty("combination.count")).map(Integer::parseInt).orElseGet(() -> null),
+					Optional.ofNullable(config.getProperty("combination.count")).filter(value -> !value.replaceAll("\\s+","").isEmpty()).map(Integer::parseInt).orElseGet(() -> null),
 					Integer.valueOf(config.getProperty("combination.choose-random.count", "0")),
 					() -> {
 						String equilibrateCombinations = config.getProperty("combination.equilibrate");
