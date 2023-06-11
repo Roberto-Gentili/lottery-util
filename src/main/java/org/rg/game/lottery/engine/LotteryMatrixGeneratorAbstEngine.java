@@ -235,20 +235,25 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		if (extractionDatesAsString == null || extractionDatesAsString.isEmpty()) {
 			extractionDates.add(LocalDate.now());
 		} else {
-			for(String date : extractionDatesAsString.replaceAll("\\s+","").split(",")) {
-				String[] dateWithOffset = date.split("\\+");
+			for(String expressionRaw : extractionDatesAsString.replaceAll("\\s+","").split(",")) {
+				Collection<LocalDate> extractionDatesForExpression = new LinkedHashSet<>();
+				String[] expressions = expressionRaw.split(":");
+				Map<String, Object> nestedExpressionsData = new LinkedHashMap<>();
+				String expression = ExpressionToPredicateEngine.findAndReplaceNextBracketArea(expressions[0], nestedExpressionsData);
+				expression = (String)nestedExpressionsData.getOrDefault(expression, expression);
+				String[] dateWithOffset = expression.split("\\+");
 				if ("thisWeek".equalsIgnoreCase(dateWithOffset[0])) {
 					if (dateWithOffset.length == 2) {
 						String[] range = dateWithOffset[1].split("\\*");
 						if (range.length == 2) {
 							for (int i = 0; i < Integer.parseInt(range[1]); i++) {
-								extractionDates.addAll(forNextWeek(Integer.parseInt(range[0])+i));
+								extractionDatesForExpression.addAll(forNextWeek(Integer.parseInt(range[0])+i));
 							}
 						} else {
-							extractionDates.addAll(forNextWeek(Integer.valueOf(range[0])));
+							extractionDatesForExpression.addAll(forNextWeek(Integer.valueOf(range[0])));
 						}
 					} else {
-						extractionDates.addAll(forThisWeek());
+						extractionDatesForExpression.addAll(forThisWeek());
 					}
 				} else {
 					LocalDate extractionDate = "next".equalsIgnoreCase(dateWithOffset[0])?
@@ -261,16 +266,27 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 						}
 						if (range.length == 2) {
 							for (int i = 0; i < Integer.parseInt(range[1]); i++) {
-								extractionDates.add(extractionDate);
+								extractionDatesForExpression.add(extractionDate);
 								extractionDate = extractionDate.plus(getIncrementDays(extractionDate), ChronoUnit.DAYS);
 							}
 						} else {
-							extractionDates.add(extractionDate);
+							extractionDatesForExpression.add(extractionDate);
 						}
 					} else {
-						extractionDates.add(extractionDate);
+						extractionDatesForExpression.add(extractionDate);
 					}
 				}
+				if (expressions.length > 1) {
+					Integer step = Integer.valueOf(expressions[1]);
+					List<LocalDate> extractionDatesList = new ArrayList<>(extractionDatesForExpression);
+					extractionDatesForExpression = new LinkedHashSet<>();
+					for (int i = 0; i < extractionDatesList.size(); i++) {
+						if ((i + 1) % step == 0) {
+							extractionDatesForExpression.add(extractionDatesList.get(i));
+						}
+					}
+				}
+				extractionDates.addAll(extractionDatesForExpression);
 			}
 		}
 		return extractionDates;

@@ -9,6 +9,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ExpressionToPredicateEngine<I> {
+	protected final static Pattern andOrSlashSplitter = Pattern.compile("(.*?)(&|\\||\\/)");
+
 
 	protected Map<Predicate<String>, Function<String, Function<Object[], String>>> simpleExpressionsPreprocessors;
 	protected Map<Predicate<String>, Function<String, Function<Object[], Predicate<I>>>> simpleExpressionsParsers;
@@ -49,7 +51,7 @@ public class ExpressionToPredicateEngine<I> {
 		}
 		Map<String, Object> nestedExpressionsData = new LinkedHashMap<>();
 		expression = bracketAreasToPlaceholders(expression, nestedExpressionsData);
-		Matcher logicalOperatorSplitter = Pattern.compile("(.*?)(&|\\||\\/)").matcher(expression + "/");
+		Matcher logicalOperatorSplitter = andOrSlashSplitter.matcher(expression + "/");
 		while (logicalOperatorSplitter.find()) {
 			String originalPredicateUnitExpression = logicalOperatorSplitter.group(1);
 			String predicateUnitExpression = originalPredicateUnitExpression.startsWith("!") ?
@@ -76,7 +78,7 @@ public class ExpressionToPredicateEngine<I> {
 	public Predicate<I> parseComplexExpression(String expression, Object... additionalParamters) {
 		Map<String, Object> nestedExpressionsData = new LinkedHashMap<>();
 		expression = bracketAreasToPlaceholders(expression, nestedExpressionsData);
-		Matcher logicalOperatorSplitter = Pattern.compile("(.*?)(&|\\||\\/)").matcher(expression + "/");
+		Matcher logicalOperatorSplitter = andOrSlashSplitter.matcher(expression + "/");
 		Predicate<I> predicate = null;
 		String logicalOperator = null;
 		while (logicalOperatorSplitter.find()) {
