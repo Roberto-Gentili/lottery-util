@@ -14,7 +14,7 @@ public class SEQualityChecker {
 		Map<String, Boolean> systemToBeChecked = new LinkedHashMap<>();
 		//systemToBeChecked.put("Simulazioni/smallest-abs-rec-45\\[2014-12-06][6][34]se-simple-simulation[1a]smallest-absence-record-45.txt", true);
 		//systemToBeChecked.put("Simulazioni/smallest-abs-rec-45\\[2021-05-06][6][34]se-simple-simulation[1a]smallest-absence-record-45.txt", true);
-		systemToBeChecked.put("Simulazioni/our-way-of-complex-playing\\[2011-12-15][6][34]se-simple-simulation[1a].txt", true);
+		systemToBeChecked.put("Simulazioni/our-way-of-complex-playing/data\\[2011-12-15][6][34]se-simple-simulation[1a].txt", true);
 
 		check(
 			systemToBeChecked
