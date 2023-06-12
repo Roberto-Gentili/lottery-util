@@ -529,19 +529,31 @@ public class SEStats {
 		return results;
 	}
 
-	public Map<String, Object> checkQuality(Supplier<Iterator<List<Integer>>> systemIteratorSupplier) {
-		return checkQuality(systemIteratorSupplier, startDate, endDate);
+	public Map<String, Object> checkQuality(Supplier<Iterator<List<Integer>>> systemIteratorSupplier, Number... premiums) {
+		return checkQuality(systemIteratorSupplier, startDate, endDate, premiums);
 	}
 
-	public Map<String, Object> checkQualityFrom(Supplier<Iterator<List<Integer>>> systemIteratorSupplier, Date startDate) {
-		return checkQuality(systemIteratorSupplier, startDate, endDate);
+	public Map<String, Object> checkQualityFrom(Supplier<Iterator<List<Integer>>> systemIteratorSupplier, Date startDate, Number... premiums) {
+		return checkQuality(systemIteratorSupplier, startDate, endDate, premiums);
 	}
 
-	public Map<String, Object> checkQualityTo(Supplier<Iterator<List<Integer>>> systemIteratorSupplier, Date endDate) {
-		return checkQuality(systemIteratorSupplier, startDate, endDate);
+	public Map<String, Object> checkQualityTo(Supplier<Iterator<List<Integer>>> systemIteratorSupplier, Date endDate, Number... premiums) {
+		return checkQuality(systemIteratorSupplier, startDate, endDate, premiums);
 	}
 
-	public Map<String, Object> checkQuality(Supplier<Iterator<List<Integer>>> systemIteratorSupplier, Date startDate, Date endDate) {
+	public Map<String, Object> checkQuality(
+		Supplier<Iterator<List<Integer>>> systemIteratorSupplier,
+		Date startDate,
+		Date endDate,
+		Number... premiums
+	) {
+		List<Number> premiumsToBeComputed = new ArrayList<>();
+		if (premiums == null || premiums.length == 0) {
+			premiumsToBeComputed.addAll(Premium.allTypes());
+		} else {
+			premiumsToBeComputed.addAll(Arrays.asList(premiums));
+		}
+
 		Map<String, Object> data = new LinkedHashMap<>();
 		Iterator<List<Integer>> systemItearator = systemIteratorSupplier.get();
 		long systemSize = 0;
@@ -575,7 +587,9 @@ public class SEStats {
 								hit = Premium.TYPE_FIVE_PLUS;
 							}
 						}
-						winningCombosForExtraction.computeIfAbsent(hit, ht -> new ArrayList<>()).add(currentCombo);
+						if (premiumsToBeComputed.contains(hit)) {
+							winningCombosForExtraction.computeIfAbsent(hit, ht -> new ArrayList<>()).add(currentCombo);
+						}
 					}
 				}
 				if (!winningCombosForExtraction.isEmpty()) {

@@ -606,6 +606,8 @@ public class SELotterySimpleSimulator {
 		Map<String, Map<String, Object>> premiumCountersForFile,
 		AtomicBoolean simulatorFinished
 	) {
+		List<Number> premiumTypeList = parseReportWinningInfoConfig(configuration.getProperty("report.winning-info", "all").replaceAll("\\s+",""));
+		Number[] premiumTypes = premiumTypeList.toArray(new Number[premiumTypeList.size()]);
 		boolean isSlave = CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false");
 		SEStats sEStats = getSEStats(configuration);
 		Map<Number, String> allPremiums = Premium.all();
@@ -698,7 +700,7 @@ public class SELotterySimpleSimulator {
 						"-historical-data.json"
 					);
 					if (!premiumCountersFile.exists()) {
-						return computePremiumCountersData(sEStats, storage, rowIndexAndExtractionDate.getValue(), premiumCountersFile);
+						return computePremiumCountersData(sEStats, storage, rowIndexAndExtractionDate.getValue(), premiumCountersFile, premiumTypes);
 					} else {
 						Map<String, Object> data = null;
 						try {
@@ -708,13 +710,13 @@ public class SELotterySimpleSimulator {
 							if (!premiumCountersFile.delete()) {
 								Throwables.sneakyThrow(exc);
 							}
-							return computePremiumCountersData(sEStats, storage, rowIndexAndExtractionDate.getValue(), premiumCountersFile);
+							return computePremiumCountersData(sEStats, storage, rowIndexAndExtractionDate.getValue(), premiumCountersFile, premiumTypes);
 						}
 						try {
 							if (dateOffsetComputer.apply(TimeUtils.getDefaultDateFormat().parse((String)data.get("referenceDate")))
 								.compareTo(sEStats.getLatestExtractionDate()) < 0
 							) {
-								return computePremiumCountersData(sEStats, storage, rowIndexAndExtractionDate.getValue(), premiumCountersFile);
+								return computePremiumCountersData(sEStats, storage, rowIndexAndExtractionDate.getValue(), premiumCountersFile, premiumTypes);
 							}
 						} catch (ParseException exc) {
 							return Throwables.sneakyThrow(exc);
@@ -827,6 +829,29 @@ public class SELotterySimpleSimulator {
 		return 1;
 	}
 
+	private static List<Number> parseReportWinningInfoConfig(String reportWinningInfoConfig) {
+		if (reportWinningInfoConfig.equalsIgnoreCase("all")) {
+			return Premium.allTypes();
+		} else if (reportWinningInfoConfig.equalsIgnoreCase("high")) {
+			return Arrays.asList(
+				Premium.toType(Premium.LABEL_FIVE),
+				Premium.toType(Premium.LABEL_FIVE_PLUS),
+				Premium.toType(Premium.LABEL_SIX)
+			);
+		} else {
+			List<Number> premiumsTypes = new ArrayList<>();
+			for (String configPremiumLabel : reportWinningInfoConfig.split(",")) {
+				for (String premiumLabel : Premium.allLabels()) {
+					if (configPremiumLabel.equalsIgnoreCase(premiumLabel.replaceAll("\\s+",""))) {
+						premiumsTypes.add(Premium.toType(premiumLabel));
+						break;
+					}
+				}
+			}
+			return premiumsTypes;
+		}
+	}
+
 	private static Function<Date, Date> dateOffsetComputer(Properties configuration) {
 		String offsetRaw = configuration.getProperty("history.validity", "0d");
 		String offsetAsString = offsetRaw.replaceAll("\\s+","").split("d|D|w|W|m|M")[0];
@@ -897,11 +922,12 @@ public class SELotterySimpleSimulator {
 		SEStats sEStats,
 		PersistentStorage storage,
 		Date extractionDate,
-		File premiumCountersFile
+		File premiumCountersFile,
+		Number... premiumTypes
 	) {
 		LogUtils.info("Computing historycal data of " + storage.getName());
-		Map<String, Object> qualityCheckResult = sEStats.checkQuality(storage::iterator);
-		Map<String, Object> qualityCheckResultFromExtractionDate = sEStats.checkQualityFrom(storage::iterator, extractionDate);
+		Map<String, Object> qualityCheckResult = sEStats.checkQuality(storage::iterator, premiumTypes);
+		Map<String, Object> qualityCheckResultFromExtractionDate = sEStats.checkQualityFrom(storage::iterator, extractionDate, premiumTypes);
 		String reportDetail = (String)qualityCheckResult.get("report.detail");
 		String reportDetailFromExtractionDate = (String)qualityCheckResultFromExtractionDate.get("report.detail");
 		String basePath = new File(storage.getAbsolutePath()).getParentFile().getAbsolutePath() + File.separator + storage.getNameWithoutExtension();

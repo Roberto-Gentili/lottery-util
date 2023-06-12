@@ -24,6 +24,8 @@ public class Premium {
 
 	private static final Map<Number, String> all;
 	private static final List<String> allLabels;
+	private static final List<Number> allTypes;
+
 	static {
 		all = new LinkedHashMap<>();
 		all.put(TYPE_TWO, LABEL_TWO);
@@ -33,6 +35,7 @@ public class Premium {
 		all.put(TYPE_FIVE_PLUS, LABEL_FIVE_PLUS);
 		all.put(TYPE_SIX, LABEL_SIX);
 		allLabels = new ArrayList<>(all.values());
+		allTypes = new ArrayList<>(all.keySet());
 	}
 
 	public static List<String> allLabels() {
@@ -41,6 +44,10 @@ public class Premium {
 
 	public static Map<Number, String> all() {
 		return all;
+	}
+
+	public static List<Number> allTypes() {
+		return allTypes;
 	}
 
 	public static String toLabel(Number hit) {
