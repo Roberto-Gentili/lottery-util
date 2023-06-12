@@ -218,7 +218,8 @@ public class SELotterySimpleSimulator {
 				configurations.add(config);
 			}
 		}
-		int maxParallelTasks = Optional.ofNullable(System.getenv("simulation.tasks.max-parallel")).map(Integer::valueOf).orElseGet(() -> 4);
+		int maxParallelTasks = Optional.ofNullable(System.getenv("simulation.tasks.max-parallel")).map(Integer::valueOf)
+			.orElseGet(() -> Math.max((Runtime.getRuntime().availableProcessors() / 2) - 1, 1));
 		for (Properties configuration : configurations) {
 			LogUtils.info(
 				"Processing file '" + configuration.getProperty("file.name") + "' located in '" + configuration.getProperty("file.parent.absolutePath") + "' in " +
