@@ -48,7 +48,9 @@ import org.apache.poi.ss.formula.BaseFormulaEvaluator;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.ComparisonOperator;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -484,8 +486,41 @@ public class SELotterySimpleSimulator {
 				excelFileName,
 				workBook -> {
 					SimpleWorkbookTemplate workBookTemplate = new SimpleWorkbookTemplate(workBook);
-					workBookTemplate.getOrCreateSheet("Risultati", true);
+					Sheet sheet = workBookTemplate.getOrCreateSheet("Risultati", true);
 					workBookTemplate.setAutoFilter(1, getLatestRowIndex(), 0, reportHeaderLabels.size() - 1);
+					workBookTemplate.addSheetConditionalFormatting(
+						new int[] {
+							Shared.getCellIndex(sheet, Premium.LABEL_FIVE),
+							Shared.getCellIndex(sheet, getFollowingProgressiveHistoricalPremiumLabel(Premium.LABEL_FIVE))
+						},
+						IndexedColors.YELLOW,
+						ComparisonOperator.GT,
+						new int[] {2,3},
+						sh -> sh.getLastRowNum() + 1,
+						"0"
+					);
+					workBookTemplate.addSheetConditionalFormatting(
+						new int[] {
+							Shared.getCellIndex(sheet, Premium.LABEL_FIVE_PLUS),
+							Shared.getCellIndex(sheet, getFollowingProgressiveHistoricalPremiumLabel(Premium.LABEL_FIVE_PLUS))
+						},
+						IndexedColors.ORANGE,
+						ComparisonOperator.GT,
+						new int[] {2,3},
+						sh -> sh.getLastRowNum() + 1,
+						"0"
+					);
+					workBookTemplate.addSheetConditionalFormatting(
+						new int[] {
+							Shared.getCellIndex(sheet, Premium.LABEL_SIX),
+							Shared.getCellIndex(sheet, getFollowingProgressiveHistoricalPremiumLabel(Premium.LABEL_SIX))
+						},
+						IndexedColors.RED,
+						ComparisonOperator.GT,
+						new int[] {2,3},
+						sh -> sh.getLastRowNum() + 1,
+						"0"
+					);
 				},
 				null,
 				workBook -> {

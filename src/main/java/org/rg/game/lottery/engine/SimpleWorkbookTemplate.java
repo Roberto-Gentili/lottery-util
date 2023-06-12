@@ -463,18 +463,41 @@ public class SimpleWorkbookTemplate implements Closeable {
 	}
 
 	public Sheet addSheetConditionalFormatting(int column, IndexedColors color, byte comparisonOperator, String... comparisonValue) {
-		return addSheetConditionalFormatting(new int[]{column}, color, comparisonOperator, comparisonValue);
+		return addSheetConditionalFormatting(
+			new int[]{column},
+			color,
+			comparisonOperator,
+			comparisonValue
+		);
 	}
 
 	public Sheet addSheetConditionalFormatting(int[] columns, IndexedColors color, byte comparisonOperator, String... comparisonValue) {
+		return addSheetConditionalFormatting(
+			columns,
+			color,
+			comparisonOperator,
+			new int[] {1,2},
+			sheet -> sheet.getLastRowNum() + 1,
+			comparisonValue
+		);
+	}
+
+	public Sheet addSheetConditionalFormatting(
+		int[] columns,
+		IndexedColors color,
+		byte comparisonOperator,
+		int[] rowNumToStart,
+		Function<Sheet, Integer> rowNumberToEndSupplier,
+		String... comparisonValue
+	) {
 		Sheet currentSheet = getOrCreateSheet(this.currentSheet);
 		int rowNumberToStart =
-			currentSheet.getPaneInformation() != null && currentSheet.getPaneInformation().isFreezePane() ? 2 : 1;
+			currentSheet.getPaneInformation() != null && currentSheet.getPaneInformation().isFreezePane() ? rowNumToStart[1] : rowNumToStart[0];
 		CellRangeAddress[] cellRangeAddress = new CellRangeAddress[columns.length];
 		for (int i = 0; i < cellRangeAddress.length; i++) {
 			String columnLetter = CellReference.convertNumToColString(columns[i]);
 			 cellRangeAddress[i] =
-				CellRangeAddress.valueOf(columnLetter + rowNumberToStart + ":" + columnLetter + (currentSheet.getLastRowNum() + 1));
+				CellRangeAddress.valueOf(columnLetter + rowNumberToStart + ":" + columnLetter + rowNumberToEndSupplier.apply(currentSheet));
 		}
 
 		SheetConditionalFormatting sheetConditionalFormatting = currentSheet.getSheetConditionalFormatting();

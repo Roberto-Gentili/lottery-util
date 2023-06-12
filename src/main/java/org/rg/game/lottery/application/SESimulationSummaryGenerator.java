@@ -18,6 +18,7 @@ import org.apache.poi.ss.formula.BaseFormulaEvaluator;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.CellValue;
+import org.apache.poi.ss.usermodel.ComparisonOperator;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -70,6 +71,33 @@ public class SESimulationSummaryGenerator {
 			summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.HISTORICAL_COST_LABEL), 3000);
 			summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.HISTORICAL_RETURN_LABEL), 3000);
 			try (OutputStream destFileOutputStream = new FileOutputStream(simulationSummaryFile)){
+				workBookTemplate.addSheetConditionalFormatting(
+					new int[] {
+						Shared.getCellIndex(summarySheet, Premium.LABEL_FIVE),
+						Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.getFollowingProgressiveHistoricalPremiumLabel(Premium.LABEL_FIVE))
+					},
+					IndexedColors.YELLOW,
+					ComparisonOperator.GT,
+					"0"
+				);
+				workBookTemplate.addSheetConditionalFormatting(
+					new int[] {
+						Shared.getCellIndex(summarySheet, Premium.LABEL_FIVE_PLUS),
+						Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.getFollowingProgressiveHistoricalPremiumLabel(Premium.LABEL_FIVE_PLUS))
+					},
+					IndexedColors.ORANGE,
+					ComparisonOperator.GT,
+					"0"
+				);
+				workBookTemplate.addSheetConditionalFormatting(
+					new int[] {
+						Shared.getCellIndex(summarySheet, Premium.LABEL_SIX),
+						Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.getFollowingProgressiveHistoricalPremiumLabel(Premium.LABEL_SIX))
+					},
+					IndexedColors.RED,
+					ComparisonOperator.GT,
+					"0"
+				);
 				workBookTemplate.setAutoFilter(0, reportCounter.get(), 0, headerLabels.size() - 1);
 				BaseFormulaEvaluator.evaluateAllFormulaCells(workBookTemplate.getWorkbook());
 				workBookTemplate.getWorkbook().write(destFileOutputStream);
@@ -91,7 +119,9 @@ public class SESimulationSummaryGenerator {
 		for (File singleSimFolder : new File(folderAbsolutePath).listFiles(
 			(file, name) -> {
 				File currentIteratedFile = new File(file, name);
-				return currentIteratedFile.isDirectory() && !currentIteratedFile.getName().equals(SELotteryComplexSimulator.GENERATED_FOLDER_NAME);
+				return currentIteratedFile.isDirectory() &&
+					!currentIteratedFile.getName().equals(SELotterySimpleSimulator.DATA_FOLDER_NAME) &&
+					!currentIteratedFile.getName().equals(SELotteryComplexSimulator.GENERATED_FOLDER_NAME);
 			})
 		) {
 			String singleSimFolderRelPath = Optional.ofNullable(currentRelativePath).map(cRP -> cRP + "/").orElseGet(() -> "") + singleSimFolder.getName();
@@ -160,28 +190,12 @@ public class SESimulationSummaryGenerator {
 				cellName,
 				singleSimFolderRelPath + "/" + report.getName()
 			);
-			String historicalCinquinaLabel = SELotterySimpleSimulator.getFollowingProgressiveHistoricalPremiumLabel(Premium.LABEL_FIVE);
-			String historicalCinquinaPlusLabel = SELotterySimpleSimulator.getFollowingProgressiveHistoricalPremiumLabel(Premium.LABEL_FIVE_PLUS);
-			String historicalTombolaLabel = SELotterySimpleSimulator.getFollowingProgressiveHistoricalPremiumLabel(Premium.LABEL_SIX);
 			for (String cellLabel : SELotterySimpleSimulator.reportHeaderLabels) {
 				if (!headersToBeSkipped.contains(cellLabel)) {
 					Cell simulationCell = resultSheet.getRow(1).getCell(Shared.getCellIndex(resultSheet, cellLabel));
 					CellValue simulationCellValue = evaluator.evaluate(simulationCell);
 					if (simulationCellValue.getCellType().equals(CellType.NUMERIC)) {
-						Cell summaryCurrentCell = summaryWorkBookTemplate.addCell(simulationCellValue.getNumberValue(), "#,##0");
-						if (cellLabel.equals(Premium.LABEL_FIVE) && simulationCellValue.getNumberValue() > 0) {
-							Shared.toHighlightedBoldedCell(summaryWorkBookTemplate.getWorkbook(), summaryCurrentCell, IndexedColors.YELLOW);
-						} else if (cellLabel.equals(Premium.LABEL_FIVE_PLUS) && simulationCellValue.getNumberValue() > 0) {
-							Shared.toHighlightedBoldedCell(summaryWorkBookTemplate.getWorkbook(), summaryCurrentCell, IndexedColors.ORANGE);
-						} else if (cellLabel.equals(Premium.LABEL_SIX) && simulationCellValue.getNumberValue() > 0) {
-							Shared.toHighlightedBoldedCell(summaryWorkBookTemplate.getWorkbook(), summaryCurrentCell, IndexedColors.RED);
-						} else if (cellLabel.equals(historicalCinquinaLabel) && simulationCellValue.getNumberValue() > 0) {
-							Shared.toHighlightedBoldedCell(summaryWorkBookTemplate.getWorkbook(), summaryCurrentCell, IndexedColors.YELLOW);
-						} else if (cellLabel.equals(historicalCinquinaPlusLabel) && simulationCellValue.getNumberValue() > 0) {
-							Shared.toHighlightedBoldedCell(summaryWorkBookTemplate.getWorkbook(), summaryCurrentCell, IndexedColors.ORANGE);
-						} else if (cellLabel.equals(historicalTombolaLabel) && simulationCellValue.getNumberValue() > 0) {
-							Shared.toHighlightedBoldedCell(summaryWorkBookTemplate.getWorkbook(), summaryCurrentCell, IndexedColors.RED);
-						}
+						summaryWorkBookTemplate.addCell(simulationCellValue.getNumberValue(), "#,##0");
 					} else if (simulationCellValue.getCellType().equals(CellType.STRING)) {
 						summaryWorkBookTemplate.addCell(simulationCellValue.getStringValue());
 					}
