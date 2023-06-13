@@ -552,6 +552,9 @@ public class SEStats {
 		if (premiumsFilters == null || premiumsFilters.length == 0) {
 			premiumsFilterList.addAll(Premium.allTypesList());
 			premiumsFilterListForReport.addAll(Premium.allTypesList());
+		} else if (premiumsFilters.length == 1) {
+			premiumsFilterList.addAll(Arrays.asList(premiumsFilters[0]));
+			premiumsFilterListForReport.addAll(Arrays.asList(premiumsFilters[0]));
 		} else {
 			premiumsFilterList.addAll(Arrays.asList(premiumsFilters[0]));
 			premiumsFilterListForReport.addAll(Arrays.asList(premiumsFilters[1]));
