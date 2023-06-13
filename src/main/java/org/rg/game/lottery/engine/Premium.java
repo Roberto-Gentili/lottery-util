@@ -23,8 +23,9 @@ public class Premium {
 	public static final String LABEL_SIX = "Tombola";
 
 	private static final Map<Number, String> all;
-	private static final List<String> allLabels;
-	private static final List<Number> allTypes;
+	private static final List<String> allLabelsList;
+	private static final List<Number> allTypesList;
+	private static final Number[] allTypes;
 
 	static {
 		all = new LinkedHashMap<>();
@@ -34,19 +35,24 @@ public class Premium {
 		all.put(TYPE_FIVE, LABEL_FIVE);
 		all.put(TYPE_FIVE_PLUS, LABEL_FIVE_PLUS);
 		all.put(TYPE_SIX, LABEL_SIX);
-		allLabels = new ArrayList<>(all.values());
-		allTypes = new ArrayList<>(all.keySet());
+		allLabelsList = new ArrayList<>(all.values());
+		allTypesList = new ArrayList<>(all.keySet());
+		allTypes = allTypesList.toArray(new Number[allTypesList.size()]);
 	}
 
-	public static List<String> allLabels() {
-		return allLabels;
+	public static List<String> allLabelsList() {
+		return allLabelsList;
 	}
 
 	public static Map<Number, String> all() {
 		return all;
 	}
 
-	public static List<Number> allTypes() {
+	public static List<Number> allTypesList() {
+		return allTypesList;
+	}
+
+	public static Number[] allTypes() {
 		return allTypes;
 	}
 

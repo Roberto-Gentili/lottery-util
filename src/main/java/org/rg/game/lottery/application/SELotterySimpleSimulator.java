@@ -111,7 +111,7 @@ public class SELotterySimpleSimulator {
 		hostName = NetworkUtils.INSTANCE.thisHostName();
 		reportHeaderLabels = new ArrayList<>();
 		reportHeaderLabels.add(EXTRACTION_DATE_LABEL);
-		Collection<String> allPremiumLabels = Premium.allLabels();
+		Collection<String> allPremiumLabels = Premium.allLabelsList();
 		reportHeaderLabels.addAll(allPremiumLabels);
 		reportHeaderLabels.add(COST_LABEL);
 		reportHeaderLabels.add(RETURN_LABEL);
@@ -747,7 +747,7 @@ public class SELotterySimpleSimulator {
 								Row previousRow = sheet.getRow(rowIndexAndExtractionDate.getKey() -1);
 								dateCellStyle.set(previousRow.getCell(dataAggStoricoColIndex.get()).getCellStyle());
 								numberCellStyle.set(
-									previousRow.getCell(Shared.getCellIndex(sheet, getHistoryPremiumLabel(Premium.allLabels().get(0)))).getCellStyle()
+									previousRow.getCell(Shared.getCellIndex(sheet, getHistoryPremiumLabel(Premium.allLabelsList().get(0)))).getCellStyle()
 								);
 								hyperLinkNumberCellStyle.set(sheet.getRow(2).getCell(historicalReturnColIndex.get()).getCellStyle());
 							}
@@ -831,7 +831,7 @@ public class SELotterySimpleSimulator {
 
 	private static List<Number> parseReportWinningInfoConfig(String reportWinningInfoConfig) {
 		if (reportWinningInfoConfig.equalsIgnoreCase("all")) {
-			return Premium.allTypes();
+			return Premium.allTypesList();
 		} else if (reportWinningInfoConfig.equalsIgnoreCase("high")) {
 			return Arrays.asList(
 				Premium.toType(Premium.LABEL_FIVE),
@@ -841,7 +841,7 @@ public class SELotterySimpleSimulator {
 		} else {
 			List<Number> premiumsTypes = new ArrayList<>();
 			for (String configPremiumLabel : reportWinningInfoConfig.split(",")) {
-				for (String premiumLabel : Premium.allLabels()) {
+				for (String premiumLabel : Premium.allLabelsList()) {
 					if (configPremiumLabel.equalsIgnoreCase(premiumLabel.replaceAll("\\s+",""))) {
 						premiumsTypes.add(Premium.toType(premiumLabel));
 						break;
@@ -926,8 +926,10 @@ public class SELotterySimpleSimulator {
 		Number... premiumTypes
 	) {
 		LogUtils.info("Computing historycal data of " + storage.getName());
-		Map<String, Object> qualityCheckResult = sEStats.checkQuality(storage::iterator, premiumTypes);
-		Map<String, Object> qualityCheckResultFromExtractionDate = sEStats.checkQualityFrom(storage::iterator, extractionDate, premiumTypes);
+		Map<String, Object> qualityCheckResult =
+			sEStats.checkQuality(storage::iterator, Premium.allTypes(), premiumTypes);
+		Map<String, Object> qualityCheckResultFromExtractionDate =
+			sEStats.checkQualityFrom(storage::iterator, extractionDate,  Premium.allTypes(), premiumTypes);
 		String reportDetail = (String)qualityCheckResult.get("report.detail");
 		String reportDetailFromExtractionDate = (String)qualityCheckResultFromExtractionDate.get("report.detail");
 		String basePath = new File(storage.getAbsolutePath()).getParentFile().getAbsolutePath() + File.separator + storage.getNameWithoutExtension();
@@ -1001,7 +1003,7 @@ public class SELotterySimpleSimulator {
 		if (storage != null) {
 			Map<String, Integer> results = allTimeStats.checkFor(extractionDate, storage::iterator);
 			workBookTemplate.addCell(TimeUtils.toDate(extractionDate)).getCellStyle().setAlignment(HorizontalAlignment.CENTER);
-			List<String> allPremiumLabels = Premium.allLabels();
+			List<String> allPremiumLabels = Premium.allLabelsList();
 			for (int i = 0; i < allPremiumLabels.size();i++) {
 				Integer result = results.get(allPremiumLabels.get(i));
 				if (result == null) {
@@ -1013,7 +1015,7 @@ public class SELotterySimpleSimulator {
 			cell.getCellStyle().setAlignment(HorizontalAlignment.CENTER);
 			int currentRowNum = cell.getRow().getRowNum()+1;
 			Sheet sheet = workBookTemplate.getOrCreateSheet("Risultati");
-			List<String> allFormulas = Premium.allLabels().stream().map(
+			List<String> allFormulas = Premium.allLabelsList().stream().map(
 				label -> generatePremiumFormula(sheet, currentRowNum, label, lb -> lb)).collect(Collectors.toList());
 			String formula = String.join("+", allFormulas);
 			workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
@@ -1022,7 +1024,7 @@ public class SELotterySimpleSimulator {
 
 			workBookTemplate.addCell(Collections.nCopies(Premium.all().size(), null));
 			workBookTemplate.addCell(0, "#,##0");
-			allFormulas = Premium.allLabels().stream().map(
+			allFormulas = Premium.allLabelsList().stream().map(
 					label -> generatePremiumFormula(sheet, currentRowNum, label, SELotterySimpleSimulator::getFollowingProgressiveHistoricalPremiumLabel)).collect(Collectors.toList());
 			formula = String.join("+", allFormulas);
 			workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
@@ -1031,7 +1033,7 @@ public class SELotterySimpleSimulator {
 
 			workBookTemplate.addCell(Collections.nCopies(Premium.all().size(), null));
 			workBookTemplate.addCell(0, "#,##0");
-			allFormulas = Premium.allLabels().stream().map(
+			allFormulas = Premium.allLabelsList().stream().map(
 					label -> generatePremiumFormula(sheet, currentRowNum, label, SELotterySimpleSimulator::getHistoryPremiumLabel)).collect(Collectors.toList());
 			formula = String.join("+", allFormulas);
 			workBookTemplate.addFormulaCell(formula, "#,##0").getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
@@ -1157,7 +1159,7 @@ public class SELotterySimpleSimulator {
 		CellStyle headerNumberStyle = workBook.createCellStyle();
 		headerNumberStyle.cloneStyleFrom(sheet.getRow(1).getCell(Shared.getCellIndex(sheet, COST_LABEL)).getCellStyle());
 		headerNumberStyle.setDataFormat(workBook.createDataFormat().getFormat("#,##0"));
-		for (String label : Premium.allLabels()) {
+		for (String label : Premium.allLabelsList()) {
 			sheet.getRow(1).getCell(Shared.getCellIndex(sheet, label)).setCellStyle(headerNumberStyle);
 			sheet.getRow(1).getCell(Shared.getCellIndex(sheet, getFollowingProgressiveHistoricalPremiumLabel(label))).setCellStyle(headerNumberStyle);
 			sheet.getRow(1).getCell(Shared.getCellIndex(sheet, getHistoryPremiumLabel(label))).setCellStyle(headerNumberStyle);

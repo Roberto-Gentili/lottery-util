@@ -529,15 +529,15 @@ public class SEStats {
 		return results;
 	}
 
-	public Map<String, Object> checkQuality(Supplier<Iterator<List<Integer>>> systemIteratorSupplier, Number... premiums) {
+	public Map<String, Object> checkQuality(Supplier<Iterator<List<Integer>>> systemIteratorSupplier, Number[]... premiums) {
 		return checkQuality(systemIteratorSupplier, startDate, endDate, premiums);
 	}
 
-	public Map<String, Object> checkQualityFrom(Supplier<Iterator<List<Integer>>> systemIteratorSupplier, Date startDate, Number... premiums) {
+	public Map<String, Object> checkQualityFrom(Supplier<Iterator<List<Integer>>> systemIteratorSupplier, Date startDate, Number[]... premiums) {
 		return checkQuality(systemIteratorSupplier, startDate, endDate, premiums);
 	}
 
-	public Map<String, Object> checkQualityTo(Supplier<Iterator<List<Integer>>> systemIteratorSupplier, Date endDate, Number... premiums) {
+	public Map<String, Object> checkQualityTo(Supplier<Iterator<List<Integer>>> systemIteratorSupplier, Date endDate, Number[]... premiums) {
 		return checkQuality(systemIteratorSupplier, startDate, endDate, premiums);
 	}
 
@@ -545,13 +545,16 @@ public class SEStats {
 		Supplier<Iterator<List<Integer>>> systemIteratorSupplier,
 		Date startDate,
 		Date endDate,
-		Number... premiums
+		Number[]... premiumsFilters
 	) {
-		List<Number> premiumsToBeComputed = new ArrayList<>();
-		if (premiums == null || premiums.length == 0) {
-			premiumsToBeComputed.addAll(Premium.allTypes());
+		List<Number> premiumsFilterList = new ArrayList<>();
+		List<Number> premiumsFilterListForReport = new ArrayList<>();
+		if (premiumsFilters == null || premiumsFilters.length == 0) {
+			premiumsFilterList.addAll(Premium.allTypesList());
+			premiumsFilterListForReport.addAll(Premium.allTypesList());
 		} else {
-			premiumsToBeComputed.addAll(Arrays.asList(premiums));
+			premiumsFilterList.addAll(Arrays.asList(premiumsFilters[0]));
+			premiumsFilterListForReport.addAll(Arrays.asList(premiumsFilters[1]));
 		}
 
 		Map<String, Object> data = new LinkedHashMap<>();
@@ -562,6 +565,7 @@ public class SEStats {
 			systemSize++;
 		}
 		Map<Map.Entry<Date, List<Integer>>, Map<Number, List<List<Integer>>>> winningsCombosData = new LinkedHashMap<>();
+		Map<Map.Entry<Date, List<Integer>>, Map<Number, List<List<Integer>>>> winningsCombosDataForReport = new LinkedHashMap<>();
 		List<Map.Entry<Date, List<Integer>>> allWinningCombosReversed = this.allWinningCombosWithJollyAndSuperstar.entrySet().stream().collect(Collectors.toList());
 		Collections.reverse(allWinningCombosReversed);
 		int processedExtractionDateCounter = 0;
@@ -575,6 +579,7 @@ public class SEStats {
 				}
 				++processedExtractionDateCounter;
 				Map<Number, List<List<Integer>>> winningCombosForExtraction = new TreeMap<>(MathUtils.INSTANCE.numberComparator);
+				Map<Number, List<List<Integer>>> winningCombosForExtractionForReport = new TreeMap<>(MathUtils.INSTANCE.numberComparator);
 				List<Integer> winningCombo = winningComboInfo.getValue();
 				Integer jolly = winningCombo.get(6);
 				systemItearator = systemIteratorSupplier.get();
@@ -587,13 +592,19 @@ public class SEStats {
 								hit = Premium.TYPE_FIVE_PLUS;
 							}
 						}
-						if (premiumsToBeComputed.contains(hit)) {
+						if (premiumsFilterList.contains(hit)) {
 							winningCombosForExtraction.computeIfAbsent(hit, ht -> new ArrayList<>()).add(currentCombo);
+						}
+						if (premiumsFilterListForReport.contains(hit)) {
+							winningCombosForExtractionForReport.computeIfAbsent(hit, ht -> new ArrayList<>()).add(currentCombo);
 						}
 					}
 				}
 				if (!winningCombosForExtraction.isEmpty()) {
 					winningsCombosData.put(new AbstractMap.SimpleEntry<>(winningComboInfo.getKey(), winningCombo), winningCombosForExtraction);
+				}
+				if (!winningCombosForExtractionForReport.isEmpty()) {
+					winningsCombosDataForReport.put(new AbstractMap.SimpleEntry<>(winningComboInfo.getKey(), winningCombo), winningCombosForExtractionForReport);
 				}
 				effectiveEndDate = referenceDate;
 			}
@@ -618,7 +629,7 @@ public class SEStats {
 				) +
 			":\n\n"
 		);
-		Iterator<Map.Entry<Entry<Date, List<Integer>>, Map<Number, List<List<Integer>>>>> winningsCombosDataItr = winningsCombosData.entrySet().iterator();
+		Iterator<Map.Entry<Entry<Date, List<Integer>>, Map<Number, List<List<Integer>>>>> winningsCombosDataItr = winningsCombosDataForReport.entrySet().iterator();
 		while (winningsCombosDataItr.hasNext()) {
 			Map.Entry<Map.Entry<Date, List<Integer>>, Map<Number, List<List<Integer>>>> winningCombosInfo = winningsCombosDataItr.next();
 			reportDetail.append("\t" + TimeUtils.getDefaultDateFormat().format(winningCombosInfo.getKey().getKey()) + " -> " +
@@ -636,7 +647,7 @@ public class SEStats {
 				reportDetail.append("\n");
 			}
 		}
-		if (winningsCombosData.isEmpty()) {
+		if (winningsCombosDataForReport.isEmpty()) {
 			reportDetail.append("\tnessuna vincita");
 		}
 		data.put("report.detail", reportDetail.toString());
