@@ -779,7 +779,7 @@ public class SEStats {
 					.stream().map(Integer::valueOf).collect(Collectors.toList());
 				winningCombo.add(Integer.valueOf((String)winningComboData.get("numeroJolly")));
 				winningCombo.add(Integer.valueOf((String)winningComboData.get("superstar")));
-				return new AbstractMap.SimpleEntry(extractionDate, winningCombo);
+				return new AbstractMap.SimpleEntry<>(extractionDate, winningCombo);
 			} catch (IOException exc) {
 				return Throwables.sneakyThrow(exc);
 			}
