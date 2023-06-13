@@ -610,7 +610,6 @@ public class SELotterySimpleSimulator {
 		Number[] premiumTypes = premiumTypeList.toArray(new Number[premiumTypeList.size()]);
 		boolean isSlave = CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false");
 		SEStats sEStats = getSEStats(configuration);
-		Map<Number, String> allPremiums = Premium.all();
 		AtomicInteger dataColIndex = new AtomicInteger(-1);
 		AtomicInteger dataAggStoricoColIndex = new AtomicInteger(-1);
 		AtomicInteger costColIndex = new AtomicInteger(-1);
@@ -754,7 +753,7 @@ public class SELotterySimpleSimulator {
 							Storage storage = storageWrapper.get();
 							if (storage.getName().equals(currentRow.getCell(fileColIndex.get()).getStringCellValue())) {
 								Cell dataAggStoricoCell = currentRow.getCell(dataAggStoricoColIndex.get());
-								for (Map.Entry<Number, String> premiumData : allPremiums.entrySet()) {
+								for (Map.Entry<Number, String> premiumData :  Premium.all().entrySet()) {
 									Cell historyDataCell =
 										currentRow.getCell(Shared.getCellIndex(sheet, getHistoryPremiumLabel(premiumData.getValue())));
 									Number premiumCounter = ((Map<Number,Integer>)premiumCountersData.get("premiumCounters.all")).get(premiumData.getKey());
