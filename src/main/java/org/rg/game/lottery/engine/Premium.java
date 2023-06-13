@@ -1,6 +1,7 @@
 package org.rg.game.lottery.engine;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,8 @@ public class Premium {
 	private static final List<String> allLabelsList;
 	private static final List<Number> allTypesList;
 	private static final Number[] allTypes;
+	private static final List<Number> allHighTypesList;
+	private static final Number[] allHighTypes;
 
 	static {
 		all = new LinkedHashMap<>();
@@ -38,6 +41,14 @@ public class Premium {
 		allLabelsList = new ArrayList<>(all.values());
 		allTypesList = new ArrayList<>(all.keySet());
 		allTypes = allTypesList.toArray(new Number[allTypesList.size()]);
+		allHighTypesList = new ArrayList<>(
+			Arrays.asList(
+				Premium.toType(Premium.LABEL_FIVE),
+				Premium.toType(Premium.LABEL_FIVE_PLUS),
+				Premium.toType(Premium.LABEL_SIX)
+			)
+		);
+		allHighTypes = allHighTypesList.toArray(new Number[allHighTypesList.size()]);
 	}
 
 	public static List<String> allLabelsList() {
@@ -54,6 +65,14 @@ public class Premium {
 
 	public static Number[] allTypes() {
 		return allTypes;
+	}
+	
+	public static List<Number> allHighTypesList() {
+		return allHighTypesList;
+	}
+	
+	public static Number[] allHighTypes() {
+		return allHighTypes;
 	}
 
 	public static String toLabel(Number hit) {

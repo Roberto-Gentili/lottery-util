@@ -833,11 +833,7 @@ public class SELotterySimpleSimulator {
 		if (reportWinningInfoConfig.equalsIgnoreCase("all")) {
 			return Premium.allTypesList();
 		} else if (reportWinningInfoConfig.equalsIgnoreCase("high")) {
-			return Arrays.asList(
-				Premium.toType(Premium.LABEL_FIVE),
-				Premium.toType(Premium.LABEL_FIVE_PLUS),
-				Premium.toType(Premium.LABEL_SIX)
-			);
+			return Premium.allHighTypesList();
 		} else {
 			List<Number> premiumsTypes = new ArrayList<>();
 			for (String configPremiumLabel : reportWinningInfoConfig.split(",")) {

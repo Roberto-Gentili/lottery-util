@@ -629,9 +629,9 @@ public class SEStats {
 				) +
 			":\n\n"
 		);
-		Iterator<Map.Entry<Entry<Date, List<Integer>>, Map<Number, List<List<Integer>>>>> winningsCombosDataItr = winningsCombosDataForReport.entrySet().iterator();
-		while (winningsCombosDataItr.hasNext()) {
-			Map.Entry<Map.Entry<Date, List<Integer>>, Map<Number, List<List<Integer>>>> winningCombosInfo = winningsCombosDataItr.next();
+		Iterator<Map.Entry<Entry<Date, List<Integer>>, Map<Number, List<List<Integer>>>>> winningsCombosDataForReportItr = winningsCombosDataForReport.entrySet().iterator();
+		while (winningsCombosDataForReportItr.hasNext()) {
+			Map.Entry<Map.Entry<Date, List<Integer>>, Map<Number, List<List<Integer>>>> winningCombosInfo = winningsCombosDataForReportItr.next();
 			reportDetail.append("\t" + TimeUtils.getDefaultDateFormat().format(winningCombosInfo.getKey().getKey()) + " -> " +
 				SEComboHandler.toString(winningCombosInfo.getKey().getValue(), ", ", " - ") + ":\n"
 			);
@@ -643,7 +643,7 @@ public class SEStats {
 					reportDetail.append("\t\t\t" + ComboHandler.toString(combo) + "\n");
 				}
 			}
-			if (winningsCombosDataItr.hasNext()) {
+			if (winningsCombosDataForReportItr.hasNext()) {
 				reportDetail.append("\n");
 			}
 		}
