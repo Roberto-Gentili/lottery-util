@@ -135,8 +135,10 @@ public class SEMassiveVerifierAndQualityChecker {
 					Iterator<Row> rowIterator = sheet.rowIterator();
 					rowIterator.next();
 					List<Integer> winningComboWithJollyAndSuperstar = Shared.getSEStats().getWinningComboWithJollyAndSuperstarOf(dateInfo.getKey());
-					List<Integer>  winningCombo = winningComboWithJollyAndSuperstar.subList(0, 6);
-					Integer jolly = winningComboWithJollyAndSuperstar.get(6);
+					List<Integer> winningCombo =
+						winningComboWithJollyAndSuperstar != null ? winningComboWithJollyAndSuperstar.subList(0, 6) : null;
+					Integer jolly =
+						winningComboWithJollyAndSuperstar != null ? winningComboWithJollyAndSuperstar.get(6) : null;
 					Cell jollyCell = null;
 					while (rowIterator.hasNext()) {
 						Row row = rowIterator.next();
@@ -153,7 +155,7 @@ public class SEMassiveVerifierAndQualityChecker {
 								} else {
 									cell.setCellStyle(normalAndCeneteredCellStyle);
 								}
-								if (jolly.compareTo(currentNumber) == 0) {
+								if (jolly != null && jolly.compareTo(currentNumber) == 0) {
 									jollyCell = cell;
 								}
 							} catch (NullPointerException exc) {
@@ -346,10 +348,10 @@ public class SEMassiveVerifierAndQualityChecker {
 		XSSFFont boldHighLightedFont,
 		XSSFFont boldHighLightedItalicFont
 	) {
-		List<Integer> winningCombo = winningComboWithJollyAndSuperstar.subList(0, 6);
-		if (winningCombo == null || winningCombo.isEmpty()) {
+		if (winningComboWithJollyAndSuperstar == null || winningComboWithJollyAndSuperstar.isEmpty()) {
 			return "Nessuna estrazione per il concorso del " + TimeUtils.defaultLocalDateFormat.format(extractionDate) + "\n";
 		}
+		List<Integer> winningCombo = winningComboWithJollyAndSuperstar.subList(0, 6);
 		Map<Number,List<List<Integer>>> winningCombos = new TreeMap<>();
 		Collection<Integer> hitNumbers = new LinkedHashSet<>();
 		Integer jolly = winningComboWithJollyAndSuperstar.get(6);
