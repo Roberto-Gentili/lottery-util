@@ -701,9 +701,7 @@ public class SELotterySimpleSimulator {
 									}
 									if ((modifiedRowCounter % 25) == 0) {
 										LogUtils.info("Storing historical data of " + excelFileName);
-										if (!isSlave) {
-											store(excelFileName, workBook);
-										}
+										store(excelFileName, workBook);
 									}
 								}
 							}
