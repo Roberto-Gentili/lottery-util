@@ -699,7 +699,7 @@ public class SELotterySimpleSimulator {
 										dataAggStoricoCell.setCellStyle(dateCellStyle);
 										dataAggStoricoCell.setCellValue(sEStats.getLatestExtractionDate());
 									}
-									if ((modifiedRowCounter % 25) == 0) {
+									if ((modifiedRowCounter % 10) == 0) {
 										LogUtils.info("Storing historical data of " + excelFileName);
 										store(excelFileName, workBook);
 									}
@@ -824,7 +824,7 @@ public class SELotterySimpleSimulator {
 		File premiumCountersFile,
 		Number... premiumTypes
 	) {
-		LogUtils.info("Computing historycal data of " + storage.getName());
+		//LogUtils.info("Computing historycal data of " + storage.getName());
 		Map<String, Object> qualityCheckResult =
 			sEStats.checkQuality(storage::iterator, Premium.allTypes(), premiumTypes);
 		Map<String, Object> qualityCheckResultFromExtractionDate =
