@@ -612,15 +612,22 @@ public class SEStats {
 				effectiveEndDate = referenceDate;
 			}
 		}
+		data.put("winningCombos", winningsCombosData);
+		Map<Number, Integer> premiumCounters = new TreeMap<>(MathUtils.INSTANCE.numberComparator);
+		Iterator<Map.Entry<Entry<Date, List<Integer>>, Map<Number, List<List<Integer>>>>> winningsCombosDataItr = winningsCombosData.entrySet().iterator();
+		while (winningsCombosDataItr.hasNext()) {
+			Map.Entry<Map.Entry<Date, List<Integer>>, Map<Number, List<List<Integer>>>> winningCombosInfo = winningsCombosDataItr.next();
+			for (Map.Entry<Number, List<List<Integer>>> winningCombos : winningCombosInfo.getValue().entrySet()) {
+				Integer counter = premiumCounters.computeIfAbsent(winningCombos.getKey(), key -> 0);
+				premiumCounters.put(winningCombos.getKey(), counter + winningCombos.getValue().size());
+			}
+		}
 		if (effectiveStartDate == null) {
 			effectiveStartDate = startDate;
 		}
 		if (effectiveEndDate == null) {
 			effectiveEndDate = endDate;
 		}
-		data.put("winningCombos", winningsCombosData);
-		Map<Number, Integer> premiumCounters = new TreeMap<>(MathUtils.INSTANCE.numberComparator);
-
 		StringBuffer reportDetail = new StringBuffer(
 			"Risultati storici dal " +
 				TimeUtils.getDefaultDateFormat().format(
@@ -632,21 +639,19 @@ public class SEStats {
 				) +
 			":\n\n"
 		);
-		Iterator<Map.Entry<Entry<Date, List<Integer>>, Map<Number, List<List<Integer>>>>> winningsCombosDataForReportItr = winningsCombosDataForReport.entrySet().iterator();
-		while (winningsCombosDataForReportItr.hasNext()) {
-			Map.Entry<Map.Entry<Date, List<Integer>>, Map<Number, List<List<Integer>>>> winningCombosInfo = winningsCombosDataForReportItr.next();
+		winningsCombosDataItr = winningsCombosDataForReport.entrySet().iterator();
+		while (winningsCombosDataItr.hasNext()) {
+			Map.Entry<Map.Entry<Date, List<Integer>>, Map<Number, List<List<Integer>>>> winningCombosInfo = winningsCombosDataItr.next();
 			reportDetail.append("\t" + TimeUtils.getDefaultDateFormat().format(winningCombosInfo.getKey().getKey()) + " -> " +
 				SEComboHandler.toString(winningCombosInfo.getKey().getValue(), ", ", " - ") + ":\n"
 			);
 			for (Map.Entry<Number, List<List<Integer>>> winningCombos : winningCombosInfo.getValue().entrySet()) {
 				reportDetail.append("\t\t" + Premium.toLabel(winningCombos.getKey()) + ":\n");
 				for (List<Integer> combo : winningCombos.getValue()) {
-					Integer counter = premiumCounters.computeIfAbsent(winningCombos.getKey(), key -> 0);
-					premiumCounters.put(winningCombos.getKey(), ++counter);
 					reportDetail.append("\t\t\t" + ComboHandler.toString(combo) + "\n");
 				}
 			}
-			if (winningsCombosDataForReportItr.hasNext()) {
+			if (winningsCombosDataItr.hasNext()) {
 				reportDetail.append("\n");
 			}
 		}
