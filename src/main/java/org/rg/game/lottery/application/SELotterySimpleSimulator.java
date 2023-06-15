@@ -467,7 +467,6 @@ public class SELotterySimpleSimulator {
 			systemProcessor = buildSystemProcessor(configuration, excelFileName);
 		}
 
-		updateHistorical(configuration, excelFileName, configuration.getProperty("nameSuffix"), new LinkedHashMap<>());
 		for (
 			List<LocalDate> datesToBeProcessed :
 			competitionDates
