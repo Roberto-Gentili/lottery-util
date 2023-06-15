@@ -109,6 +109,7 @@ public class SELotterySimpleSimulator {
 	static final String HISTORICAL_UPDATE_DATE_LABEL = "Data agg. storico";
 	static final List<String> reportHeaderLabels;
 	static final Map<String, Integer> cellIndexesCache;
+	static final Map<Integer, String> indexToLetterCache;
 
 	static final ObjectMapper objectMapper = new ObjectMapper();
 	static Pattern regexForExtractConfigFileName = Pattern.compile("\\[.*?\\]\\[.*?\\]\\[.*?\\](.*)\\.txt");
@@ -136,7 +137,8 @@ public class SELotterySimpleSimulator {
 		reportHeaderLabels.add(HISTORICAL_BALANCE_LABEL);
 		reportHeaderLabels.add(HISTORICAL_UPDATE_DATE_LABEL);
 		reportHeaderLabels.add(FILE_LABEL);
-		cellIndexesCache = new ConcurrentHashMap<String, Integer>();
+		cellIndexesCache = new ConcurrentHashMap<>();
+		indexToLetterCache = new ConcurrentHashMap<>();
 	}
 
 	public static void main(String[] args) throws IOException {
@@ -208,7 +210,11 @@ public class SELotterySimpleSimulator {
 	}
 
 	private static Integer getCellIndex(Sheet sheet, String label) {
-		return cellIndexesCache.computeIfAbsent(label, lb -> Shared.getCellIndex(sheet, label));
+		return cellIndexesCache.computeIfAbsent(sheet.getSheetName() + "." + label, lb -> Shared.getCellIndex(sheet, label));
+	}
+
+	private static String convertNumToColString(Integer idx) {
+		return indexToLetterCache.computeIfAbsent(idx, index -> CellReference.convertNumToColString(index));
 	}
 
 	protected static void prepareAndProcess(
@@ -554,7 +560,7 @@ public class SELotterySimpleSimulator {
 	}
 
 	private static int getMaxRowIndex() {
-		return SpreadsheetVersion.EXCEL2007.getMaxRows() -1;
+		return SpreadsheetVersion.EXCEL2007.getMaxRows();
 		//return Shared.getSEStats().getAllWinningCombos().size() * 2;
 	}
 
@@ -1026,12 +1032,12 @@ public class SELotterySimpleSimulator {
 
 	protected static String generateBalanceFormula(int currentRowNum, Sheet sheet, List<String> labels) {
 		return String.join("-", labels.stream().map(label ->
-			"(" + CellReference.convertNumToColString(getCellIndex(sheet, label))  + currentRowNum + ")"
+			"(" + convertNumToColString(getCellIndex(sheet, label))  + currentRowNum + ")"
 		).collect(Collectors.toList()));
 	}
 
 	protected static String generatePremiumFormula(Sheet sheet, int currentRowNum, String columnLabel, UnaryOperator<String> transformer) {
-		return "(" + CellReference.convertNumToColString(getCellIndex(sheet, transformer.apply(columnLabel))) + currentRowNum + "*" + SEStats.premiumPrice(columnLabel) + ")";
+		return "(" + convertNumToColString(getCellIndex(sheet, transformer.apply(columnLabel))) + currentRowNum + "*" + SEStats.premiumPrice(columnLabel) + ")";
 	}
 
 	protected static String getHistoryPremiumLabel(String label) {
@@ -1112,10 +1118,10 @@ public class SELotterySimpleSimulator {
 		Sheet sheet = workBookTemplate.getOrCreateSheet("Risultati", true);
 
 		List<String> summaryFormulas = new ArrayList<>();
-		String columnName = CellReference.convertNumToColString(0);
+		String columnName = convertNumToColString(0);
 		summaryFormulas.add("FORMULA_COUNTA(" + columnName + "3:"+ columnName + getMaxRowIndex() +")");
 		for (int i = 1; i < reportHeaderLabels.size()-2; i++) {
-			columnName = CellReference.convertNumToColString(i);
+			columnName = convertNumToColString(i);
 			summaryFormulas.add(
 				"FORMULA_SUM(" + columnName + "3:"+ columnName + getMaxRowIndex() +")"
 			);
@@ -1142,25 +1148,25 @@ public class SELotterySimpleSimulator {
 		sheet.getRow(1).getCell(getCellIndex(sheet, RETURN_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(getCellIndex(sheet, BALANCE_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(getCellIndex(sheet, BALANCE_LABEL)).setCellFormula(
-			"TEXT((SUM(" + CellReference.convertNumToColString(reportHeaderLabels.indexOf(BALANCE_LABEL)) + "3:" +
-			CellReference.convertNumToColString(reportHeaderLabels.indexOf(BALANCE_LABEL)) + getMaxRowIndex() +
-			")/" + CellReference.convertNumToColString(reportHeaderLabels.indexOf(COST_LABEL)) + "2),\"###,00%\")"
+			"TEXT((SUM(" + convertNumToColString(reportHeaderLabels.indexOf(BALANCE_LABEL)) + "3:" +
+			convertNumToColString(reportHeaderLabels.indexOf(BALANCE_LABEL)) + getMaxRowIndex() +
+			")/" + convertNumToColString(reportHeaderLabels.indexOf(COST_LABEL)) + "2),\"###,00%\")"
 		);
 		sheet.getRow(1).getCell(getCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(getCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_RETURN_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(getCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_BALANCE_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(getCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_BALANCE_LABEL)).setCellFormula(
-			"TEXT((SUM(" + CellReference.convertNumToColString(reportHeaderLabels.indexOf(FOLLOWING_PROGRESSIVE_HISTORICAL_BALANCE_LABEL)) + "3:" +
-			CellReference.convertNumToColString(reportHeaderLabels.indexOf(FOLLOWING_PROGRESSIVE_HISTORICAL_BALANCE_LABEL)) + getMaxRowIndex() +
-			")/" + CellReference.convertNumToColString(reportHeaderLabels.indexOf(FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL)) + "2),\"###,00%\")"
+			"TEXT((SUM(" + convertNumToColString(reportHeaderLabels.indexOf(FOLLOWING_PROGRESSIVE_HISTORICAL_BALANCE_LABEL)) + "3:" +
+			convertNumToColString(reportHeaderLabels.indexOf(FOLLOWING_PROGRESSIVE_HISTORICAL_BALANCE_LABEL)) + getMaxRowIndex() +
+			")/" + convertNumToColString(reportHeaderLabels.indexOf(FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL)) + "2),\"###,00%\")"
 		);
 		sheet.getRow(1).getCell(getCellIndex(sheet, HISTORICAL_COST_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(getCellIndex(sheet, HISTORICAL_RETURN_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(getCellIndex(sheet, HISTORICAL_BALANCE_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(getCellIndex(sheet, HISTORICAL_BALANCE_LABEL)).setCellFormula(
-			"TEXT((SUM(" + CellReference.convertNumToColString(reportHeaderLabels.indexOf(HISTORICAL_BALANCE_LABEL)) + "3:" +
-			CellReference.convertNumToColString(reportHeaderLabels.indexOf(HISTORICAL_BALANCE_LABEL)) + getMaxRowIndex() +
-			")/" + CellReference.convertNumToColString(reportHeaderLabels.indexOf(HISTORICAL_COST_LABEL)) + "2),\"###,00%\")"
+			"TEXT((SUM(" + convertNumToColString(reportHeaderLabels.indexOf(HISTORICAL_BALANCE_LABEL)) + "3:" +
+			convertNumToColString(reportHeaderLabels.indexOf(HISTORICAL_BALANCE_LABEL)) + getMaxRowIndex() +
+			")/" + convertNumToColString(reportHeaderLabels.indexOf(HISTORICAL_COST_LABEL)) + "2),\"###,00%\")"
 		);
 		sheet.setColumnWidth(getCellIndex(sheet, EXTRACTION_DATE_LABEL), 3800);
 		sheet.setColumnWidth(getCellIndex(sheet, COST_LABEL), 3000);
