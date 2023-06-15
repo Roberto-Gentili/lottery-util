@@ -56,6 +56,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellReference;
+import org.apache.poi.util.RecordFormatException;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.xmlbeans.impl.values.XmlValueDisconnectedException;
 import org.rg.game.core.CollectionUtils;
@@ -1159,7 +1160,7 @@ public class SELotterySimpleSimulator {
 			});
 		} catch (Throwable exc) {
 			if (!(exc instanceof POIXMLException || exc instanceof EmptyFileException || exc instanceof ZipException || exc instanceof PartAlreadyExistsException ||
-				exc instanceof XmlValueDisconnectedException || (exc instanceof IOException && exc.getMessage().equalsIgnoreCase("Truncated ZIP file")))) {
+				exc instanceof XmlValueDisconnectedException || exc instanceof RecordFormatException || (exc instanceof IOException && exc.getMessage().equalsIgnoreCase("Truncated ZIP file")))) {
 				LogUtils.error("Unable to process file " + excelFileName);
 				Throwables.sneakyThrow(exc);
 			}
