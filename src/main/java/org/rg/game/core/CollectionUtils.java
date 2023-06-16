@@ -25,4 +25,12 @@ public class CollectionUtils {
 		return Boolean.parseBoolean((defaultValue != null ? config.getProperty(key, defaultValue) : config.getProperty(key)).toLowerCase().replaceAll("\\s+",""));
 	}
 
+	public static <T> T getLastElement(final Iterable<T> elements) {
+	    T lastElement = null;
+	    for (T element : elements) {
+	        lastElement = element;
+	    }
+	    return lastElement;
+	}
+
 }

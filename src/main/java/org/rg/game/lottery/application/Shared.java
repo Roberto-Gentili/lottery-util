@@ -21,6 +21,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.rg.game.core.CollectionUtils;
 import org.rg.game.core.LogUtils;
 import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.ComboHandler;
@@ -43,7 +44,7 @@ class Shared {
 		if (dateAsString.equals("today")) {
 			return LocalDateTime.now(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE)).toLocalDate();
 		}
-		return new SELotteryMatrixGeneratorEngine().computeExtractionDates(dateAsString).iterator().next();
+		return CollectionUtils.getLastElement(new SELotteryMatrixGeneratorEngine().computeExtractionDates(dateAsString));
 	}
 
 	static String getMonth(String date) {
