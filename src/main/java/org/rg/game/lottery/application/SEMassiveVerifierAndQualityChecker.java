@@ -200,6 +200,17 @@ public class SEMassiveVerifierAndQualityChecker {
 					if (results.getString() != null) {
 						results.append("\n");
 					}
+					checkInFollowingProgressiveHistory(
+						//historyData,
+						dateInfo.getKey(),
+						system,
+						Shared.getSEStats().getAllWinningCombosWithJollyAndSuperstar(),
+						results,
+						boldFont
+					);
+					if (results.getString() != null) {
+						results.append("\n\n");
+					}
 					checkInHistory(
 						historyData,
 						dateInfo.getKey(),
@@ -494,6 +505,60 @@ public class SEMassiveVerifierAndQualityChecker {
 			if (winningAndCombosIterator.hasNext()) {
 				results.append("\n");
 			}
+		}
+	}
+
+	private static void checkInFollowingProgressiveHistory(
+		LocalDate extractionDate,
+		List<List<Integer>> system,
+		Map<Date, List<Integer>> allWinningCombosWithJollyAndSuperstar,
+		XSSFRichTextString results,
+		XSSFFont boldFont
+	) {
+		Map<String, Map<Number,List<List<Integer>>>> historyData = new LinkedHashMap<>();
+		Collection<Integer> hitNumbers = new LinkedHashSet<>();
+		String extractionDateAsString = TimeUtils.defaultLocalDateFormat.format(extractionDate);
+		for (Map.Entry<Date, List<Integer>> winningComboWithJollyAndSuperstarEntry : allWinningCombosWithJollyAndSuperstar.entrySet()) {
+			if (TimeUtils.toLocalDate(winningComboWithJollyAndSuperstarEntry.getKey()).compareTo(extractionDate) >= 0) {
+				List<Integer> winningComboWithJollyAndSuperstar = winningComboWithJollyAndSuperstarEntry.getValue();
+				List<Integer> winningCombo = winningComboWithJollyAndSuperstar.subList(0, 6);
+				for (List<Integer> currentCombo : system) {
+					Number hit = 0;
+					for (Integer currentNumber : currentCombo) {
+						if (winningCombo.contains(currentNumber)) {
+							hitNumbers.add(currentNumber);
+							hit = hit.intValue() +1;
+						}
+					}
+					if (hit.intValue() > 1) {
+						if (hit.intValue() == Premium.TYPE_FIVE.intValue()) {
+							if (currentCombo.contains(winningComboWithJollyAndSuperstar.get(6))) {
+								hit = Premium.TYPE_FIVE_PLUS;
+							}
+						}
+						historyData.computeIfAbsent(extractionDateAsString, key -> new TreeMap<>(MathUtils.INSTANCE.numberComparator))
+						.computeIfAbsent(hit, ht -> new ArrayList<>()).add(currentCombo);
+					}
+				}
+			}
+		}
+		results.append("Storico prg. ant", boldFont);
+		results.append(":\n");
+		Map<Number,List<List<Integer>>> systemResultsInHistory = historyData.get(extractionDateAsString);
+		if (systemResultsInHistory != null) {
+			Iterator<Map.Entry<Number, List<List<Integer>>>> systemResultsInHistoryItr = systemResultsInHistory.entrySet().iterator();
+			while (systemResultsInHistoryItr.hasNext()) {
+				Map.Entry<Number, List<List<Integer>>> singleHistoryResult = systemResultsInHistoryItr.next();
+				String label = Premium.toLabel(singleHistoryResult.getKey());
+				results.append("    ");
+				results.append(label, boldFont);
+				results.append(": " + MathUtils.INSTANCE.integerFormat.format(singleHistoryResult.getValue().size()));
+				if (systemResultsInHistoryItr.hasNext()) {
+					results.append("\n");
+				}
+			}
+		} else {
+			results.append("    nessuna vincita");
 		}
 	}
 
