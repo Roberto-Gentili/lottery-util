@@ -560,7 +560,7 @@ public class SELotterySimpleSimulator {
 	}
 
 	private static int getMaxRowIndex() {
-		return SpreadsheetVersion.EXCEL2007.getMaxRows() - 1;
+		return SpreadsheetVersion.EXCEL2007.getMaxRows();
 		//return Shared.getSEStats().getAllWinningCombos().size() * 2;
 	}
 
@@ -921,11 +921,12 @@ public class SELotterySimpleSimulator {
 		CellStyle numberCellStyle = null;
 		CellStyle dateCellStyle = null;
 		CellStyle hyperLinkStyle = null;
-		if (row.getRowNum() > 2) {
+		Integer currentRowNum = row.getRowNum();
+		if (currentRowNum > 2) {
 			Row firstRow = getFirstRow(sheet);
-			numberCellStyle = firstRow.getCell(getCellIndex(row.getSheet(), BALANCE_LABEL)).getCellStyle();
-			dateCellStyle = firstRow.getCell(getCellIndex(row.getSheet(), EXTRACTION_DATE_LABEL)).getCellStyle();
-			hyperLinkStyle = firstRow.getCell(getCellIndex(row.getSheet(), FILE_LABEL)).getCellStyle();
+			numberCellStyle = firstRow.getCell(getCellIndex(sheet, BALANCE_LABEL)).getCellStyle();
+			dateCellStyle = firstRow.getCell(getCellIndex(sheet, EXTRACTION_DATE_LABEL)).getCellStyle();
+			hyperLinkStyle = firstRow.getCell(getCellIndex(sheet, FILE_LABEL)).getCellStyle();
 		} else {
 			numberCellStyle = workBook.createCellStyle();
 			numberCellStyle.setAlignment(HorizontalAlignment.RIGHT);
@@ -963,13 +964,13 @@ public class SELotterySimpleSimulator {
 		cell.setCellValue(storage.size());
 
 		List<String> allFormulas = Premium.allLabelsList().stream().map(
-			label -> generatePremiumFormula(sheet, row.getRowNum(), label, lb -> lb)).collect(Collectors.toList());
+			label -> generatePremiumFormula(sheet, currentRowNum, label, lb -> lb)).collect(Collectors.toList());
 		String formula = String.join("+", allFormulas);
 		cell = row.createCell(getCellIndex(row.getSheet(), RETURN_LABEL));
 		cell.setCellStyle(numberCellStyle);
 		cell.setCellFormula(formula);
 
-		formula = generateBalanceFormula(row.getRowNum(), sheet, Arrays.asList(RETURN_LABEL, COST_LABEL));
+		formula = generateBalanceFormula(currentRowNum, sheet, Arrays.asList(RETURN_LABEL, COST_LABEL));
 		cell = row.createCell(getCellIndex(row.getSheet(), BALANCE_LABEL));
 		cell.setCellStyle(numberCellStyle);
 		cell.setCellFormula(formula);
@@ -983,13 +984,13 @@ public class SELotterySimpleSimulator {
 		cell.setCellValue(0);
 
 		allFormulas = Premium.allLabelsList().stream().map(
-				label -> generatePremiumFormula(sheet, row.getRowNum(), label, SELotterySimpleSimulator::getFollowingProgressiveHistoricalPremiumLabel)).collect(Collectors.toList());
+				label -> generatePremiumFormula(sheet, currentRowNum, label, SELotterySimpleSimulator::getFollowingProgressiveHistoricalPremiumLabel)).collect(Collectors.toList());
 		formula = String.join("+", allFormulas);
 		cell = row.createCell(getCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_RETURN_LABEL));
 		cell.setCellStyle(numberCellStyle);
 		cell.setCellFormula(formula);
 
-		formula = generateBalanceFormula(row.getRowNum(), sheet, Arrays.asList(FOLLOWING_PROGRESSIVE_HISTORICAL_RETURN_LABEL, FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL));
+		formula = generateBalanceFormula(currentRowNum, sheet, Arrays.asList(FOLLOWING_PROGRESSIVE_HISTORICAL_RETURN_LABEL, FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL));
 		cell = row.createCell(getCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_BALANCE_LABEL));
 		cell.setCellStyle(numberCellStyle);
 		cell.setCellFormula(formula);
@@ -1004,13 +1005,13 @@ public class SELotterySimpleSimulator {
 		cell.setCellValue(0);
 
 		allFormulas = Premium.allLabelsList().stream().map(
-				label -> generatePremiumFormula(sheet, row.getRowNum(), label, SELotterySimpleSimulator::getHistoryPremiumLabel)).collect(Collectors.toList());
+				label -> generatePremiumFormula(sheet, currentRowNum, label, SELotterySimpleSimulator::getHistoryPremiumLabel)).collect(Collectors.toList());
 		formula = String.join("+", allFormulas);
 		cell = row.createCell(getCellIndex(sheet, HISTORICAL_RETURN_LABEL));
 		cell.setCellStyle(numberCellStyle);
 		cell.setCellFormula(formula);
 
-		formula = generateBalanceFormula(row.getRowNum(), sheet, Arrays.asList(HISTORICAL_RETURN_LABEL, HISTORICAL_COST_LABEL));
+		formula = generateBalanceFormula(currentRowNum, sheet, Arrays.asList(HISTORICAL_RETURN_LABEL, HISTORICAL_COST_LABEL));
 		cell = row.createCell(getCellIndex(sheet, HISTORICAL_BALANCE_LABEL));
 		cell.setCellStyle(numberCellStyle);
 		cell.setCellFormula(formula);
@@ -1031,13 +1032,15 @@ public class SELotterySimpleSimulator {
 	}
 
 	protected static String generateBalanceFormula(int currentRowNum, Sheet sheet, List<String> labels) {
+		int effectiveRowIndex = currentRowNum + 1;
 		return String.join("-", labels.stream().map(label ->
-			"(" + convertNumToColString(getCellIndex(sheet, label))  + currentRowNum + ")"
+			"(" + convertNumToColString(getCellIndex(sheet, label))  + effectiveRowIndex + ")"
 		).collect(Collectors.toList()));
 	}
 
 	protected static String generatePremiumFormula(Sheet sheet, int currentRowNum, String columnLabel, UnaryOperator<String> transformer) {
-		return "(" + convertNumToColString(getCellIndex(sheet, transformer.apply(columnLabel))) + currentRowNum + "*" + SEStats.premiumPrice(columnLabel) + ")";
+		int effectiveRowIndex = currentRowNum + 1;
+		return "(" + convertNumToColString(getCellIndex(sheet, transformer.apply(columnLabel))) + effectiveRowIndex + "*" + SEStats.premiumPrice(columnLabel) + ")";
 	}
 
 	protected static String getHistoryPremiumLabel(String label) {
