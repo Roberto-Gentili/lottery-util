@@ -560,7 +560,7 @@ public class SELotterySimpleSimulator {
 	}
 
 	private static int getMaxRowIndex() {
-		return SpreadsheetVersion.EXCEL2007.getMaxRows();
+		return SpreadsheetVersion.EXCEL2007.getMaxRows() - 1;
 		//return Shared.getSEStats().getAllWinningCombos().size() * 2;
 	}
 

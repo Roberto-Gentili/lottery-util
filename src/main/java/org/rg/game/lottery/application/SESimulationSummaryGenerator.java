@@ -134,7 +134,8 @@ public class SESimulationSummaryGenerator {
 						singleSimFolderRelPath,
 						workBookTemplate,
 						headersToBeSkipped,
-						singleSimFolder, report
+						singleSimFolder,
+						report
 					);
 				} catch (Throwable exc) {
 					LogUtils.warn("Unable to process " + report.getAbsolutePath() + ": " + exc.getMessage());
