@@ -560,6 +560,10 @@ public class SELotterySimpleSimulator {
 	}
 
 	private static int getMaxRowIndex() {
+		return getMaxRowIndexInExcelFormat() - 1;
+	}
+
+	private static int getMaxRowIndexInExcelFormat() {
 		return SpreadsheetVersion.EXCEL2007.getMaxRows();
 		//return Shared.getSEStats().getAllWinningCombos().size() * 2;
 	}
@@ -1122,11 +1126,11 @@ public class SELotterySimpleSimulator {
 
 		List<String> summaryFormulas = new ArrayList<>();
 		String columnName = convertNumToColString(0);
-		summaryFormulas.add("FORMULA_COUNTA(" + columnName + "3:"+ columnName + getMaxRowIndex() +")");
+		summaryFormulas.add("FORMULA_COUNTA(" + columnName + "3:"+ columnName + getMaxRowIndexInExcelFormat() +")");
 		for (int i = 1; i < reportHeaderLabels.size()-2; i++) {
 			columnName = convertNumToColString(i);
 			summaryFormulas.add(
-				"FORMULA_SUM(" + columnName + "3:"+ columnName + getMaxRowIndex() +")"
+				"FORMULA_SUM(" + columnName + "3:"+ columnName + getMaxRowIndexInExcelFormat() +")"
 			);
 		}
 		summaryFormulas.add("");
@@ -1152,7 +1156,7 @@ public class SELotterySimpleSimulator {
 		sheet.getRow(1).getCell(getCellIndex(sheet, BALANCE_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(getCellIndex(sheet, BALANCE_LABEL)).setCellFormula(
 			"TEXT((SUM(" + convertNumToColString(reportHeaderLabels.indexOf(BALANCE_LABEL)) + "3:" +
-			convertNumToColString(reportHeaderLabels.indexOf(BALANCE_LABEL)) + getMaxRowIndex() +
+			convertNumToColString(reportHeaderLabels.indexOf(BALANCE_LABEL)) + getMaxRowIndexInExcelFormat() +
 			")/" + convertNumToColString(reportHeaderLabels.indexOf(COST_LABEL)) + "2),\"###,00%\")"
 		);
 		sheet.getRow(1).getCell(getCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL)).setCellStyle(headerNumberStyle);
@@ -1160,7 +1164,7 @@ public class SELotterySimpleSimulator {
 		sheet.getRow(1).getCell(getCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_BALANCE_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(getCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_BALANCE_LABEL)).setCellFormula(
 			"TEXT((SUM(" + convertNumToColString(reportHeaderLabels.indexOf(FOLLOWING_PROGRESSIVE_HISTORICAL_BALANCE_LABEL)) + "3:" +
-			convertNumToColString(reportHeaderLabels.indexOf(FOLLOWING_PROGRESSIVE_HISTORICAL_BALANCE_LABEL)) + getMaxRowIndex() +
+			convertNumToColString(reportHeaderLabels.indexOf(FOLLOWING_PROGRESSIVE_HISTORICAL_BALANCE_LABEL)) + getMaxRowIndexInExcelFormat() +
 			")/" + convertNumToColString(reportHeaderLabels.indexOf(FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL)) + "2),\"###,00%\")"
 		);
 		sheet.getRow(1).getCell(getCellIndex(sheet, HISTORICAL_COST_LABEL)).setCellStyle(headerNumberStyle);
@@ -1168,7 +1172,7 @@ public class SELotterySimpleSimulator {
 		sheet.getRow(1).getCell(getCellIndex(sheet, HISTORICAL_BALANCE_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(getCellIndex(sheet, HISTORICAL_BALANCE_LABEL)).setCellFormula(
 			"TEXT((SUM(" + convertNumToColString(reportHeaderLabels.indexOf(HISTORICAL_BALANCE_LABEL)) + "3:" +
-			convertNumToColString(reportHeaderLabels.indexOf(HISTORICAL_BALANCE_LABEL)) + getMaxRowIndex() +
+			convertNumToColString(reportHeaderLabels.indexOf(HISTORICAL_BALANCE_LABEL)) + getMaxRowIndexInExcelFormat() +
 			")/" + convertNumToColString(reportHeaderLabels.indexOf(HISTORICAL_COST_LABEL)) + "2),\"###,00%\")"
 		);
 		sheet.setColumnWidth(getCellIndex(sheet, EXTRACTION_DATE_LABEL), 3800);
