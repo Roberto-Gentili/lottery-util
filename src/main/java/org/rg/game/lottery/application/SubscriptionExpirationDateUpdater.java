@@ -208,8 +208,16 @@ public class SubscriptionExpirationDateUpdater {
 
 	static SimpleEntry<List<String>, Integer> addUpdateInfo(Integer incrementation, String... names) {
 		return new AbstractMap.SimpleEntry<>(
-			Arrays.asList(names), computeIncrementation(incrementation, 0)
+			namesToListOfNames(names), computeIncrementation(incrementation, 0)
 		);
+	}
+
+	protected static List<String> namesToListOfNames(String[] names) {
+		List<String> listOfNames = new ArrayList<>();
+		for (String name : names) {
+			listOfNames.add(name.replace("-", " ").replace("_", " "));
+		}
+		return listOfNames;
 	}
 
 	static Integer computeIncrementationOfDays(int days) {
