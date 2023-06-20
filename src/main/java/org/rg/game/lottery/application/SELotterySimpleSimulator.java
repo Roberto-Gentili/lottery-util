@@ -246,7 +246,7 @@ public class SELotterySimpleSimulator {
 			if (info != null) {
 				LogUtils.info(info);
 			}
-			String excelFileName = retrieveExcelFileName(configuration, "simulation.group");
+			String excelFileName = retrieveExcelFileName(configuration);
 			SELotteryMatrixGeneratorEngine engine = engineSupplier.get();
 			String configFileName = configuration.getProperty("file.name").replace("." + configuration.getProperty("file.extension"), "");
 			configuration.setProperty(
@@ -294,28 +294,33 @@ public class SELotterySimpleSimulator {
 		}
 	}
 
-	protected static String retrieveExcelFileName(Properties configuration, String groupKey) {
-		return Optional.ofNullable(configuration.getProperty(groupKey)).map(groupName -> {
-			PersistentStorage.buildWorkingPath(groupName);
-			String reportFileName = (groupName.contains("\\") ?
-				groupName.substring(groupName.lastIndexOf("\\") + 1) :
-					groupName.contains("/") ?
-					groupName.substring(groupName.lastIndexOf("/") + 1) :
-						groupName) + "-report.xlsx";
-			return groupName + File.separator + reportFileName;
-		}).orElseGet(() -> configuration.getProperty("file.name").replace("." + configuration.getProperty("file.extension"), "") + "-sim.xlsx");
+	protected static String retrieveExcelFileName(Properties configuration) {
+		String groupName = configuration.getProperty("simulation.group");
+		PersistentStorage.buildWorkingPath(groupName);
+		String reportFileName = (groupName.contains("\\") ?
+			groupName.substring(groupName.lastIndexOf("\\") + 1) :
+				groupName.contains("/") ?
+				groupName.substring(groupName.lastIndexOf("/") + 1) :
+					groupName) + "-report.xlsx";
+		return groupName + File.separator + reportFileName;
 	}
 
 	protected static void setGroup(Properties config) {
 		String simulationGroup = config.getProperty("simulation.group");
-		if (simulationGroup != null) {
-			simulationGroup = simulationGroup.replace("${localhost.name}", hostName);
-			config.setProperty("simulation.group", simulationGroup);
-			config.setProperty(
-				"group",
-				simulationGroup + "/" + DATA_FOLDER_NAME
-			);
+		if (simulationGroup == null) {
+			simulationGroup = config.getProperty("file.name").replace("." + config.getProperty("file.extension"), "");
 		}
+		simulationGroup = simulationGroup.replace("${localhost.name}", hostName);
+		config.setProperty("simulation.group", simulationGroup);
+		config.setProperty(
+			"group",
+			simulationGroup + "/" + DATA_FOLDER_NAME
+		);
+	}
+
+
+	protected static String retrieveDataBasePath(Properties configuration) {
+		return  PersistentStorage.buildWorkingPath(configuration.getProperty("group"));
 	}
 
 	protected static LocalDate removeNextOfLatestExtractionDate(Properties config, Collection<LocalDate> extractionDates) {
@@ -545,7 +550,11 @@ public class SELotterySimpleSimulator {
 			}
 		}
 		//Puliamo file txt duplicati da google drive
-		for (File file : ResourceUtils.INSTANCE.find("(1)", "txt", retrieveBasePath(configuration))) {
+		for (File file : ResourceUtils.INSTANCE.find("(1)", "txt", retrieveDataBasePath(configuration))) {
+			file.delete();
+		}
+		//Puliamo file json duplicati da google drive
+		for (File file : ResourceUtils.INSTANCE.find("(1)", "json", retrieveDataBasePath(configuration))) {
 			file.delete();
 		}
 	}
@@ -742,10 +751,6 @@ public class SELotterySimpleSimulator {
 			},
 			isSlave
 		);
-		//Puliamo file json duplicati da google drive
-		for (File file : ResourceUtils.INSTANCE.find("(1)", "json", retrieveBasePath(configuration))) {
-			file.delete();
-		}
 		return 1;
 	}
 
@@ -799,12 +804,6 @@ public class SELotterySimpleSimulator {
 			date != null ?
 				TimeUtils.increment(date, offset, ChronoUnit.DAYS) :
 				null;
-	}
-
-	protected static String retrieveBasePath(Properties configuration) {
-		return Optional.ofNullable(configuration.getProperty("simulation.group")).map(groupName -> {
-			return PersistentStorage.buildWorkingPath(groupName);
-		}).orElseGet(() -> PersistentStorage.buildWorkingPath());
 	}
 
 	protected static SEStats getSEStats(Properties configuration) {
