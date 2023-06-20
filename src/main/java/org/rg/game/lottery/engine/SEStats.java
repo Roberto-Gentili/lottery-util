@@ -629,12 +629,8 @@ public class SEStats {
 			effectiveEndDate = endDate;
 		}
 		List<String> labelsForReport = Premium.toLabels(premiumsFilterListForReport);
-		String reportDetailPremiumInfo = "";
-		if (!labelsForReport.containsAll( Premium.allLabelsList())) {
-			reportDetailPremiumInfo = "(" + String.join(", ", labelsForReport) + ") ";
-		}
 		StringBuffer reportDetail = new StringBuffer(
-			"Risultati storici " + reportDetailPremiumInfo + "dal " +
+			"Risultati storici" + (labelsForReport.containsAll(Premium.allLabelsList()) ? " " :  " (" + String.join(", ", labelsForReport) + ") ") + "dal " +
 				TimeUtils.getDefaultDateFormat().format(
 					effectiveStartDate
 				) +
