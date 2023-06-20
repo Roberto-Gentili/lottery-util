@@ -20,6 +20,7 @@ import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.CellValue;
 import org.apache.poi.ss.usermodel.ComparisonOperator;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -198,7 +199,7 @@ public class SESimulationSummaryGenerator {
 					if (simulationCellValue.getCellType().equals(CellType.NUMERIC)) {
 						summaryWorkBookTemplate.addCell(simulationCellValue.getNumberValue(), "#,##0");
 					} else if (simulationCellValue.getCellType().equals(CellType.STRING)) {
-						summaryWorkBookTemplate.addCell(simulationCellValue.getStringValue());
+						summaryWorkBookTemplate.addCell(simulationCellValue.getStringValue()).stream().findFirst().get().getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
 					}
 				}
 			}
