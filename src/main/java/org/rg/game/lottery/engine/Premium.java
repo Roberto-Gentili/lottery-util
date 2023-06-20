@@ -66,11 +66,11 @@ public class Premium {
 	public static Number[] allTypes() {
 		return allTypes;
 	}
-	
+
 	public static List<Number> allHighTypesList() {
 		return allHighTypesList;
 	}
-	
+
 	public static Number[] allHighTypes() {
 		return allHighTypes;
 	}
@@ -83,6 +83,19 @@ public class Premium {
 			return label;
 		}
 		throw new IllegalArgumentException("Unvalid premium type: " + hit);
+	}
+
+	public static List<String> toLabels(List<Number> hits) {
+		List<String> labels = new ArrayList<>();
+		for (Map.Entry<Number, String> typeAndLabel : all.entrySet()) {
+			for (Number hit : hits) {
+				if (hit.doubleValue() == typeAndLabel.getKey().doubleValue()) {
+					labels.add(typeAndLabel.getValue());
+					break;
+				}
+			}
+		}
+		return labels;
 	}
 
 	public static Number parseType(String typeAsString) {
