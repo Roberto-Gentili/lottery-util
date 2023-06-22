@@ -476,7 +476,7 @@ public class SimpleWorkbookTemplate implements Closeable {
 			columns,
 			color,
 			comparisonOperator,
-			new int[] {1,2},
+			1,
 			sheet -> sheet.getLastRowNum() + 1,
 			comparisonValue
 		);
@@ -486,13 +486,13 @@ public class SimpleWorkbookTemplate implements Closeable {
 		int[] columns,
 		IndexedColors color,
 		byte comparisonOperator,
-		int[] rowNumToStart,
+		int rowNumToStart,
 		Function<Sheet, Integer> rowNumberToEndSupplier,
 		String... comparisonValue
 	) {
 		Sheet currentSheet = getOrCreateSheet(this.currentSheet);
 		int rowNumberToStart =
-			currentSheet.getPaneInformation() != null && currentSheet.getPaneInformation().isFreezePane() ? rowNumToStart[1] : rowNumToStart[0];
+			currentSheet.getPaneInformation() != null && currentSheet.getPaneInformation().isFreezePane() ? rowNumToStart + 1 : rowNumToStart;
 		CellRangeAddress[] cellRangeAddress = new CellRangeAddress[columns.length];
 		for (int i = 0; i < cellRangeAddress.length; i++) {
 			String columnLetter = CellReference.convertNumToColString(columns[i]);

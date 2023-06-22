@@ -108,6 +108,7 @@ public class SELotterySimpleSimulator {
 	static final String FILE_LABEL = "File";
 	static final String HISTORICAL_UPDATE_DATE_LABEL = "Data agg. storico";
 	static final List<String> reportHeaderLabels;
+	static final List<String> summaryFormulas;
 	static final Map<String, Integer> cellIndexesCache;
 	static final Map<Integer, String> indexToLetterCache;
 
@@ -115,9 +116,13 @@ public class SELotterySimpleSimulator {
 	static Pattern regexForExtractConfigFileName = Pattern.compile("\\[.*?\\]\\[.*?\\]\\[.*?\\](.*)\\.txt");
 	static String hostName;
 	static SEStats allTimeStats;
+	static List<List<String>> header;
 
 	static {
+		cellIndexesCache = new ConcurrentHashMap<>();
+		indexToLetterCache = new ConcurrentHashMap<>();
 		hostName = NetworkUtils.INSTANCE.thisHostName();
+
 		reportHeaderLabels = new ArrayList<>();
 		reportHeaderLabels.add(EXTRACTION_DATE_LABEL);
 		Collection<String> allPremiumLabels = Premium.allLabelsList();
@@ -137,8 +142,22 @@ public class SELotterySimpleSimulator {
 		reportHeaderLabels.add(HISTORICAL_BALANCE_LABEL);
 		reportHeaderLabels.add(HISTORICAL_UPDATE_DATE_LABEL);
 		reportHeaderLabels.add(FILE_LABEL);
-		cellIndexesCache = new ConcurrentHashMap<>();
-		indexToLetterCache = new ConcurrentHashMap<>();
+		summaryFormulas = new ArrayList<>();
+
+		header = Arrays.asList(
+			reportHeaderLabels,
+			summaryFormulas
+		);
+		String columnName = convertNumToColString(0);
+		summaryFormulas.add("FORMULA_COUNTA(" + columnName + (getHeaderSize() + 1) + ":"+ columnName + getMaxRowIndexInExcelFormat() +")");
+		for (int i = 1; i < reportHeaderLabels.size()-2; i++) {
+			columnName = convertNumToColString(i);
+			summaryFormulas.add(
+				"FORMULA_SUM(" + columnName + (getHeaderSize() + 1) + ":"+ columnName + getMaxRowIndexInExcelFormat() +")"
+			);
+		}
+		summaryFormulas.add("");
+		summaryFormulas.add("");
 	}
 
 	public static void main(String[] args) throws IOException {
@@ -510,7 +529,7 @@ public class SELotterySimpleSimulator {
 						},
 						IndexedColors.YELLOW,
 						ComparisonOperator.GT,
-						new int[] {2,3},
+						getHeaderSize(),
 						sh -> sh.getLastRowNum() + 1,
 						"0"
 					);
@@ -521,7 +540,7 @@ public class SELotterySimpleSimulator {
 						},
 						IndexedColors.ORANGE,
 						ComparisonOperator.GT,
-						new int[] {2,3},
+						getHeaderSize(),
 						sh -> sh.getLastRowNum() + 1,
 						"0"
 					);
@@ -532,7 +551,7 @@ public class SELotterySimpleSimulator {
 						},
 						IndexedColors.RED,
 						ComparisonOperator.GT,
-						new int[] {2,3},
+						getHeaderSize(),
 						sh -> sh.getLastRowNum() + 1,
 						"0"
 					);
@@ -615,7 +634,7 @@ public class SELotterySimpleSimulator {
 				} else {
 					hyperLinkNumberCellStyle = firstRow.getCell(historicalReturnColIndex).getCellStyle();
 				}
-				List<Integer> rowsToBeProcessed = IntStream.range(2, sheet.getPhysicalNumberOfRows()).boxed().collect(Collectors.toList());
+				List<Integer> rowsToBeProcessed = IntStream.range(getHeaderSize(), sheet.getPhysicalNumberOfRows()).boxed().collect(Collectors.toList());
 				if (isSlave) {
 					Collections.shuffle(rowsToBeProcessed);
 				}
@@ -755,7 +774,11 @@ public class SELotterySimpleSimulator {
 	}
 
 	protected static Row getFirstRow(Sheet sheet) {
-		return sheet.getRow(2);
+		return sheet.getRow(getHeaderSize());
+	}
+
+	protected static int getHeaderSize() {
+		return header.size();
 	}
 
 	private static List<Number> parseReportWinningInfoConfig(String reportWinningInfoConfig) {
@@ -925,7 +948,7 @@ public class SELotterySimpleSimulator {
 		CellStyle dateCellStyle = null;
 		CellStyle hyperLinkStyle = null;
 		Integer currentRowNum = row.getRowNum();
-		if (currentRowNum > 2) {
+		if (currentRowNum > getHeaderSize()) {
 			Row firstRow = getFirstRow(sheet);
 			numberCellStyle = firstRow.getCell(getCellIndex(sheet, BALANCE_LABEL)).getCellStyle();
 			dateCellStyle = firstRow.getCell(getCellIndex(sheet, EXTRACTION_DATE_LABEL)).getCellStyle();
@@ -1123,24 +1146,10 @@ public class SELotterySimpleSimulator {
 		SimpleWorkbookTemplate workBookTemplate = new SimpleWorkbookTemplate(workBook);
 		Sheet sheet = workBookTemplate.getOrCreateSheet("Risultati", true);
 
-		List<String> summaryFormulas = new ArrayList<>();
-		String columnName = convertNumToColString(0);
-		summaryFormulas.add("FORMULA_COUNTA(" + columnName + "3:"+ columnName + getMaxRowIndexInExcelFormat() +")");
-		for (int i = 1; i < reportHeaderLabels.size()-2; i++) {
-			columnName = convertNumToColString(i);
-			summaryFormulas.add(
-				"FORMULA_SUM(" + columnName + "3:"+ columnName + getMaxRowIndexInExcelFormat() +")"
-			);
-		}
-		summaryFormulas.add("");
-		summaryFormulas.add("");
 		workBookTemplate.createHeader(
 			"Risultati",
 			true,
-			Arrays.asList(
-				reportHeaderLabels,
-				summaryFormulas
-			)
+			header
 		);
 		CellStyle headerNumberStyle = workBook.createCellStyle();
 		headerNumberStyle.cloneStyleFrom(sheet.getRow(1).getCell(getCellIndex(sheet, COST_LABEL)).getCellStyle());
@@ -1154,9 +1163,9 @@ public class SELotterySimpleSimulator {
 		sheet.getRow(1).getCell(getCellIndex(sheet, RETURN_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(getCellIndex(sheet, BALANCE_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(getCellIndex(sheet, BALANCE_LABEL)).setCellFormula(
-			"TEXT((SUM(" + convertNumToColString(reportHeaderLabels.indexOf(BALANCE_LABEL)) + "3:" +
+			"TEXT((SUM(" + convertNumToColString(reportHeaderLabels.indexOf(BALANCE_LABEL)) + (getHeaderSize() + 1) + ":" +
 			convertNumToColString(reportHeaderLabels.indexOf(BALANCE_LABEL)) + getMaxRowIndexInExcelFormat() +
-			")/" + convertNumToColString(reportHeaderLabels.indexOf(COST_LABEL)) + "2),\"###,00%\")"
+			")/" + convertNumToColString(reportHeaderLabels.indexOf(COST_LABEL)) + getHeaderSize() + "),\"###,00%\")"
 		);
 		sheet.getRow(1).getCell(getCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(getCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_RETURN_LABEL)).setCellStyle(headerNumberStyle);
@@ -1170,9 +1179,9 @@ public class SELotterySimpleSimulator {
 		sheet.getRow(1).getCell(getCellIndex(sheet, HISTORICAL_RETURN_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(getCellIndex(sheet, HISTORICAL_BALANCE_LABEL)).setCellStyle(headerNumberStyle);
 		sheet.getRow(1).getCell(getCellIndex(sheet, HISTORICAL_BALANCE_LABEL)).setCellFormula(
-			"TEXT((SUM(" + convertNumToColString(reportHeaderLabels.indexOf(HISTORICAL_BALANCE_LABEL)) + "3:" +
+			"TEXT((SUM(" + convertNumToColString(reportHeaderLabels.indexOf(HISTORICAL_BALANCE_LABEL)) + (getHeaderSize() + 1) + ":" +
 			convertNumToColString(reportHeaderLabels.indexOf(HISTORICAL_BALANCE_LABEL)) + getMaxRowIndexInExcelFormat() +
-			")/" + convertNumToColString(reportHeaderLabels.indexOf(HISTORICAL_COST_LABEL)) + "2),\"###,00%\")"
+			")/" + convertNumToColString(reportHeaderLabels.indexOf(HISTORICAL_COST_LABEL)) + getHeaderSize() + "),\"###,00%\")"
 		);
 		sheet.setColumnWidth(getCellIndex(sheet, EXTRACTION_DATE_LABEL), 3800);
 		sheet.setColumnWidth(getCellIndex(sheet, COST_LABEL), 3000);

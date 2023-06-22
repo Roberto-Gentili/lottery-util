@@ -8,8 +8,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.poi.common.usermodel.HyperlinkType;
@@ -31,6 +34,8 @@ import org.rg.game.lottery.engine.Premium;
 import org.rg.game.lottery.engine.SimpleWorkbookTemplate;
 
 public class SESimulationSummaryGenerator {
+	static final String EXTRACTION_COUNTER_LABEL = "Conteggio estrazioni";
+	static final String SYSTEM_COUNTER_LABEL = "Conteggio sistemi";
 
 	static {
 		ZipSecureFile.setMinInflateRatio(0);
@@ -49,14 +54,18 @@ public class SESimulationSummaryGenerator {
 			Sheet summarySheet = workBookTemplate.getOrCreateSheet("Riepilogo", true);
 			List<String> headerLabels = new ArrayList<>();
 			List<String> headerLabelsTemp = new ArrayList<>(SELotterySimpleSimulator.reportHeaderLabels);
-			List<String> headersToBeSkipped = Arrays.asList(
-				SELotterySimpleSimulator.HISTORICAL_UPDATE_DATE_LABEL,
-				SELotterySimpleSimulator.FILE_LABEL
+			List<String> headersToBeSkipped = new ArrayList<>(
+				Arrays.asList(
+					SELotterySimpleSimulator.HISTORICAL_UPDATE_DATE_LABEL,
+					SELotterySimpleSimulator.FILE_LABEL
+				)
 			);
 			headerLabelsTemp.removeAll(headersToBeSkipped);
 			headerLabels.add(SELotterySimpleSimulator.FILE_LABEL);
 			headerLabels.addAll(headerLabelsTemp);
-			headerLabels.set(headerLabels.indexOf(SELotterySimpleSimulator.EXTRACTION_DATE_LABEL), "Conteggio estrazioni");
+			headerLabels.set(headerLabels.indexOf(SELotterySimpleSimulator.EXTRACTION_DATE_LABEL), SYSTEM_COUNTER_LABEL);
+			headerLabels.add(headerLabels.indexOf(SYSTEM_COUNTER_LABEL), EXTRACTION_COUNTER_LABEL);
+			headersToBeSkipped.add(SELotterySimpleSimulator.EXTRACTION_DATE_LABEL);
 			workBookTemplate.createHeader(true, headerLabels);
 			AtomicInteger reportCounter = new AtomicInteger(0);
 			process(
@@ -186,12 +195,20 @@ public class SESimulationSummaryGenerator {
 			FormulaEvaluator evaluator = simulationWorkBook.getCreationHelper().createFormulaEvaluator();
 			Sheet resultSheet = simulationWorkBook.getSheet("Risultati");
 			summaryWorkBookTemplate.addRow();
-			Cell cellName = summaryWorkBookTemplate.addCell(report.getName()).get(0);
+			Cell cellForName = summaryWorkBookTemplate.addCell(report.getName()).get(0);
 			summaryWorkBookTemplate.setLinkForCell(
 				HyperlinkType.FILE,
-				cellName,
+				cellForName,
 				singleSimFolderRelPath + "/" + report.getName()
 			);
+			Set<Date> extractionDatesHolder = new LinkedHashSet<>();
+			int generatedSystemCounter = 0;
+			for (int i = SELotterySimpleSimulator.getHeaderSize(); i < resultSheet.getLastRowNum() + 1; i++) {
+				generatedSystemCounter++;
+				extractionDatesHolder.add(resultSheet.getRow(i).getCell(0).getDateCellValue());
+			}
+			summaryWorkBookTemplate.addCell(extractionDatesHolder.size(), "#,##0");
+			summaryWorkBookTemplate.addCell(generatedSystemCounter, "#,##0");
 			for (String cellLabel : SELotterySimpleSimulator.reportHeaderLabels) {
 				if (!headersToBeSkipped.contains(cellLabel)) {
 					Cell simulationCell = resultSheet.getRow(1).getCell(Shared.getCellIndex(resultSheet, cellLabel));
