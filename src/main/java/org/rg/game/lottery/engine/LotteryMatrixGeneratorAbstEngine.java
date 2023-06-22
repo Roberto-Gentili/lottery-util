@@ -65,7 +65,9 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	protected Integer avoidMode;
 	protected Predicate<List<Integer>> combinationFilter;
 	protected ExpressionToPredicateEngine<List<Integer>> combinationFilterPreProcessor;
+	protected Integer seedShifter;
 	public LocalDate extractionDate;
+
 
 
 	LotteryMatrixGeneratorAbstEngine() {
@@ -78,6 +80,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		comboSequencedIndexSelectorCounter = new AtomicInteger(0);
 		extractionArchiveStartDate = config.getProperty("competition.archive.start-date");
 		extractionArchiveForSeedStartDate = config.getProperty("seed-data.start-date");
+		seedShifter = Integer.valueOf(config.getProperty("seed-data.seed-shift", "0"));
 		comboIndexSelectorType = config.getProperty("combination.selector", "random");
 		String extractionDatesAsString = config.getProperty("competition");
 		Collection<LocalDate> extractionDates = computeExtractionDates(extractionDatesAsString);

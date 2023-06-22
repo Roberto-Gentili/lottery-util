@@ -101,6 +101,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		//Per il calcolo del seed prendiamo sempre l'istanza SEStats più aggiornata
 		//In modo da avere le date corrette per i concorsi che hanno subito anticipi o posticipi
 		Map.Entry<LocalDate, Long> seedRecord = getSEStatsForSeed().getSeedData(extractionDate);
+		seedRecord.setValue(seedRecord.getValue() + seedShifter);
 		random = new Random(seedRecord.getValue());
 		buildComboIndexSupplier();
 		Map<String, Object> seedData = new LinkedHashMap<>();
