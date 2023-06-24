@@ -108,15 +108,17 @@ class SEIntegralSystemAnalyzer {
 				if (bestSystems.size() > 100) {
 					Map.Entry<List<Integer>, Map<Number, Integer>> removedItem = bestSystems.pollLast();
 					if (removedItem != addedItem) {
-						store(basePath, cacheKey, data, dataFromCacheWrapper, combo, allPremiums, "Replacing data from rank: ");
+						store(basePath, cacheKey, data, dataFromCacheWrapper, combo, allPremiums);
+						LogUtils.info("Replacing data from rank: " + ComboHandler.toString(combo, ", ") + ": " + allPremiums);
 					}
 				} else if (addedItemFlag) {
-					store(basePath, cacheKey, data, dataFromCacheWrapper, combo, allPremiums, "Adding data to rank: ");
+					store(basePath, cacheKey, data, dataFromCacheWrapper, combo, allPremiums);
+					LogUtils.info("Adding data to rank: " + ComboHandler.toString(combo, ", ") + ": " + allPremiums);
 				}
 			}
 			if (processedSystemsCounterWrapper.get().mod(modder).compareTo(BigInteger.ZERO) == 0) {
-				store(basePath, cacheKey, data, dataFromCacheWrapper, combo, allPremiums, "Storing rank data: ");
-	    		LogUtils.info(processedSystemsCounterWrapper.get() + " of combinations have been processed");
+				store(basePath, cacheKey, data, dataFromCacheWrapper, combo, allPremiums);
+	    		LogUtils.info("Storing rank data: ");
     		}
 			/*Map<>
 			for (Integer number : combo) {
@@ -139,14 +141,11 @@ class SEIntegralSystemAnalyzer {
 		AtomicReference<Map.Entry<AtomicReference<BigInteger>,
 		Collection<Map.Entry<List<Integer>, Map<Number, Integer>>>>> dataFromCacheWrapper,
 		List<Integer> combo,
-		Map<Number, Integer> allPremiums,
-		String messagePrefix
+		Map<Number, Integer> allPremiums
 	) {
 		Collection<Map.Entry<List<Integer>, Map<Number, Integer>>> comboAndPremiumDataToBeCached = new ArrayList<>();
 		dataFromCacheWrapper.get().setValue(comboAndPremiumDataToBeCached);
 		comboAndPremiumDataToBeCached.addAll(data.getValue());
-		IOUtils.INSTANCE.store(cacheKey, (Serializable)dataFromCacheWrapper.get(), basePath);
-		LogUtils.info(messagePrefix + ComboHandler.toString(combo, ", ") + ": " + allPremiums);
-	}
+		IOUtils.INSTANCE.store(cacheKey, (Serializable)dataFromCacheWrapper.get(), basePath);	}
 
 }
