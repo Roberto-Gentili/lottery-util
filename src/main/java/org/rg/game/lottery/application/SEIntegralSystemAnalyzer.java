@@ -108,20 +108,20 @@ class SEIntegralSystemAnalyzer {
 				if (bestSystems.size() > 100) {
 					Map.Entry<List<Integer>, Map<Number, Integer>> removedItem = bestSystems.pollLast();
 					if (removedItem != addedItem) {
-						store(basePath, cacheKey, data, dataFromCacheWrapper, combo, allPremiums);
+						store(basePath, cacheKey, data, dataFromCacheWrapper, allPremiums);
 						LogUtils.info(
 							"Replacing data from rank:\n\t" + ComboHandler.toString(removedItem.getKey(), ", ") + ": " + removedItem.getValue() + "\n" +
 							"\t\twith\n"+
-							"\t" + ComboHandler.toString(combo, ", ") + ": " + allPremiums
+							"\t" + ComboHandler.toString(addedItem.getKey(), ", ") + ": " + addedItem.getValue()
 						);
 					}
 				} else if (addedItemFlag) {
-					store(basePath, cacheKey, data, dataFromCacheWrapper, combo, allPremiums);
+					store(basePath, cacheKey, data, dataFromCacheWrapper, allPremiums);
 					LogUtils.info("Adding data to rank: " + ComboHandler.toString(combo, ", ") + ": " + allPremiums);
 				}
 			}
 			if (processedSystemsCounterWrapper.get().mod(modder).compareTo(BigInteger.ZERO) == 0) {
-				store(basePath, cacheKey, data, dataFromCacheWrapper, combo, allPremiums);
+				store(basePath, cacheKey, data, dataFromCacheWrapper, allPremiums);
 	    		LogUtils.info("Storing rank data: ");
     		}
 			/*Map<>
@@ -144,7 +144,6 @@ class SEIntegralSystemAnalyzer {
 		Map.Entry<AtomicReference<BigInteger>, TreeSet<Map.Entry<List<Integer>, Map<Number, Integer>>>> data,
 		AtomicReference<Map.Entry<AtomicReference<BigInteger>,
 		Collection<Map.Entry<List<Integer>, Map<Number, Integer>>>>> dataFromCacheWrapper,
-		List<Integer> combo,
 		Map<Number, Integer> allPremiums
 	) {
 		Collection<Map.Entry<List<Integer>, Map<Number, Integer>>> comboAndPremiumDataToBeCached = new ArrayList<>();
