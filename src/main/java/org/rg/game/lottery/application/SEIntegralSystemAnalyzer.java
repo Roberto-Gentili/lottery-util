@@ -108,22 +108,15 @@ class SEIntegralSystemAnalyzer {
 				if (bestSystems.size() > 100) {
 					Map.Entry<List<Integer>, Map<Number, Integer>> removedItem = bestSystems.pollLast();
 					if (removedItem != addedItem) {
-						Collection<Map.Entry<List<Integer>, Map<Number, Integer>>> comboAndPremiumDataToBeCached = new ArrayList<>();
-						dataFromCacheWrapper.get().setValue(comboAndPremiumDataToBeCached);
-						comboAndPremiumDataToBeCached.addAll(data.getValue());
-						IOUtils.INSTANCE.store(cacheKey, (Serializable)dataFromCacheWrapper.get(), basePath);
-						LogUtils.info("Replacing data from rank: " + ComboHandler.toString(combo, ", ") + ": " + allPremiums);
+						store(basePath, cacheKey, data, dataFromCacheWrapper, combo, allPremiums, "Replacing data from rank: ");
 					}
 				} else if (addedItemFlag) {
-					Collection<Map.Entry<List<Integer>, Map<Number, Integer>>> comboAndPremiumDataToBeCached = new ArrayList<>();
-					dataFromCacheWrapper.get().setValue(comboAndPremiumDataToBeCached);
-					comboAndPremiumDataToBeCached.addAll(data.getValue());
-					IOUtils.INSTANCE.store(cacheKey, (Serializable)dataFromCacheWrapper.get(), basePath);
-					LogUtils.info("Adding data to rank: " + ComboHandler.toString(combo, ", ") + ": " + allPremiums);
+					store(basePath, cacheKey, data, dataFromCacheWrapper, combo, allPremiums, "Adding data to rank: ");
 				}
 			}
 			if (processedSystemsCounterWrapper.get().mod(modder).compareTo(BigInteger.ZERO) == 0) {
-	    		LogUtils.info("Tested " + processedSystemsCounterWrapper.get() + " of combinations");
+				store(basePath, cacheKey, data, dataFromCacheWrapper, combo, allPremiums, "Storing rank data: ");
+	    		LogUtils.info(processedSystemsCounterWrapper.get() + " of combinations have been processed");
     		}
 			/*Map<>
 			for (Integer number : combo) {
@@ -139,6 +132,21 @@ class SEIntegralSystemAnalyzer {
 			sEStats.*/
 		});
 		LogUtils.info(processedSystemsCounterWrapper.get() + " of combinations analyzed");
+	}
+
+	protected static void store(String basePath, String cacheKey,
+		Map.Entry<AtomicReference<BigInteger>, TreeSet<Map.Entry<List<Integer>, Map<Number, Integer>>>> data,
+		AtomicReference<Map.Entry<AtomicReference<BigInteger>,
+		Collection<Map.Entry<List<Integer>, Map<Number, Integer>>>>> dataFromCacheWrapper,
+		List<Integer> combo,
+		Map<Number, Integer> allPremiums,
+		String messagePrefix
+	) {
+		Collection<Map.Entry<List<Integer>, Map<Number, Integer>>> comboAndPremiumDataToBeCached = new ArrayList<>();
+		dataFromCacheWrapper.get().setValue(comboAndPremiumDataToBeCached);
+		comboAndPremiumDataToBeCached.addAll(data.getValue());
+		IOUtils.INSTANCE.store(cacheKey, (Serializable)dataFromCacheWrapper.get(), basePath);
+		LogUtils.info(messagePrefix + ComboHandler.toString(combo, ", ") + ": " + allPremiums);
 	}
 
 }
