@@ -68,7 +68,7 @@ public class IOUtils {
 		try (FileInputStream fIS = new FileInputStream(basePath + "/" + key /*Base64.getEncoder().encodeToString(key.getBytes(StandardCharsets.UTF_8))*/ + ".ser");
 			ObjectInputStream oIS = new ObjectInputStream(fIS)) {
 			T effectiveItem = (T) oIS.readObject();
-			LogUtils.info("Object with id '" + key + "' loaded from physical cache: " + effectiveItem);
+			LogUtils.info("Object with id '" + key + "' loaded from physical cache" /*+ ": " + effectiveItem*/);
 	        return effectiveItem;
 		} catch (FileNotFoundException exc) {
 			return null;

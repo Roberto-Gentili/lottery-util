@@ -77,6 +77,12 @@ class SEIntegralSystemAnalyzer {
 						"Cache succesfully restored, starting from index " + MathUtils.INSTANCE.format(processedSystemsCounterWrapper.get()) + ". " +
 						MathUtils.INSTANCE.format(cH.getSize().subtract(processedSystemsCounterWrapper.get())) + " systems remained."
 					);
+					LogUtils.info(
+						String.join(
+							"\n",
+							data.getValue().stream().map(entry -> ComboHandler.toString(entry.getKey(), ", ") + ": " + entry.getValue()).collect(Collectors.toList())
+						)
+					);
 					return;
 				}
 				return;
