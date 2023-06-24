@@ -10,7 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.TreeSet;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
@@ -20,18 +21,22 @@ public class ComboHandler {
 
 	private List<Integer> numbers;
 	private long combinationSize;
-	private Long size;
+	private BigInteger size;
 
 	public ComboHandler(List<Integer> numbers, long combinationSize) {
 		this.numbers = new ArrayList<>(numbers);
 		this.combinationSize = combinationSize;
 	}
 
-	public Long getSize() {
+	public BigInteger getSize() {
 		if (size == null) {
-			size = sizeOfAsLong(numbers.size(), combinationSize);
+			size = sizeOf(numbers.size(), combinationSize);
 		}
 		return size;
+	}
+
+	public long getCombinationSize() {
+		return combinationSize;
 	}
 
 	public static Long sizeOfAsLong(Number numbersCount, Number combinationCount) {
@@ -61,15 +66,19 @@ public class ComboHandler {
 		return getSize().intValue();
 	}
 
-	public Map<Integer, List<Integer>> find(Collection<Integer> indexes, boolean useSameCollectionInstance) {
-		Map<Integer, List<Integer>> result = new HashMap<>();
+	public long getSizeAsLong() {
+		return getSize().longValue();
+	}
+
+	public Map<Long, List<Integer>> find(Collection<Long> indexes, boolean useSameCollectionInstance) {
+		Map<Long, List<Integer>> result = new HashMap<>();
 		if (indexes.isEmpty()) {
 			return result;
 		}
-		Collection<Integer> indexesToBeFound = useSameCollectionInstance ? indexes : new HashSet<>(indexes);
+		Collection<Long> indexesToBeFound = useSameCollectionInstance ? indexes : new HashSet<>(indexes);
 		find(
 			numbers,
-			new AtomicInteger(0),
+			new AtomicLong(0),
 			new int[(int)combinationSize],
 			0,
 			numbers.size() - 1,
@@ -83,21 +92,21 @@ public class ComboHandler {
 		return result;
 	}
 
-	private Map<Integer, List<Integer>> find(
+	private Map<Long, List<Integer>> find(
 		List<Integer> numbers,
-		AtomicInteger combinationCounter,
+		AtomicLong combinationCounter,
 		int indexes[],
 		int start,
 		int end,
 		int index,
-		Collection<Integer> indexesToBeFound,
-		Map<Integer, List<Integer>> collector
+		Collection<Long> indexesToBeFound,
+		Map<Long, List<Integer>> collector
 	) {
         if (indexesToBeFound.isEmpty()) {
         	return collector;
         }
 	    if (index == indexes.length) {
-	    	Integer currentIndex = combinationCounter.getAndIncrement();
+	    	Long currentIndex = combinationCounter.getAndIncrement();
 	    	if (indexesToBeFound.remove(currentIndex)) {
 	    		collector.put(
     				currentIndex,
@@ -116,6 +125,41 @@ public class ComboHandler {
 	        find(numbers, combinationCounter, indexes, start + 1, end, index, indexesToBeFound, collector);
 	    }
 	    return collector;
+	}
+
+	public void iterate(
+		Consumer<List<Integer>> action
+	) {
+		iterate(
+			this.numbers,
+			new int[(int)combinationSize],
+			0,
+			numbers.size() - 1,
+			0,
+			action
+		);
+	}
+
+	private void iterate(
+		List<Integer> numbers,
+		int indexes[],
+		int start,
+		int end,
+		int index,
+		Consumer<List<Integer>> action
+	) {
+	    if (index == indexes.length) {
+	    	action.accept(
+		    	Arrays.stream(indexes)
+				.map(numbers::get)
+				.boxed()
+			    .collect(Collectors.toList())
+			 );
+	    } else if (start <= end) {
+	        indexes[index] = start;
+	        iterate(numbers, indexes, start + 1, end, index + 1, action);
+	        iterate(numbers, indexes, start + 1, end, index, action);
+	    }
 	}
 
 	public static String toExpression(Collection<Integer> numbers) {

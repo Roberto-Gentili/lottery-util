@@ -68,4 +68,8 @@ public class MathUtils {
 		return factorial(BigInteger.valueOf(number.longValue()));
 	}
 
+	public String format(Number value) {
+		return String.format("%,d", value);
+	}
+
 }

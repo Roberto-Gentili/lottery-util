@@ -686,16 +686,17 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		AtomicLong indexGeneratorCallsCounter,
 		AtomicInteger uniqueIndexCounter
 	) {
-		List<Integer> effectiveIndexes = new ArrayList<>();
-		Set<Integer> indexesToBeProcessed = new HashSet<>();
+		List<Long> effectiveIndexes = new ArrayList<>();
+		Set<Long> indexesToBeProcessed = new HashSet<>();
 		Integer size = comboHandler.getSizeAsInt();
 		int randomCollSize = Math.min(size, 10_000_000);
 		while (effectiveIndexes.size() < randomCollSize) {
 			Integer idx = comboIndexSupplier.apply(size);
 			indexGeneratorCallsCounter.incrementAndGet();
 			if (!alreadyComputed[idx]) {
-				effectiveIndexes.add(idx);
-				indexesToBeProcessed.add(idx);
+				Long idxAsLongValue = idx.longValue();
+				effectiveIndexes.add(idxAsLongValue);
+				indexesToBeProcessed.add(idxAsLongValue);
 				uniqueIndexCounter.incrementAndGet();
 				alreadyComputed[idx] = true;
 			} else {
@@ -711,9 +712,9 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		if (size <= uniqueIndexCounter.get() && indexesToBeProcessed.isEmpty()) {
 			throw new AllRandomNumbersHaveBeenGeneratedException();
 		}
-		Map<Integer, List<Integer>> indexForCombos = comboHandler.find(indexesToBeProcessed, true);
+		Map<Long, List<Integer>> indexForCombos = comboHandler.find(indexesToBeProcessed, true);
 		List<List<Integer>> combos = new ArrayList<>();
-		for (Integer index : effectiveIndexes) {
+		for (Long index : effectiveIndexes) {
 			List<Integer> combo = indexForCombos.get(index);
 			combos.add(combo);
 		}

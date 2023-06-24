@@ -2,6 +2,7 @@ package org.rg.game.lottery.engine;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +27,9 @@ public class Premium {
 	private static final Map<Number, String> all;
 	private static final List<String> allLabelsList;
 	private static final List<Number> allTypesList;
+	private static final List<Number> allTypesListReversed;
 	private static final Number[] allTypes;
+	private static final Number[] allTypesReversed;
 	private static final List<Number> allHighTypesList;
 	private static final Number[] allHighTypes;
 
@@ -40,7 +43,10 @@ public class Premium {
 		all.put(TYPE_SIX, LABEL_SIX);
 		allLabelsList = new ArrayList<>(all.values());
 		allTypesList = new ArrayList<>(all.keySet());
+		allTypesListReversed = new ArrayList<>(allTypesList);
+		Collections.reverse(allTypesListReversed);
 		allTypes = allTypesList.toArray(new Number[allTypesList.size()]);
+		allTypesReversed = allTypesListReversed.toArray(new Number[allTypesListReversed.size()]);
 		allHighTypesList = new ArrayList<>(
 			Arrays.asList(
 				Premium.toType(Premium.LABEL_FIVE),
@@ -65,6 +71,10 @@ public class Premium {
 
 	public static Number[] allTypes() {
 		return allTypes;
+	}
+
+	public static Number[] allTypesReversed() {
+		return allTypesReversed;
 	}
 
 	public static List<Number> allHighTypesList() {

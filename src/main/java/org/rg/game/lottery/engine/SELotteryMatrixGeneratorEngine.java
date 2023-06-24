@@ -185,11 +185,11 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 			LogUtils.info();
 		}
 		ComboHandler comboHandler = new ComboHandler(numbers, 6);
-		Collection<Integer> comboPartitionIndexes = new HashSet<>();
+		Collection<Long> comboPartitionIndexes = new HashSet<>();
 		int discardedFromIntegralSystem = 0;
 		int elaborationUnitSize = 25_000_000;
 		combinationFilter = CombinationFilterFactory.INSTANCE.parse(filterAsString);
-		for (int i = 0 ; i < comboHandler.getSizeAsInt(); i++) {
+		for (long i = 0 ; i < comboHandler.getSizeAsLong(); i++) {
 			comboPartitionIndexes.add(i);
 			if (comboPartitionIndexes.size() == elaborationUnitSize) {
 				/*if (fineLog) {

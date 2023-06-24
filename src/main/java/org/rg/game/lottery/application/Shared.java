@@ -5,11 +5,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.TextStyle;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Locale;
 
 import org.apache.poi.ss.usermodel.Cell;
@@ -22,9 +19,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.rg.game.core.CollectionUtils;
-import org.rg.game.core.LogUtils;
 import org.rg.game.core.TimeUtils;
-import org.rg.game.lottery.engine.ComboHandler;
 import org.rg.game.lottery.engine.PersistentStorage;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.SEStats;
@@ -122,8 +117,24 @@ class Shared {
 		return value;
 	}
 
+	static String rightAlignedString(String value, int emptySpacesCount) {
+		return String.format("%" + emptySpacesCount + "s", value);
+	}
+
+	static Cell toHighlightedBoldedCell(Workbook workbook, Cell cell, IndexedColors color) {
+		CellStyle highLightedBoldedNumberCellStyle = workbook.createCellStyle();
+		highLightedBoldedNumberCellStyle.cloneStyleFrom(cell.getCellStyle());
+		XSSFFont boldFont = (XSSFFont) workbook.createFont();
+		boldFont.setBold(true);
+		highLightedBoldedNumberCellStyle.setFont(boldFont);
+		highLightedBoldedNumberCellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+		highLightedBoldedNumberCellStyle.setFillForegroundColor(color.getIndex());
+		cell.setCellStyle(highLightedBoldedNumberCellStyle);
+		return cell;
+	}
+
 	public static void main(String[] args) {
-		List<Integer> ourNumbers = Arrays.asList(
+		/*List<Integer> ourNumbers = Arrays.asList(
 			1,2,3,4,5,7,8,9,
 			10,11,12,13,14,16,17,19,
 			20,21,23,24,25,27,28,29,
@@ -162,23 +173,7 @@ class Shared {
 		for (List<Integer> winningCombo : system) {
 			inClauses.add("in " + ComboHandler.toString(winningCombo, ",") + ":" + bound + "," + 6);
 		}
-		LogUtils.info("(" + String.join("|", inClauses) + ")");
-	}
-
-	static String rightAlignedString(String value, int emptySpacesCount) {
-		return String.format("%" + emptySpacesCount + "s", value);
-	}
-
-	static Cell toHighlightedBoldedCell(Workbook workbook, Cell cell, IndexedColors color) {
-		CellStyle highLightedBoldedNumberCellStyle = workbook.createCellStyle();
-		highLightedBoldedNumberCellStyle.cloneStyleFrom(cell.getCellStyle());
-		XSSFFont boldFont = (XSSFFont) workbook.createFont();
-		boldFont.setBold(true);
-		highLightedBoldedNumberCellStyle.setFont(boldFont);
-		highLightedBoldedNumberCellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-		highLightedBoldedNumberCellStyle.setFillForegroundColor(color.getIndex());
-		cell.setCellStyle(highLightedBoldedNumberCellStyle);
-		return cell;
+		LogUtils.info("(" + String.join("|", inClauses) + ")");*/
 	}
 
 }
