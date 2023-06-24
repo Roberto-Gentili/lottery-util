@@ -109,7 +109,11 @@ class SEIntegralSystemAnalyzer {
 					Map.Entry<List<Integer>, Map<Number, Integer>> removedItem = bestSystems.pollLast();
 					if (removedItem != addedItem) {
 						store(basePath, cacheKey, data, dataFromCacheWrapper, combo, allPremiums);
-						LogUtils.info("Replacing data from rank: " + ComboHandler.toString(combo, ", ") + ": " + allPremiums);
+						LogUtils.info(
+							"Replacing data from rank:\n\t" + ComboHandler.toString(removedItem.getKey(), ", ") + ": " + removedItem.getValue() +
+							"\n\t\twith"+
+							ComboHandler.toString(combo, ", ") + ": " + allPremiums
+						);
 					}
 				} else if (addedItemFlag) {
 					store(basePath, cacheKey, data, dataFromCacheWrapper, combo, allPremiums);
