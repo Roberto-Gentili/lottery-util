@@ -144,7 +144,7 @@ class SEIntegralSystemAnalyzer {
 	protected static void printData(
 		Map.Entry<AtomicReference<BigInteger>, TreeSet<Map.Entry<List<Integer>, Map<Number, Integer>>>> data
 	) {
-		LogUtils.info("Current data:\n");
+		LogUtils.info("Current data:");
 		LogUtils.info(
 			String.join(
 				"\n",
