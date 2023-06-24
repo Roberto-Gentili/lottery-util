@@ -110,9 +110,9 @@ class SEIntegralSystemAnalyzer {
 					if (removedItem != addedItem) {
 						store(basePath, cacheKey, data, dataFromCacheWrapper, combo, allPremiums);
 						LogUtils.info(
-							"Replacing data from rank:\n\t" + ComboHandler.toString(removedItem.getKey(), ", ") + ": " + removedItem.getValue() +
-							"\n\t\twith"+
-							ComboHandler.toString(combo, ", ") + ": " + allPremiums
+							"Replacing data from rank:\n\t" + ComboHandler.toString(removedItem.getKey(), ", ") + ": " + removedItem.getValue() + "\n" +
+							"\t\twith\n"+
+							"\t" + ComboHandler.toString(combo, ", ") + ": " + allPremiums
 						);
 					}
 				} else if (addedItemFlag) {
