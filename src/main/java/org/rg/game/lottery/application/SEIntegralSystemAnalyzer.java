@@ -77,12 +77,7 @@ class SEIntegralSystemAnalyzer {
 						"Cache succesfully restored, starting from index " + MathUtils.INSTANCE.format(processedSystemsCounterWrapper.get()) + ". " +
 						MathUtils.INSTANCE.format(cH.getSize().subtract(processedSystemsCounterWrapper.get())) + " systems remained."
 					);
-					LogUtils.info(
-						String.join(
-							"\n",
-							data.getValue().stream().map(entry -> ComboHandler.toString(entry.getKey(), ", ") + ": " + entry.getValue()).collect(Collectors.toList())
-						)
-					);
+					printData(data);
 					return;
 				}
 				return;
@@ -127,8 +122,8 @@ class SEIntegralSystemAnalyzer {
 				}
 			}
 			if (processedSystemsCounterWrapper.get().mod(modder).compareTo(BigInteger.ZERO) == 0) {
+				LogUtils.info(MathUtils.INSTANCE.format(processedSystemsCounterWrapper.get()) + " of systems have been processed");
 				store(basePath, cacheKey, data, dataFromCacheWrapper, allPremiums);
-	    		LogUtils.info("Storing rank data: ");
     		}
 			/*Map<>
 			for (Integer number : combo) {
@@ -144,6 +139,18 @@ class SEIntegralSystemAnalyzer {
 			sEStats.*/
 		});
 		LogUtils.info(processedSystemsCounterWrapper.get() + " of combinations analyzed");
+	}
+
+	protected static void printData(
+		Map.Entry<AtomicReference<BigInteger>, TreeSet<Map.Entry<List<Integer>, Map<Number, Integer>>>> data
+	) {
+		LogUtils.info("Current data:\n");
+		LogUtils.info(
+			String.join(
+				"\n",
+				data.getValue().stream().map(entry -> ComboHandler.toString(entry.getKey(), ", ") + ": " + entry.getValue()).collect(Collectors.toList())
+			)
+		);
 	}
 
 	protected static void store(String basePath, String cacheKey,
