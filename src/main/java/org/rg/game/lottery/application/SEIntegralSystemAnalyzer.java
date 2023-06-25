@@ -19,6 +19,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.rg.game.core.CollectionUtils;
 import org.rg.game.core.IOUtils;
 import org.rg.game.core.LogUtils;
 import org.rg.game.core.MathUtils;
@@ -178,7 +179,13 @@ class SEIntegralSystemAnalyzer {
 				String[] blockAssigneeInfo = blockAssignee.replaceAll("\\s+","").split(":");
 				if (blockAssigneeInfo[0].equalsIgnoreCase(thisHostName)) {
 					for (String blockIndex : blockAssigneeInfo[1].split(",")) {
-						blocks.add(cacheRecordTemp.getBlock(Integer.valueOf(blockIndex) - 1));
+						if (blockIndex.equalsIgnoreCase("odd")) {
+							blocks.addAll(CollectionUtils.odd(cacheRecordTemp.getBlocks()));
+						} else if (blockIndex.equalsIgnoreCase("even")) {
+							blocks.addAll(CollectionUtils.even(cacheRecordTemp.getBlocks()));
+						} else {
+							blocks.add(cacheRecordTemp.getBlock(Integer.valueOf(blockIndex) - 1));
+						}
 					}
 				}
 			}

@@ -1,6 +1,8 @@
 package org.rg.game.core;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Properties;
@@ -31,6 +33,31 @@ public class CollectionUtils {
 	        lastElement = element;
 	    }
 	    return lastElement;
+	}
+	public static <T> Collection<T> even(Collection<T> elements) {
+		Collection<T> items = new ArrayList<>();
+		Iterator<T> elementsIterator = elements.iterator();
+		int j = 0;
+		while (elementsIterator.hasNext()) {
+			T item = elementsIterator.next();
+			if (j++ % 2 == 0) {
+		    	items.add(item);
+		    }
+		}
+		return items;
+	}
+
+	public static <T> Collection<T> odd(Collection<T> elements) {
+		Collection<T> items = new ArrayList<>();
+		Iterator<T> elementsIterator = elements.iterator();
+		int j = 0;
+		while (elementsIterator.hasNext()) {
+			T item = elementsIterator.next();
+			if (j++ % 2 != 0) {
+		    	items.add(item);
+		    }
+		}
+		return items;
 	}
 
 }
