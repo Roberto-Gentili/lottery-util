@@ -186,6 +186,13 @@ class SEIntegralSystemAnalyzer {
 							blocks.addAll(CollectionUtils.odd(cacheRecordTemp.getBlocks()));
 						} else if (blockIndex.equalsIgnoreCase("even")) {
 							blocks.addAll(CollectionUtils.even(cacheRecordTemp.getBlocks()));
+						} else if (blockIndex.contains("/")) {
+							String[] subListsInfo = blockIndex.split("/");
+							List<List<Block>> subList =
+								CollectionUtils.toSubLists((List<Block>)cacheRecordTemp.getBlocks(),
+									Double.valueOf(Math.ceil(((List<Block>)cacheRecordTemp.getBlocks()).size() / Double.valueOf(subListsInfo[1]))).intValue()
+								);
+							blocks.addAll(subList.get(Integer.valueOf(subListsInfo[0]) - 1));
 						} else {
 							blocks.add(cacheRecordTemp.getBlock(Integer.valueOf(blockIndex) - 1));
 						}
