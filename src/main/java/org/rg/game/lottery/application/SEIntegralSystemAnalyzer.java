@@ -47,17 +47,20 @@ class SEIntegralSystemAnalyzer {
 				configurationFileFolders
 			);
 		for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles)) {
-			execute(config);
+			analyze(config);
 		}
 
 	}
 
-	protected static void execute(Properties config) {
+	protected static void analyze(Properties config) {
 		long combinationSize = Long.valueOf(config.getProperty("combination.components"));
 		ComboHandler cH = new ComboHandler(IntStream.range(1, 91).boxed().collect(Collectors.toList()), combinationSize);
 		BigInteger modderForSkipLog = BigInteger.valueOf(1_000_000_000);
-		BigInteger modderForAutoSave = BigInteger.valueOf(10_000_000);
-		SEStats sEStats = SEStats.get("02/07/2009", "23/06/2023");
+		BigInteger modderForAutoSave = new BigInteger(config.getProperty("autosave-every"));
+		SEStats sEStats = SEStats.get(
+			config.getProperty("competition.archive.start-date"),
+			config.getProperty("competition.archive.end-date")
+		);
 		Collection<List<Integer>> allWinningCombos = sEStats.getAllWinningCombosWithJollyAndSuperstar().values();
 		LogUtils.info("All systems size: " +  MathUtils.INSTANCE.format(cH.getSize()));
 		String basePath = PersistentStorage.buildWorkingPath("Analisi sistemi integrali");
@@ -127,7 +130,7 @@ class SEIntegralSystemAnalyzer {
 			for (Number premiumType : Premium.allTypesReversed()) {
 				allPremiums.put(premiumType, 0);
 			}
-			allWinningCombos.stream().forEach(winningComboWithSuperStar -> {
+			for (List<Integer> winningComboWithSuperStar : allWinningCombos) {
 				Map<Number, Integer> premiums = SEPremium.checkIntegral(combo, winningComboWithSuperStar);
 				for (Map.Entry<Number, Integer> premiumTypeAndCounter : allPremiums.entrySet()) {
 					Number premiumType = premiumTypeAndCounter.getKey();
@@ -136,7 +139,7 @@ class SEIntegralSystemAnalyzer {
 						allPremiums.put(premiumType, allPremiums.get(premiumType) + premiumCounter);
 					}
 				}
-			});
+			}
 			boolean highWinningFound = false;
 			for (Map.Entry<Number, Integer> premiumTypeAndCounter : allPremiums.entrySet()) {
 				if (premiumTypeAndCounter.getKey().doubleValue() > Premium.TYPE_FIVE.doubleValue() && premiumTypeAndCounter.getValue() > 0) {
@@ -162,7 +165,7 @@ class SEIntegralSystemAnalyzer {
 					LogUtils.info("Adding data to rank: " + ComboHandler.toString(combo, ", ") + ": " + allPremiums);
 				}
 			}
-			if (iterationData.getCounter().mod(modderForAutoSave).compareTo(BigInteger.ZERO) == 0) {
+			if (iterationData.getCounter().mod(modderForAutoSave).compareTo(BigInteger.ZERO) == 0 || iterationData.getCounter().compareTo(currentBlock.getEnd()) == 0) {
 				LogUtils.info(MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems have been processed");
 				store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock);
     		}
