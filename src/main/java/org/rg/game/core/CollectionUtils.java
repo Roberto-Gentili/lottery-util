@@ -40,7 +40,7 @@ public class CollectionUtils {
 		int j = 0;
 		while (elementsIterator.hasNext()) {
 			T item = elementsIterator.next();
-			if (j++ % 2 == 0) {
+			if (j++ % 2 != 0) {
 		    	items.add(item);
 		    }
 		}
@@ -53,7 +53,7 @@ public class CollectionUtils {
 		int j = 0;
 		while (elementsIterator.hasNext()) {
 			T item = elementsIterator.next();
-			if (j++ % 2 != 0) {
+			if (j++ % 2 == 0) {
 		    	items.add(item);
 		    }
 		}
