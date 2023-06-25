@@ -67,7 +67,7 @@ class SEIntegralSystemAnalyzer {
 			new AtomicReference<>(
 				new AbstractMap.SimpleEntry<>(processedSystemsCounterWrapper, null)
 			);
-		cH.iterate(combo -> {
+		cH.iterate(iterationData -> {
 			processedSystemsCounterWrapper.set(processedSystemsCounterWrapper.get().add(BigInteger.ONE));
 			BigInteger cachedIndex = cachedProcessedSystemsCounterWrapper.get();
 			if (cachedIndex != null) {
@@ -82,6 +82,7 @@ class SEIntegralSystemAnalyzer {
 				}
 				return;
 			}
+			List<Integer> combo = iterationData.getCombo();
 			Map<Number, Integer> allPremiums = new LinkedHashMap<>();
 			for (Number premiumType : Premium.allTypesReversed()) {
 				allPremiums.put(premiumType, 0);

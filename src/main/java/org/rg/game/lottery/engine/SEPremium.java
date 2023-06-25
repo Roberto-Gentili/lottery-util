@@ -32,7 +32,8 @@ public class SEPremium {
 			.computeIfAbsent(winningType, wT -> new TreeMap<>(MathUtils.INSTANCE.numberComparator));
 		if (results.isEmpty()) {
 			LogUtils.info("Caching winning type " + winningType + " for combo with size " + combo.size());
-			new ComboHandler(combo, 6).iterate(cmb -> {
+			new ComboHandler(combo, 6).iterate(iterationData -> {
+				List<Integer> cmb = iterationData.getCombo();
 				Number hitCounter = 0;
 				for (Integer number : winningCombo) {
 					if (cmb.contains(number)) {

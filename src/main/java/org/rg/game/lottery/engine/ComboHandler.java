@@ -128,11 +128,11 @@ public class ComboHandler {
 	}
 
 	public void iterate(
-		Consumer<List<Integer>> action
+		Consumer<IterationData> action
 	) {
+		IterationData iterationData = new IterationData();
 		iterate(
-			this.numbers,
-			new int[(int)combinationSize],
+			iterationData,
 			0,
 			numbers.size() - 1,
 			0,
@@ -141,24 +141,30 @@ public class ComboHandler {
 	}
 
 	private void iterate(
-		List<Integer> numbers,
-		int indexes[],
+		IterationData iterationData,
 		int start,
 		int end,
 		int index,
-		Consumer<List<Integer>> action
+		Consumer<IterationData> action
 	) {
-	    if (index == indexes.length) {
-	    	action.accept(
-		    	Arrays.stream(indexes)
-				.map(numbers::get)
-				.boxed()
-			    .collect(Collectors.toList())
-			 );
+	    if (index == iterationData.indexes.length) {
+	    	action.accept(iterationData);
 	    } else if (start <= end) {
-	        indexes[index] = start;
-	        iterate(numbers, indexes, start + 1, end, index + 1, action);
-	        iterate(numbers, indexes, start + 1, end, index, action);
+	    	iterationData.indexes[index] = start;
+	        iterate(
+        		iterationData,
+        		start + 1,
+        		end,
+        		index + 1,
+        		action
+    		);
+	        iterate(
+        		iterationData,
+        		start + 1,
+        		end,
+        		index,
+        		action
+			);
 	    }
 	}
 
@@ -219,6 +225,26 @@ public class ComboHandler {
 	public static int processAndSum(List<Integer> combo, UnaryOperator<Integer> numberProcessor) {
 		return combo.stream().map(numberProcessor).collect(Collectors.toList())
 		.stream().collect(Collectors.summingInt(Integer::intValue)).intValue();
+	}
+
+	public class IterationData {
+		int indexes[];
+
+		private IterationData() {
+			indexes = new int[(int)combinationSize];
+		}
+
+		public List<Integer> getCombo() {
+			List<Integer> combo = new ArrayList<>();
+	    	for (int numberIndex : indexes) {
+	    		combo.add(numbers.get(numberIndex));
+	    	}
+	    	return combo;
+		}
+
+		public List<Integer> getNumbers() {
+			return numbers;
+		}
 	}
 
 }
