@@ -1,22 +1,29 @@
 package org.rg.game.lottery.application;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.rg.game.core.IOUtils;
 import org.rg.game.core.LogUtils;
 import org.rg.game.core.MathUtils;
+import org.rg.game.core.NetworkUtils;
+import org.rg.game.core.ResourceUtils;
 import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.ComboHandler;
 import org.rg.game.lottery.engine.ComboHandler.IterationData;
@@ -27,13 +34,31 @@ import org.rg.game.lottery.engine.SEStats;
 
 class SEIntegralSystemAnalyzer {
 
-	public static void main(String[] args) {
-		ComboHandler cH = new ComboHandler(IntStream.range(1, 91).boxed().collect(Collectors.toList()), 8);
-		BigInteger modder = BigInteger.valueOf(10_000_000);
+	public static void main(String[] args) throws IOException {
+		String[] configurationFileFolders = ResourceUtils.INSTANCE.pathsFromSystemEnv(
+			"working-path.integral-system-analysis.folder",
+			"resources.integral-system-analysis.folder"
+		);
+		LogUtils.info("Set configuration files folder to " + String.join(", ", configurationFileFolders) + "\n");
+		List<File> configurationFiles =
+			ResourceUtils.INSTANCE.find(
+				"se-integral-systems-analysis", "properties",
+				configurationFileFolders
+			);
+		for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles)) {
+			execute(config);
+		}
+
+	}
+
+	protected static void execute(Properties config) {
+		long combinationSize = Long.valueOf(config.getProperty("combination.components"));
+		ComboHandler cH = new ComboHandler(IntStream.range(1, 91).boxed().collect(Collectors.toList()), combinationSize);
+		BigInteger modder = BigInteger.valueOf(1_000_000_000);
 		SEStats sEStats = SEStats.get("02/07/2009", "23/06/2023");
 		Collection<List<Integer>> allWinningCombos = sEStats.getAllWinningCombosWithJollyAndSuperstar().values();
 		LogUtils.info("All systems size: " +  MathUtils.INSTANCE.format(cH.getSize()));
-		String basePath = PersistentStorage.buildWorkingPath("Analizzatore sistemi integrali");
+		String basePath = PersistentStorage.buildWorkingPath("Analisi sistemi integrali");
 		String cacheKey = "[" + MathUtils.INSTANCE.format(cH.getSize()).replace(".", "_") + "][" + cH.getCombinationSize() + "]" +
 				TimeUtils.getDefaultDateFmtForFilePrefix().format(sEStats.getStartDate()) +
 				TimeUtils.getDefaultDateFmtForFilePrefix().format(sEStats.getEndDate());
@@ -44,12 +69,48 @@ class SEIntegralSystemAnalyzer {
 		} else {
 			cacheRecordTemp = new Record();
 		}
+		if (cacheRecordTemp.getBlocks() == null) {
+			cacheRecordTemp.setBlocks(divide(cH.getSize(), combinationSize * 2));
+		}
+		List<Block> assignedBlocks = retrieveBlocks(config, cacheRecordTemp);
+		AtomicReference<Block> currentBlockWrapper = new AtomicReference<>();
+		Supplier<Block> blockSupplier = () -> {
+			Block block = currentBlockWrapper.get();
+			if (block != null && block.getCounter() != null && block.getCounter().compareTo(block.getEnd()) >= 0) {
+				currentBlockWrapper.set(block = null);
+			}
+			if (block == null) {
+				Iterator<Block> blocksIterator =  assignedBlocks.iterator();
+				while (blocksIterator.hasNext()) {
+					block = blocksIterator.next();
+					blocksIterator.remove();
+					if (block.getCounter() != null && block.getCounter().compareTo(block.getEnd()) >= 0) {
+						continue;
+					}
+					currentBlockWrapper.set(block);
+					break;
+				}
+			}
+			return block;
+		};
 		Record cacheRecord = cacheRecordTemp;
 		cH.iterate(iterationData -> {
-			BigInteger cachedCounter = cacheRecord.getCounter();
-			if (cachedCounter != null) {
-				if (cachedCounter.compareTo(iterationData.getCounter()) == 0) {
-					cacheRecord.setCounter(null);
+			Block currentBlock = blockSupplier.get();
+			if (currentBlock == null) {
+				iterationData.terminateIteration();
+			}
+			if (iterationData.getCounter().compareTo(currentBlock.getStart()) < 0 || iterationData.getCounter().compareTo(currentBlock.getEnd()) > 0) {
+				if (iterationData.getCounter().mod(modder).compareTo(BigInteger.ZERO) == 0) {
+					LogUtils.info("Skipped " + iterationData.getCounter().toString() + " of systems");
+				}
+				return;
+			}
+			BigInteger currentBlockCounter = currentBlock.getCounter();
+			if (currentBlockCounter != null) {
+				if (currentBlockCounter.compareTo(iterationData.getCounter()) > 0) {
+					return;
+				}
+				if (currentBlockCounter.compareTo(iterationData.getCounter()) == 0) {
 					LogUtils.info(
 						"Cache succesfully restored, starting from index " + MathUtils.INSTANCE.format(iterationData.getCounter()) + ". " +
 						MathUtils.INSTANCE.format(cH.getSize().subtract(iterationData.getCounter())) + " systems remained."
@@ -57,8 +118,8 @@ class SEIntegralSystemAnalyzer {
 					printData(cacheRecord);
 					return;
 				}
-				return;
 			}
+			currentBlock.setCounter(currentBlockCounter = iterationData.getCounter());
 			List<Integer> combo = iterationData.getCombo();
 			Map<Number, Integer> allPremiums = new LinkedHashMap<>();
 			for (Number premiumType : Premium.allTypesReversed()) {
@@ -87,7 +148,7 @@ class SEIntegralSystemAnalyzer {
 				if (systemsRank.size() > 100) {
 					Map.Entry<List<Integer>, Map<Number, Integer>> removedItem = systemsRank.pollLast();
 					if (removedItem != addedItem) {
-						store(basePath, cacheKey, iterationData, systemsRank, cacheRecord);
+						store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock);
 						LogUtils.info(
 							"Replacing data from rank:\n\t" + ComboHandler.toString(removedItem.getKey(), ", ") + ": " + removedItem.getValue() + "\n" +
 							"\t\twith\n"+
@@ -95,16 +156,35 @@ class SEIntegralSystemAnalyzer {
 						);
 					}
 				} else if (addedItemFlag) {
-					store(basePath, cacheKey, iterationData, systemsRank, cacheRecord);
+					store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock);
 					LogUtils.info("Adding data to rank: " + ComboHandler.toString(combo, ", ") + ": " + allPremiums);
 				}
 			}
 			if (iterationData.getCounter().mod(modder).compareTo(BigInteger.ZERO) == 0) {
 				LogUtils.info(MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems have been processed");
-				store(basePath, cacheKey, iterationData, systemsRank, cacheRecord);
+				store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock);
     		}
 		});
 		//LogUtils.info(processedSystemsCounterWrapper.get() + " of combinations analyzed");
+	}
+
+	protected static List<Block> retrieveBlocks(Properties config, Record cacheRecordTemp) {
+		String blockAssignees = config.getProperty("blocks.assegnee");
+		List<Block> blocks = new ArrayList<>();
+		if (blockAssignees != null) {
+			String thisHostName = NetworkUtils.INSTANCE.thisHostName();
+			for (String blockAssignee : blockAssignees.split(";")) {
+				String[] blockAssigneeInfo = blockAssignee.replaceAll("\\s+","").split(":");
+				if (blockAssigneeInfo[0].equalsIgnoreCase(thisHostName)) {
+					for (String blockIndex : blockAssigneeInfo[1].split(",")) {
+						blocks.add(cacheRecordTemp.getBlock(Integer.valueOf(blockIndex) - 1));
+					}
+				}
+			}
+		} else {
+			blocks.addAll(cacheRecordTemp.getBlocks());
+		}
+		return blocks;
 	}
 
 	protected static TreeSet<Map.Entry<List<Integer>, Map<Number, Integer>>> buildDataCollection() {
@@ -146,7 +226,6 @@ class SEIntegralSystemAnalyzer {
 		Record record,
 		Record cacheRecord
 	) {
-		cacheRecord.setCounter(record.getCounter());
 		cacheRecord.setData(new ArrayList<>(record.getData()));
 		IOUtils.INSTANCE.store(cacheKey, cacheRecord, basePath);
 	}
@@ -157,34 +236,108 @@ class SEIntegralSystemAnalyzer {
 		String cacheKey,
 		IterationData iterationData,
 		Collection<Entry<List<Integer>, Map<Number, Integer>>> systemsRank,
-		Record cacheRecord
+		Record toBeCached,
+		Block currentBlock
 	) {
-		cacheRecord.setCounter(iterationData.getCounter());
-		cacheRecord.setData(new ArrayList<>(systemsRank));
-		IOUtils.INSTANCE.store(cacheKey, cacheRecord, basePath);
-		IOUtils.INSTANCE.writeToJSONPrettyFormat(new File(basePath + "/" + cacheKey + ".json"), cacheRecord);
-		cacheRecord.setCounter(null);
+		Record cacheRecord = IOUtils.INSTANCE.load(cacheKey, basePath);
+		if (cacheRecord != null) {
+			systemsRank.addAll(cacheRecord.getData());
+			List<Block> cachedBlocks = (List<Block>)cacheRecord.getBlocks();
+			for (int i = 0; i < cachedBlocks.size(); i++) {
+				Block toBeCachedBlock = ((List<Block>)toBeCached.getBlocks()).get(i);
+				if (currentBlock == toBeCachedBlock) {
+					continue;
+				}
+				toBeCachedBlock.setCounter(
+					cachedBlocks.get(i).getCounter()
+				);
+			}
+		}
+		toBeCached.setData(new ArrayList<>(systemsRank));
+		IOUtils.INSTANCE.store(cacheKey, toBeCached, basePath);
+		IOUtils.INSTANCE.writeToJSONPrettyFormat(new File(basePath + "/" + cacheKey + ".json"), toBeCached);
+		//block.setCounter(null);
+	}
+
+	public static List<Block> divide(BigInteger size, long blockNumber) {
+		BigInteger blockSize = size.divide(BigInteger.valueOf(blockNumber));
+		BigInteger remainedSize = size.mod(BigInteger.valueOf(blockNumber));
+		List<Block> blocks = new ArrayList<>();
+		BigInteger blockStart = BigInteger.ONE;
+		for (int i = 0; i < blockNumber; i++) {
+			BigInteger blockEnd = blockStart.add(blockSize.subtract(BigInteger.ONE));
+			blocks.add(new Block(blockStart, blockEnd, null));
+			blockStart = blockEnd.add(BigInteger.ONE);
+		}
+		if (remainedSize.compareTo(BigInteger.ZERO) != 0) {
+			blocks.add(new Block(blockStart, blockStart.add(remainedSize.subtract(BigInteger.ONE)), null));
+		}
+		return blocks;
 	}
 
 	public static class Record implements Serializable {
 
 		private static final long serialVersionUID = -5223969149097163659L;
 
-		private BigInteger counter;
+		private Collection<Block> blocks;
 		private Collection<Map.Entry<List<Integer>, Map<Number, Integer>>> data;
 
-		public BigInteger getCounter() {
-			return counter;
-		}
-		public void setCounter(BigInteger counter) {
-			this.counter = counter;
-		}
 		public Collection<Map.Entry<List<Integer>, Map<Number, Integer>>> getData() {
 			return data;
 		}
 		public void setData(Collection<Map.Entry<List<Integer>, Map<Number, Integer>>> data) {
 			this.data = data;
 		}
+		public Collection<Block> getBlocks() {
+			return blocks;
+		}
+		public Block getBlock(int index) {
+			return ((List<Block>)blocks).get(index);
+		}
+		public void setBlocks(Collection<Block> blocks) {
+			this.blocks = blocks;
+		}
+
+	}
+
+	public static class Block implements Serializable {
+
+		private static final long serialVersionUID = 1725710713018555234L;
+
+		private BigInteger start;
+		private BigInteger end;
+		private BigInteger counter;
+
+		public Block(BigInteger start, BigInteger end, BigInteger counter) {
+			this.start = start;
+			this.end = end;
+			this.counter = counter;
+		}
+
+		public BigInteger getStart() {
+			return start;
+		}
+		public void setStart(BigInteger start) {
+			this.start = start;
+		}
+		public BigInteger getEnd() {
+			return end;
+		}
+		public void setEnd(BigInteger end) {
+			this.end = end;
+		}
+		public BigInteger getCounter() {
+			return counter;
+		}
+		public void setCounter(BigInteger counter) {
+			this.counter = counter;
+		}
+
+		@Override
+		public String toString() {
+			return "Block [start=" + start + ", end=" + end + ", counter=" + counter + "]";
+		}
+
 
 	}
 

@@ -131,13 +131,17 @@ public class ComboHandler {
 		Consumer<IterationData> action
 	) {
 		IterationData iterationData = new IterationData();
-		iterate(
-			iterationData,
-			0,
-			numbers.size() - 1,
-			0,
-			action
-		);
+		try {
+			iterate(
+				iterationData,
+				0,
+				numbers.size() - 1,
+				0,
+				action
+			);
+		} catch (TerminateIteration exc) {
+
+		}
 	}
 
 	private void iterate(
@@ -260,6 +264,10 @@ public class ComboHandler {
 
 		public List<Integer> getNumbers() {
 			return numbers;
+		}
+
+		public <T> T terminateIteration() {
+			throw TerminateIteration.NOTIFICATION;
 		}
 	}
 
