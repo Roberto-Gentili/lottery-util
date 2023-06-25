@@ -163,6 +163,7 @@ class SEIntegralSystemAnalyzer {
 		cacheRecord.setData(new ArrayList<>(systemsRank));
 		IOUtils.INSTANCE.store(cacheKey, cacheRecord, basePath);
 		IOUtils.INSTANCE.writeToJSONPrettyFormat(new File(basePath + "/" + cacheKey + ".json"), cacheRecord);
+		cacheRecord.setCounter(null);
 	}
 
 	public static class Record implements Serializable {
