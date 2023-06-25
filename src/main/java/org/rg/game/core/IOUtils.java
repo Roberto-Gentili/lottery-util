@@ -14,8 +14,11 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.nio.channels.FileChannel;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 public class IOUtils {
 	public static final IOUtils INSTANCE = new IOUtils();
+	final ObjectMapper objectMapper = new ObjectMapper();
 
 
 	public void copy(InputStream input, OutputStream output) {
@@ -74,6 +77,30 @@ public class IOUtils {
 			return null;
 		} catch (Throwable exc) {
 			return Throwables.sneakyThrow(exc);
+		}
+	}
+
+	public <T> T readFromJSONFormat(File premiumCountersFile, Class<T> cls) {
+		try {
+			return objectMapper.readValue(premiumCountersFile, cls);
+		} catch (IOException exc) {
+			return Throwables.sneakyThrow(exc);
+		}
+	}
+
+	public void writeToJSONFormat(File premiumCountersFile, Object object) {
+		try {
+			objectMapper.writeValue(premiumCountersFile, object);
+		} catch (IOException exc) {
+			Throwables.sneakyThrow(exc);
+		}
+	}
+
+	public void writeToJSONPrettyFormat(File premiumCountersFile, Object object) {
+		try {
+			objectMapper.writerWithDefaultPrettyPrinter().writeValue(premiumCountersFile, object);
+		} catch (IOException exc) {
+			Throwables.sneakyThrow(exc);
 		}
 	}
 

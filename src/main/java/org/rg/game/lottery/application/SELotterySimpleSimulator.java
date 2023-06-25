@@ -84,7 +84,6 @@ import org.rg.game.lottery.engine.Storage;
 
 import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.databind.DatabindException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 
@@ -112,7 +111,6 @@ public class SELotterySimpleSimulator {
 	static final Map<String, Integer> cellIndexesCache;
 	static final Map<Integer, String> indexToLetterCache;
 
-	static final ObjectMapper objectMapper = new ObjectMapper();
 	static Pattern regexForExtractConfigFileName = Pattern.compile("\\[.*?\\]\\[.*?\\]\\[.*?\\](.*)\\.txt");
 	static String hostName;
 	static SEStats allTimeStats;
@@ -843,7 +841,7 @@ public class SELotterySimpleSimulator {
 		Date extractionDate,
 		File premiumCountersFile
 	) throws StreamReadException, DatabindException, IOException {
-		Map<String, Object> data = objectMapper.readValue(premiumCountersFile, Map.class);
+		Map<String, Object> data = IOUtils.INSTANCE.readFromJSONFormat(premiumCountersFile, Map.class);
 		data.put("premiumCounters.all",((Map<String, Integer>)data.get("premiumCounters.all")).entrySet().stream()
 			.collect(Collectors.toMap(entry -> Premium.parseType(entry.getKey()), Map.Entry::getValue, (x, y) -> y, LinkedHashMap::new)));
 		data.put("premiumCounters.fromExtractionDate",((Map<String, Integer>)data.get("premiumCounters.fromExtractionDate")).entrySet().stream()
@@ -891,18 +889,10 @@ public class SELotterySimpleSimulator {
 		data.put("premiumCounters.fromExtractionDate", qualityCheckResultFromExtractionDate.get("premium.counters"));
 		data.put("premiumCounters.fromExtractionDate.processedExtractionDateCounter", qualityCheckResultFromExtractionDate.get("processedExtractionDateCounter"));
 		data.put("referenceDate", qualityCheckResult.get("referenceDate"));
-		writePremiumCountersData(premiumCountersFile, data);
+		IOUtils.INSTANCE.writeToJSONFormat(premiumCountersFile, data);
 		data.put("reportDetailFile.all", reportDetailFile);
 		data.put("reportDetailFile.fromExtractionDate", reportDetailFileFromExtractionDate);
 		return data;
-	}
-
-	private static void writePremiumCountersData(File premiumCountersFile, Map<String, Object> qualityCheckResult) {
-		try {
-			objectMapper.writeValue(premiumCountersFile, qualityCheckResult);
-		} catch (IOException exc) {
-			Throwables.sneakyThrow(exc);
-		}
 	}
 
 	private static Function<LocalDate, Consumer<List<Storage>>> buildSystemProcessor(Properties configuration, String excelFileName) {
