@@ -148,6 +148,7 @@ public class ComboHandler {
 		Consumer<IterationData> action
 	) {
 	    if (index == iterationData.indexes.length) {
+	    	iterationData.combo = null;
 	    	action.accept(iterationData);
 	    } else if (start <= end) {
 	    	iterationData.indexes[index] = start;
@@ -229,13 +230,17 @@ public class ComboHandler {
 
 	public class IterationData {
 		int indexes[];
+		List<Integer> combo;
 
 		private IterationData() {
 			indexes = new int[(int)combinationSize];
 		}
 
 		public List<Integer> getCombo() {
-			List<Integer> combo = new ArrayList<>();
+			if (combo != null) {
+				return combo;
+			}
+			combo = new ArrayList<>();
 	    	for (int numberIndex : indexes) {
 	    		combo.add(numbers.get(numberIndex));
 	    	}
