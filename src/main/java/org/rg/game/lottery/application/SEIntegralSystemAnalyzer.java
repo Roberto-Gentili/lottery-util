@@ -101,7 +101,7 @@ class SEIntegralSystemAnalyzer {
 			}
 			if (iterationData.getCounter().compareTo(currentBlock.getStart()) < 0 || iterationData.getCounter().compareTo(currentBlock.getEnd()) > 0) {
 				if (iterationData.getCounter().mod(modder).compareTo(BigInteger.ZERO) == 0) {
-					LogUtils.info("Skipped " + iterationData.getCounter().toString() + " of systems");
+					LogUtils.info("Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems");
 				}
 				return;
 			}
