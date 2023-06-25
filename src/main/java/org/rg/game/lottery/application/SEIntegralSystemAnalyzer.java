@@ -54,7 +54,8 @@ class SEIntegralSystemAnalyzer {
 	protected static void execute(Properties config) {
 		long combinationSize = Long.valueOf(config.getProperty("combination.components"));
 		ComboHandler cH = new ComboHandler(IntStream.range(1, 91).boxed().collect(Collectors.toList()), combinationSize);
-		BigInteger modder = BigInteger.valueOf(1_000_000_000);
+		BigInteger modderForSkipLog = BigInteger.valueOf(1_000_000_000);
+		BigInteger modderForAutoSave = BigInteger.valueOf(10_000_000);
 		SEStats sEStats = SEStats.get("02/07/2009", "23/06/2023");
 		Collection<List<Integer>> allWinningCombos = sEStats.getAllWinningCombosWithJollyAndSuperstar().values();
 		LogUtils.info("All systems size: " +  MathUtils.INSTANCE.format(cH.getSize()));
@@ -100,7 +101,7 @@ class SEIntegralSystemAnalyzer {
 				iterationData.terminateIteration();
 			}
 			if (iterationData.getCounter().compareTo(currentBlock.getStart()) < 0 || iterationData.getCounter().compareTo(currentBlock.getEnd()) > 0) {
-				if (iterationData.getCounter().mod(modder).compareTo(BigInteger.ZERO) == 0) {
+				if (iterationData.getCounter().mod(modderForSkipLog).compareTo(BigInteger.ZERO) == 0) {
 					LogUtils.info("Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems");
 				}
 				return;
@@ -160,7 +161,7 @@ class SEIntegralSystemAnalyzer {
 					LogUtils.info("Adding data to rank: " + ComboHandler.toString(combo, ", ") + ": " + allPremiums);
 				}
 			}
-			if (iterationData.getCounter().mod(modder).compareTo(BigInteger.ZERO) == 0) {
+			if (iterationData.getCounter().mod(modderForAutoSave).compareTo(BigInteger.ZERO) == 0) {
 				LogUtils.info(MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems have been processed");
 				store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock);
     		}
