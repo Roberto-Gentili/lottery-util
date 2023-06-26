@@ -131,7 +131,7 @@ public class Premium {
 		Iterator<Map.Entry<Number, Integer>> entryIterator = premiums.entrySet().iterator();
 		while (entryIterator.hasNext()) {
 			Map.Entry<Number, Integer> entry = entryIterator.next();
-			buffer.append(Premium.toLabel(entry.getKey()) + keyValueSeparator + entry.getValue());
+			buffer.append(toLabel(entry.getKey()) + keyValueSeparator + entry.getValue());
 			if (entryIterator.hasNext()) {
 				buffer.append(premiumSeparator);
 			}
