@@ -121,6 +121,7 @@ class SEIntegralSystemAnalyzer {
 						return;
 					}
 					if (currentBlockCounter.compareTo(iterationData.getCounter()) == 0) {
+						LogUtils.info("Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems");
 						LogUtils.info(
 							"Cache succesfully restored, starting from index " + MathUtils.INSTANCE.format(iterationData.getCounter()) + ". " +
 							MathUtils.INSTANCE.format(cH.getSize().subtract(iterationData.getCounter())) + " systems remained."
