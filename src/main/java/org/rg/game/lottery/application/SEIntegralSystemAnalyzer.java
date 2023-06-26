@@ -320,7 +320,7 @@ class SEIntegralSystemAnalyzer {
 		String basePath,
 		String cacheKey,
 		IterationData iterationData,
-		Collection<Entry<List<Integer>, Map<Number, Integer>>> systemsRank,
+		TreeSet<Entry<List<Integer>, Map<Number, Integer>>> systemsRank,
 		Record toBeCached,
 		Block currentBlock
 	) {
@@ -339,6 +339,9 @@ class SEIntegralSystemAnalyzer {
 					toBeCachedBlock.counter = cachedBlock.counter;
 				}
 			}
+		}
+		while (systemsRank.size() > 100) {
+			systemsRank.pollLast();
 		}
 		toBeCached.data = new ArrayList<>(systemsRank);
 		IOUtils.INSTANCE.store(cacheKey, toBeCached, basePath);
