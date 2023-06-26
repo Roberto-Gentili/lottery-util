@@ -305,7 +305,9 @@ class SEIntegralSystemAnalyzer {
 		LogUtils.info(
 			String.join(
 				"\n",
-				record.data.stream().map(entry -> ComboHandler.toString(entry.getKey(), ", ") + ": " + entry.getValue()).collect(Collectors.toList())
+				record.data.stream().map(entry ->
+					ComboHandler.toString(entry.getKey(), ", ") + ": " + Premium.toString(entry.getValue(), "=", ", ")
+				).collect(Collectors.toList())
 			)
 		);
 	}

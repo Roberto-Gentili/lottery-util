@@ -3,6 +3,7 @@ package org.rg.game.lottery.engine;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -123,6 +124,19 @@ public class Premium {
 			}
 		}
 		throw new IllegalArgumentException("Unvalid premium label: " + label);
+	}
+
+	public static String toString(Map<Number, Integer> premiums, String keyValueSeparator, String premiumSeparator) {
+		StringBuffer buffer = new StringBuffer();
+		Iterator<Map.Entry<Number, Integer>> entryIterator = premiums.entrySet().iterator();
+		while (entryIterator.hasNext()) {
+			Map.Entry<Number, Integer> entry = entryIterator.next();
+			buffer.append(Premium.toLabel(entry.getKey()) + keyValueSeparator + entry.getValue());
+			if (entryIterator.hasNext()) {
+				buffer.append(premiumSeparator);
+			}
+		}
+		return buffer.toString();
 	}
 
 }
