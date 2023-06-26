@@ -189,6 +189,7 @@ class SEIntegralSystemAnalyzer {
 				}
 				if (iterationData.getCounter().mod(modderForAutoSave).compareTo(BigInteger.ZERO) == 0 || iterationData.getCounter().compareTo(currentBlock.end) == 0) {
 					store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock, rankSize);
+					printData(cacheRecord);
 					LogUtils.info(MathUtils.INSTANCE.format(processedSystemsCounter(cacheRecord)) + " of systems have been processed");
 	    		}
 			});
@@ -301,12 +302,20 @@ class SEIntegralSystemAnalyzer {
 	protected static void printData(
 		Record record
 	) {
-		LogUtils.info("Current data:");
+		LogUtils.info("Current blocks status:");
 		LogUtils.info(
-			String.join(
-				"\n",
+			"\t" + String.join(
+				"\n\t",
+				record.blocks.stream().map(Object::toString).collect(Collectors.toList())
+			)
+		);
+		LogUtils.info("Current rank data:");
+		LogUtils.info(
+			"\t" + String.join(
+				"\n\t",
 				record.data.stream().map(entry ->
 					ComboHandler.toString(entry.getKey(), ", ") + ": " + Premium.toString(entry.getValue(), "=", ", ")
+					//ComboHandler.toString(entry.getKey(), ", ") + ": " + entry.getValue().toString().replace("{", "").replace("}", "")
 				).collect(Collectors.toList())
 			)
 		);
