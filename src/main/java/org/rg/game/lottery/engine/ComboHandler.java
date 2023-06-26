@@ -61,13 +61,16 @@ public class ComboHandler {
 		);
 	}
 
-
 	public int getSizeAsInt() {
 		return getSize().intValue();
 	}
 
 	public long getSizeAsLong() {
 		return getSize().longValue();
+	}
+
+	public List<Integer> getNumbers() {
+		return numbers;
 	}
 
 	public Map<Long, List<Integer>> find(Collection<Long> indexes, boolean useSameCollectionInstance) {

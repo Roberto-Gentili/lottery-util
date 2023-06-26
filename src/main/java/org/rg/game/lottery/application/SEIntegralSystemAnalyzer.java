@@ -82,7 +82,7 @@ class SEIntegralSystemAnalyzer {
 			config.getProperty("competition.archive.end-date")
 		);
 		Collection<List<Integer>> allWinningCombos = sEStats.getAllWinningCombosWithJollyAndSuperstar().values();
-		LogUtils.info("All systems size: " +  MathUtils.INSTANCE.format(comboHandler.getSize()));
+		LogUtils.info("All systems size of " + combinationSize + " based integral system (" + comboHandler.getNumbers().size() + " numbers):" +  MathUtils.INSTANCE.format(comboHandler.getSize()));
 		String basePath = PersistentStorage.buildWorkingPath("Analisi sistemi integrali");
 		String cacheKey = buildCacheKey(comboHandler, sEStats);
 		TreeSet<Map.Entry<List<Integer>, Map<Number, Integer>>> systemsRank = buildDataCollection();
