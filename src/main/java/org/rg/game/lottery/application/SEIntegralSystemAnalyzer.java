@@ -302,14 +302,14 @@ class SEIntegralSystemAnalyzer {
 	protected static void printData(
 		Record record
 	) {
-		LogUtils.info("\nCurrent blocks status:");
+		LogUtils.info("\nBlocks (size: " + record.blocks.size() + ") status:");
 		LogUtils.info(
 			"\t" + String.join(
 				"\n\t",
 				record.blocks.stream().map(Object::toString).collect(Collectors.toList())
 			)
 		);
-		LogUtils.info("Current rank data:");
+		LogUtils.info("Rank (size: " + record.data.size() + "):");
 		LogUtils.info(
 			"\t" + String.join(
 				"\n\t",
