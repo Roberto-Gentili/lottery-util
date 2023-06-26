@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -79,6 +80,7 @@ class SEIntegralSystemAnalyzer {
 		}
 		List<Block> assignedBlocks = retrieveBlocks(config, cacheRecordTemp);
 		AtomicReference<Block> currentBlockWrapper = new AtomicReference<>();
+		AtomicBoolean blockNotAlignedWrapper = new AtomicBoolean(false);
 		Supplier<Block> blockSupplier = () -> {
 			Block block = currentBlockWrapper.get();
 			if (block != null && block.getCounter() != null && block.getCounter().compareTo(block.getEnd()) >= 0) {
@@ -93,6 +95,7 @@ class SEIntegralSystemAnalyzer {
 						continue;
 					}
 					currentBlockWrapper.set(block);
+					blockNotAlignedWrapper.set(true);
 					break;
 				}
 			}
@@ -103,28 +106,32 @@ class SEIntegralSystemAnalyzer {
 			Block currentBlock = blockSupplier.get();
 			if (currentBlock == null) {
 				iterationData.terminateIteration();
-			}
-			if (iterationData.getCounter().compareTo(currentBlock.getStart()) < 0 || iterationData.getCounter().compareTo(currentBlock.getEnd()) > 0) {
-				if (iterationData.getCounter().mod(modderForSkipLog).compareTo(BigInteger.ZERO) == 0) {
-					LogUtils.info("Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems");
-				}
 				return;
 			}
-			BigInteger currentBlockCounter = currentBlock.getCounter();
-			if (currentBlockCounter != null) {
-				if (currentBlockCounter.compareTo(iterationData.getCounter()) > 0) {
+			if (blockNotAlignedWrapper.get()) {
+				if (iterationData.getCounter().compareTo(currentBlock.getStart()) < 0 || iterationData.getCounter().compareTo(currentBlock.getEnd()) > 0) {
+					if (iterationData.getCounter().mod(modderForSkipLog).compareTo(BigInteger.ZERO) == 0) {
+						LogUtils.info("Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems");
+					}
 					return;
 				}
-				if (currentBlockCounter.compareTo(iterationData.getCounter()) == 0) {
-					LogUtils.info(
-						"Cache succesfully restored, starting from index " + MathUtils.INSTANCE.format(iterationData.getCounter()) + ". " +
-						MathUtils.INSTANCE.format(cH.getSize().subtract(iterationData.getCounter())) + " systems remained."
-					);
-					printData(cacheRecord);
-					return;
+				BigInteger currentBlockCounter = currentBlock.getCounter();
+				if (currentBlockCounter != null) {
+					if (currentBlockCounter.compareTo(iterationData.getCounter()) > 0) {
+						return;
+					}
+					if (currentBlockCounter.compareTo(iterationData.getCounter()) == 0) {
+						LogUtils.info(
+							"Cache succesfully restored, starting from index " + MathUtils.INSTANCE.format(iterationData.getCounter()) + ". " +
+							MathUtils.INSTANCE.format(cH.getSize().subtract(iterationData.getCounter())) + " systems remained."
+						);
+						printData(cacheRecord);
+						return;
+					}
 				}
+				blockNotAlignedWrapper.set(false);
 			}
-			currentBlock.setCounter(currentBlockCounter = iterationData.getCounter());
+			currentBlock.setCounter(iterationData.getCounter());
 			List<Integer> combo = iterationData.getCombo();
 			Map<Number, Integer> allPremiums = new LinkedHashMap<>();
 			for (Number premiumType : Premium.allTypesReversed()) {
@@ -266,9 +273,12 @@ class SEIntegralSystemAnalyzer {
 				if (currentBlock == toBeCachedBlock) {
 					continue;
 				}
-				toBeCachedBlock.setCounter(
-					cachedBlocks.get(i).getCounter()
-				);
+				Block cachedBlock = cachedBlocks.get(i);
+				if (cachedBlock.getCounter().compareTo(toBeCachedBlock.getCounter()) > 0) {
+					toBeCachedBlock.setCounter(
+						cachedBlock.getCounter()
+					);
+				}
 			}
 		}
 		toBeCached.setData(new ArrayList<>(systemsRank));
