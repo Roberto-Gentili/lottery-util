@@ -77,105 +77,108 @@ class SEIntegralSystemAnalyzer {
 			comboHandler,
 			systemsRank
 		);
-		List<Block> assignedBlocks = retrieveBlocks(config, cacheRecord);
-		AtomicReference<Block> currentBlockWrapper = new AtomicReference<>();
-		AtomicBoolean blockNotAlignedWrapper = new AtomicBoolean(false);
-		Supplier<Block> blockSupplier = () -> {
-			Block block = currentBlockWrapper.get();
-			if (block != null && block.counter != null && block.counter.compareTo(block.end) >= 0) {
-				currentBlockWrapper.set(block = null);
-			}
-			if (block == null) {
-				Iterator<Block> blocksIterator =  assignedBlocks.iterator();
-				while (blocksIterator.hasNext()) {
-					block = blocksIterator.next();
-					blocksIterator.remove();
-					if (block.counter != null && block.counter.compareTo(block.end) >= 0) {
-						continue;
-					}
-					currentBlockWrapper.set(block);
-					blockNotAlignedWrapper.set(true);
-					break;
+		List<Block> assignedBlocks = retrieveAssignedBlocks(config, cacheRecord);
+		while (!assignedBlocks.isEmpty()) {
+			AtomicReference<Block> currentBlockWrapper = new AtomicReference<>();
+			AtomicBoolean blockNotAlignedWrapper = new AtomicBoolean(false);
+			Supplier<Block> blockSupplier = () -> {
+				Block block = currentBlockWrapper.get();
+				if (block != null && block.counter != null && block.counter.compareTo(block.end) >= 0) {
+					currentBlockWrapper.set(block = null);
 				}
-			}
-			return block;
-		};
-		comboHandler.iterate(iterationData -> {
-			Block currentBlock = blockSupplier.get();
-			if (currentBlock == null) {
-				iterationData.terminateIteration();
-				return;
-			}
-			if (blockNotAlignedWrapper.get()) {
-				if (iterationData.getCounter().compareTo(currentBlock.start) < 0 || iterationData.getCounter().compareTo(currentBlock.end) > 0) {
-					if (iterationData.getCounter().mod(modderForSkipLog).compareTo(BigInteger.ZERO) == 0) {
-						LogUtils.info("Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems");
+				if (block == null) {
+					Iterator<Block> blocksIterator =  assignedBlocks.iterator();
+					while (blocksIterator.hasNext()) {
+						block = blocksIterator.next();
+						blocksIterator.remove();
+						if (block.counter != null && block.counter.compareTo(block.end) >= 0) {
+							continue;
+						}
+						currentBlockWrapper.set(block);
+						blockNotAlignedWrapper.set(true);
+						break;
 					}
+				}
+				return block;
+			};
+			comboHandler.iterate(iterationData -> {
+				Block currentBlock = blockSupplier.get();
+				if (currentBlock == null) {
+					iterationData.terminateIteration();
 					return;
 				}
-				BigInteger currentBlockCounter = currentBlock.counter;
-				if (currentBlockCounter != null) {
-					if (currentBlockCounter.compareTo(iterationData.getCounter()) > 0) {
+				if (blockNotAlignedWrapper.get()) {
+					if (iterationData.getCounter().compareTo(currentBlock.start) < 0 || iterationData.getCounter().compareTo(currentBlock.end) > 0) {
+						if (iterationData.getCounter().mod(modderForSkipLog).compareTo(BigInteger.ZERO) == 0) {
+							LogUtils.info("Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems");
+						}
 						return;
 					}
-					if (currentBlockCounter.compareTo(iterationData.getCounter()) == 0) {
-						LogUtils.info("Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems");
-						LogUtils.info(
-							"Cache succesfully restored, starting from index " + MathUtils.INSTANCE.format(iterationData.getCounter()) + ". " +
-							MathUtils.INSTANCE.format(comboHandler.getSize().subtract(iterationData.getCounter())) + " systems remained."
-						);
-						printData(cacheRecord);
-						return;
+					BigInteger currentBlockCounter = currentBlock.counter;
+					if (currentBlockCounter != null) {
+						if (currentBlockCounter.compareTo(iterationData.getCounter()) > 0) {
+							return;
+						}
+						if (currentBlockCounter.compareTo(iterationData.getCounter()) == 0) {
+							LogUtils.info("Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems");
+							LogUtils.info(
+								"Cache succesfully restored, starting from index " + MathUtils.INSTANCE.format(iterationData.getCounter()) + ". " +
+								MathUtils.INSTANCE.format(comboHandler.getSize().subtract(iterationData.getCounter())) + " systems remained."
+							);
+							printData(cacheRecord);
+							return;
+						}
+					}
+					blockNotAlignedWrapper.set(false);
+				}
+				currentBlock.counter = iterationData.getCounter();
+				List<Integer> combo = iterationData.getCombo();
+				Map<Number, Integer> allPremiums = new LinkedHashMap<>();
+				for (Number premiumType : Premium.allTypesReversed()) {
+					allPremiums.put(premiumType, 0);
+				}
+				for (List<Integer> winningComboWithSuperStar : allWinningCombos) {
+					Map<Number, Integer> premiums = SEPremium.checkIntegral(combo, winningComboWithSuperStar);
+					for (Map.Entry<Number, Integer> premiumTypeAndCounter : allPremiums.entrySet()) {
+						Number premiumType = premiumTypeAndCounter.getKey();
+						Integer premiumCounter = premiums.get(premiumType);
+						if (premiumCounter != null) {
+							allPremiums.put(premiumType, allPremiums.get(premiumType) + premiumCounter);
+						}
 					}
 				}
-				blockNotAlignedWrapper.set(false);
-			}
-			currentBlock.counter = iterationData.getCounter();
-			List<Integer> combo = iterationData.getCombo();
-			Map<Number, Integer> allPremiums = new LinkedHashMap<>();
-			for (Number premiumType : Premium.allTypesReversed()) {
-				allPremiums.put(premiumType, 0);
-			}
-			for (List<Integer> winningComboWithSuperStar : allWinningCombos) {
-				Map<Number, Integer> premiums = SEPremium.checkIntegral(combo, winningComboWithSuperStar);
+				boolean highWinningFound = false;
 				for (Map.Entry<Number, Integer> premiumTypeAndCounter : allPremiums.entrySet()) {
-					Number premiumType = premiumTypeAndCounter.getKey();
-					Integer premiumCounter = premiums.get(premiumType);
-					if (premiumCounter != null) {
-						allPremiums.put(premiumType, allPremiums.get(premiumType) + premiumCounter);
+					if (premiumTypeAndCounter.getKey().doubleValue() > Premium.TYPE_FIVE.doubleValue() && premiumTypeAndCounter.getValue() > 0) {
+						highWinningFound = true;
+						break;
 					}
 				}
-			}
-			boolean highWinningFound = false;
-			for (Map.Entry<Number, Integer> premiumTypeAndCounter : allPremiums.entrySet()) {
-				if (premiumTypeAndCounter.getKey().doubleValue() > Premium.TYPE_FIVE.doubleValue() && premiumTypeAndCounter.getValue() > 0) {
-					highWinningFound = true;
-					break;
-				}
-			}
-			if (highWinningFound) {
-				Map.Entry<List<Integer>, Map<Number, Integer>> addedItem = new AbstractMap.SimpleEntry<>(combo, allPremiums);
-				boolean addedItemFlag = systemsRank.add(addedItem);
-				if (systemsRank.size() > 100) {
-					Map.Entry<List<Integer>, Map<Number, Integer>> removedItem = systemsRank.pollLast();
-					if (removedItem != addedItem) {
+				if (highWinningFound) {
+					Map.Entry<List<Integer>, Map<Number, Integer>> addedItem = new AbstractMap.SimpleEntry<>(combo, allPremiums);
+					boolean addedItemFlag = systemsRank.add(addedItem);
+					if (systemsRank.size() > 100) {
+						Map.Entry<List<Integer>, Map<Number, Integer>> removedItem = systemsRank.pollLast();
+						if (removedItem != addedItem) {
+							store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock);
+							LogUtils.info(
+								"Replacing data from rank:\n\t" + ComboHandler.toString(removedItem.getKey(), ", ") + ": " + removedItem.getValue() + "\n" +
+								"\t\twith\n"+
+								"\t" + ComboHandler.toString(addedItem.getKey(), ", ") + ": " + addedItem.getValue()
+							);
+						}
+					} else if (addedItemFlag) {
 						store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock);
-						LogUtils.info(
-							"Replacing data from rank:\n\t" + ComboHandler.toString(removedItem.getKey(), ", ") + ": " + removedItem.getValue() + "\n" +
-							"\t\twith\n"+
-							"\t" + ComboHandler.toString(addedItem.getKey(), ", ") + ": " + addedItem.getValue()
-						);
+						LogUtils.info("Adding data to rank: " + ComboHandler.toString(combo, ", ") + ": " + allPremiums);
 					}
-				} else if (addedItemFlag) {
-					store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock);
-					LogUtils.info("Adding data to rank: " + ComboHandler.toString(combo, ", ") + ": " + allPremiums);
 				}
-			}
-			if (iterationData.getCounter().mod(modderForAutoSave).compareTo(BigInteger.ZERO) == 0 || iterationData.getCounter().compareTo(currentBlock.end) == 0) {
-				LogUtils.info(MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems have been processed");
-				store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock);
-    		}
-		});
+				if (iterationData.getCounter().mod(modderForAutoSave).compareTo(BigInteger.ZERO) == 0 || iterationData.getCounter().compareTo(currentBlock.end) == 0) {
+					LogUtils.info(MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems have been processed");
+					store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock);
+	    		}
+			});
+		}
+		assignedBlocks.addAll(retrieveAssignedBlocks(config, cacheRecord));
 		//LogUtils.info(processedSystemsCounterWrapper.get() + " of combinations analyzed");
 	}
 
@@ -195,7 +198,7 @@ class SEIntegralSystemAnalyzer {
 		return cacheRecordTemp;
 	}
 
-	protected static List<Block> retrieveBlocks(Properties config, Record cacheRecordTemp) {
+	protected static List<Block> retrieveAssignedBlocks(Properties config, Record cacheRecordTemp) {
 		String blockAssignees = config.getProperty("blocks.assegnee");
 		List<Block> blocks = new ArrayList<>();
 		if (blockAssignees != null) {
