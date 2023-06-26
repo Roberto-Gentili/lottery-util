@@ -75,7 +75,8 @@ class SEIntegralSystemAnalyzer {
 		long combinationSize = Long.valueOf(config.getProperty("combination.components"));
 		ComboHandler comboHandler = new ComboHandler(IntStream.range(1, 91).boxed().collect(Collectors.toList()), combinationSize);
 		BigInteger modderForSkipLog = BigInteger.valueOf(1_000_000_000);
-		BigInteger modderForAutoSave = new BigInteger(config.getProperty("autosave-every"));
+		BigInteger modderForAutoSave = new BigInteger(config.getProperty("autosave-every", "1000000"));
+		int rankSize = Integer.valueOf(config.getProperty("rank-size", "100"));
 		SEStats sEStats = SEStats.get(
 			config.getProperty("competition.archive.start-date"),
 			config.getProperty("competition.archive.end-date")
@@ -173,10 +174,10 @@ class SEIntegralSystemAnalyzer {
 				if (highWinningFound) {
 					Map.Entry<List<Integer>, Map<Number, Integer>> addedItem = new AbstractMap.SimpleEntry<>(combo, allPremiums);
 					boolean addedItemFlag = systemsRank.add(addedItem);
-					if (systemsRank.size() > 100) {
+					if (systemsRank.size() > rankSize) {
 						Map.Entry<List<Integer>, Map<Number, Integer>> removedItem = systemsRank.pollLast();
 						if (removedItem != addedItem) {
-							//store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock);
+							//store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock, rankSize);
 							LogUtils.info(
 								"Replaced data from rank:\n\t" + ComboHandler.toString(removedItem.getKey(), ", ") + ": " + removedItem.getValue() + "\n" +
 								"\t\twith\n"+
@@ -184,12 +185,12 @@ class SEIntegralSystemAnalyzer {
 							);
 						}
 					} else if (addedItemFlag) {
-						//store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock);
+						//store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock, rankSize);
 						LogUtils.info("Added data to rank: " + ComboHandler.toString(combo, ", ") + ": " + allPremiums);
 					}
 				}
 				if (iterationData.getCounter().mod(modderForAutoSave).compareTo(BigInteger.ZERO) == 0 || iterationData.getCounter().compareTo(currentBlock.end) == 0) {
-					store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock);
+					store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock, rankSize);
 					LogUtils.info(MathUtils.INSTANCE.format(processedSystemsCounter(cacheRecord)) + " of systems have been processed");
 	    		}
 			});
@@ -322,7 +323,8 @@ class SEIntegralSystemAnalyzer {
 		IterationData iterationData,
 		TreeSet<Entry<List<Integer>, Map<Number, Integer>>> systemsRank,
 		Record toBeCached,
-		Block currentBlock
+		Block currentBlock,
+		int rankSize
 	) {
 		Record cacheRecord = IOUtils.INSTANCE.load(cacheKey, basePath);
 		if (cacheRecord != null) {
@@ -340,7 +342,7 @@ class SEIntegralSystemAnalyzer {
 				}
 			}
 		}
-		while (systemsRank.size() > 100) {
+		while (systemsRank.size() > rankSize) {
 			systemsRank.pollLast();
 		}
 		toBeCached.data = new ArrayList<>(systemsRank);
