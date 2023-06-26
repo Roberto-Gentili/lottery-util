@@ -123,7 +123,7 @@ class SEIntegralSystemAnalyzer {
 							LogUtils.info("Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems");
 							LogUtils.info(
 								"Cache succesfully restored, starting from index " + MathUtils.INSTANCE.format(iterationData.getCounter()) + ". " +
-								MathUtils.INSTANCE.format(comboHandler.getSize().subtract(iterationData.getCounter())) + " systems remained."
+								MathUtils.INSTANCE.format(remainedSystems(cacheRecord)) + " systems remained."
 							);
 							printData(cacheRecord);
 							return;
@@ -162,19 +162,19 @@ class SEIntegralSystemAnalyzer {
 						if (removedItem != addedItem) {
 							store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock);
 							LogUtils.info(
-								"Replacing data from rank:\n\t" + ComboHandler.toString(removedItem.getKey(), ", ") + ": " + removedItem.getValue() + "\n" +
+								"Replaced data from rank:\n\t" + ComboHandler.toString(removedItem.getKey(), ", ") + ": " + removedItem.getValue() + "\n" +
 								"\t\twith\n"+
 								"\t" + ComboHandler.toString(addedItem.getKey(), ", ") + ": " + addedItem.getValue()
 							);
 						}
 					} else if (addedItemFlag) {
 						store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock);
-						LogUtils.info("Adding data to rank: " + ComboHandler.toString(combo, ", ") + ": " + allPremiums);
+						LogUtils.info("Added data to rank: " + ComboHandler.toString(combo, ", ") + ": " + allPremiums);
 					}
 				}
 				if (iterationData.getCounter().mod(modderForAutoSave).compareTo(BigInteger.ZERO) == 0 || iterationData.getCounter().compareTo(currentBlock.end) == 0) {
-					LogUtils.info(MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems have been processed");
 					store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock);
+					LogUtils.info(MathUtils.INSTANCE.format(processedSystemsCounter(cacheRecord)) + " of systems have been processed");
 	    		}
 			});
 		}
@@ -182,6 +182,22 @@ class SEIntegralSystemAnalyzer {
 			assignedBlocks.addAll(retrieveAssignedBlocks(config, cacheRecord));
 		}
 		//LogUtils.info(processedSystemsCounterWrapper.get() + " of combinations analyzed");
+	}
+
+	protected static BigInteger processedSystemsCounter(Record record) {
+		BigInteger processed = BigInteger.ZERO;
+		for (Block block : record.blocks) {
+			if (block.counter != null) {
+				processed = processed.add(block.counter);
+			}
+		}
+		return processed;
+	}
+
+	protected static BigInteger remainedSystems(Record record) {
+		BigInteger processedSystemsCounter = processedSystemsCounter(record);
+		Block latestBlock = CollectionUtils.getLastElement(record.blocks);
+		return latestBlock.end.subtract(processedSystemsCounter);
 	}
 
 	protected static Record prepareCacheRecord(
