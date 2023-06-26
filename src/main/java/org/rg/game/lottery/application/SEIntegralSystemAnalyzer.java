@@ -178,7 +178,9 @@ class SEIntegralSystemAnalyzer {
 	    		}
 			});
 		}
-		assignedBlocks.addAll(retrieveAssignedBlocks(config, cacheRecord));
+		if (assignedBlocks.isEmpty()) {
+			assignedBlocks.addAll(retrieveAssignedBlocks(config, cacheRecord));
+		}
 		//LogUtils.info(processedSystemsCounterWrapper.get() + " of combinations analyzed");
 	}
 
