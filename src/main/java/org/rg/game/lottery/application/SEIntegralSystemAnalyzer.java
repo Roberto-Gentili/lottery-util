@@ -80,7 +80,7 @@ class SEIntegralSystemAnalyzer {
 		AtomicBoolean blockNotAlignedWrapper = new AtomicBoolean(false);
 		Supplier<Block> blockSupplier = () -> {
 			Block block = currentBlockWrapper.get();
-			if (block != null && block.getCounter() != null && block.getCounter().compareTo(block.getEnd()) >= 0) {
+			if (block != null && block.counter != null && block.counter.compareTo(block.end) >= 0) {
 				currentBlockWrapper.set(block = null);
 			}
 			if (block == null) {
@@ -88,7 +88,7 @@ class SEIntegralSystemAnalyzer {
 				while (blocksIterator.hasNext()) {
 					block = blocksIterator.next();
 					blocksIterator.remove();
-					if (block.getCounter() != null && block.getCounter().compareTo(block.getEnd()) >= 0) {
+					if (block.counter != null && block.counter.compareTo(block.end) >= 0) {
 						continue;
 					}
 					currentBlockWrapper.set(block);
@@ -105,13 +105,13 @@ class SEIntegralSystemAnalyzer {
 				return;
 			}
 			if (blockNotAlignedWrapper.get()) {
-				if (iterationData.getCounter().compareTo(currentBlock.getStart()) < 0 || iterationData.getCounter().compareTo(currentBlock.getEnd()) > 0) {
+				if (iterationData.getCounter().compareTo(currentBlock.start) < 0 || iterationData.getCounter().compareTo(currentBlock.end) > 0) {
 					if (iterationData.getCounter().mod(modderForSkipLog).compareTo(BigInteger.ZERO) == 0) {
 						LogUtils.info("Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems");
 					}
 					return;
 				}
-				BigInteger currentBlockCounter = currentBlock.getCounter();
+				BigInteger currentBlockCounter = currentBlock.counter;
 				if (currentBlockCounter != null) {
 					if (currentBlockCounter.compareTo(iterationData.getCounter()) > 0) {
 						return;
@@ -128,7 +128,7 @@ class SEIntegralSystemAnalyzer {
 				}
 				blockNotAlignedWrapper.set(false);
 			}
-			currentBlock.setCounter(iterationData.getCounter());
+			currentBlock.counter = iterationData.getCounter();
 			List<Integer> combo = iterationData.getCombo();
 			Map<Number, Integer> allPremiums = new LinkedHashMap<>();
 			for (Number premiumType : Premium.allTypesReversed()) {
@@ -169,7 +169,7 @@ class SEIntegralSystemAnalyzer {
 					LogUtils.info("Adding data to rank: " + ComboHandler.toString(combo, ", ") + ": " + allPremiums);
 				}
 			}
-			if (iterationData.getCounter().mod(modderForAutoSave).compareTo(BigInteger.ZERO) == 0 || iterationData.getCounter().compareTo(currentBlock.getEnd()) == 0) {
+			if (iterationData.getCounter().mod(modderForAutoSave).compareTo(BigInteger.ZERO) == 0 || iterationData.getCounter().compareTo(currentBlock.end) == 0) {
 				LogUtils.info(MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems have been processed");
 				store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock);
     		}
@@ -183,12 +183,12 @@ class SEIntegralSystemAnalyzer {
 	) {
 		Record cacheRecordTemp = IOUtils.INSTANCE.load(cacheKey, basePath);
 		if (cacheRecordTemp != null) {
-			systemsRank.addAll(cacheRecordTemp.getData());
+			systemsRank.addAll(cacheRecordTemp.data);
 		} else {
 			cacheRecordTemp = new Record();
 		}
-		if (cacheRecordTemp.getBlocks() == null) {
-			cacheRecordTemp.setBlocks(divide(cH.getSize(), cH.getCombinationSize() * 2));
+		if (cacheRecordTemp.blocks == null) {
+			cacheRecordTemp.blocks = divide(cH.getSize(), cH.getCombinationSize() * 2);
 		}
 		return cacheRecordTemp;
 	}
@@ -203,14 +203,14 @@ class SEIntegralSystemAnalyzer {
 				if (blockAssigneeInfo[0].equalsIgnoreCase(thisHostName)) {
 					for (String blockIndex : blockAssigneeInfo[1].split(",")) {
 						if (blockIndex.equalsIgnoreCase("odd")) {
-							blocks.addAll(CollectionUtils.odd(cacheRecordTemp.getBlocks()));
+							blocks.addAll(CollectionUtils.odd(cacheRecordTemp.blocks));
 						} else if (blockIndex.equalsIgnoreCase("even")) {
-							blocks.addAll(CollectionUtils.even(cacheRecordTemp.getBlocks()));
+							blocks.addAll(CollectionUtils.even(cacheRecordTemp.blocks));
 						} else if (blockIndex.contains("/")) {
 							String[] subListsInfo = blockIndex.split("/");
 							List<List<Block>> subList =
-								CollectionUtils.toSubLists((List<Block>)cacheRecordTemp.getBlocks(),
-									Double.valueOf(Math.ceil(((List<Block>)cacheRecordTemp.getBlocks()).size() / Double.valueOf(subListsInfo[1]))).intValue()
+								CollectionUtils.toSubLists((List<Block>)cacheRecordTemp.blocks,
+									Double.valueOf(Math.ceil(((List<Block>)cacheRecordTemp.blocks).size() / Double.valueOf(subListsInfo[1]))).intValue()
 								);
 							blocks.addAll(subList.get(Integer.valueOf(subListsInfo[0]) - 1));
 						} else {
@@ -220,7 +220,15 @@ class SEIntegralSystemAnalyzer {
 				}
 			}
 		} else {
-			blocks.addAll(cacheRecordTemp.getBlocks());
+			blocks.addAll(cacheRecordTemp.blocks);
+		}
+		Iterator<Block> blocksIterator = blocks.iterator();
+		while (blocksIterator.hasNext()) {
+			Block block = blocksIterator.next();
+			BigInteger counter = block.counter;
+			if (counter != null && counter.compareTo(block.end) == 0) {
+				blocksIterator.remove();
+			}
 		}
 		return blocks;
 	}
@@ -253,7 +261,7 @@ class SEIntegralSystemAnalyzer {
 		LogUtils.info(
 			String.join(
 				"\n",
-				record.getData().stream().map(entry -> ComboHandler.toString(entry.getKey(), ", ") + ": " + entry.getValue()).collect(Collectors.toList())
+				record.data.stream().map(entry -> ComboHandler.toString(entry.getKey(), ", ") + ": " + entry.getValue()).collect(Collectors.toList())
 			)
 		);
 	}
@@ -264,7 +272,7 @@ class SEIntegralSystemAnalyzer {
 		Record record,
 		Record cacheRecord
 	) {
-		cacheRecord.setData(new ArrayList<>(record.getData()));
+		cacheRecord.data = new ArrayList<>(record.data);
 		IOUtils.INSTANCE.store(cacheKey, cacheRecord, basePath);
 	}
 
@@ -279,23 +287,21 @@ class SEIntegralSystemAnalyzer {
 	) {
 		Record cacheRecord = IOUtils.INSTANCE.load(cacheKey, basePath);
 		if (cacheRecord != null) {
-			systemsRank.addAll(cacheRecord.getData());
-			List<Block> cachedBlocks = (List<Block>)cacheRecord.getBlocks();
+			systemsRank.addAll(cacheRecord.data);
+			List<Block> cachedBlocks = (List<Block>)cacheRecord.blocks;
 			for (int i = 0; i < cachedBlocks.size(); i++) {
-				Block toBeCachedBlock = ((List<Block>)toBeCached.getBlocks()).get(i);
+				Block toBeCachedBlock = ((List<Block>)toBeCached.blocks).get(i);
 				if (currentBlock == toBeCachedBlock) {
 					continue;
 				}
 				Block cachedBlock = cachedBlocks.get(i);
-				BigInteger cachedBlockCounter = cachedBlock.getCounter();
-				if (cachedBlockCounter != null && cachedBlockCounter.compareTo(toBeCachedBlock.getCounter()) > 0) {
-					toBeCachedBlock.setCounter(
-						cachedBlock.getCounter()
-					);
+				BigInteger cachedBlockCounter = cachedBlock.counter;
+				if (cachedBlockCounter != null && cachedBlockCounter.compareTo(toBeCachedBlock.counter) > 0) {
+					toBeCachedBlock.counter = cachedBlock.counter;
 				}
 			}
 		}
-		toBeCached.setData(new ArrayList<>(systemsRank));
+		toBeCached.data = new ArrayList<>(systemsRank);
 		IOUtils.INSTANCE.store(cacheKey, toBeCached, basePath);
 		IOUtils.INSTANCE.writeToJSONPrettyFormat(new File(basePath + "/" + cacheKey + ".json"), toBeCached);
 	}
@@ -323,20 +329,8 @@ class SEIntegralSystemAnalyzer {
 		private Collection<Block> blocks;
 		private Collection<Map.Entry<List<Integer>, Map<Number, Integer>>> data;
 
-		public Collection<Map.Entry<List<Integer>, Map<Number, Integer>>> getData() {
-			return data;
-		}
-		public void setData(Collection<Map.Entry<List<Integer>, Map<Number, Integer>>> data) {
-			this.data = data;
-		}
-		public Collection<Block> getBlocks() {
-			return blocks;
-		}
 		public Block getBlock(int index) {
 			return ((List<Block>)blocks).get(index);
-		}
-		public void setBlocks(Collection<Block> blocks) {
-			this.blocks = blocks;
 		}
 
 	}
@@ -352,25 +346,6 @@ class SEIntegralSystemAnalyzer {
 		public Block(BigInteger start, BigInteger end, BigInteger counter) {
 			this.start = start;
 			this.end = end;
-			this.counter = counter;
-		}
-
-		public BigInteger getStart() {
-			return start;
-		}
-		public void setStart(BigInteger start) {
-			this.start = start;
-		}
-		public BigInteger getEnd() {
-			return end;
-		}
-		public void setEnd(BigInteger end) {
-			this.end = end;
-		}
-		public BigInteger getCounter() {
-			return counter;
-		}
-		public void setCounter(BigInteger counter) {
 			this.counter = counter;
 		}
 
