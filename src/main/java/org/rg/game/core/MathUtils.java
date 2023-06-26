@@ -69,6 +69,9 @@ public class MathUtils {
 	}
 
 	public String format(Number value) {
+		if (value == null) {
+			return "null";
+		}
 		return String.format("%,d", value);
 	}
 

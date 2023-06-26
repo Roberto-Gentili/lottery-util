@@ -302,7 +302,7 @@ class SEIntegralSystemAnalyzer {
 	protected static void printData(
 		Record record
 	) {
-		LogUtils.info("Current blocks status:");
+		LogUtils.info("\nCurrent blocks status:");
 		LogUtils.info(
 			"\t" + String.join(
 				"\n\t",
@@ -317,7 +317,7 @@ class SEIntegralSystemAnalyzer {
 					ComboHandler.toString(entry.getKey(), ", ") + ": " + Premium.toString(entry.getValue(), "=", ", ")
 					//ComboHandler.toString(entry.getKey(), ", ") + ": " + entry.getValue().toString().replace("{", "").replace("}", "")
 				).collect(Collectors.toList())
-			)
+			) + "\n"
 		);
 	}
 
@@ -418,9 +418,8 @@ class SEIntegralSystemAnalyzer {
 
 		@Override
 		public String toString() {
-			return "Block [start=" + start + ", end=" + end + ", counter=" + counter + "]";
+			return "Block [start=" + MathUtils.INSTANCE.format(start) + ", end=" + MathUtils.INSTANCE.format(end) + ", counter=" + MathUtils.INSTANCE.format(counter) + "]";
 		}
-
 
 	}
 
