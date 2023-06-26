@@ -55,7 +55,7 @@ class SEIntegralSystemAnalyzer {
 
 	protected static void analyze(Properties config) {
 		long combinationSize = Long.valueOf(config.getProperty("combination.components"));
-		ComboHandler cH = new ComboHandler(IntStream.range(1, 91).boxed().collect(Collectors.toList()), combinationSize);
+		ComboHandler comboHandler = new ComboHandler(IntStream.range(1, 91).boxed().collect(Collectors.toList()), combinationSize);
 		BigInteger modderForSkipLog = BigInteger.valueOf(1_000_000_000);
 		BigInteger modderForAutoSave = new BigInteger(config.getProperty("autosave-every"));
 		SEStats sEStats = SEStats.get(
@@ -63,22 +63,19 @@ class SEIntegralSystemAnalyzer {
 			config.getProperty("competition.archive.end-date")
 		);
 		Collection<List<Integer>> allWinningCombos = sEStats.getAllWinningCombosWithJollyAndSuperstar().values();
-		LogUtils.info("All systems size: " +  MathUtils.INSTANCE.format(cH.getSize()));
+		LogUtils.info("All systems size: " +  MathUtils.INSTANCE.format(comboHandler.getSize()));
 		String basePath = PersistentStorage.buildWorkingPath("Analisi sistemi integrali");
-		String cacheKey = "[" + MathUtils.INSTANCE.format(cH.getSize()).replace(".", "_") + "][" + cH.getCombinationSize() + "]" +
+		String cacheKey = "[" + MathUtils.INSTANCE.format(comboHandler.getSize()).replace(".", "_") + "][" + comboHandler.getCombinationSize() + "]" +
 				TimeUtils.getDefaultDateFmtForFilePrefix().format(sEStats.getStartDate()) +
 				TimeUtils.getDefaultDateFmtForFilePrefix().format(sEStats.getEndDate());
-		Record cacheRecordTemp = IOUtils.INSTANCE.load(cacheKey, basePath);
 		TreeSet<Map.Entry<List<Integer>, Map<Number, Integer>>> systemsRank = buildDataCollection();
-		if (cacheRecordTemp != null) {
-			systemsRank.addAll(cacheRecordTemp.getData());
-		} else {
-			cacheRecordTemp = new Record();
-		}
-		if (cacheRecordTemp.getBlocks() == null) {
-			cacheRecordTemp.setBlocks(divide(cH.getSize(), combinationSize * 2));
-		}
-		List<Block> assignedBlocks = retrieveBlocks(config, cacheRecordTemp);
+		Record cacheRecord = prepareCacheRecord(
+			basePath,
+			cacheKey,
+			comboHandler,
+			systemsRank
+		);
+		List<Block> assignedBlocks = retrieveBlocks(config, cacheRecord);
 		AtomicReference<Block> currentBlockWrapper = new AtomicReference<>();
 		AtomicBoolean blockNotAlignedWrapper = new AtomicBoolean(false);
 		Supplier<Block> blockSupplier = () -> {
@@ -101,8 +98,7 @@ class SEIntegralSystemAnalyzer {
 			}
 			return block;
 		};
-		Record cacheRecord = cacheRecordTemp;
-		cH.iterate(iterationData -> {
+		comboHandler.iterate(iterationData -> {
 			Block currentBlock = blockSupplier.get();
 			if (currentBlock == null) {
 				iterationData.terminateIteration();
@@ -124,7 +120,7 @@ class SEIntegralSystemAnalyzer {
 						LogUtils.info("Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems");
 						LogUtils.info(
 							"Cache succesfully restored, starting from index " + MathUtils.INSTANCE.format(iterationData.getCounter()) + ". " +
-							MathUtils.INSTANCE.format(cH.getSize().subtract(iterationData.getCounter())) + " systems remained."
+							MathUtils.INSTANCE.format(comboHandler.getSize().subtract(iterationData.getCounter())) + " systems remained."
 						);
 						printData(cacheRecord);
 						return;
@@ -179,6 +175,22 @@ class SEIntegralSystemAnalyzer {
     		}
 		});
 		//LogUtils.info(processedSystemsCounterWrapper.get() + " of combinations analyzed");
+	}
+
+	protected static Record prepareCacheRecord(
+		String basePath, String cacheKey, ComboHandler cH,
+		TreeSet<Map.Entry<List<Integer>, Map<Number, Integer>>> systemsRank
+	) {
+		Record cacheRecordTemp = IOUtils.INSTANCE.load(cacheKey, basePath);
+		if (cacheRecordTemp != null) {
+			systemsRank.addAll(cacheRecordTemp.getData());
+		} else {
+			cacheRecordTemp = new Record();
+		}
+		if (cacheRecordTemp.getBlocks() == null) {
+			cacheRecordTemp.setBlocks(divide(cH.getSize(), cH.getCombinationSize() * 2));
+		}
+		return cacheRecordTemp;
 	}
 
 	protected static List<Block> retrieveBlocks(Properties config, Record cacheRecordTemp) {
