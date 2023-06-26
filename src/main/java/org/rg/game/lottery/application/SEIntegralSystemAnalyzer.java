@@ -84,9 +84,7 @@ class SEIntegralSystemAnalyzer {
 		Collection<List<Integer>> allWinningCombos = sEStats.getAllWinningCombosWithJollyAndSuperstar().values();
 		LogUtils.info("All systems size: " +  MathUtils.INSTANCE.format(comboHandler.getSize()));
 		String basePath = PersistentStorage.buildWorkingPath("Analisi sistemi integrali");
-		String cacheKey = "[" + MathUtils.INSTANCE.format(comboHandler.getSize()).replace(".", "_") + "][" + comboHandler.getCombinationSize() + "]" +
-				TimeUtils.getDefaultDateFmtForFilePrefix().format(sEStats.getStartDate()) +
-				TimeUtils.getDefaultDateFmtForFilePrefix().format(sEStats.getEndDate());
+		String cacheKey = buildCacheKey(comboHandler, sEStats);
 		TreeSet<Map.Entry<List<Integer>, Map<Number, Integer>>> systemsRank = buildDataCollection();
 		Record cacheRecord = prepareCacheRecord(
 			basePath,
@@ -199,6 +197,12 @@ class SEIntegralSystemAnalyzer {
 			assignedBlocks.addAll(retrieveAssignedBlocks(config, cacheRecord));
 		}
 		//LogUtils.info(processedSystemsCounterWrapper.get() + " of combinations analyzed");
+	}
+
+	protected static String buildCacheKey(ComboHandler comboHandler, SEStats sEStats) {
+		return "[" + MathUtils.INSTANCE.format(comboHandler.getSize()).replace(".", "_") + "][" + comboHandler.getCombinationSize() + "]" +
+				"[" + TimeUtils.getAlternativeDateFormat().format(sEStats.getStartDate()) + "]" +
+				"[" + TimeUtils.getAlternativeDateFormat().format(sEStats.getEndDate()) + "]";
 	}
 
 	protected static BigInteger processedSystemsCounter(Record record) {
