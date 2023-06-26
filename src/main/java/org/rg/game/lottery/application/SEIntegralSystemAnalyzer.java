@@ -287,7 +287,8 @@ class SEIntegralSystemAnalyzer {
 					continue;
 				}
 				Block cachedBlock = cachedBlocks.get(i);
-				if (cachedBlock.getCounter().compareTo(toBeCachedBlock.getCounter()) > 0) {
+				BigInteger cachedBlockCounter = cachedBlock.getCounter();
+				if (cachedBlockCounter != null && cachedBlockCounter.compareTo(toBeCachedBlock.getCounter()) > 0) {
 					toBeCachedBlock.setCounter(
 						cachedBlock.getCounter()
 					);
@@ -297,7 +298,6 @@ class SEIntegralSystemAnalyzer {
 		toBeCached.setData(new ArrayList<>(systemsRank));
 		IOUtils.INSTANCE.store(cacheKey, toBeCached, basePath);
 		IOUtils.INSTANCE.writeToJSONPrettyFormat(new File(basePath + "/" + cacheKey + ".json"), toBeCached);
-		//block.setCounter(null);
 	}
 
 	public static List<Block> divide(BigInteger size, long blockNumber) {
