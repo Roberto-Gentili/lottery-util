@@ -34,6 +34,8 @@ import org.rg.game.lottery.engine.Premium;
 import org.rg.game.lottery.engine.SEPremium;
 import org.rg.game.lottery.engine.SEStats;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 class SEIntegralSystemAnalyzer {
 
 	public static void main(String[] args) throws IOException {
@@ -326,7 +328,10 @@ class SEIntegralSystemAnalyzer {
 
 		private static final long serialVersionUID = -5223969149097163659L;
 
+		@JsonProperty("blocks")
 		private Collection<Block> blocks;
+
+		@JsonProperty("data")
 		private Collection<Map.Entry<List<Integer>, Map<Number, Integer>>> data;
 
 		public Block getBlock(int index) {
@@ -339,8 +344,13 @@ class SEIntegralSystemAnalyzer {
 
 		private static final long serialVersionUID = 1725710713018555234L;
 
+		@JsonProperty("start")
 		private BigInteger start;
+
+		@JsonProperty("end")
 		private BigInteger end;
+
+		@JsonProperty("counter")
 		private BigInteger counter;
 
 		public Block(BigInteger start, BigInteger end, BigInteger counter) {
