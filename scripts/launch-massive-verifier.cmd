@@ -17,6 +17,8 @@ for /R "%CURRENT_DIR%lib" %%a in (*.jar) do (
 )
 set LIBS=!LIBS!"
 
+set endDate=next+1*1
+
 call "%JAVA_HOME%\bin\java.exe" -cp %classPath%;%LIBS%;"%CURRENT_DIR%binaries.jar"; org.rg.game.lottery.application.SEMassiveVerifierAndQualityChecker
 echo: 
 echo:

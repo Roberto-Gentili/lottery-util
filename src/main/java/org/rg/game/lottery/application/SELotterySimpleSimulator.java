@@ -252,7 +252,7 @@ public class SELotterySimpleSimulator {
 				configurations.add(config);
 			}
 		}
-		int maxParallelTasks = Optional.ofNullable(System.getenv("simulation.tasks.max-parallel")).map(Integer::valueOf)
+		int maxParallelTasks = Optional.ofNullable(System.getenv("tasks.max-parallel")).map(Integer::valueOf)
 			.orElseGet(() -> Math.max((Runtime.getRuntime().availableProcessors() / 2) - 1, 1));
 		for (Properties configuration : configurations) {
 			LogUtils.info(

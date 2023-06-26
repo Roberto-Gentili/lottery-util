@@ -12,8 +12,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.TreeSet;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
@@ -21,6 +24,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.rg.game.core.CollectionUtils;
+import org.rg.game.core.ConcurrentUtils;
 import org.rg.game.core.IOUtils;
 import org.rg.game.core.LogUtils;
 import org.rg.game.core.MathUtils;
@@ -49,10 +53,22 @@ class SEIntegralSystemAnalyzer {
 				"se-integral-systems-analysis", "properties",
 				configurationFileFolders
 			);
+		int maxParallelTasks = Optional.ofNullable(System.getenv("tasks.max-parallel")).map(Integer::valueOf)
+				.orElseGet(() -> Math.max((Runtime.getRuntime().availableProcessors() / 2) - 1, 1));
+		Collection<CompletableFuture<Void>> futures = new CopyOnWriteArrayList<>();
 		for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles)) {
-			analyze(config);
+			if (CollectionUtils.retrieveBoolean(config, "enabled", "false")) {
+				Runnable task = () ->
+					analyze(config);
+				if (CollectionUtils.retrieveBoolean(config, "async", "false")) {
+					ConcurrentUtils.addTask(futures, task);
+				} else {
+					task.run();
+				}
+			}
+			ConcurrentUtils.waitUntil(futures, ft -> ft.size() >= maxParallelTasks);
 		}
-
+		futures.forEach(CompletableFuture::join);
 	}
 
 	protected static void analyze(Properties config) {
