@@ -335,7 +335,7 @@ class SEIntegralSystemAnalyzer {
 				}
 				Block cachedBlock = cachedBlocks.get(i);
 				BigInteger cachedBlockCounter = cachedBlock.counter;
-				if (cachedBlockCounter != null && cachedBlockCounter.compareTo(toBeCachedBlock.counter) > 0) {
+				if (cachedBlockCounter != null && (toBeCachedBlock.counter == null || cachedBlockCounter.compareTo(toBeCachedBlock.counter) > 0)) {
 					toBeCachedBlock.counter = cachedBlock.counter;
 				}
 			}
