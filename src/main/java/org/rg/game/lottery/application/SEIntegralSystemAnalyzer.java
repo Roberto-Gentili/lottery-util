@@ -188,7 +188,7 @@ class SEIntegralSystemAnalyzer {
 		BigInteger processed = BigInteger.ZERO;
 		for (Block block : record.blocks) {
 			if (block.counter != null) {
-				processed = processed.add(block.counter);
+				processed = processed.add(block.counter.subtract(block.start.subtract(BigInteger.ONE)));
 			}
 		}
 		return processed;
