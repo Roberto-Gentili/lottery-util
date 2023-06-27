@@ -512,7 +512,10 @@ public class SELotterySimpleSimulator {
 				systemProcessor
 			);
 		}
-		checkAndNotifyExecutionOfFirstSetupForConfiguration(firstSetupExecuted);		updateHistorical(configuration, excelFileName, configuration.getProperty("nameSuffix"), new LinkedHashMap<>());
+		if (competitionDates.isEmpty()) {
+			engine.setup(configuration, true);
+			checkAndNotifyExecutionOfFirstSetupForConfiguration(firstSetupExecuted);
+		}		updateHistorical(configuration, excelFileName, configuration.getProperty("nameSuffix"), new LinkedHashMap<>());
 		if (!isSlave) {
 			readOrCreateExcel(
 				excelFileName,
