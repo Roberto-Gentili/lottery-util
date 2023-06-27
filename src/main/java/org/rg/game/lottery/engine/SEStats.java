@@ -109,7 +109,7 @@ public class SEStats {
 			synchronized(INSTANCES) {
 				sEStats = INSTANCES.get(key);
 				if (sEStats == null) {
-					if (INSTANCES.size() > 499) {
+					if (INSTANCES.size() > 249) {
 						clear();
 					}
 					sEStats = new SEStats(startDate, endDate);
