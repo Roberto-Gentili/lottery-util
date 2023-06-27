@@ -129,13 +129,15 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 			try {
 				getAllPreviousEngineAndConfigurations().get(engineIndex);
 			} catch (IndexOutOfBoundsException exc) {
+				Properties clonedConfig = new Properties();
+				clonedConfig.putAll(config);
 				getAllPreviousEngineAndConfigurations().add(
 					new AbstractMap.SimpleEntry<>(
 						newEngineBuilderWithId(this.engineIndex),
 						() -> {
-							Properties clonedConfig = new Properties();
-							clonedConfig.putAll(config);
-							return clonedConfig;
+							Properties clonedConfigCopy = new Properties();
+							clonedConfigCopy.putAll(clonedConfig);
+							return clonedConfigCopy;
 						}
 					)
 				);

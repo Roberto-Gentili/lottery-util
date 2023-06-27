@@ -494,7 +494,9 @@ public class SELotterySimpleSimulator {
 			);
 			systemProcessor = buildSystemProcessor(configuration, excelFileName);
 		}
-
+		//Per cachare il motore in caso di utilizzo dell'opzione prevSys
+		engine.setup(configuration, true);
+		checkAndNotifyExecutionOfFirstSetupForConfiguration(firstSetupExecuted);
 		for (
 			List<LocalDate> datesToBeProcessed :
 			competitionDates
@@ -504,18 +506,12 @@ public class SELotterySimpleSimulator {
 					datesToBeProcessed.stream().map(TimeUtils.defaultLocalDateFormat::format).collect(Collectors.toList())
 				)
 			);
-			engine.setup(configuration, true);
-			checkAndNotifyExecutionOfFirstSetupForConfiguration(firstSetupExecuted);
+			engine.setup(configuration, false);
 			engine.getExecutor().apply(
 				extractionDatePredicate
 			).apply(
 				systemProcessor
 			);
-		}
-		if (competitionDates.isEmpty()) {
-			//Per cachare il motore in caso di utilizzo dell'opzione prevSys
-			engine.setup(configuration, true);
-			checkAndNotifyExecutionOfFirstSetupForConfiguration(firstSetupExecuted);
 		}		updateHistorical(configuration, excelFileName, configuration.getProperty("nameSuffix"), new LinkedHashMap<>());
 		if (!isSlave) {
 			readOrCreateExcel(
