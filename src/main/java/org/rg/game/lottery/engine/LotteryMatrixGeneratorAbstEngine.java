@@ -85,12 +85,12 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		comboIndexSelectorType = config.getProperty("combination.selector", "random");
 		String extractionDatesAsString = config.getProperty("competition");
 		Collection<LocalDate> extractionDates = computeExtractionDates(extractionDatesAsString);
-		LogUtils.info(
+		/*LogUtils.info(
 			"Computing for the following extraction dates:\n\t"+
 			String.join(", ",
 				extractionDates.stream().map(TimeUtils.defaultLocalDateFormat::format).collect(Collectors.toList())
 			)
-		);
+		);*/
 		storageType = config.getProperty("storage", "memory").replaceAll("\\s+","");
 		String combinationFilterRaw = config.getProperty("combination.filter");
 		Function<LocalDate, Map<String, Object>> basicDataSupplier = extractionDate -> {
