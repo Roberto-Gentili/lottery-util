@@ -6,8 +6,10 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -73,8 +75,8 @@ public class NumberProcessor {
 		return numbersToBeExcluded;
 	}
 
-	private List<Integer> retrieveNumbers(
-		Context context,
+	private <E extends LotteryMatrixGeneratorAbstEngine> List<Integer> retrieveNumbers(
+		Context<E> context,
 		String numbersAsString,
 		LocalDate extractionDate,
 		List<Integer> collectedNumbers,
@@ -256,32 +258,28 @@ public class NumberProcessor {
 		return count;
 	}
 
-	private List<Integer> getPreviousNumbers(Context context, String exclusionsOptions, List<Integer> collector, LocalDate extractionDate) {
+	private <E extends LotteryMatrixGeneratorAbstEngine> List<Integer> getPreviousNumbers(Context<E> context, String exclusionsOptions, List<Integer> collector, LocalDate extractionDate) {
 		return exclusionsOptions.startsWith(PREVIOUS_SYSTEM_KEY) ?
 				exclusionsOptions.contains("discard") ?
-					getAllExcludedNumbers(context, exclusionsOptions.split("\\/"), extractionDate) :
-					getAllChosenNumbers(context, exclusionsOptions.split("\\/"), extractionDate) :
+					getNumbersFromPreviousSystems(context, exclusionsOptions.split("\\/"), extractionDate, "numbersToBeDiscarded") :
+					getNumbersFromPreviousSystems(context, exclusionsOptions.split("\\/"), extractionDate, "chosenNumbers") :
 			new ArrayList<>(collector);
 	}
 
-	private List<Integer> getAllChosenNumbers(Context context, String[] numbersAsString, LocalDate extractionDate) {
+	private <E extends LotteryMatrixGeneratorAbstEngine> List<Integer> getNumbersFromPreviousSystems(
+		Context<E> context,
+		String[] numbersAsString,
+		LocalDate extractionDate,
+		String numbersType
+	) {
 		if (numbersAsString.length == 1) {
-			return context.allChosenNumbers.get(context.elaborationIndex - 1).get(TimeUtils.defaultLocalDateFormat.format(extractionDate));
+			return context.getNumbers(context.elaborationIndex - 1, extractionDate, numbersType);
 		}
 		List<Integer> chosenNumbers = new ArrayList<>();
 		for (int i = 1; i < numbersAsString.length; i++) {
-			chosenNumbers.addAll(context.allChosenNumbers.get(context.elaborationIndex - Integer.valueOf(numbersAsString[i])).get(TimeUtils.defaultLocalDateFormat.format(extractionDate)));
-		}
-		return chosenNumbers;
-	}
-
-	private List<Integer> getAllExcludedNumbers(Context context, String[] numbersAsString, LocalDate extractionDate) {
-		if (numbersAsString.length == 1) {
-			return context.allDiscardedNumbers.get(context.elaborationIndex - 1).get(TimeUtils.defaultLocalDateFormat.format(extractionDate));
-		}
-		List<Integer> chosenNumbers = new ArrayList<>();
-		for (int i = 1; i < numbersAsString.length; i++) {
-			chosenNumbers.addAll(context.allDiscardedNumbers.get(context.elaborationIndex - Integer.valueOf(numbersAsString[i])).get(TimeUtils.defaultLocalDateFormat.format(extractionDate)));
+			chosenNumbers.addAll(
+				context.getNumbers(context.elaborationIndex - Integer.valueOf(numbersAsString[i]), extractionDate, numbersType)
+			);
 		}
 		return chosenNumbers;
 	}
@@ -338,22 +336,26 @@ public class NumberProcessor {
 		);
 	}
 
-	static class Context {
+	static class Context<E extends LotteryMatrixGeneratorAbstEngine> {
 		final Integer elaborationIndex;
-		final List<Map<String,List<Integer>>> allChosenNumbers;
-		final List<Map<String,List<Integer>>> allDiscardedNumbers;
+		final List<Map.Entry<Supplier<E>, Supplier<Properties>>> allPreviousEngineAndConfigurations;
 		final Function<String, Function<Integer, Function<Integer, Iterator<Integer>>>> numberGeneratorFactory;
 
 		public Context(
 			Function<String, Function<Integer, Function<Integer, Iterator<Integer>>>> numberGeneratorFactory,
 			Integer elaborationIndex,
-			List<Map<String, List<Integer>>> allChosenNumbers,
-			List<Map<String, List<Integer>>> allDiscardedNumbers
+			List<Map.Entry<Supplier<E>, Supplier<Properties>>> allPreviousEngineAndConfigurations
 		) {
 			this.numberGeneratorFactory = numberGeneratorFactory;
 			this.elaborationIndex = elaborationIndex;
-			this.allChosenNumbers = allChosenNumbers;
-			this.allDiscardedNumbers = allDiscardedNumbers;
+			this.allPreviousEngineAndConfigurations = allPreviousEngineAndConfigurations;
+		}
+
+		public List<Integer> getNumbers(int index, LocalDate extractionDate, String numbersCollectionName) {
+			E engine = allPreviousEngineAndConfigurations.get(index).getKey().get();
+			Properties configuration = allPreviousEngineAndConfigurations.get(index).getValue().get();
+			configuration.setProperty("competition", TimeUtils.defaultLocalDateFormat.format(extractionDate));
+			return (List<Integer>)engine.setup(configuration, false).apply(extractionDate).get(numbersCollectionName);
 		}
 
 	}

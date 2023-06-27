@@ -10,16 +10,17 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.Random;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class MDLotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEngine {
-	private static final List<Map<String,List<Integer>>> allChosenNumbers;
-	private static final List<Map<String,List<Integer>>> allExcluededNumbers;
+	private static final List<Map.Entry<Supplier<MDLotteryMatrixGeneratorEngine>, Properties>> allPreviousEngineAndConfigurations;
 
 	static {
-		allChosenNumbers = new ArrayList<>();
-		allExcluededNumbers = new ArrayList<>();
+		allPreviousEngineAndConfigurations = new ArrayList<>();
 	}
 
 	public MDLotteryMatrixGeneratorEngine() {
@@ -44,13 +45,8 @@ public class MDLotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	@Override
-	protected List<Map<String,List<Integer>>> getAllChosenNumbers() {
-		return allChosenNumbers;
-	}
-
-	@Override
-	protected List<Map<String,List<Integer>>> getAllDiscardedNumbers() {
-		return allExcluededNumbers;
+	protected List<Entry<Supplier<MDLotteryMatrixGeneratorEngine>, Properties>> getAllPreviousEngineAndConfigurations() {
+		return allPreviousEngineAndConfigurations;
 	}
 
 	@Override
@@ -118,5 +114,14 @@ public class MDLotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	@Override
 	public String getDefaultExtractionArchiveForSeedStartDate() {
 		return "07/02/2018";
+	}
+
+	@Override
+	protected Supplier<MDLotteryMatrixGeneratorEngine> newEngineBuilderWithId(int index) {
+		return () -> {
+			MDLotteryMatrixGeneratorEngine engine = new MDLotteryMatrixGeneratorEngine();
+			engine.engineIndex = index;
+			return engine;
+		};
 	}
 }

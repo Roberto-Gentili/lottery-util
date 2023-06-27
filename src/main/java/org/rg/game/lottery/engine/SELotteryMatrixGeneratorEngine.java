@@ -17,11 +17,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -30,12 +32,10 @@ import org.rg.game.core.LogUtils;
 import org.rg.game.core.TimeUtils;
 
 public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEngine {
-	private static final List<Map<String,List<Integer>>> allChosenNumbers;
-	private static final List<Map<String,List<Integer>>> allDiscardedNumbers;
+	private static final List<Entry<Supplier<SELotteryMatrixGeneratorEngine>, Supplier<Properties>>> allPreviousEngineAndConfigurations;
 
 	static {
-		allChosenNumbers = new ArrayList<>();
-		allDiscardedNumbers = new ArrayList<>();
+		allPreviousEngineAndConfigurations = new ArrayList<>();
 	}
 
 	@Override
@@ -112,16 +112,6 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 
 
 	@Override
-	protected List<Map<String,List<Integer>>> getAllChosenNumbers() {
-		return allChosenNumbers;
-	}
-
-	@Override
-	protected List<Map<String,List<Integer>>> getAllDiscardedNumbers() {
-		return allDiscardedNumbers;
-	}
-
-	@Override
 	protected Function<String, Function<Integer, Function<Integer, Iterator<Integer>>>> getNumberGeneratorFactory() {
 		return generatorType-> leftBound -> rightBound -> {
 			if (NumberProcessor.RANDOM_KEY.equals(generatorType)) {
@@ -151,7 +141,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 
 	@Override
 	public String getDefaultExtractionArchiveStartDate() {
-		return "02/07/2009";
+		return SEStats.FIRST_EXTRACTION_DATE_WITH_NEW_MACHINE_AS_STRING;
 	}
 
 	@Override
@@ -425,6 +415,20 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	protected Map<String, Object> checkQuality(Storage storage) {
 		return getSEStats()
 			.checkQuality(storage::iterator);
+	}
+
+	@Override
+	protected List<Entry<Supplier<SELotteryMatrixGeneratorEngine>, Supplier<Properties>>> getAllPreviousEngineAndConfigurations() {
+		return allPreviousEngineAndConfigurations;
+	}
+
+	@Override
+	protected Supplier<SELotteryMatrixGeneratorEngine> newEngineBuilderWithId(int index) {
+		return () -> {
+			SELotteryMatrixGeneratorEngine engine = new SELotteryMatrixGeneratorEngine();
+			engine.engineIndex = index;
+			return engine;
+		};
 	}
 
 }

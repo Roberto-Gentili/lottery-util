@@ -60,9 +60,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class SEStats {
 	private static final Map<String, SEStats> INSTANCES;
-	static final String FIRST_EXTRACTION_DATE_AS_STRING = "03/12/1997";
-	static final LocalDate FIRST_EXTRACTION_LOCAL_DATE = LocalDate.parse(FIRST_EXTRACTION_DATE_AS_STRING, TimeUtils.defaultLocalDateFormat);
-	static final Date FIRST_EXTRACTION_DATE = TimeUtils.toDate(FIRST_EXTRACTION_LOCAL_DATE);
+	public static final String FIRST_EXTRACTION_DATE_AS_STRING = "03/12/1997";
+	public static final LocalDate FIRST_EXTRACTION_LOCAL_DATE = LocalDate.parse(FIRST_EXTRACTION_DATE_AS_STRING, TimeUtils.defaultLocalDateFormat);
+	public static final Date FIRST_EXTRACTION_DATE = TimeUtils.toDate(FIRST_EXTRACTION_LOCAL_DATE);
+
+	public static final String FIRST_EXTRACTION_DATE_WITH_NEW_MACHINE_AS_STRING = "02/07/2009";
+	public static final LocalDate FIRST_EXTRACTION_LOCAL_DATE_WITH_NEW_MACHINE = LocalDate.parse(FIRST_EXTRACTION_DATE_WITH_NEW_MACHINE_AS_STRING, TimeUtils.defaultLocalDateFormat);
+	public static final Date FIRST_EXTRACTION_DATE_WITH_NEW_MACHINE = TimeUtils.toDate(FIRST_EXTRACTION_LOCAL_DATE_WITH_NEW_MACHINE);
 
 	public static boolean forceLoadingFromExcel;
 	static {
@@ -97,7 +101,7 @@ public class SEStats {
 		boolean isGlobal = false;
 		if (LocalDate.parse(endDate, TimeUtils.defaultLocalDateFormat).compareTo(LocalDate.now()) >= 0) {
 			endDate = TimeUtils.defaultLocalDateFormat.format(LocalDate.now());
-			isGlobal = startDate.equals("03/12/1997") || startDate.equals("02/07/2009");
+			isGlobal = startDate.equals(FIRST_EXTRACTION_DATE_AS_STRING) || startDate.equals(FIRST_EXTRACTION_DATE_WITH_NEW_MACHINE_AS_STRING);
 		}
 		String key = startDate+"->"+endDate;
 		SEStats sEStats = INSTANCES.get(key);
@@ -105,6 +109,9 @@ public class SEStats {
 			synchronized(INSTANCES) {
 				sEStats = INSTANCES.get(key);
 				if (sEStats == null) {
+					if (INSTANCES.size() > 999) {
+						clear();
+					}
 					sEStats = new SEStats(startDate, endDate);
 					sEStats.global = isGlobal;
 					INSTANCES.put(key, sEStats);
@@ -121,6 +128,7 @@ public class SEStats {
 	}
 
 	public static void clear() {
+		LogUtils.info("Cleaning " + SEStats.class.getSimpleName() + " cache");
 		synchronized(INSTANCES) {
 			Iterator<Map.Entry<String, SEStats>> sEStatsIterator = INSTANCES.entrySet().iterator();
 			while (sEStatsIterator.hasNext()) {
@@ -130,6 +138,7 @@ public class SEStats {
 				}
 			}
 		}
+		LogUtils.info(SEStats.class.getSimpleName() + " cache cleaned");
 	}
 
 	private void init(String startDate, String endDate) {

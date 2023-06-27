@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.time.temporal.ChronoUnit;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -71,12 +72,12 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 
 
 	LotteryMatrixGeneratorAbstEngine() {
-		engineIndex = getAllChosenNumbers().size();
+		engineIndex = getAllPreviousEngineAndConfigurations().size();
 		combinationFilterPreProcessor = new ExpressionToPredicateEngine<>();
 		setupCombinationFilterPreProcessor();
 	}
 
-	public void setup(Properties config) {
+	public Function<LocalDate, Map<String, Object>> setup(Properties config, boolean cacheEngineAndConfiguration) {
 		comboSequencedIndexSelectorCounter = new AtomicInteger(0);
 		extractionArchiveStartDate = config.getProperty("competition.archive.start-date");
 		extractionArchiveForSeedStartDate = config.getProperty("seed-data.start-date");
@@ -100,8 +101,8 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 				);
 			}
 			Map<String, Object> data = adjustSeed();
-			NumberProcessor.Context numberProcessorContext = new NumberProcessor.Context(
-				getNumberGeneratorFactory(), engineIndex, getAllChosenNumbers(), getAllDiscardedNumbers()
+			NumberProcessor.Context<?> numberProcessorContext = new NumberProcessor.Context<>(
+				getNumberGeneratorFactory(), engineIndex, getAllPreviousEngineAndConfigurations()
 			);
 			List<Integer> chosenNumbers = numberProcessor.retrieveNumbersToBePlayed(
 				numberProcessorContext,
@@ -109,7 +110,6 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 				extractionDate,
 				CollectionUtils.retrieveBoolean(config, "numbers.ordered", "false")
 			);
-			SEStats.clear();
 			data.put("chosenNumbers", chosenNumbers);
 			List<Integer> numbersToBePlayed = new ArrayList<>(chosenNumbers);
 			data.put(
@@ -125,25 +125,21 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 			data.put("numbersToBePlayed", numbersToBePlayed);
 			return data;
 		};
-		for (LocalDate extractionDate : extractionDates) {
-			Map<String,List<Integer>> numbersToBePlayedForData = null;
-			Map<String,List<Integer>> numbersToBeExludedForData = null;
+		if (cacheEngineAndConfiguration) {
 			try {
-				numbersToBePlayedForData = getAllChosenNumbers().get(engineIndex);
-				numbersToBeExludedForData = getAllDiscardedNumbers().get(engineIndex);
+				getAllPreviousEngineAndConfigurations().get(engineIndex);
 			} catch (IndexOutOfBoundsException exc) {
-				getAllChosenNumbers().add(numbersToBePlayedForData = new LinkedHashMap<>());
-				getAllDiscardedNumbers().add(numbersToBeExludedForData = new LinkedHashMap<>());
+				getAllPreviousEngineAndConfigurations().add(
+					new AbstractMap.SimpleEntry<>(
+						newEngineBuilderWithId(this.engineIndex),
+						() -> {
+							Properties clonedConfig = new Properties();
+							clonedConfig.putAll(config);
+							return clonedConfig;
+						}
+					)
+				);
 			}
-			Map<String, Object> basicData = basicDataSupplier.apply(extractionDate);
-			numbersToBePlayedForData.put(
-				TimeUtils.defaultLocalDateFormat.format(extractionDate),
-				(List<Integer>)basicData.get("chosenNumbers")
-			);
-			numbersToBeExludedForData.put(
-				TimeUtils.defaultLocalDateFormat.format(extractionDate),
-				(List<Integer>)basicData.get("numbersToBeDiscarded")
-			);
 		}
 		reportEnabled = CollectionUtils.retrieveBoolean(
 			config,
@@ -231,6 +227,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		} else if (avoidModeConfigValue.equals("if not strongly suggested")) {
 			avoidMode = 2;
 		}
+		return basicDataSupplier;
 	}
 
 	public Collection<LocalDate> computeExtractionDates(String extractionDatesAsString) {
@@ -775,9 +772,9 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 
 	public abstract String getDefaultExtractionArchiveStartDate();
 
-	protected abstract List<Map<String,List<Integer>>> getAllChosenNumbers();
+	protected abstract <E extends LotteryMatrixGeneratorAbstEngine> List<Entry<Supplier<E>, Supplier<Properties>>> getAllPreviousEngineAndConfigurations();
 
-	protected abstract List<Map<String,List<Integer>>> getAllDiscardedNumbers();
+	protected abstract <E extends LotteryMatrixGeneratorAbstEngine> Supplier<E> newEngineBuilderWithId(int engineIndex);
 
 	protected abstract List<LocalDate> forWeekOf(LocalDate dayOfWeek);
 

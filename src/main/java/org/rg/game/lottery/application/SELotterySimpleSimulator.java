@@ -184,8 +184,8 @@ public class SELotterySimpleSimulator {
 		Collection<CompletableFuture<Void>> futures
 	) {
 		SEStats.forceLoadingFromExcel = false;
-		allTimeStats = SEStats.get("03/12/1997", TimeUtils.getDefaultDateFormat().format(new Date()));
-		SEStats.get("02/07/2009", TimeUtils.getDefaultDateFormat().format(new Date()));
+		allTimeStats = SEStats.get(SEStats.FIRST_EXTRACTION_DATE_AS_STRING, TimeUtils.getDefaultDateFormat().format(new Date()));
+		SEStats.get(SEStats.FIRST_EXTRACTION_DATE_WITH_NEW_MACHINE_AS_STRING, TimeUtils.getDefaultDateFormat().format(new Date()));
 		SEStats.forceLoadingFromExcel = true;
 		Supplier<SELotteryMatrixGeneratorEngine> engineSupplier = SELotteryMatrixGeneratorEngine::new;
 		String[] configurationFileFolders = ResourceUtils.INSTANCE.pathsFromSystemEnv(
@@ -242,13 +242,13 @@ public class SELotterySimpleSimulator {
 		List<Properties> configurations = new ArrayList<>();
 		for (Properties config : configurationProperties) {
 			String simulationDates = config.getProperty("simulation.dates");
+			if (simulationDates != null) {
+				config.setProperty("competition", simulationDates);
+			}
+			setGroup(config);
+			config.setProperty("storage", "filesystem");
+			config.setProperty("overwrite-if-exists", String.valueOf(CollectionUtils.retrieveBoolean(config, "simulation.slave", "false")? -1 : 0));
 			if (CollectionUtils.retrieveBoolean(config, "simulation.enabled", "false")) {
-				if (simulationDates != null) {
-					config.setProperty("competition", simulationDates);
-				}
-				setGroup(config);
-				config.setProperty("storage", "filesystem");
-				config.setProperty("overwrite-if-exists", String.valueOf(CollectionUtils.retrieveBoolean(config, "simulation.slave", "false")? -1 : 0));
 				configurations.add(config);
 			}
 		}
@@ -504,7 +504,7 @@ public class SELotterySimpleSimulator {
 					datesToBeProcessed.stream().map(TimeUtils.defaultLocalDateFormat::format).collect(Collectors.toList())
 				)
 			);
-			engine.setup(configuration);
+			engine.setup(configuration, true);
 			checkAndNotifyExecutionOfFirstSetupForConfiguration(firstSetupExecuted);
 			engine.getExecutor().apply(
 				extractionDatePredicate
@@ -917,7 +917,6 @@ public class SELotterySimpleSimulator {
 					fileCreatedFlag.set(true);
 				},
 				workBook -> {
-					SEStats.clear();
 					if (!isSlave && (fileCreatedFlag.get() || rowAddedFlag.get())) {
 						store(excelFileName, workBook);
 					}
