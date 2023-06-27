@@ -513,6 +513,7 @@ public class SELotterySimpleSimulator {
 			);
 		}
 		if (competitionDates.isEmpty()) {
+			//Per cachare il motore in caso di utilizzo dell'opzione prevSys
 			engine.setup(configuration, true);
 			checkAndNotifyExecutionOfFirstSetupForConfiguration(firstSetupExecuted);
 		}		updateHistorical(configuration, excelFileName, configuration.getProperty("nameSuffix"), new LinkedHashMap<>());
