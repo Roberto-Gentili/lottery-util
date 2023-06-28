@@ -173,6 +173,8 @@ public class SESimulationSummaryGenerator extends Shared {
 						LogUtils.error("Unable to process backups of " + report.getAbsolutePath());
 					}
 				}
+			} else {
+				LogUtils.warn("No report found in folder " + singleSimFolder.getAbsolutePath());
 			}
 			process(
 				singleSimFolderRelPath,
