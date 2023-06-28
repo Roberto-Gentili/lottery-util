@@ -8,7 +8,7 @@ import org.rg.game.core.LogUtils;
 import org.rg.game.lottery.engine.PersistentStorage;
 import org.rg.game.lottery.engine.Storage;
 
-public class SEQualityChecker {
+public class SEQualityChecker extends Shared {
 
 	public static void main(String[] args) throws IOException {
 		Map<String, Boolean> systemToBeChecked = new LinkedHashMap<>();
@@ -27,7 +27,7 @@ public class SEQualityChecker {
 				String[] dataInfoSplitted = dateInfo.getKey().split("\\\\");
 				Storage storage = PersistentStorage.restore(dataInfoSplitted[0], dataInfoSplitted[dataInfoSplitted.length - 1]);
 				storage.printAll();
-				Map<String, Object> report = Shared.getSEStats().checkQuality(storage::iterator);
+				Map<String, Object> report = getSEStats().checkQuality(storage::iterator);
 				if ((boolean)dateInfo.getValue()) {
 					LogUtils.info("\t" + ((String)report.get("report.detail")).replace("\n", "\n\t"));
 				}

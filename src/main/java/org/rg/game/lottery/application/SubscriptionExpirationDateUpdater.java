@@ -21,7 +21,6 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -32,7 +31,7 @@ import org.rg.game.core.MathUtils;
 import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.PersistentStorage;
 
-public class SubscriptionExpirationDateUpdater {
+public class SubscriptionExpirationDateUpdater extends Shared {
 	static DateTimeFormatter datePattern = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
 
 	static List<Map.Entry<List<String>, Integer>> updateInfos = Arrays.asList(
@@ -168,14 +167,14 @@ public class SubscriptionExpirationDateUpdater {
 							extractionDateCounter++;
 						}
 						String label = name + " " + extractionDateCounter + " estrazioni rimaste. Importo credito: ";
-						LogUtils.info(label + Shared.rightAlignedString(MathUtils.INSTANCE.decimalFormat.format(extractionCost * extractionDateCounter), displaySize - label.length()) + "€");
+						LogUtils.info(label + rightAlignedString(MathUtils.INSTANCE.decimalFormat.format(extractionCost * extractionDateCounter), displaySize - label.length()) + "€");
 						total += extractionCost * extractionDateCounter;
 					}
 				}
 			}
 			LogUtils.info();
 			String label = "Importo debito: ";
-			LogUtils.info(label + Shared.rightAlignedString(MathUtils.INSTANCE.decimalFormat.format(total), displaySize - label.length()) + "€");
+			LogUtils.info(label + rightAlignedString(MathUtils.INSTANCE.decimalFormat.format(total), displaySize - label.length()) + "€");
 		} catch (Throwable exc) {
 			exc.printStackTrace();
 		}
@@ -188,22 +187,6 @@ public class SubscriptionExpirationDateUpdater {
 			return () -> computeIncrementationOfWeeks(Integer.valueOf(value.split("w|W")[0]));
 		}
 		throw new IllegalArgumentException("Unvalid incrementation type: " + value.charAt(value.length() - 1));
-	}
-
-	private static int getCellIndex(Sheet sheet, String name) {
-		return getCellIndex(sheet, 0, name);
-	}
-
-	private static int getCellIndex(Sheet sheet, int headerIndex, String name) {
-		Row header = sheet.getRow(headerIndex);
-		Iterator<Cell> cellIterator = header.cellIterator();
-		while (cellIterator.hasNext()) {
-			Cell cell = cellIterator.next();
-			if (CellType.STRING.equals(cell.getCellType()) && name.equalsIgnoreCase(cell.getStringCellValue()) ) {
-				return cell.getColumnIndex();
-			}
-		}
-		return -1;
 	}
 
 	static SimpleEntry<List<String>, Integer> addUpdateInfo(Integer incrementation, String... names) {

@@ -40,7 +40,7 @@ import org.rg.game.lottery.engine.SEStats;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-class SEIntegralSystemAnalyzer {
+class SEIntegralSystemAnalyzer extends Shared {
 
 	public static void main(String[] args) throws IOException {
 		String[] configurationFileFolders = ResourceUtils.INSTANCE.pathsFromSystemEnv(

@@ -22,14 +22,14 @@ import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 
-public class SEQualityCheckerForExcel {
+public class SEQualityCheckerForExcel extends Shared {
 
 	public static void main(String[] args) throws IOException {
 		check(
 			forDate(
-				Shared.getSystemEnv(
+				getSystemEnv(
 					"startDate", "14/02/2023"
-				), Shared.getSystemEnv(
+				), getSystemEnv(
 					"endDate", "next+0"
 				),
 				true
@@ -43,8 +43,8 @@ public class SEQualityCheckerForExcel {
 		Boolean printReportDetail
 	) {
 		LotteryMatrixGeneratorAbstEngine engine = new SELotteryMatrixGeneratorEngine();
-		LocalDate startDate = Shared.convert(startDateAsString);
-		LocalDate endDate =  Shared.convert(endDateAsString);
+		LocalDate startDate = convert(startDateAsString);
+		LocalDate endDate =  convert(endDateAsString);
 		List<Map.Entry<LocalDate, Object>> dates = new ArrayList<>();
 		while (startDate.compareTo(endDate) <= 0) {
 			startDate = engine.computeNextExtractionDate(startDate, false);
@@ -59,10 +59,10 @@ public class SEQualityCheckerForExcel {
 			for (Map.Entry<LocalDate, Object> dateInfo : dateGroup) {
 				String extractionDate = TimeUtils.defaultLocalDateFormat.format(dateInfo.getKey());
 				String extractionYear = extractionDate.split("\\/")[2];
-				String extractionMonth = Shared.getMonth(extractionDate);
+				String extractionMonth = getMonth(extractionDate);
 				String extractionDay = extractionDate.split("\\/")[0];
 				File mainFile =
-					Shared.getSystemsFile(extractionYear);
+					getSystemsFile(extractionYear);
 				List<List<Integer>> system = new ArrayList<>();
 				try (InputStream srcFileInputStream = new FileInputStream(mainFile); Workbook workbook = new XSSFWorkbook(srcFileInputStream);) {
 					Sheet sheet = workbook.getSheet(extractionMonth);
@@ -70,7 +70,7 @@ public class SEQualityCheckerForExcel {
 						LogUtils.warn("No sheet named '" + extractionMonth + "' to test for date " + extractionDate);
 						continue;
 					}
-					int offset = Shared.getCellIndex(sheet, extractionDay);
+					int offset = getCellIndex(sheet, extractionDay);
 					if (offset < 0) {
 						LogUtils.warn("No combination to test for date " + extractionDate);
 						continue;
@@ -94,7 +94,7 @@ public class SEQualityCheckerForExcel {
 						system.add(currentCombo);
 					}
 					LogUtils.info("\nAnalisi del sistema del " + extractionDate + ":" );
-					Map<String, Object> report = Shared.getSEStats().checkQuality(system::iterator);
+					Map<String, Object> report = getSEStats().checkQuality(system::iterator);
 					if ((boolean)dateInfo.getValue()) {
 						LogUtils.info("\t" + ((String)report.get("report.detail")).replace("\n", "\n\t"));
 					}

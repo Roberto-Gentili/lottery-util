@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.Locale;
 
+import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
@@ -17,6 +18,7 @@ import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.util.IOUtils;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.rg.game.core.CollectionUtils;
 import org.rg.game.core.TimeUtils;
@@ -25,6 +27,11 @@ import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.SEStats;
 
 class Shared {
+
+	static {
+		ZipSecureFile.setMinInflateRatio(0);
+		IOUtils.setByteArrayMaxOverride(1000000000);
+	}
 
 	static String sEStatsDefaultDate = System.getenv("competition.archive.start-date") != null ?
 		System.getenv("competition.archive.start-date"):
@@ -133,8 +140,9 @@ class Shared {
 		return cell;
 	}
 
+	/*
 	public static void main(String[] args) {
-		/*List<Integer> ourNumbers = Arrays.asList(
+		List<Integer> ourNumbers = Arrays.asList(
 			1,2,3,4,5,7,8,9,
 			10,11,12,13,14,16,17,19,
 			20,21,23,24,25,27,28,29,
@@ -173,7 +181,7 @@ class Shared {
 		for (List<Integer> winningCombo : system) {
 			inClauses.add("in " + ComboHandler.toString(winningCombo, ",") + ":" + bound + "," + 6);
 		}
-		LogUtils.info("(" + String.join("|", inClauses) + ")");*/
-	}
+		LogUtils.info("(" + String.join("|", inClauses) + ")");
+	}*/
 
 }

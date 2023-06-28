@@ -5,7 +5,7 @@ import java.util.stream.IntStream;
 
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 
-public class SEFilterAnalyzer {
+public class SEFilterAnalyzer extends Shared {
 	private static String filter =
 		"sameLastDigit: 0,4&" +
 		"1 -> 9: 0,3;" +

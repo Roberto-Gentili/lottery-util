@@ -87,7 +87,7 @@ import com.fasterxml.jackson.databind.DatabindException;
 
 
 
-public class SELotterySimpleSimulator {
+public class SELotterySimpleSimulator extends Shared {
 
 	static final String DATA_FOLDER_NAME = "data";
 
@@ -226,8 +226,8 @@ public class SELotterySimpleSimulator {
 		return configurations;
 	}
 
-	private static Integer getCellIndex(Sheet sheet, String label) {
-		return cellIndexesCache.computeIfAbsent(sheet.getSheetName() + "." + label, lb -> Shared.getCellIndex(sheet, label));
+	private static Integer getOrPutAndGetCellIndex(Sheet sheet, String label) {
+		return cellIndexesCache.computeIfAbsent(sheet.getSheetName() + "." + label, lb -> getCellIndex(sheet, label));
 	}
 
 	private static String convertNumToColString(Integer idx) {
@@ -456,7 +456,7 @@ public class SELotterySimpleSimulator {
 
 	private static boolean rowRefersTo(Row row, String configurationName) {
 		Matcher matcher = regexForExtractConfigFileName.matcher(
-			row.getCell(getCellIndex(row.getSheet(), FILE_LABEL)).getStringCellValue()
+			row.getCell(getOrPutAndGetCellIndex(row.getSheet(), FILE_LABEL)).getStringCellValue()
 		);
 		return matcher.find() && matcher.group(1).equals(configurationName);
 	}
@@ -522,8 +522,8 @@ public class SELotterySimpleSimulator {
 					workBookTemplate.setAutoFilter(1, getMaxRowIndex(), 0, reportHeaderLabels.size() - 1);
 					workBookTemplate.addSheetConditionalFormatting(
 						new int[] {
-							getCellIndex(sheet, Premium.LABEL_FIVE),
-							getCellIndex(sheet, getFollowingProgressiveHistoricalPremiumLabel(Premium.LABEL_FIVE))
+							getOrPutAndGetCellIndex(sheet, Premium.LABEL_FIVE),
+							getOrPutAndGetCellIndex(sheet, getFollowingProgressiveHistoricalPremiumLabel(Premium.LABEL_FIVE))
 						},
 						IndexedColors.YELLOW,
 						ComparisonOperator.GT,
@@ -533,8 +533,8 @@ public class SELotterySimpleSimulator {
 					);
 					workBookTemplate.addSheetConditionalFormatting(
 						new int[] {
-							getCellIndex(sheet, Premium.LABEL_FIVE_PLUS),
-							getCellIndex(sheet, getFollowingProgressiveHistoricalPremiumLabel(Premium.LABEL_FIVE_PLUS))
+							getOrPutAndGetCellIndex(sheet, Premium.LABEL_FIVE_PLUS),
+							getOrPutAndGetCellIndex(sheet, getFollowingProgressiveHistoricalPremiumLabel(Premium.LABEL_FIVE_PLUS))
 						},
 						IndexedColors.ORANGE,
 						ComparisonOperator.GT,
@@ -544,8 +544,8 @@ public class SELotterySimpleSimulator {
 					);
 					workBookTemplate.addSheetConditionalFormatting(
 						new int[] {
-							getCellIndex(sheet, Premium.LABEL_SIX),
-							getCellIndex(sheet, getFollowingProgressiveHistoricalPremiumLabel(Premium.LABEL_SIX))
+							getOrPutAndGetCellIndex(sheet, Premium.LABEL_SIX),
+							getOrPutAndGetCellIndex(sheet, getFollowingProgressiveHistoricalPremiumLabel(Premium.LABEL_SIX))
 						},
 						IndexedColors.RED,
 						ComparisonOperator.GT,
@@ -591,7 +591,7 @@ public class SELotterySimpleSimulator {
 
 	private static int getMaxRowIndexInExcelFormat() {
 		return SpreadsheetVersion.EXCEL2007.getMaxRows();
-		//return Shared.getSEStats().getAllWinningCombos().size() * 2;
+		//return getSEStats().getAllWinningCombos().size() * 2;
 	}
 
 	private static Integer updateHistorical(
@@ -612,19 +612,19 @@ public class SELotterySimpleSimulator {
 				if (sheet.getPhysicalNumberOfRows() < 3) {
 					return;
 				}
-				Integer extractionDateColIndex = getCellIndex(sheet, EXTRACTION_DATE_LABEL);
-				Integer dataAggStoricoColIndex = getCellIndex(sheet, HISTORICAL_UPDATE_DATE_LABEL);
-				Integer costColIndex = getCellIndex(sheet, COST_LABEL);
-				Integer historicalCostColIndex = getCellIndex(sheet, HISTORICAL_COST_LABEL);
-				Integer historicalReturnColIndex = getCellIndex(sheet, HISTORICAL_RETURN_LABEL);
-				Integer followingProgressiveHistoricalCostColIndex = getCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL);
-				Integer followingProgressiveHistoricalReturnColIndex = getCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_RETURN_LABEL);
-				Integer fileColIndex = getCellIndex(sheet, FILE_LABEL);
+				Integer extractionDateColIndex = getOrPutAndGetCellIndex(sheet, EXTRACTION_DATE_LABEL);
+				Integer dataAggStoricoColIndex = getOrPutAndGetCellIndex(sheet, HISTORICAL_UPDATE_DATE_LABEL);
+				Integer costColIndex = getOrPutAndGetCellIndex(sheet, COST_LABEL);
+				Integer historicalCostColIndex = getOrPutAndGetCellIndex(sheet, HISTORICAL_COST_LABEL);
+				Integer historicalReturnColIndex = getOrPutAndGetCellIndex(sheet, HISTORICAL_RETURN_LABEL);
+				Integer followingProgressiveHistoricalCostColIndex = getOrPutAndGetCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL);
+				Integer followingProgressiveHistoricalReturnColIndex = getOrPutAndGetCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_RETURN_LABEL);
+				Integer fileColIndex = getOrPutAndGetCellIndex(sheet, FILE_LABEL);
 				Row firstRow = getFirstRow(sheet);
 				CellStyle dateCellStyle = firstRow.getCell(extractionDateColIndex).getCellStyle();
 				CellStyle numberCellStyle = firstRow.getCell(costColIndex).getCellStyle();
 				CellStyle hyperLinkNumberCellStyle = null;
-				if (firstRow.getCell(getCellIndex(sheet, getFollowingProgressiveHistoricalPremiumLabel(Premium.LABEL_TWO))).getCellType() == CellType.BLANK) {
+				if (firstRow.getCell(getOrPutAndGetCellIndex(sheet, getFollowingProgressiveHistoricalPremiumLabel(Premium.LABEL_TWO))).getCellType() == CellType.BLANK) {
 					hyperLinkNumberCellStyle = workBook.createCellStyle();
 					hyperLinkNumberCellStyle.cloneStyleFrom(firstRow.getCell(fileColIndex).getCellStyle());
 					hyperLinkNumberCellStyle.setDataFormat(workBook.createDataFormat().getFormat("#,##0"));
@@ -696,7 +696,7 @@ public class SELotterySimpleSimulator {
 										Cell dataAggStoricoCell = currentRow.getCell(dataAggStoricoColIndex);
 										for (Map.Entry<Number, String> premiumData :  Premium.all().entrySet()) {
 											Cell historyDataCell =
-												currentRow.getCell(getCellIndex(sheet, getHistoryPremiumLabel(premiumData.getValue())));
+												currentRow.getCell(getOrPutAndGetCellIndex(sheet, getHistoryPremiumLabel(premiumData.getValue())));
 											Number premiumCounter = ((Map<Number,Integer>)premiumCountersData.get("premiumCounters.all")).get(premiumData.getKey());
 											if (premiumCounter != null) {
 												historyDataCell.setCellValue(premiumCounter.doubleValue());
@@ -704,7 +704,7 @@ public class SELotterySimpleSimulator {
 												historyDataCell.setCellValue(0d);
 											}
 											historyDataCell =
-												currentRow.getCell(getCellIndex(sheet, getFollowingProgressiveHistoricalPremiumLabel(premiumData.getValue())));
+												currentRow.getCell(getOrPutAndGetCellIndex(sheet, getFollowingProgressiveHistoricalPremiumLabel(premiumData.getValue())));
 											premiumCounter = ((Map<Number,Integer>)premiumCountersData.get("premiumCounters.fromExtractionDate")).get(premiumData.getKey());
 											if (premiumCounter != null) {
 												historyDataCell.setCellValue(premiumCounter.doubleValue());
@@ -939,9 +939,9 @@ public class SELotterySimpleSimulator {
 		Integer currentRowNum = row.getRowNum();
 		if (currentRowNum > getHeaderSize()) {
 			Row firstRow = getFirstRow(sheet);
-			numberCellStyle = firstRow.getCell(getCellIndex(sheet, BALANCE_LABEL)).getCellStyle();
-			dateCellStyle = firstRow.getCell(getCellIndex(sheet, EXTRACTION_DATE_LABEL)).getCellStyle();
-			hyperLinkStyle = firstRow.getCell(getCellIndex(sheet, FILE_LABEL)).getCellStyle();
+			numberCellStyle = firstRow.getCell(getOrPutAndGetCellIndex(sheet, BALANCE_LABEL)).getCellStyle();
+			dateCellStyle = firstRow.getCell(getOrPutAndGetCellIndex(sheet, EXTRACTION_DATE_LABEL)).getCellStyle();
+			hyperLinkStyle = firstRow.getCell(getOrPutAndGetCellIndex(sheet, FILE_LABEL)).getCellStyle();
 		} else {
 			numberCellStyle = workBook.createCellStyle();
 			numberCellStyle.setAlignment(HorizontalAlignment.RIGHT);
@@ -959,7 +959,7 @@ public class SELotterySimpleSimulator {
 			hyperLinkStyle.setFont(fontStyle);
 		}
 		Map<String, Integer> results = allTimeStats.checkFor(extractionDate, storage::iterator);
-		Cell cell = row.createCell(getCellIndex(row.getSheet(), EXTRACTION_DATE_LABEL));
+		Cell cell = row.createCell(getOrPutAndGetCellIndex(row.getSheet(), EXTRACTION_DATE_LABEL));
 		cell.setCellStyle(dateCellStyle);
 		cell.setCellValue(TimeUtils.toDate(extractionDate));
 
@@ -970,68 +970,68 @@ public class SELotterySimpleSimulator {
 			if (result == null) {
 				result = 0;
 			}
-			cell = row.createCell(getCellIndex(row.getSheet(), label));
+			cell = row.createCell(getOrPutAndGetCellIndex(row.getSheet(), label));
 			cell.setCellStyle(numberCellStyle);
 			cell.setCellValue(result);
 		}
-		cell = row.createCell(getCellIndex(row.getSheet(), COST_LABEL));
+		cell = row.createCell(getOrPutAndGetCellIndex(row.getSheet(), COST_LABEL));
 		cell.setCellStyle(numberCellStyle);
 		cell.setCellValue(storage.size());
 
 		List<String> allFormulas = Premium.allLabelsList().stream().map(
 			label -> generatePremiumFormula(sheet, currentRowNum, label, lb -> lb)).collect(Collectors.toList());
 		String formula = String.join("+", allFormulas);
-		cell = row.createCell(getCellIndex(row.getSheet(), RETURN_LABEL));
+		cell = row.createCell(getOrPutAndGetCellIndex(row.getSheet(), RETURN_LABEL));
 		cell.setCellStyle(numberCellStyle);
 		cell.setCellFormula(formula);
 
 		formula = generateBalanceFormula(currentRowNum, sheet, Arrays.asList(RETURN_LABEL, COST_LABEL));
-		cell = row.createCell(getCellIndex(row.getSheet(), BALANCE_LABEL));
+		cell = row.createCell(getOrPutAndGetCellIndex(row.getSheet(), BALANCE_LABEL));
 		cell.setCellStyle(numberCellStyle);
 		cell.setCellFormula(formula);
 
 		for (int i = 0; i < allPremiumLabels.size();i++) {
-			cell = row.createCell(getCellIndex(sheet, getFollowingProgressiveHistoricalPremiumLabel(allPremiumLabels.get(i))));
+			cell = row.createCell(getOrPutAndGetCellIndex(sheet, getFollowingProgressiveHistoricalPremiumLabel(allPremiumLabels.get(i))));
 			cell.setCellStyle(numberCellStyle);
 		}
-		cell = row.createCell(getCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL));
+		cell = row.createCell(getOrPutAndGetCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL));
 		cell.setCellStyle(numberCellStyle);
 		cell.setCellValue(0);
 
 		allFormulas = Premium.allLabelsList().stream().map(
 				label -> generatePremiumFormula(sheet, currentRowNum, label, SELotterySimpleSimulator::getFollowingProgressiveHistoricalPremiumLabel)).collect(Collectors.toList());
 		formula = String.join("+", allFormulas);
-		cell = row.createCell(getCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_RETURN_LABEL));
+		cell = row.createCell(getOrPutAndGetCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_RETURN_LABEL));
 		cell.setCellStyle(numberCellStyle);
 		cell.setCellFormula(formula);
 
 		formula = generateBalanceFormula(currentRowNum, sheet, Arrays.asList(FOLLOWING_PROGRESSIVE_HISTORICAL_RETURN_LABEL, FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL));
-		cell = row.createCell(getCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_BALANCE_LABEL));
+		cell = row.createCell(getOrPutAndGetCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_BALANCE_LABEL));
 		cell.setCellStyle(numberCellStyle);
 		cell.setCellFormula(formula);
 
 		for (int i = 0; i < allPremiumLabels.size();i++) {
-			cell = row.createCell(getCellIndex(sheet, getHistoryPremiumLabel(allPremiumLabels.get(i))));
+			cell = row.createCell(getOrPutAndGetCellIndex(sheet, getHistoryPremiumLabel(allPremiumLabels.get(i))));
 			cell.setCellStyle(numberCellStyle);
 		}
 
-		cell = row.createCell(getCellIndex(sheet, HISTORICAL_COST_LABEL));
+		cell = row.createCell(getOrPutAndGetCellIndex(sheet, HISTORICAL_COST_LABEL));
 		cell.setCellStyle(numberCellStyle);
 		cell.setCellValue(0);
 
 		allFormulas = Premium.allLabelsList().stream().map(
 				label -> generatePremiumFormula(sheet, currentRowNum, label, SELotterySimpleSimulator::getHistoryPremiumLabel)).collect(Collectors.toList());
 		formula = String.join("+", allFormulas);
-		cell = row.createCell(getCellIndex(sheet, HISTORICAL_RETURN_LABEL));
+		cell = row.createCell(getOrPutAndGetCellIndex(sheet, HISTORICAL_RETURN_LABEL));
 		cell.setCellStyle(numberCellStyle);
 		cell.setCellFormula(formula);
 
 		formula = generateBalanceFormula(currentRowNum, sheet, Arrays.asList(HISTORICAL_RETURN_LABEL, HISTORICAL_COST_LABEL));
-		cell = row.createCell(getCellIndex(sheet, HISTORICAL_BALANCE_LABEL));
+		cell = row.createCell(getOrPutAndGetCellIndex(sheet, HISTORICAL_BALANCE_LABEL));
 		cell.setCellStyle(numberCellStyle);
 		cell.setCellFormula(formula);
 
-		cell = row.createCell(getCellIndex(row.getSheet(), HISTORICAL_UPDATE_DATE_LABEL));
+		cell = row.createCell(getOrPutAndGetCellIndex(row.getSheet(), HISTORICAL_UPDATE_DATE_LABEL));
 		cell.setCellStyle(dateCellStyle);
 
 		Hyperlink hyperLink = workBook.getCreationHelper().createHyperlink(HyperlinkType.FILE);
@@ -1040,7 +1040,7 @@ public class SELotterySimpleSimulator {
 		} catch (UnsupportedEncodingException exc) {
 			Throwables.sneakyThrow(exc);
 		}
-		cell = row.createCell(getCellIndex(row.getSheet(), FILE_LABEL));
+		cell = row.createCell(getOrPutAndGetCellIndex(row.getSheet(), FILE_LABEL));
 		cell.setCellValue(storage.getName());
 		cell.setHyperlink(hyperLink);
 		cell.setCellStyle(hyperLinkStyle);
@@ -1049,13 +1049,13 @@ public class SELotterySimpleSimulator {
 	protected static String generateBalanceFormula(int currentRowNum, Sheet sheet, List<String> labels) {
 		int effectiveRowIndex = currentRowNum + 1;
 		return String.join("-", labels.stream().map(label ->
-			"(" + convertNumToColString(getCellIndex(sheet, label))  + effectiveRowIndex + ")"
+			"(" + convertNumToColString(getOrPutAndGetCellIndex(sheet, label))  + effectiveRowIndex + ")"
 		).collect(Collectors.toList()));
 	}
 
 	protected static String generatePremiumFormula(Sheet sheet, int currentRowNum, String columnLabel, UnaryOperator<String> transformer) {
 		int effectiveRowIndex = currentRowNum + 1;
-		return "(" + convertNumToColString(getCellIndex(sheet, transformer.apply(columnLabel))) + effectiveRowIndex + "*" + SEStats.premiumPrice(columnLabel) + ")";
+		return "(" + convertNumToColString(getOrPutAndGetCellIndex(sheet, transformer.apply(columnLabel))) + effectiveRowIndex + "*" + SEStats.premiumPrice(columnLabel) + ")";
 	}
 
 	protected static String getHistoryPremiumLabel(String label) {
@@ -1141,49 +1141,49 @@ public class SELotterySimpleSimulator {
 			header
 		);
 		CellStyle headerNumberStyle = workBook.createCellStyle();
-		headerNumberStyle.cloneStyleFrom(sheet.getRow(1).getCell(getCellIndex(sheet, COST_LABEL)).getCellStyle());
+		headerNumberStyle.cloneStyleFrom(sheet.getRow(1).getCell(getOrPutAndGetCellIndex(sheet, COST_LABEL)).getCellStyle());
 		headerNumberStyle.setDataFormat(workBook.createDataFormat().getFormat("#,##0"));
 		for (String label : Premium.allLabelsList()) {
-			sheet.getRow(1).getCell(getCellIndex(sheet, label)).setCellStyle(headerNumberStyle);
-			sheet.getRow(1).getCell(getCellIndex(sheet, getFollowingProgressiveHistoricalPremiumLabel(label))).setCellStyle(headerNumberStyle);
-			sheet.getRow(1).getCell(getCellIndex(sheet, getHistoryPremiumLabel(label))).setCellStyle(headerNumberStyle);
+			sheet.getRow(1).getCell(getOrPutAndGetCellIndex(sheet, label)).setCellStyle(headerNumberStyle);
+			sheet.getRow(1).getCell(getOrPutAndGetCellIndex(sheet, getFollowingProgressiveHistoricalPremiumLabel(label))).setCellStyle(headerNumberStyle);
+			sheet.getRow(1).getCell(getOrPutAndGetCellIndex(sheet, getHistoryPremiumLabel(label))).setCellStyle(headerNumberStyle);
 		}
-		sheet.getRow(1).getCell(getCellIndex(sheet, COST_LABEL)).setCellStyle(headerNumberStyle);
-		sheet.getRow(1).getCell(getCellIndex(sheet, RETURN_LABEL)).setCellStyle(headerNumberStyle);
-		sheet.getRow(1).getCell(getCellIndex(sheet, BALANCE_LABEL)).setCellStyle(headerNumberStyle);
-		sheet.getRow(1).getCell(getCellIndex(sheet, BALANCE_LABEL)).setCellFormula(
+		sheet.getRow(1).getCell(getOrPutAndGetCellIndex(sheet, COST_LABEL)).setCellStyle(headerNumberStyle);
+		sheet.getRow(1).getCell(getOrPutAndGetCellIndex(sheet, RETURN_LABEL)).setCellStyle(headerNumberStyle);
+		sheet.getRow(1).getCell(getOrPutAndGetCellIndex(sheet, BALANCE_LABEL)).setCellStyle(headerNumberStyle);
+		sheet.getRow(1).getCell(getOrPutAndGetCellIndex(sheet, BALANCE_LABEL)).setCellFormula(
 			"TEXT((SUM(" + convertNumToColString(reportHeaderLabels.indexOf(BALANCE_LABEL)) + (getHeaderSize() + 1) + ":" +
 			convertNumToColString(reportHeaderLabels.indexOf(BALANCE_LABEL)) + getMaxRowIndexInExcelFormat() +
 			")/" + convertNumToColString(reportHeaderLabels.indexOf(COST_LABEL)) + getHeaderSize() + "),\"###,00%\")"
 		);
-		sheet.getRow(1).getCell(getCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL)).setCellStyle(headerNumberStyle);
-		sheet.getRow(1).getCell(getCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_RETURN_LABEL)).setCellStyle(headerNumberStyle);
-		sheet.getRow(1).getCell(getCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_BALANCE_LABEL)).setCellStyle(headerNumberStyle);
-		sheet.getRow(1).getCell(getCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_BALANCE_LABEL)).setCellFormula(
+		sheet.getRow(1).getCell(getOrPutAndGetCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL)).setCellStyle(headerNumberStyle);
+		sheet.getRow(1).getCell(getOrPutAndGetCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_RETURN_LABEL)).setCellStyle(headerNumberStyle);
+		sheet.getRow(1).getCell(getOrPutAndGetCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_BALANCE_LABEL)).setCellStyle(headerNumberStyle);
+		sheet.getRow(1).getCell(getOrPutAndGetCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_BALANCE_LABEL)).setCellFormula(
 			"TEXT((SUM(" + convertNumToColString(reportHeaderLabels.indexOf(FOLLOWING_PROGRESSIVE_HISTORICAL_BALANCE_LABEL)) + "3:" +
 			convertNumToColString(reportHeaderLabels.indexOf(FOLLOWING_PROGRESSIVE_HISTORICAL_BALANCE_LABEL)) + getMaxRowIndexInExcelFormat() +
 			")/" + convertNumToColString(reportHeaderLabels.indexOf(FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL)) + "2),\"###,00%\")"
 		);
-		sheet.getRow(1).getCell(getCellIndex(sheet, HISTORICAL_COST_LABEL)).setCellStyle(headerNumberStyle);
-		sheet.getRow(1).getCell(getCellIndex(sheet, HISTORICAL_RETURN_LABEL)).setCellStyle(headerNumberStyle);
-		sheet.getRow(1).getCell(getCellIndex(sheet, HISTORICAL_BALANCE_LABEL)).setCellStyle(headerNumberStyle);
-		sheet.getRow(1).getCell(getCellIndex(sheet, HISTORICAL_BALANCE_LABEL)).setCellFormula(
+		sheet.getRow(1).getCell(getOrPutAndGetCellIndex(sheet, HISTORICAL_COST_LABEL)).setCellStyle(headerNumberStyle);
+		sheet.getRow(1).getCell(getOrPutAndGetCellIndex(sheet, HISTORICAL_RETURN_LABEL)).setCellStyle(headerNumberStyle);
+		sheet.getRow(1).getCell(getOrPutAndGetCellIndex(sheet, HISTORICAL_BALANCE_LABEL)).setCellStyle(headerNumberStyle);
+		sheet.getRow(1).getCell(getOrPutAndGetCellIndex(sheet, HISTORICAL_BALANCE_LABEL)).setCellFormula(
 			"TEXT((SUM(" + convertNumToColString(reportHeaderLabels.indexOf(HISTORICAL_BALANCE_LABEL)) + (getHeaderSize() + 1) + ":" +
 			convertNumToColString(reportHeaderLabels.indexOf(HISTORICAL_BALANCE_LABEL)) + getMaxRowIndexInExcelFormat() +
 			")/" + convertNumToColString(reportHeaderLabels.indexOf(HISTORICAL_COST_LABEL)) + getHeaderSize() + "),\"###,00%\")"
 		);
-		sheet.setColumnWidth(getCellIndex(sheet, EXTRACTION_DATE_LABEL), 3800);
-		sheet.setColumnWidth(getCellIndex(sheet, COST_LABEL), 3000);
-		sheet.setColumnWidth(getCellIndex(sheet, RETURN_LABEL), 3000);
-		sheet.setColumnWidth(getCellIndex(sheet, BALANCE_LABEL), 3000);
-		sheet.setColumnWidth(getCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL), 3000);
-		sheet.setColumnWidth(getCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_RETURN_LABEL), 3000);
-		sheet.setColumnWidth(getCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_BALANCE_LABEL), 3000);
-		sheet.setColumnWidth(getCellIndex(sheet, HISTORICAL_COST_LABEL), 3000);
-		sheet.setColumnWidth(getCellIndex(sheet, HISTORICAL_RETURN_LABEL), 3000);
-		sheet.setColumnWidth(getCellIndex(sheet, HISTORICAL_BALANCE_LABEL), 3000);
-		sheet.setColumnWidth(getCellIndex(sheet, HISTORICAL_UPDATE_DATE_LABEL), 3800);
-		sheet.setColumnWidth(getCellIndex(sheet, FILE_LABEL), 12000);
+		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, EXTRACTION_DATE_LABEL), 3800);
+		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, COST_LABEL), 3000);
+		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, RETURN_LABEL), 3000);
+		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, BALANCE_LABEL), 3000);
+		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL), 3000);
+		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_RETURN_LABEL), 3000);
+		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_BALANCE_LABEL), 3000);
+		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, HISTORICAL_COST_LABEL), 3000);
+		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, HISTORICAL_RETURN_LABEL), 3000);
+		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, HISTORICAL_BALANCE_LABEL), 3000);
+		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, HISTORICAL_UPDATE_DATE_LABEL), 3800);
+		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, FILE_LABEL), 12000);
 		//LogUtils.logInfo(PersistentStorage.buildWorkingPath() + File.separator + excelFileName + " succesfully created");
 	}
 

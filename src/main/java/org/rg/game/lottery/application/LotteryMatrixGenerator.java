@@ -18,7 +18,7 @@ import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 
 
 
-public class LotteryMatrixGenerator {
+public class LotteryMatrixGenerator extends Shared {
 
 	public static void main(String[] args) throws IOException {
 		Collection<CompletableFuture<Void>> futures = new ArrayList<>();

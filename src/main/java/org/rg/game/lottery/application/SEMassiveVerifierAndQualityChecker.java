@@ -44,14 +44,14 @@ import org.rg.game.lottery.engine.SEComboHandler;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.SEStats;
 
-public class SEMassiveVerifierAndQualityChecker {
+public class SEMassiveVerifierAndQualityChecker extends Shared {
 
 	public static void main(String[] args) throws IOException {
 		check(
 			forDate(
-				Shared.getSystemEnv(
+				getSystemEnv(
 					"startDate", "14/02/2023"
-				), Shared.getSystemEnv(
+				), getSystemEnv(
 					"endDate", "next+0*1"
 				),
 				false
@@ -65,8 +65,8 @@ public class SEMassiveVerifierAndQualityChecker {
 		Boolean printReportDetail
 	) {
 		LotteryMatrixGeneratorAbstEngine engine = new SELotteryMatrixGeneratorEngine();
-		LocalDate startDate = Shared.convert(startDateAsString);
-		LocalDate endDate =  Shared.convert(endDateAsString);
+		LocalDate startDate = convert(startDateAsString);
+		LocalDate endDate =  convert(endDateAsString);
 		List<Map.Entry<LocalDate, Object>> dates = new ArrayList<>();
 		while (startDate.compareTo(endDate) <= 0) {
 			startDate = engine.computeNextExtractionDate(startDate, false);
@@ -86,9 +86,9 @@ public class SEMassiveVerifierAndQualityChecker {
 			for (Map.Entry<LocalDate, Object> dateInfo : dateGroup) {
 				String extractionDate = TimeUtils.defaultLocalDateFormat.format(dateInfo.getKey());
 				String extractionYear = extractionDate.split("\\/")[2];
-				String extractionMonth = Shared.getMonth(extractionDate);
+				String extractionMonth = getMonth(extractionDate);
 				String extractionDay = extractionDate.split("\\/")[0];
-				File mainFile = Shared.getSystemsFile(extractionYear);
+				File mainFile = getSystemsFile(extractionYear);
 				ResourceUtils.INSTANCE.backup(
 					backupTime,
 					mainFile,
@@ -127,14 +127,14 @@ public class SEMassiveVerifierAndQualityChecker {
 						LogUtils.warn("Nessun foglio da verificare per il mese " + extractionMonth);
 						continue;
 					}
-					int offset = Shared.getCellIndex(sheet, extractionDay);
+					int offset = getCellIndex(sheet, extractionDay);
 					if (offset < 0) {
 						LogUtils.warn("Nessuna combinazione da verificare per la data " + extractionDate + "\n");
 						continue;
 					}
 					Iterator<Row> rowIterator = sheet.rowIterator();
 					rowIterator.next();
-					List<Integer> winningComboWithJollyAndSuperstar = Shared.getSEStats().getWinningComboWithJollyAndSuperstarOf(dateInfo.getKey());
+					List<Integer> winningComboWithJollyAndSuperstar = getSEStats().getWinningComboWithJollyAndSuperstarOf(dateInfo.getKey());
 					List<Integer> winningCombo =
 						winningComboWithJollyAndSuperstar != null ? winningComboWithJollyAndSuperstar.subList(0, 6) : null;
 					Integer jolly =
@@ -204,7 +204,7 @@ public class SEMassiveVerifierAndQualityChecker {
 						//historyData,
 						dateInfo.getKey(),
 						system,
-						Shared.getSEStats().getAllWinningCombosWithJollyAndSuperstar(),
+						getSEStats().getAllWinningCombosWithJollyAndSuperstar(),
 						results,
 						boldFont
 					);
@@ -215,7 +215,7 @@ public class SEMassiveVerifierAndQualityChecker {
 						historyData,
 						dateInfo.getKey(),
 						system,
-						Shared.getSEStats().getAllWinningCombosWithJollyAndSuperstar(),
+						getSEStats().getAllWinningCombosWithJollyAndSuperstar(),
 						results,
 						boldFont
 					);
@@ -242,11 +242,11 @@ public class SEMassiveVerifierAndQualityChecker {
 			int year = yearAndDataForMonth.getKey();
 			Map<String, Map<Number, Integer>> dataForMonth = yearAndDataForMonth.getValue();
 			LogUtils.info("\t" + year + ":");
-			File mainFile = Shared.getSystemsFile(year);
+			File mainFile = getSystemsFile(year);
 			try (InputStream srcFileInputStream = new FileInputStream(mainFile);
 				Workbook workbook = new XSSFWorkbook(srcFileInputStream);
 			) {
-				Sheet sheet = Shared.getSummarySheet(workbook);
+				Sheet sheet = getSummarySheet(workbook);
 				Iterator<Row> rowIterator = sheet.rowIterator();
 				Font normalFont = null;
 				Font boldFont = null;
@@ -296,7 +296,7 @@ public class SEMassiveVerifierAndQualityChecker {
 					for (Number type : Premium.all().keySet()) {
 						Integer counter = winningInfo.getOrDefault(type, 0);
 						String label = Premium.toLabel(type);
-						int labelIndex = Shared.getCellIndex(sheet, label);
+						int labelIndex = getCellIndex(sheet, label);
 						if (counter > 0) {
 							LogUtils.info("\t\t\t" + label + ":" + SEStats.rightAlignedString(MathUtils.INSTANCE.integerFormat.format(counter), 21 - label.length()));
 						}
@@ -383,7 +383,7 @@ public class SEMassiveVerifierAndQualityChecker {
 				}
 				winningCombos.computeIfAbsent(hit, ht -> new ArrayList<>()).add(currentCombo);
 				Map<Number, Integer> winningCounter = dataForTime.computeIfAbsent(extractionDate.getYear(), year -> new LinkedHashMap<>()).computeIfAbsent(
-					Shared.getMonth(extractionDate), monthLabel -> new LinkedHashMap<>()
+					getMonth(extractionDate), monthLabel -> new LinkedHashMap<>()
 				);
 				winningCounter.put(hit, winningCounter.computeIfAbsent(hit, key -> Integer.valueOf(0)) + 1);
 				globalData.computeIfAbsent(hit, ht -> new ArrayList<>()).add(currentCombo);

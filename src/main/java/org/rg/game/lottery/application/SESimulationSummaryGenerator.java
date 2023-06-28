@@ -33,7 +33,7 @@ import org.rg.game.core.ResourceUtils;
 import org.rg.game.lottery.engine.Premium;
 import org.rg.game.lottery.engine.SimpleWorkbookTemplate;
 
-public class SESimulationSummaryGenerator {
+public class SESimulationSummaryGenerator extends Shared {
 	static final String EXTRACTION_COUNTER_LABEL = "Conteggio estrazioni";
 	static final String SYSTEM_COUNTER_LABEL = "Conteggio sistemi";
 
@@ -75,16 +75,16 @@ public class SESimulationSummaryGenerator {
 				headersToBeSkipped,
 				reportCounter
 			);
-			summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.FILE_LABEL), 15000);
-			summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL), 3000);
-			summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.FOLLOWING_PROGRESSIVE_HISTORICAL_RETURN_LABEL), 3000);
-			summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.HISTORICAL_COST_LABEL), 3000);
-			summarySheet.setColumnWidth(Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.HISTORICAL_RETURN_LABEL), 3000);
+			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.FILE_LABEL), 15000);
+			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL), 3000);
+			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.FOLLOWING_PROGRESSIVE_HISTORICAL_RETURN_LABEL), 3000);
+			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.HISTORICAL_COST_LABEL), 3000);
+			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.HISTORICAL_RETURN_LABEL), 3000);
 			try (OutputStream destFileOutputStream = new FileOutputStream(simulationSummaryFile)){
 				workBookTemplate.addSheetConditionalFormatting(
 					new int[] {
-						Shared.getCellIndex(summarySheet, Premium.LABEL_FIVE),
-						Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.getFollowingProgressiveHistoricalPremiumLabel(Premium.LABEL_FIVE))
+						getCellIndex(summarySheet, Premium.LABEL_FIVE),
+						getCellIndex(summarySheet, SELotterySimpleSimulator.getFollowingProgressiveHistoricalPremiumLabel(Premium.LABEL_FIVE))
 					},
 					IndexedColors.YELLOW,
 					ComparisonOperator.GT,
@@ -92,8 +92,8 @@ public class SESimulationSummaryGenerator {
 				);
 				workBookTemplate.addSheetConditionalFormatting(
 					new int[] {
-						Shared.getCellIndex(summarySheet, Premium.LABEL_FIVE_PLUS),
-						Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.getFollowingProgressiveHistoricalPremiumLabel(Premium.LABEL_FIVE_PLUS))
+						getCellIndex(summarySheet, Premium.LABEL_FIVE_PLUS),
+						getCellIndex(summarySheet, SELotterySimpleSimulator.getFollowingProgressiveHistoricalPremiumLabel(Premium.LABEL_FIVE_PLUS))
 					},
 					IndexedColors.ORANGE,
 					ComparisonOperator.GT,
@@ -101,8 +101,8 @@ public class SESimulationSummaryGenerator {
 				);
 				workBookTemplate.addSheetConditionalFormatting(
 					new int[] {
-						Shared.getCellIndex(summarySheet, Premium.LABEL_SIX),
-						Shared.getCellIndex(summarySheet, SELotterySimpleSimulator.getFollowingProgressiveHistoricalPremiumLabel(Premium.LABEL_SIX))
+						getCellIndex(summarySheet, Premium.LABEL_SIX),
+						getCellIndex(summarySheet, SELotterySimpleSimulator.getFollowingProgressiveHistoricalPremiumLabel(Premium.LABEL_SIX))
 					},
 					IndexedColors.RED,
 					ComparisonOperator.GT,
@@ -211,7 +211,7 @@ public class SESimulationSummaryGenerator {
 			summaryWorkBookTemplate.addCell(generatedSystemCounter, "#,##0");
 			for (String cellLabel : SELotterySimpleSimulator.reportHeaderLabels) {
 				if (!headersToBeSkipped.contains(cellLabel)) {
-					Cell simulationCell = resultSheet.getRow(1).getCell(Shared.getCellIndex(resultSheet, cellLabel));
+					Cell simulationCell = resultSheet.getRow(1).getCell(getCellIndex(resultSheet, cellLabel));
 					CellValue simulationCellValue = evaluator.evaluate(simulationCell);
 					if (simulationCellValue.getCellType().equals(CellType.NUMERIC)) {
 						summaryWorkBookTemplate.addCell(simulationCellValue.getNumberValue(), "#,##0");
