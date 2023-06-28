@@ -29,6 +29,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.function.Supplier;
@@ -59,7 +60,8 @@ import org.rg.game.core.TimeUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class SEStats {
-	private static final Map<String, SEStats> INSTANCES;
+	private static final Map<String, SEStats> CACHE;
+	private static final int CACHE_MAX_SIZE;
 	public static final String FIRST_EXTRACTION_DATE_AS_STRING = "03/12/1997";
 	public static final LocalDate FIRST_EXTRACTION_LOCAL_DATE = LocalDate.parse(FIRST_EXTRACTION_DATE_AS_STRING, TimeUtils.defaultLocalDateFormat);
 	public static final Date FIRST_EXTRACTION_DATE = TimeUtils.toDate(FIRST_EXTRACTION_LOCAL_DATE);
@@ -73,7 +75,8 @@ public class SEStats {
 		ZipSecureFile.setMinInflateRatio(0);
 		SEStats.forceLoadingFromExcel =
 				Boolean.parseBoolean(System.getenv().getOrDefault("se-stats.force-loading-from-excel", "false"));
-		INSTANCES = new LinkedHashMap<>();
+		CACHE = new LinkedHashMap<>();
+		CACHE_MAX_SIZE = Optional.ofNullable(System.getenv("se-stats.cache.max-size")).map(Integer::parseInt).orElseGet(() -> 200);
 	}
 
 	private boolean global;
@@ -104,17 +107,17 @@ public class SEStats {
 			isGlobal = startDate.equals(FIRST_EXTRACTION_DATE_AS_STRING) || startDate.equals(FIRST_EXTRACTION_DATE_WITH_NEW_MACHINE_AS_STRING);
 		}
 		String key = startDate+"->"+endDate;
-		SEStats sEStats = INSTANCES.get(key);
+		SEStats sEStats = CACHE.get(key);
 		if (sEStats == null) {
-			synchronized(INSTANCES) {
-				sEStats = INSTANCES.get(key);
+			synchronized(CACHE) {
+				sEStats = CACHE.get(key);
 				if (sEStats == null) {
-					if (INSTANCES.size() > 249) {
+					if (CACHE.size() >= CACHE_MAX_SIZE) {
 						clear();
 					}
 					sEStats = new SEStats(startDate, endDate);
 					sEStats.global = isGlobal;
-					INSTANCES.put(key, sEStats);
+					CACHE.put(key, sEStats);
 				}
 			}
 		}
@@ -122,15 +125,15 @@ public class SEStats {
 	}
 
 	public static void hardClear() {
-		synchronized(INSTANCES) {
-			INSTANCES.clear();
+		synchronized(CACHE) {
+			CACHE.clear();
 		}
 	}
 
 	public static void clear() {
 		LogUtils.info("Cleaning " + SEStats.class.getSimpleName() + " cache");
-		synchronized(INSTANCES) {
-			Iterator<Map.Entry<String, SEStats>> sEStatsIterator = INSTANCES.entrySet().iterator();
+		synchronized(CACHE) {
+			Iterator<Map.Entry<String, SEStats>> sEStatsIterator = CACHE.entrySet().iterator();
 			while (sEStatsIterator.hasNext()) {
 				Map.Entry<String, SEStats> sEStatsData = sEStatsIterator.next();
 				if (!sEStatsData.getValue().global) {
