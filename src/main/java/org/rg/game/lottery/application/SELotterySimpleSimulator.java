@@ -291,7 +291,16 @@ public class SELotterySimpleSimulator extends Shared {
 				process(configuration, excelFileName, engine, competitionDates, firstSetupExecuted);
 				LogUtils.info("Computation of " + configuration.getProperty("file.name") + " succesfully finished");
 			};
-			if (CollectionUtils.retrieveBoolean(configuration, "async", "false")) {
+			String asyncFlag = configuration.getProperty("async", "false");
+			boolean async = false;
+			if (asyncFlag.equalsIgnoreCase("onSlave")) {
+				if (CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false")) {
+					async = true;
+				}
+			} else {
+				async = CollectionUtils.retrieveBoolean(configuration, "async", "false");
+			}
+			if (async) {
 				ConcurrentUtils.addTask(futures, taskOperation);
 			} else {
 				taskOperation.run();
