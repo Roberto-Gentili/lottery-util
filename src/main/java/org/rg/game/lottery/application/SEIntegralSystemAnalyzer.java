@@ -111,6 +111,7 @@ class SEIntegralSystemAnalyzer extends Shared {
 						}
 						currentBlockWrapper.set(block);
 						blockNotAlignedWrapper.set(true);
+						LogUtils.info("Received in assignment " + block);
 						break;
 					}
 				}
