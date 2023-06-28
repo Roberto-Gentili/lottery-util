@@ -294,9 +294,7 @@ public class SELotterySimpleSimulator extends Shared {
 			String asyncFlag = configuration.getProperty("async", "false");
 			boolean async = false;
 			if (asyncFlag.equalsIgnoreCase("onSlave")) {
-				if (CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false")) {
-					async = true;
-				}
+				async = CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false");
 			} else {
 				async = CollectionUtils.retrieveBoolean(configuration, "async", "false");
 			}
