@@ -765,10 +765,10 @@ public class SELotterySimpleSimulator extends Shared {
 							}
 						}
 					} catch (Throwable exc) {
-						LogUtils.INSTANCE.error("Exception occurred while processing row " + (rowIndex + 1) + ": " + exc.getMessage());
+						LogUtils.INSTANCE.error("Exception occurred while processing row " + (rowIndex + 1) + " of file " + excelFileName + ": " + exc.getMessage());
 						if (!isSlave) {
-							fileLogger.error("Exception occurred while processing row " + (rowIndex + 1) + ": " + exc.getMessage());
-							LogUtils.INSTANCE.warn("Row " + (rowIndex + 1) +" will be removed");
+							fileLogger.error("Exception occurred while processing row " + (rowIndex + 1) + " of file " + excelFileName + ": " + exc.getMessage());
+							LogUtils.INSTANCE.warn("Row " + (rowIndex + 1) + " of file " + excelFileName + " will be removed");
 							rowsToBeRemoved.add(rowIndex);
 						}
 					}
