@@ -3,24 +3,26 @@ package org.rg.game.core;
 import java.io.PrintStream;
 
 public class LogUtils {
+	public final static LogUtils INSTANCE = new LogUtils();
 
-	public static void debug(String... reports) {
+
+	public void debug(String... reports) {
 		log(System.out, reports);
 	}
 
-	public static void info(String... reports) {
+	public void info(String... reports) {
 		log(System.out, reports);
 	}
 
-	public static void warn(String... reports) {
+	public void warn(String... reports) {
 		log(System.err, reports);
 	}
 
-	public static void error(String... reports) {
+	public void error(String... reports) {
 		log(System.err, reports);
 	}
 
-	private static void log(PrintStream stream, String... reports) {
+	private void log(PrintStream stream, String... reports) {
 		if (reports == null || reports.length == 0) {
 			stream.println();
 			return;
@@ -28,6 +30,30 @@ public class LogUtils {
 		for (String report : reports) {
 			stream.println(report);
 		}
+	}
+
+	public static class ToFile extends LogUtils {
+
+		@Override
+		public void debug(String... reports) {
+
+		}
+
+		@Override
+		public void info(String... reports) {
+
+		}
+
+		@Override
+		public void warn(String... reports) {
+
+		}
+
+		@Override
+		public void error(String... reports) {
+
+		}
+
 	}
 
 }

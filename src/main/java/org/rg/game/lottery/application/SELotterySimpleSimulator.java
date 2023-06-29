@@ -192,7 +192,7 @@ public class SELotterySimpleSimulator extends Shared {
 			"working-path.simulations.folder",
 			"resources.simulations.folder"
 		);
-		LogUtils.info("Set configuration files folder to " + String.join(", ", configurationFileFolders) + "\n");
+		LogUtils.INSTANCE.info("Set configuration files folder to " + String.join(", ", configurationFileFolders) + "\n");
 		List<File> configurationFiles =
 			ResourceUtils.INSTANCE.find(
 				configFilePrefix + "-simple-simulation", "properties",
@@ -255,13 +255,13 @@ public class SELotterySimpleSimulator extends Shared {
 		int maxParallelTasks = Optional.ofNullable(System.getenv("tasks.max-parallel")).map(Integer::valueOf)
 			.orElseGet(() -> Math.max((Runtime.getRuntime().availableProcessors() / 2) - 1, 1));
 		for (Properties configuration : configurations) {
-			LogUtils.info(
+			LogUtils.INSTANCE.info(
 				"Processing file '" + configuration.getProperty("file.name") + "' located in '" + configuration.getProperty("file.parent.absolutePath") + "' in " +
 					(CollectionUtils.retrieveBoolean(configuration, "simulation.slave") ? "slave" : "master") + " mode"
 			);
 			String info = configuration.getProperty("info");
 			if (info != null) {
-				LogUtils.info(info);
+				LogUtils.INSTANCE.info(info);
 			}
 			String excelFileName = retrieveExcelFileName(configuration);
 			SELotteryMatrixGeneratorEngine engine = engineSupplier.get();
@@ -287,9 +287,9 @@ public class SELotterySimpleSimulator extends Shared {
 			configuration.setProperty("report.enabled", "true");
 			AtomicBoolean firstSetupExecuted = new AtomicBoolean(false);
 			Runnable taskOperation = () -> {
-				LogUtils.info("Computation of " + configuration.getProperty("file.name") + " started");
+				LogUtils.INSTANCE.info("Computation of " + configuration.getProperty("file.name") + " started");
 				process(configuration, excelFileName, engine, competitionDates, firstSetupExecuted);
-				LogUtils.info("Computation of " + configuration.getProperty("file.name") + " succesfully finished");
+				LogUtils.INSTANCE.info("Computation of " + configuration.getProperty("file.name") + " succesfully finished");
 			};
 			String asyncFlag = configuration.getProperty("async", "false");
 			boolean async = false;
@@ -407,7 +407,7 @@ public class SELotterySimpleSimulator extends Shared {
 			},
 			isSlave
 		);
-		LogUtils.info(competitionDates.size() + " dates will be processed, " + (initialSize - competitionDates.size()) + " already processed for file " + configuration.getProperty("file.name"));
+		LogUtils.INSTANCE.info(competitionDates.size() + " dates will be processed, " + (initialSize - competitionDates.size()) + " already processed for file " + configuration.getProperty("file.name"));
 	}
 
 	private static void cleanupRedundant(Properties configuration, String excelFileName, String configFileName, Integer redundancy, Collection<LocalDate> competitionDatesFlat) {
@@ -678,7 +678,7 @@ public class SELotterySimpleSimulator extends Shared {
 											try {
 												data = readPremiumCountersData(storage, rowIndexAndExtractionDate.getValue(), premiumCountersFile);
 											} catch (IOException exc) {
-												LogUtils.error("Unable to read file " + premiumCountersFile.getAbsolutePath() + ": it will be deleted and recreated");
+												LogUtils.INSTANCE.error("Unable to read file " + premiumCountersFile.getAbsolutePath() + ": it will be deleted and recreated");
 												if (!premiumCountersFile.delete()) {
 													Throwables.sneakyThrow(exc);
 												}
@@ -754,7 +754,7 @@ public class SELotterySimpleSimulator extends Shared {
 											dataAggStoricoCell.setCellValue(sEStats.getLatestExtractionDate());
 										}
 										if ((modifiedRowCounter % 10) == 0) {
-											LogUtils.info("Storing historical data of " + excelFileName);
+											LogUtils.INSTANCE.info("Storing historical data of " + excelFileName);
 											store(excelFileName, workBook);
 										}
 									}
@@ -764,16 +764,16 @@ public class SELotterySimpleSimulator extends Shared {
 							}
 						}
 					} catch (Throwable exc) {
-						LogUtils.error("Exception occurred while processing row " + (rowIndex + 1) + ": " + exc.getMessage());
+						LogUtils.INSTANCE.error("Exception occurred while processing row " + (rowIndex + 1) + ": " + exc.getMessage());
 						if (!isSlave) {
-							LogUtils.warn("Row " + (rowIndex + 1) +" will be removed");
+							LogUtils.INSTANCE.warn("Row " + (rowIndex + 1) +" will be removed");
 							rowsToBeRemoved.add(rowIndex);
 						}
 					}
 					++rowProcessedCounter;
 					int remainedRecords = (rowsToBeProcessed.size() - (rowProcessedCounter));
 					if (remainedRecords % 250 == 0) {
-						LogUtils.info("Historical update remained records of " + excelFileName + ": " + remainedRecords);
+						LogUtils.INSTANCE.info("Historical update remained records of " + excelFileName + ": " + remainedRecords);
 					}
 				}
 				if (!isSlave) {
@@ -781,7 +781,7 @@ public class SELotterySimpleSimulator extends Shared {
 						try {
 							sheet.removeRow(sheet.getRow(rowIndex));
 						} catch (Throwable exc) {
-							LogUtils.error("Unable to remove row " + (rowIndex + 1) + " for file " + excelFileName + ": " + exc.getMessage());
+							LogUtils.INSTANCE.error("Unable to remove row " + (rowIndex + 1) + " for file " + excelFileName + ": " + exc.getMessage());
 						}
 					}
 				}
@@ -789,7 +789,7 @@ public class SELotterySimpleSimulator extends Shared {
 			null,
 			workBook -> {
 				if (!isSlave) {
-					LogUtils.info("Final historical data storing of " + excelFileName);
+					LogUtils.INSTANCE.info("Final historical data storing of " + excelFileName);
 					store(excelFileName, workBook);
 				}
 			},
@@ -896,7 +896,7 @@ public class SELotterySimpleSimulator extends Shared {
 		File premiumCountersFile,
 		Number... premiumTypes
 	) {
-		//LogUtils.info("Computing historycal data of " + storage.getName());
+		//LogUtils.INSTANCE.info("Computing historycal data of " + storage.getName());
 		Map<String, Object> qualityCheckResult =
 			sEStats.checkQuality(storage::iterator, Premium.allTypes(), premiumTypes);
 		Map<String, Object> qualityCheckResultFromExtractionDate =
@@ -909,7 +909,7 @@ public class SELotterySimpleSimulator extends Shared {
 			basePath + "-historical-premiums" +
 			TimeUtils.getDefaultDateFmtForFilePrefix().format(extractionDate) + ".txt", reportDetailFromExtractionDate
 		);
-		LogUtils.info("Computed historycal data of " + storage.getName());
+		LogUtils.INSTANCE.info("Computed historycal data of " + storage.getName());
 		Map<String, Object> data = new LinkedHashMap<>();
 		data.put("premiumCounters.all", qualityCheckResult.get("premium.counters"));
 		data.put("premiumCounters.all.processedExtractionDateCounter", qualityCheckResult.get("processedExtractionDateCounter"));
@@ -1211,7 +1211,7 @@ public class SELotterySimpleSimulator extends Shared {
 		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, HISTORICAL_BALANCE_LABEL), 3000);
 		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, HISTORICAL_UPDATE_DATE_LABEL), 3800);
 		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, FILE_LABEL), 12000);
-		//LogUtils.logInfo(PersistentStorage.buildWorkingPath() + File.separator + excelFileName + " succesfully created");
+		//LogUtils.INSTANCE.logInfo(PersistentStorage.buildWorkingPath() + File.separator + excelFileName + " succesfully created");
 	}
 
 	protected static Integer readOrCreateExcel(
@@ -1269,18 +1269,18 @@ public class SELotterySimpleSimulator extends Shared {
 		} catch (Throwable exc) {
 			if (!(exc instanceof POIXMLException || exc instanceof EmptyFileException || exc instanceof ZipException || exc instanceof PartAlreadyExistsException ||
 				exc instanceof XmlValueDisconnectedException || exc instanceof RecordFormatException || (exc instanceof IOException && exc.getMessage().equalsIgnoreCase("Truncated ZIP file")))) {
-				LogUtils.error("Unable to process file " + excelFileName);
+				LogUtils.INSTANCE.error("Unable to process file " + excelFileName);
 				Throwables.sneakyThrow(exc);
 			}
 			if (isSlave) {
 				Mutex mutex = Synchronizer.INSTANCE.getMutex(excelFileName);
 				synchronized(mutex) {
-					LogUtils.error("Error in Excel file '" + excelFileAbsolutePath + "'. Wating for restore by master");
+					LogUtils.INSTANCE.error("Error in Excel file '" + excelFileAbsolutePath + "'. Wating for restore by master");
 					try {
 						if (--slaveAdditionalReadingMaxAttempts > 0) {
 							mutex.wait(5000);
 						} else {
-							LogUtils.error("Error in Excel file '" + excelFileAbsolutePath + "'. The file will be skipped");
+							LogUtils.INSTANCE.error("Error in Excel file '" + excelFileAbsolutePath + "'. The file will be skipped");
 							return -1;
 						}
 					} catch (InterruptedException e) {
@@ -1296,12 +1296,12 @@ public class SELotterySimpleSimulator extends Shared {
 					backups = ResourceUtils.INSTANCE.findReverseOrdered(effectiveExcelFileNameWithoutExtension + " - ", excelFileExtension, excelFileParentPath);
 				}
 				if (backups.isEmpty()) {
-					LogUtils.error("Error in Excel file '" + excelFileAbsolutePath + "'. No backup found");
+					LogUtils.INSTANCE.error("Error in Excel file '" + excelFileAbsolutePath + "'. No backup found");
 					Throwables.sneakyThrow(exc);
 				}
 				Iterator<File> backupsIterator = backups.iterator();
 				File backup = backupsIterator.next();
-				LogUtils.warn("Error in Excel file '" + excelFileAbsolutePath + "'.\nTrying to restore previous backup: '" + backup.getAbsolutePath() + "'");
+				LogUtils.INSTANCE.warn("Error in Excel file '" + excelFileAbsolutePath + "'.\nTrying to restore previous backup: '" + backup.getAbsolutePath() + "'");
 				File processedFile = new File(excelFileAbsolutePath);
 				if (!processedFile.delete() || !backup.renameTo(processedFile)) {
 					Throwables.sneakyThrow(exc);

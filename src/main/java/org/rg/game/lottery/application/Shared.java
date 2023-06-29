@@ -99,7 +99,7 @@ class Shared {
 		String suffix = System.getenv("file-to-be-processed-suffix");
 		File file = new File(PersistentStorage.buildWorkingPath() +
 			File.separator + "[SE]["+ extractionYear +"] - " + (suffix != null ? suffix : "Sistemi") +".xlsx");
-		//LogUtils.logInfo("Processing file " + file.getName());
+		//LogUtils.INSTANCE.logInfo("Processing file " + file.getName());
 		return file;
 	}
 
@@ -153,7 +153,7 @@ class Shared {
 			75,77,79,
 			80,83,84,85,86,88,90
 		);
-		//LogUtils.logInfo(ComboHandler.sizeOf(ComboHandler.sizeOf(ourNumbers.size(), 6), 34));
+		//LogUtils.INSTANCE.logInfo(ComboHandler.sizeOf(ComboHandler.sizeOf(ourNumbers.size(), 6), 34));
 		int count = 0;
 		List<List<Integer>> system = new ArrayList<>();
 		int bound = 4;
@@ -171,7 +171,7 @@ class Shared {
 			}
 			if (hit == bound) {
 				system.add(winningCombo);
-				LogUtils.info(ComboHandler.toString(winningCombo, "\t"));
+				LogUtils.INSTANCE.info(ComboHandler.toString(winningCombo, "\t"));
 			}
 		}
 		SELotteryMatrixGeneratorEngine engine = new SELotteryMatrixGeneratorEngine();
@@ -181,7 +181,7 @@ class Shared {
 		for (List<Integer> winningCombo : system) {
 			inClauses.add("in " + ComboHandler.toString(winningCombo, ",") + ":" + bound + "," + 6);
 		}
-		LogUtils.info("(" + String.join("|", inClauses) + ")");
+		LogUtils.INSTANCE.info("(" + String.join("|", inClauses) + ")");
 	}*/
 
 }

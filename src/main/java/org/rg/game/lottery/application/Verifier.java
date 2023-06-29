@@ -86,7 +86,7 @@ public class Verifier {
 			Sheet sheet = workbook.getSheet(extractionMonth);
 			int offset = Shared.getCellIndex(sheet, extractionDay);
 			if (offset < 0) {
-				LogUtils.warn("No combination to test for date " + extractionDate);
+				LogUtils.INSTANCE.warn("No combination to test for date " + extractionDate);
 				return;
 			}
 			Iterator<Row> rowIterator = sheet.rowIterator();
@@ -123,25 +123,25 @@ public class Verifier {
 						}
 					}
 					winningCombos.computeIfAbsent(hit, ht -> new ArrayList<>()).add(currentCombo);
-					LogUtils.info(comboCount + ") " + ComboHandler.toString(currentCombo, "\t"));
+					LogUtils.INSTANCE.info(comboCount + ") " + ComboHandler.toString(currentCombo, "\t"));
 				}
 				comboCount++;
 			}
 			if (!winningComboWithJollyAndSuperstar.isEmpty()) {
-				LogUtils.info("\n\nNumeri estratti per il *" + competionName + "* del " + extractionDate +": " + SEComboHandler.toWAString(winningComboWithJollyAndSuperstar, ", ", " - ", hitNumbers));
+				LogUtils.INSTANCE.info("\n\nNumeri estratti per il *" + competionName + "* del " + extractionDate +": " + SEComboHandler.toWAString(winningComboWithJollyAndSuperstar, ", ", " - ", hitNumbers));
 				if (!winningCombos.isEmpty()) {
 					for (Map.Entry<Number, List<List<Integer>>> combos: winningCombos.entrySet()) {
-						LogUtils.info("\t*Combinazioni con " + Premium.toLabel(combos.getKey()).toLowerCase() + "*:");
+						LogUtils.INSTANCE.info("\t*Combinazioni con " + Premium.toLabel(combos.getKey()).toLowerCase() + "*:");
 						for (List<Integer> combo : combos.getValue()) {
-							LogUtils.info("\t\t" +
+							LogUtils.INSTANCE.info("\t\t" +
 								SEComboHandler.toWAString(combo, "\t", "\t\t", winningComboWithJollyAndSuperstar)
 							);
 						}
 					}
 				} else {
-					LogUtils.info("Nessuna vincita");
+					LogUtils.INSTANCE.info("Nessuna vincita");
 				}
-				LogUtils.info();
+				LogUtils.INSTANCE.info();
 			}
 		} catch (Throwable exc) {
 			exc.printStackTrace();

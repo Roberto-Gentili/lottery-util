@@ -47,7 +47,7 @@ class SEIntegralSystemAnalyzer extends Shared {
 			"working-path.integral-system-analysis.folder",
 			"resources.integral-system-analysis.folder"
 		);
-		LogUtils.info("Set configuration files folder to " + String.join(", ", configurationFileFolders) + "\n");
+		LogUtils.INSTANCE.info("Set configuration files folder to " + String.join(", ", configurationFileFolders) + "\n");
 		List<File> configurationFiles =
 			ResourceUtils.INSTANCE.find(
 				"se-integral-systems-analysis", "properties",
@@ -82,7 +82,7 @@ class SEIntegralSystemAnalyzer extends Shared {
 			config.getProperty("competition.archive.end-date")
 		);
 		Collection<List<Integer>> allWinningCombos = sEStats.getAllWinningCombosWithJollyAndSuperstar().values();
-		LogUtils.info("All " + combinationSize + " based integral systems size (" + comboHandler.getNumbers().size() + " numbers): " +  MathUtils.INSTANCE.format(comboHandler.getSize()));
+		LogUtils.INSTANCE.info("All " + combinationSize + " based integral systems size (" + comboHandler.getNumbers().size() + " numbers): " +  MathUtils.INSTANCE.format(comboHandler.getSize()));
 		String basePath = PersistentStorage.buildWorkingPath("Analisi sistemi integrali");
 		String cacheKey = buildCacheKey(comboHandler, sEStats);
 		TreeSet<Map.Entry<List<Integer>, Map<Number, Integer>>> systemsRank = buildDataCollection();
@@ -111,7 +111,7 @@ class SEIntegralSystemAnalyzer extends Shared {
 						}
 						currentBlockWrapper.set(block);
 						blockNotAlignedWrapper.set(true);
-						LogUtils.info("Received in assignment " + block);
+						LogUtils.INSTANCE.info("Received in assignment " + block);
 						break;
 					}
 				}
@@ -126,7 +126,7 @@ class SEIntegralSystemAnalyzer extends Shared {
 				if (blockNotAlignedWrapper.get()) {
 					if (iterationData.getCounter().compareTo(currentBlock.start) < 0 || iterationData.getCounter().compareTo(currentBlock.end) > 0) {
 						if (iterationData.getCounter().mod(modderForSkipLog).compareTo(BigInteger.ZERO) == 0) {
-							LogUtils.info("Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems");
+							LogUtils.INSTANCE.info("Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems");
 						}
 						return;
 					}
@@ -136,8 +136,8 @@ class SEIntegralSystemAnalyzer extends Shared {
 							return;
 						}
 						if (currentBlockCounter.compareTo(iterationData.getCounter()) == 0) {
-							LogUtils.info("Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems");
-							LogUtils.info(
+							LogUtils.INSTANCE.info("Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems");
+							LogUtils.INSTANCE.info(
 								"Cache succesfully restored, starting from index " + MathUtils.INSTANCE.format(iterationData.getCounter()) + ". " +
 								MathUtils.INSTANCE.format(remainedSystems(cacheRecord)) + " systems remained."
 							);
@@ -177,7 +177,7 @@ class SEIntegralSystemAnalyzer extends Shared {
 						Map.Entry<List<Integer>, Map<Number, Integer>> removedItem = systemsRank.pollLast();
 						if (removedItem != addedItem) {
 							//store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock, rankSize);
-							LogUtils.info(
+							LogUtils.INSTANCE.info(
 								"Replaced data from rank:\n\t" + ComboHandler.toString(removedItem.getKey(), ", ") + ": " + removedItem.getValue() + "\n" +
 								"\t\twith\n"+
 								"\t" + ComboHandler.toString(addedItem.getKey(), ", ") + ": " + addedItem.getValue()
@@ -185,20 +185,20 @@ class SEIntegralSystemAnalyzer extends Shared {
 						}
 					} else if (addedItemFlag) {
 						//store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock, rankSize);
-						LogUtils.info("Added data to rank: " + ComboHandler.toString(combo, ", ") + ": " + allPremiums);
+						LogUtils.INSTANCE.info("Added data to rank: " + ComboHandler.toString(combo, ", ") + ": " + allPremiums);
 					}
 				}
 				if (iterationData.getCounter().mod(modderForAutoSave).compareTo(BigInteger.ZERO) == 0 || iterationData.getCounter().compareTo(currentBlock.end) == 0) {
 					store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock, rankSize);
 					printData(cacheRecord);
-					LogUtils.info(MathUtils.INSTANCE.format(processedSystemsCounter(cacheRecord)) + " of systems have been processed");
+					LogUtils.INSTANCE.info(MathUtils.INSTANCE.format(processedSystemsCounter(cacheRecord)) + " of systems have been processed");
 	    		}
 			});
 		}
 		if (assignedBlocks.isEmpty()) {
 			assignedBlocks.addAll(retrieveAssignedBlocks(config, cacheRecord));
 		}
-		//LogUtils.info(processedSystemsCounterWrapper.get() + " of combinations analyzed");
+		//LogUtils.INSTANCE.info(processedSystemsCounterWrapper.get() + " of combinations analyzed");
 	}
 
 	protected static String buildCacheKey(ComboHandler comboHandler, SEStats sEStats) {
@@ -303,15 +303,15 @@ class SEIntegralSystemAnalyzer extends Shared {
 	protected static void printData(
 		Record record
 	) {
-		LogUtils.info("\nBlocks (size: " + record.blocks.size() + ") status:");
-		LogUtils.info(
+		LogUtils.INSTANCE.info("\nBlocks (size: " + record.blocks.size() + ") status:");
+		LogUtils.INSTANCE.info(
 			"\t" + String.join(
 				"\n\t",
 				record.blocks.stream().map(Object::toString).collect(Collectors.toList())
 			)
 		);
-		LogUtils.info("Rank (size: " + record.data.size() + "):");
-		LogUtils.info(
+		LogUtils.INSTANCE.info("Rank (size: " + record.data.size() + "):");
+		LogUtils.INSTANCE.info(
 			"\t" + String.join(
 				"\n\t",
 				record.data.stream().map(entry ->

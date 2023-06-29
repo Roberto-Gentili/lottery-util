@@ -89,7 +89,7 @@ public class SubscriptionExpirationDateUpdater extends Shared {
 			int expiryColumnIndex = getCellIndex(sheet, "Scadenza");
 			Iterator<Row> rowIterator = sheet.rowIterator();
 			rowIterator.next();
-			LogUtils.info("Aggiornamento data scadenza abbonamento:\n");
+			LogUtils.INSTANCE.info("Aggiornamento data scadenza abbonamento:\n");
 			while (rowIterator.hasNext()) {
 				Row row = rowIterator.next();
 				String clientName = null;
@@ -130,7 +130,7 @@ public class SubscriptionExpirationDateUpdater extends Shared {
 									}
 								}
 								boolean expireSoon = expiryLocalDate.minus(7, ChronoUnit.DAYS).compareTo(LocalDate.now()) <= 0;
-								LogUtils.info(
+								LogUtils.INSTANCE.info(
 									(expireSoon ? "*" : "") + row.getCell(nameColumnIndex).getStringCellValue() + (expireSoon ? "*" : "") +" da " + startExpiryDate.format(TimeUtils.defaultLocalDateFormat) +
 									" a " + (expireSoon ? "*" : "") +expiryLocalDate.format(TimeUtils.defaultLocalDateFormat) + (expireSoon ? "*" : "")
 								);
@@ -144,7 +144,7 @@ public class SubscriptionExpirationDateUpdater extends Shared {
 				XSSFFormulaEvaluator.evaluateAllFormulaCells(workbook);
 				workbook.write(outputStream);
 			}
-			LogUtils.info();
+			LogUtils.INSTANCE.info();
 			rowIterator = sheet.rowIterator();
 			rowIterator.next();
 			double extractionCost = workbook.getSheet("Informazioni varie").getRow(3).getCell(1).getNumericCellValue() / 3;
@@ -167,14 +167,14 @@ public class SubscriptionExpirationDateUpdater extends Shared {
 							extractionDateCounter++;
 						}
 						String label = name + " " + extractionDateCounter + " estrazioni rimaste. Importo credito: ";
-						LogUtils.info(label + rightAlignedString(MathUtils.INSTANCE.decimalFormat.format(extractionCost * extractionDateCounter), displaySize - label.length()) + "€");
+						LogUtils.INSTANCE.info(label + rightAlignedString(MathUtils.INSTANCE.decimalFormat.format(extractionCost * extractionDateCounter), displaySize - label.length()) + "€");
 						total += extractionCost * extractionDateCounter;
 					}
 				}
 			}
-			LogUtils.info();
+			LogUtils.INSTANCE.info();
 			String label = "Importo debito: ";
-			LogUtils.info(label + rightAlignedString(MathUtils.INSTANCE.decimalFormat.format(total), displaySize - label.length()) + "€");
+			LogUtils.INSTANCE.info(label + rightAlignedString(MathUtils.INSTANCE.decimalFormat.format(total), displaySize - label.length()) + "€");
 		} catch (Throwable exc) {
 			exc.printStackTrace();
 		}

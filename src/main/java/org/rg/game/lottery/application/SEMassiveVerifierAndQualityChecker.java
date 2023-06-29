@@ -124,12 +124,12 @@ public class SEMassiveVerifierAndQualityChecker extends Shared {
 					normalAndCeneteredCellStyle.setAlignment(HorizontalAlignment.CENTER);
 					Sheet sheet = workbook.getSheet(extractionMonth);
 					if (sheet == null) {
-						LogUtils.warn("Nessun foglio da verificare per il mese " + extractionMonth);
+						LogUtils.INSTANCE.warn("Nessun foglio da verificare per il mese " + extractionMonth);
 						continue;
 					}
 					int offset = getCellIndex(sheet, extractionDay);
 					if (offset < 0) {
-						LogUtils.warn("Nessuna combinazione da verificare per la data " + extractionDate + "\n");
+						LogUtils.INSTANCE.warn("Nessuna combinazione da verificare per la data " + extractionDate + "\n");
 						continue;
 					}
 					Iterator<Row> rowIterator = sheet.rowIterator();
@@ -183,7 +183,7 @@ public class SEMassiveVerifierAndQualityChecker extends Shared {
 					rowIterator.next();
 					Cell cell = rowIterator.next().getCell(offset + 6);
 					XSSFRichTextString results = new XSSFRichTextString();
-					LogUtils.info(
+					LogUtils.INSTANCE.info(
 						checkCombo(
 							globalData,
 							dataForTime,
@@ -237,11 +237,11 @@ public class SEMassiveVerifierAndQualityChecker extends Shared {
 		Map<Number, List<List<Integer>>> globalData,
 		Map<Integer, Map<String, Map<Number, Integer>>> dataForTime
 	) throws IOException {
-		LogUtils.info("\nRisultati per tempo:");
+		LogUtils.INSTANCE.info("\nRisultati per tempo:");
 		for (Map.Entry<Integer, Map<String, Map<Number, Integer>>> yearAndDataForMonth : dataForTime.entrySet()) {
 			int year = yearAndDataForMonth.getKey();
 			Map<String, Map<Number, Integer>> dataForMonth = yearAndDataForMonth.getValue();
-			LogUtils.info("\t" + year + ":");
+			LogUtils.INSTANCE.info("\t" + year + ":");
 			File mainFile = getSystemsFile(year);
 			try (InputStream srcFileInputStream = new FileInputStream(mainFile);
 				Workbook workbook = new XSSFWorkbook(srcFileInputStream);
@@ -283,7 +283,7 @@ public class SEMassiveVerifierAndQualityChecker extends Shared {
 				rowIndex++;
 				for (Map.Entry<String, Map<Number, Integer>> monthWinningInfo : dataForMonth.entrySet()) {
 					String month = monthWinningInfo.getKey();
-					LogUtils.info("\t\t" + month + ":");
+					LogUtils.INSTANCE.info("\t\t" + month + ":");
 					Map<Number, Integer> winningInfo = monthWinningInfo.getValue();
 					Row row = rowIterator.hasNext() ? rowIterator.next() : sheet.createRow(rowIndex);
 					Cell labelCell = row.getCell(0);
@@ -298,7 +298,7 @@ public class SEMassiveVerifierAndQualityChecker extends Shared {
 						String label = Premium.toLabel(type);
 						int labelIndex = getCellIndex(sheet, label);
 						if (counter > 0) {
-							LogUtils.info("\t\t\t" + label + ":" + SEStats.rightAlignedString(MathUtils.INSTANCE.integerFormat.format(counter), 21 - label.length()));
+							LogUtils.INSTANCE.info("\t\t\t" + label + ":" + SEStats.rightAlignedString(MathUtils.INSTANCE.integerFormat.format(counter), 21 - label.length()));
 						}
 						Cell valueCell = row.getCell(labelIndex);
 						if (valueCell == null) {
@@ -340,10 +340,10 @@ public class SEMassiveVerifierAndQualityChecker extends Shared {
 			}
 		};
 
-		LogUtils.info("\nRisultati globali:");
+		LogUtils.INSTANCE.info("\nRisultati globali:");
 		globalData.forEach((key, combos) -> {
 			String label = Premium.toLabel(key);
-			LogUtils.info("\t" + label + ":" + SEStats.rightAlignedString(MathUtils.INSTANCE.integerFormat.format(combos.size()), 21 - label.length()));
+			LogUtils.INSTANCE.info("\t" + label + ":" + SEStats.rightAlignedString(MathUtils.INSTANCE.integerFormat.format(combos.size()), 21 - label.length()));
 		});
 	}
 

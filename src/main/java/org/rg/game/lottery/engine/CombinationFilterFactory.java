@@ -435,7 +435,7 @@ public class CombinationFilterFactory {
 			return combo -> {
 				boolean result = predicate.test(combo);
 				if (!result) {
-					LogUtils.info("[" + filterAsString + "] returned false on combo:\t" + ComboHandler.toString(combo));
+					LogUtils.INSTANCE.info("[" + filterAsString + "] returned false on combo:\t" + ComboHandler.toString(combo));
 				}
 				return result;
 			};

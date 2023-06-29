@@ -120,7 +120,7 @@ public class ComboHandler {
 	    		);
 	    	}
 	    	/*if ((combinationCounter.get() % 10_000_000) == 0) {
-	    		LogUtils.logInfo("Tested " + combinationCounter.get() + " of combinations");
+	    		LogUtils.INSTANCE.logInfo("Tested " + combinationCounter.get() + " of combinations");
     		}*/
 	    } else if (start <= end) {
 	        indexes[index] = start;

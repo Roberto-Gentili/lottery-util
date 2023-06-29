@@ -31,7 +31,7 @@ public class SEPremium {
 			.computeIfAbsent(combo.size(), size -> new HashMap<>())
 			.computeIfAbsent(winningType, wT -> new TreeMap<>(MathUtils.INSTANCE.numberComparator));
 		if (results.isEmpty()) {
-			LogUtils.info("Caching winning type " + winningType + " for combo with size " + combo.size());
+			LogUtils.INSTANCE.info("Caching winning type " + winningType + " for combo with size " + combo.size());
 			new ComboHandler(combo, 6).iterate(iterationData -> {
 				List<Integer> cmb = iterationData.getCombo();
 				Number hitCounter = 0;

@@ -112,7 +112,7 @@ public class PersistentStorage implements Storage {
 						"Desktop" + File.separator +
 						"Combos";
 					workingPath = Paths.get(workingPath).normalize().toFile().getAbsolutePath();
-					LogUtils.info("Set working path to: " + workingPath);
+					LogUtils.INSTANCE.info("Set working path to: " + workingPath);
 					PersistentStorage.workingPath = workingPath;
 				}
 			}
@@ -306,7 +306,7 @@ public class PersistentStorage implements Storage {
 	    try (BufferedReader br = new BufferedReader(new FileReader(absolutePath))) {
 	        String line;
 	        while ((line = br.readLine()) != null) {
-	           LogUtils.info(line);
+	           LogUtils.INSTANCE.info(line);
 	        }
 	    } catch (IOException e) {
 			e.printStackTrace();

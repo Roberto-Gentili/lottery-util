@@ -57,7 +57,7 @@ public class MathUtils {
 			number = number.subtract(BigInteger.ONE);
 			BigInteger processedNumbers = initialValue.subtract(number);
 			if (processedNumbers.mod(divisor).compareTo(BigInteger.ZERO) == 0) {
-				LogUtils.info("Processed " + processedNumbers
+				LogUtils.INSTANCE.info("Processed " + processedNumbers
 					.toString() + " numbers - Factorial: " + factorial.toString());
 			}
 		}

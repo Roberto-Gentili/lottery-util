@@ -67,12 +67,12 @@ public class SEQualityCheckerForExcel extends Shared {
 				try (InputStream srcFileInputStream = new FileInputStream(mainFile); Workbook workbook = new XSSFWorkbook(srcFileInputStream);) {
 					Sheet sheet = workbook.getSheet(extractionMonth);
 					if (sheet == null) {
-						LogUtils.warn("No sheet named '" + extractionMonth + "' to test for date " + extractionDate);
+						LogUtils.INSTANCE.warn("No sheet named '" + extractionMonth + "' to test for date " + extractionDate);
 						continue;
 					}
 					int offset = getCellIndex(sheet, extractionDay);
 					if (offset < 0) {
-						LogUtils.warn("No combination to test for date " + extractionDate);
+						LogUtils.INSTANCE.warn("No combination to test for date " + extractionDate);
 						continue;
 					}
 					Iterator<Row> rowIterator = sheet.rowIterator();
@@ -93,12 +93,12 @@ public class SEQualityCheckerForExcel extends Shared {
 						}
 						system.add(currentCombo);
 					}
-					LogUtils.info("\nAnalisi del sistema del " + extractionDate + ":" );
+					LogUtils.INSTANCE.info("\nAnalisi del sistema del " + extractionDate + ":" );
 					Map<String, Object> report = getSEStats().checkQuality(system::iterator);
 					if ((boolean)dateInfo.getValue()) {
-						LogUtils.info("\t" + ((String)report.get("report.detail")).replace("\n", "\n\t"));
+						LogUtils.INSTANCE.info("\t" + ((String)report.get("report.detail")).replace("\n", "\n\t"));
 					}
-					LogUtils.info("\t" + ((String)report.get("report.summary")).replace("\n", "\n\t"));
+					LogUtils.INSTANCE.info("\t" + ((String)report.get("report.summary")).replace("\n", "\n\t"));
 				} catch (Throwable exc) {
 					exc.printStackTrace();
 				}

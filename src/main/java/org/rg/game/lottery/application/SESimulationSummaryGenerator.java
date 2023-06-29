@@ -48,7 +48,7 @@ public class SESimulationSummaryGenerator extends Shared {
 						"working-path.simulations.folder"
 					)
 				).findFirst().orElseGet(() -> null);
-			LogUtils.info("\n\n");
+			LogUtils.INSTANCE.info("\n\n");
 			String simulationSummaryFile = simulationSummaryFolder + File.separator + "Summary.xlsx";
 			SimpleWorkbookTemplate workBookTemplate = new SimpleWorkbookTemplate(true);
 			Sheet summarySheet = workBookTemplate.getOrCreateSheet("Riepilogo", true);
@@ -112,9 +112,9 @@ public class SESimulationSummaryGenerator extends Shared {
 				BaseFormulaEvaluator.evaluateAllFormulaCells(workBookTemplate.getWorkbook());
 				workBookTemplate.getWorkbook().write(destFileOutputStream);
 			}
-			LogUtils.info("\n\nSummary file succesfully generated");
+			LogUtils.INSTANCE.info("\n\nSummary file succesfully generated");
 		} catch (Throwable exc) {
-			LogUtils.error("\n\nUnable to generate summary file");
+			LogUtils.INSTANCE.error("\n\nUnable to generate summary file");
 			exc.printStackTrace();
 		}
 	}
@@ -135,7 +135,7 @@ public class SESimulationSummaryGenerator extends Shared {
 			})
 		) {
 			String singleSimFolderRelPath = Optional.ofNullable(currentRelativePath).map(cRP -> cRP + "/").orElseGet(() -> "") + singleSimFolder.getName();
-			LogUtils.info("Scanning " + singleSimFolder.getAbsolutePath());
+			LogUtils.INSTANCE.info("Scanning " + singleSimFolder.getAbsolutePath());
 			File report = Arrays.stream(singleSimFolder.listFiles((file, name) -> name.endsWith("report.xlsx"))).findFirst().orElseGet(() -> null);
 			if (report != null) {
 				reportCounter.incrementAndGet();
@@ -148,11 +148,11 @@ public class SESimulationSummaryGenerator extends Shared {
 						report
 					);
 				} catch (Throwable exc) {
-					LogUtils.warn("Unable to process " + report.getAbsolutePath() + ": " + exc.getMessage());
+					LogUtils.INSTANCE.warn("Unable to process " + report.getAbsolutePath() + ": " + exc.getMessage());
 					List<File> backupFiles = ResourceUtils.INSTANCE.findReverseOrdered("report - ", "xlsx", report.getParentFile().getAbsolutePath());
 					boolean processed = false;
 					if (backupFiles.size() > 0) {
-						LogUtils.info("Trying to process its backups");
+						LogUtils.INSTANCE.info("Trying to process its backups");
 						for (File backup : backupFiles) {
 							try {
 								process(
@@ -170,11 +170,11 @@ public class SESimulationSummaryGenerator extends Shared {
 						}
 					}
 					if (!processed) {
-						LogUtils.error("Unable to process backups of " + report.getAbsolutePath());
+						LogUtils.INSTANCE.error("Unable to process backups of " + report.getAbsolutePath());
 					}
 				}
 			} else {
-				LogUtils.warn("No report found in folder " + singleSimFolder.getAbsolutePath());
+				LogUtils.INSTANCE.warn("No report found in folder " + singleSimFolder.getAbsolutePath());
 			}
 			process(
 				singleSimFolderRelPath,

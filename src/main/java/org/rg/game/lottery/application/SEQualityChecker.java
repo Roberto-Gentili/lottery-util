@@ -29,9 +29,9 @@ public class SEQualityChecker extends Shared {
 				storage.printAll();
 				Map<String, Object> report = getSEStats().checkQuality(storage::iterator);
 				if ((boolean)dateInfo.getValue()) {
-					LogUtils.info("\t" + ((String)report.get("report.detail")).replace("\n", "\n\t"));
+					LogUtils.INSTANCE.info("\t" + ((String)report.get("report.detail")).replace("\n", "\n\t"));
 				}
-				LogUtils.info("\t" + ((String)report.get("report.summary")).replace("\n", "\n\t"));
+				LogUtils.INSTANCE.info("\t" + ((String)report.get("report.summary")).replace("\n", "\n\t"));
 			} catch (Throwable exc) {
 				exc.printStackTrace();
 			}

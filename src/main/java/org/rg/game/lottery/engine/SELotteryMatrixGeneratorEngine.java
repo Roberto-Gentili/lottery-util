@@ -155,14 +155,14 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		Predicate<List<Integer>> combinationFilter = CombinationFilterFactory.INSTANCE.parse(filterAsString, fineLog);
 		Set<Entry<Date, List<Integer>>> allWinningCombos = getSEStats().getAllWinningCombos().entrySet();
 		int discardedFromHistory = 0;
-		LogUtils.info("Starting filter analysis\n");
+		LogUtils.INSTANCE.info("Starting filter analysis\n");
 		Collection<Integer> comboSums = new TreeSet<>();
 		for (Map.Entry<Date, List<Integer>> comboForDate : allWinningCombos) {
 			if (!combinationFilter.test(comboForDate.getValue())) {
 				discardedFromHistory++;
 				if (fineLog) {
 					comboSums.add(comboForDate.getValue().stream().mapToInt(Integer::intValue).sum());
-					LogUtils.info("  Filter discarded winning combo of " + TimeUtils.getDefaultDateFormat().format(comboForDate.getKey()) + ":  " +
+					LogUtils.INSTANCE.info("  Filter discarded winning combo of " + TimeUtils.getDefaultDateFormat().format(comboForDate.getKey()) + ":  " +
 						ComboHandler.toString(comboForDate.getValue()));
 				}
 			}
@@ -170,9 +170,9 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		if (fineLog) {
 			String comboExpression = ComboHandler.toExpression(comboSums);
 			if (!comboExpression.isEmpty()) {
-				LogUtils.info("\n" + ComboHandler.toExpression(comboSums));
+				LogUtils.INSTANCE.info("\n" + ComboHandler.toExpression(comboSums));
 			}
-			LogUtils.info();
+			LogUtils.INSTANCE.info();
 		}
 		ComboHandler comboHandler = new ComboHandler(numbers, 6);
 		Collection<Long> comboPartitionIndexes = new HashSet<>();
@@ -183,7 +183,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 			comboPartitionIndexes.add(i);
 			if (comboPartitionIndexes.size() == elaborationUnitSize) {
 				/*if (fineLog) {
-					LogUtils.logInfo("Loaded " + integerFormat.format(i + 1) + " of indexes");
+					LogUtils.INSTANCE.logInfo("Loaded " + integerFormat.format(i + 1) + " of indexes");
 				}*/
 				for (List<Integer> combo : comboHandler.find(comboPartitionIndexes, true).values()) {
 					if (!combinationFilter.test(combo)) {
@@ -191,7 +191,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 					}
 				}
 				if (fineLog) {
-					LogUtils.info("Processed " + integerFormat.format(i + 1) + " of combos");
+					LogUtils.INSTANCE.info("Processed " + integerFormat.format(i + 1) + " of combos");
 				}
 			}
 		}
@@ -202,11 +202,11 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 				}
 			}
 			if (fineLog && comboHandler.getSizeAsInt() >= elaborationUnitSize) {
-				LogUtils.info("Processed " + integerFormat.format(comboHandler.getSizeAsInt()) + " of combo");
+				LogUtils.INSTANCE.info("Processed " + integerFormat.format(comboHandler.getSizeAsInt()) + " of combo");
 			}
 		}
 		if (fineLog && discardedFromHistory > 0) {
-			LogUtils.info();
+			LogUtils.INSTANCE.info();
 		}
 		Map<String, Object> stats = new LinkedHashMap<>();
 		double discardedPercentageFromHistory = (discardedFromHistory * 100) / (double)allWinningCombos.size();
@@ -235,7 +235,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		report.append("Integral system discarded combos:" + rightAlignedString(decimalFormat.format(discardedFromIntegralSystem), 19) + "\n");
 		report.append("Integral system discarded combos percentage:" + rightAlignedString(decimalFormat.format(discardedFromIntegralSystemPercentage) + " %", 10) + "\n");
 		report.append("Effectiveness:" + rightAlignedString(decimalFormat.format(effectiveness) + " %", 40) +"\n");
-		LogUtils.info(report.toString() + "\nFilter analysis ended\n");
+		LogUtils.INSTANCE.info(report.toString() + "\nFilter analysis ended\n");
 
 		stats.put("totalExtractionsAnalyzed", allWinningCombos.size());
 		stats.put("discardedWinningCombos", discardedFromHistory);

@@ -38,7 +38,7 @@ public class LotteryMatrixGenerator extends Shared {
 			"working-path.generations.folder",
 			"resources.generations.folder"
 		);
-		LogUtils.info("Set configuration files folder to " + String.join(", ", configurationFileFolders) + "\n");
+		LogUtils.INSTANCE.info("Set configuration files folder to " + String.join(", ", configurationFileFolders) + "\n");
 		List<File> configurationFiles =
 			ResourceUtils.INSTANCE.find(
 				configFilePrefix + "-matrix-generator", "properties",
@@ -61,12 +61,12 @@ public class LotteryMatrixGenerator extends Shared {
 		Supplier<LotteryMatrixGeneratorAbstEngine> engineSupplier,
 		Properties configuration
 	) {
-		LogUtils.info(
+		LogUtils.INSTANCE.info(
 			"Processing file '" + configuration.getProperty("file.name") + "' located in '" + configuration.getProperty("file.parent.absolutePath") + "'"
 		);
 		String info = configuration.getProperty("info");
 		if (info != null) {
-			LogUtils.info(info);
+			LogUtils.INSTANCE.info(info);
 		}
 		LotteryMatrixGeneratorAbstEngine engine = engineSupplier.get();
 		configuration.setProperty("nameSuffix", configuration.getProperty("file.name")

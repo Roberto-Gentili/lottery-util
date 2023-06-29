@@ -53,7 +53,7 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 			"working-path.complex-simulations.folder",
 			"resources.complex-simulations.folder"
 		);
-		LogUtils.info("Set configuration files folder to " + String.join(", ", configurationFileFolders) + "\n");
+		LogUtils.INSTANCE.info("Set configuration files folder to " + String.join(", ", configurationFileFolders) + "\n");
 		try {
 			for (Properties complexSimulationConfig : toConfigurations(
 				ResourceUtils.INSTANCE.find(

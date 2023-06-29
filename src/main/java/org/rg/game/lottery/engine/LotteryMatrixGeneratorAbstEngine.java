@@ -85,7 +85,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		comboIndexSelectorType = config.getProperty("combination.selector", "random");
 		String extractionDatesAsString = config.getProperty("competition");
 		Collection<LocalDate> extractionDates = computeExtractionDates(extractionDatesAsString);
-		/*LogUtils.info(
+		/*LogUtils.INSTANCE.info(
 			"Computing for the following extraction dates:\n\t"+
 			String.join(", ",
 				extractionDates.stream().map(TimeUtils.defaultLocalDateFormat::format).collect(Collectors.toList())
@@ -217,7 +217,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 				if (storageProcessor != null) {
 					storageProcessor.apply(extractionDate).accept(storages);
 				}
-				LogUtils.info("\n\n");
+				LogUtils.INSTANCE.info("\n\n");
 			}
 			return storages;
 		};
@@ -406,23 +406,23 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 					long timeout = waitingSomeoneForGenerationTimeout * 1000;
 					while (!storageRef.isClosed() && overwriteIfExists == 0 && timeout >= 0) {
 						try {
-							LogUtils.info("Waiting a maximum of " + timeout/1000 + " seconds for " + storageRef.getName() + " prepared by someone else");
+							LogUtils.INSTANCE.info("Waiting a maximum of " + timeout/1000 + " seconds for " + storageRef.getName() + " prepared by someone else");
 							Thread.sleep(timeout - (timeout -= 1000));
 						} catch (InterruptedException e) {
 							Throwables.sneakyThrow(e);
 						}
 					}
 					if (storageRef.isClosed()) {
-						LogUtils.info(storageRef.getName() + " succesfully restored\n");
+						LogUtils.INSTANCE.info(storageRef.getName() + " succesfully restored\n");
 						storageRef.printAll();
 						return storageRef;
 					}
 					if (overwriteIfExists == -1) {
-						LogUtils.info(storageRef.getName() + " not generated");
+						LogUtils.INSTANCE.info(storageRef.getName() + " not generated");
 						return null;
 					}
 					if (timeout < 0) {
-						LogUtils.info("Waiting for system generation by others ended: " + storageRef.getName() + " will be overwritten");
+						LogUtils.INSTANCE.info("Waiting for system generation by others ended: " + storageRef.getName() + " will be overwritten");
 					}
 				} catch (Throwable exc) {
 					if (!(exc instanceof FileNotFoundException)) {
@@ -546,7 +546,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 					}
 				}
 			} catch (AllRandomNumbersHaveBeenGeneratedException exc) {
-				LogUtils.info("\n" + exc.getMessage());
+				LogUtils.INSTANCE.info("\n" + exc.getMessage());
 			}
 			Integer minOccurrences = storage.getMinOccurence();
 			Integer maxOccurrences = storage.getMaxOccurence();
@@ -615,7 +615,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 				if ((avoidMode == 1 && shouldBePlayed) || (avoidMode == 2 && shouldBePlayedAbsolutely)) {
 					storageRef.printAll();
 				} else {
-					LogUtils.info(text);
+					LogUtils.INSTANCE.info(text);
 					storageRef.delete();
 				}
 			} else {
@@ -702,7 +702,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 				effectiveIndexes.add(null);
 			}
 		}
-		LogUtils.info(
+		LogUtils.INSTANCE.info(
 			formatter.format(LocalDateTime.now()) +
 			" - " + integerFormat.format(uniqueIndexCounter.get()) + " unique indexes generated on " +
 			integerFormat.format(indexGeneratorCallsCounter.get()) + " calls. " +

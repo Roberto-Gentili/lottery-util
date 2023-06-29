@@ -129,7 +129,7 @@ public class SEStats {
 	}
 
 	public static void clear() {
-		LogUtils.info("Cleaning " + SEStats.class.getSimpleName() + " cache");
+		LogUtils.INSTANCE.info("Cleaning " + SEStats.class.getSimpleName() + " cache");
 		synchronized(CACHE) {
 			Iterator<Map.Entry<String, SEStats>> sEStatsIterator = CACHE.entrySet().iterator();
 			while (sEStatsIterator.hasNext()) {
@@ -139,7 +139,7 @@ public class SEStats {
 				}
 			}
 		}
-		LogUtils.info(SEStats.class.getSimpleName() + " cache cleaned");
+		LogUtils.INSTANCE.info(SEStats.class.getSimpleName() + " cache cleaned");
 	}
 
 	private void init(String startDate, String endDate) {
@@ -168,7 +168,7 @@ public class SEStats {
 					break;
 				}
 			} catch (Throwable exc) {
-				LogUtils.warn(dataLoader.getClass() + " in unable to load extractions data: " + exc.getMessage());
+				LogUtils.INSTANCE.warn(dataLoader.getClass() + " in unable to load extractions data: " + exc.getMessage());
 			}
 		}
 		if (!dataLoaded) {
@@ -176,17 +176,17 @@ public class SEStats {
 		}
 
 		loadStats();
-		LogUtils.info("\nAll extraction data have been succesfully loaded for period " + startDate + " -> " + endDate);
+		LogUtils.INSTANCE.info("\nAll extraction data have been succesfully loaded for period " + startDate + " -> " + endDate);
 		for (DataStorer dataStorer : dataStorers) {
 			try {
 				if (dataStorer.store()) {
 
 				} else {
-					LogUtils.info(dataStorer.getClass() + " stored no data");
+					LogUtils.INSTANCE.info(dataStorer.getClass() + " stored no data");
 				}
 			} catch (Throwable exc) {
 				exc.printStackTrace();
-				LogUtils.info(dataStorer.getClass() + " in unable to store extractions data: " + exc.getMessage());
+				LogUtils.INSTANCE.info(dataStorer.getClass() + " in unable to store extractions data: " + exc.getMessage());
 			}
 		}
 	}
@@ -278,9 +278,9 @@ public class SEStats {
 		};
 		extractedNumberTripleCounters = extractedNumberTripleCountersMap.entrySet().stream().sorted(integerComparator.reversed()).collect(Collectors.toList());
 		extractedNumberPairCounters = extractedNumberPairCountersMap.entrySet().stream().sorted(integerComparator.reversed()).collect(Collectors.toList());
-		//extractedNumberPairCounters.stream().forEach(entry -> LogUtils.logInfo(String.join("\t", Arrays.asList(entry.getKey().split("-"))) + "\t" + entry.getValue()));
+		//extractedNumberPairCounters.stream().forEach(entry -> LogUtils.INSTANCE.logInfo(String.join("\t", Arrays.asList(entry.getKey().split("-"))) + "\t" + entry.getValue()));
 		extractedNumberCounters = extractedNumberCountersMap.entrySet().stream().sorted(integerComparator.reversed()).collect(Collectors.toList());
-		//extractedNumberCounters.stream().forEach(entry -> LogUtils.logInfo(String.join("\t", Arrays.asList(entry.getKey().split("-"))) + "\t" + entry.getValue()));
+		//extractedNumberCounters.stream().forEach(entry -> LogUtils.INSTANCE.logInfo(String.join("\t", Arrays.asList(entry.getKey().split("-"))) + "\t" + entry.getValue()));
 		Map<Integer, Integer> extractedNumberFromMostExtractedCoupleMap = new LinkedHashMap<>();
 		extractedNumberPairCounters.stream().forEach(entry -> {
 			for (Integer number : Arrays.stream(entry.getKey().split("-")).map(Integer::parseInt).collect(Collectors.toList())) {
@@ -813,14 +813,14 @@ public class SEStats {
 			int startYear =  calendar.get(Calendar.YEAR);
 			calendar.setTime(currentDate);
 			int endYear = calendar.get(Calendar.YEAR);
-			LogUtils.info();
+			LogUtils.INSTANCE.info();
 			Map.Entry<Date, List<Integer>> latestWinningCombo = getLatestWinningCombo();
 			if (TimeUtils.isBetween(latestWinningCombo.getKey(), startDate, endDate)) {
 				allWinningCombos.put(latestWinningCombo.getKey(), latestWinningCombo.getValue().subList(0, 6));
 				allWinningCombosWithJollyAndSuperstar.put(latestWinningCombo.getKey(), latestWinningCombo.getValue());
 			}
 			for (int year : IntStream.range(startYear, (endYear + 1)).map(i -> (endYear + 1) - i + startYear - 1).toArray()) {
-				LogUtils.info("Loading all extraction data of " + year);
+				LogUtils.INSTANCE.info("Loading all extraction data of " + year);
 				Document doc = Jsoup.connect(EXTRACTIONS_ARCHIVE_URL.replace("${year}", String.valueOf(year))).get();
 				Element table = doc.select("table[class=resultsTable table light]").first();
 				Iterator<Element> itr = table.select("tr").iterator();
@@ -1228,10 +1228,10 @@ public class SEStats {
 		if (startDate.getDayOfWeek().getValue() == DayOfWeek.MONDAY.getValue() ||
 			startDate.getDayOfWeek().getValue() == DayOfWeek.WEDNESDAY.getValue()
 		) {
-			LogUtils.info("Attenzione: il concorso eseguito in data " + TimeUtils.defaultLocalDateWithDayNameFormat.format(startDate) + " risulta essere anticipato");
+			LogUtils.INSTANCE.info("Attenzione: il concorso eseguito in data " + TimeUtils.defaultLocalDateWithDayNameFormat.format(startDate) + " risulta essere anticipato");
 			return 3;
 		} else if (startDate.getDayOfWeek().getValue() == DayOfWeek.FRIDAY.getValue()) {
-			LogUtils.info("Attenzione: il concorso eseguito in data " + TimeUtils.defaultLocalDateWithDayNameFormat.format(startDate) + " risulta essere anticipato");
+			LogUtils.INSTANCE.info("Attenzione: il concorso eseguito in data " + TimeUtils.defaultLocalDateWithDayNameFormat.format(startDate) + " risulta essere anticipato");
 			return 4;
 		}
 		return startDate.getDayOfWeek().getValue() == DayOfWeek.SATURDAY.getValue() ? 3 : 2;

@@ -84,7 +84,7 @@ public class MemoryStorage implements Storage {
 
 	@Override
 	public void printAll() {
-		LogUtils.info(output);
+		LogUtils.INSTANCE.info(output);
 	}
 
 	@Override
