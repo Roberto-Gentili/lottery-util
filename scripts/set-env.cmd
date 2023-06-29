@@ -17,3 +17,5 @@ set LIBS=!LIBS!"
 endlocal & (
   set "LIBS=%LIBS%"
 )
+
+set XMX=5g
