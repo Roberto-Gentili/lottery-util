@@ -607,6 +607,7 @@ public class SELotterySimpleSimulator extends Shared {
 		String configurationName,
 		Map<String, Map<String, Object>> premiumCountersForFile
 	) {
+		LogUtils fileLogger = LogUtils.ToFile.getLogger(configuration.getProperty("logger.file.name"));
 		List<Number> premiumTypeList = parseReportWinningInfoConfig(configuration.getProperty("report.winning-info", "all").replaceAll("\\s+",""));
 		Number[] premiumTypes = premiumTypeList.toArray(new Number[premiumTypeList.size()]);
 		boolean isSlave = CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false");
@@ -766,6 +767,7 @@ public class SELotterySimpleSimulator extends Shared {
 					} catch (Throwable exc) {
 						LogUtils.INSTANCE.error("Exception occurred while processing row " + (rowIndex + 1) + ": " + exc.getMessage());
 						if (!isSlave) {
+							fileLogger.error("Exception occurred while processing row " + (rowIndex + 1) + ": " + exc.getMessage());
 							LogUtils.INSTANCE.warn("Row " + (rowIndex + 1) +" will be removed");
 							rowsToBeRemoved.add(rowIndex);
 						}
@@ -781,6 +783,7 @@ public class SELotterySimpleSimulator extends Shared {
 						try {
 							sheet.removeRow(sheet.getRow(rowIndex));
 						} catch (Throwable exc) {
+							fileLogger.error("Unable to remove row " + (rowIndex + 1) + " for file " + excelFileName + ": " + exc.getMessage());
 							LogUtils.INSTANCE.error("Unable to remove row " + (rowIndex + 1) + " for file " + excelFileName + ": " + exc.getMessage());
 						}
 					}
