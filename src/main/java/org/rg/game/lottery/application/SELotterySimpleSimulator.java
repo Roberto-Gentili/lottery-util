@@ -781,7 +781,7 @@ public class SELotterySimpleSimulator extends Shared {
 						try {
 							sheet.removeRow(sheet.getRow(rowIndex));
 						} catch (Throwable exc) {
-							LogUtils.error("Unable to remove row " + (rowIndex + 1) + ": " + exc.getMessage());
+							LogUtils.error("Unable to remove row " + (rowIndex + 1) + " for file " + excelFileName + ": " + exc.getMessage());
 						}
 					}
 				}
