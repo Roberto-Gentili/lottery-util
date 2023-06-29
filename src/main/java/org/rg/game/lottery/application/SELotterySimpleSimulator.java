@@ -780,14 +780,17 @@ public class SELotterySimpleSimulator extends Shared {
 					}
 				}
 				if (!isSlave) {
+					LogUtils fileLogger = LogUtils.ToFile.getLogger(configuration.getProperty("logger.file.name"));
 					for (Integer rowIndex : rowsToBeRemoved) {
 						try {
 							sheet.removeRow(sheet.getRow(rowIndex));
 						} catch (Throwable exc) {
-							LogUtils.ToFile.getLogger(configuration.getProperty("logger.file.name"))
-							.error("Unable to remove row " + (rowIndex + 1) + " for file " + excelFileName + ": " + exc.getMessage());
+							fileLogger.error("Unable to remove row " + (rowIndex + 1) + " for file " + excelFileName + ": " + exc.getMessage());
 							LogUtils.INSTANCE.error("Unable to remove row " + (rowIndex + 1) + " for file " + excelFileName + ": " + exc.getMessage());
 						}
+					}
+					if (!rowsToBeRemoved.isEmpty()) {
+						fileLogger.error();
 					}
 				}
 			},
