@@ -69,7 +69,7 @@ public class SEStats {
 	public static final LocalDate FIRST_EXTRACTION_LOCAL_DATE_WITH_NEW_MACHINE = LocalDate.parse(FIRST_EXTRACTION_DATE_WITH_NEW_MACHINE_AS_STRING, TimeUtils.defaultLocalDateFormat);
 	public static final Date FIRST_EXTRACTION_DATE_WITH_NEW_MACHINE = TimeUtils.toDate(FIRST_EXTRACTION_LOCAL_DATE_WITH_NEW_MACHINE);
 
-	public static boolean forceLoadingFromExcel;
+	private static boolean forceLoadingFromExcel;
 	static {
 		SEStats.forceLoadingFromExcel =
 				Boolean.parseBoolean(System.getenv().getOrDefault("se-stats.force-loading-from-excel", "false"));

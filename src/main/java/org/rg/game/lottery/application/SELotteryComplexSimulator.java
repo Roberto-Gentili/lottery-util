@@ -45,10 +45,10 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 		String configFilePrefix,
 		Collection<CompletableFuture<Void>> futures
 	) {
-		SEStats.forceLoadingFromExcel = false;
+		//SEStats.forceLoadingFromExcel = false;
 		allTimeStats = SEStats.get(SEStats.FIRST_EXTRACTION_DATE_AS_STRING, TimeUtils.getDefaultDateFormat().format(new Date()));
 		SEStats.get(SEStats.FIRST_EXTRACTION_DATE_WITH_NEW_MACHINE_AS_STRING, TimeUtils.getDefaultDateFormat().format(new Date()));
-		SEStats.forceLoadingFromExcel = true;
+		//SEStats.forceLoadingFromExcel = true;
 		String[] configurationFileFolders = ResourceUtils.INSTANCE.pathsFromSystemEnv(
 			"working-path.complex-simulations.folder",
 			"resources.complex-simulations.folder"
