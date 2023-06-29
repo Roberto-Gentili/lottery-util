@@ -440,13 +440,13 @@ public class SELotterySimpleSimulator extends Shared {
 				for (List<Row> rows : allGroupedForRedundancyRows) {
 					if (rows.size() < redundancy) {
 						for (Row row : rows) {
-							sheet.removeRow(row);
+							removeRow(row);
 						}
 					}
 				}
 				if (latestGroupOfRows != null && latestGroupOfRows.size() != redundancy && latestGroupOfRows.size() != competionDateLatestBlock.size()) {
 					for (Row row : latestGroupOfRows) {
-						sheet.removeRow(row);
+						removeRow(row);
 					}
 				}
 			},
@@ -783,7 +783,7 @@ public class SELotterySimpleSimulator extends Shared {
 					LogUtils fileLogger = LogUtils.ToFile.getLogger(configuration.getProperty("logger.file.name"));
 					for (Integer rowIndex : rowsToBeRemoved) {
 						try {
-							sheet.removeRow(sheet.getRow(rowIndex));
+							removeRow(sheet, rowIndex);
 						} catch (Throwable exc) {
 							fileLogger.error("Unable to remove row " + (rowIndex + 1) + " for file " + excelFileName + ": " + exc.getMessage());
 							LogUtils.INSTANCE.error("Unable to remove row " + (rowIndex + 1) + " for file " + excelFileName + ": " + exc.getMessage());

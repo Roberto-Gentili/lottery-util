@@ -140,6 +140,23 @@ class Shared {
 		return cell;
 	}
 
+	static void removeRow(Row row) {
+		removeRow(row.getSheet(), row.getRowNum());
+	}
+
+	static void removeRow(Sheet sheet, int rowIndex) {
+	    int lastRowNum=sheet.getLastRowNum();
+	    if(rowIndex>=0&&rowIndex<lastRowNum){
+	        sheet.shiftRows(rowIndex+1,lastRowNum, -1);
+	    }
+	    if(rowIndex==lastRowNum){
+	        Row removingRow=sheet.getRow(rowIndex);
+	        if(removingRow!=null){
+	            sheet.removeRow(removingRow);
+	        }
+	    }
+	}
+
 	/*
 	public static void main(String[] args) {
 		List<Integer> ourNumbers = Arrays.asList(
