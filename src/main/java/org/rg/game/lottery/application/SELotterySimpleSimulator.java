@@ -646,8 +646,6 @@ public class SELotterySimpleSimulator extends Shared {
 				int rowProcessedCounter = 0;
 				int modifiedRowCounter = 0;
 				for (int index = 0; index < rowsToBeProcessed.size(); index++) {
-					++rowProcessedCounter;
-					int remainedRecords = (rowsToBeProcessed.size() - (rowProcessedCounter));
 					Integer rowIndex = rowsToBeProcessed.get(index);
 					Row currentRow = sheet.getRow(rowIndex);
 					currentRow.getCell(historicalReturnColIndex).setCellStyle(hyperLinkNumberCellStyle);
@@ -758,10 +756,14 @@ public class SELotterySimpleSimulator extends Shared {
 										store(excelFileName, workBook);
 									}
 								}
+							} else {
+								LogUtils.warn("Warning! Missing file " + currentRow.getCell(getOrPutAndGetCellIndex(sheet, FILE_LABEL)).getStringCellValue() + " for row " + rowIndex + 1);
 							}
 						}
 					}
-					if (remainedRecords % 100 == 0) {
+					++rowProcessedCounter;
+					int remainedRecords = (rowsToBeProcessed.size() - (rowProcessedCounter));
+					if (remainedRecords % 250 == 0) {
 						LogUtils.info("Historical update remained records of " + excelFileName + ": " + remainedRecords);
 					}
 				}
