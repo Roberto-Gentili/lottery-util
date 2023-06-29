@@ -13,12 +13,15 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.poi.ss.formula.BaseFormulaEvaluator;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.CellValue;
 import org.apache.poi.ss.usermodel.ComparisonOperator;
@@ -30,6 +33,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.rg.game.core.LogUtils;
 import org.rg.game.core.ResourceUtils;
+import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.Premium;
 import org.rg.game.lottery.engine.SimpleWorkbookTemplate;
 
@@ -65,6 +69,7 @@ public class SESimulationSummaryGenerator extends Shared {
 			headerLabels.addAll(headerLabelsTemp);
 			headerLabels.set(headerLabels.indexOf(SELotterySimpleSimulator.EXTRACTION_DATE_LABEL), SYSTEM_COUNTER_LABEL);
 			headerLabels.add(headerLabels.indexOf(SYSTEM_COUNTER_LABEL), EXTRACTION_COUNTER_LABEL);
+			headerLabels.add(SELotterySimpleSimulator.HISTORICAL_UPDATE_DATE_LABEL);
 			headersToBeSkipped.add(SELotterySimpleSimulator.EXTRACTION_DATE_LABEL);
 			workBookTemplate.createHeader(true, headerLabels);
 			AtomicInteger reportCounter = new AtomicInteger(0);
@@ -80,6 +85,7 @@ public class SESimulationSummaryGenerator extends Shared {
 			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.FOLLOWING_PROGRESSIVE_HISTORICAL_RETURN_LABEL), 3000);
 			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.HISTORICAL_COST_LABEL), 3000);
 			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.HISTORICAL_RETURN_LABEL), 3000);
+			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.HISTORICAL_UPDATE_DATE_LABEL), 9000);
 			try (OutputStream destFileOutputStream = new FileOutputStream(simulationSummaryFile)){
 				workBookTemplate.addSheetConditionalFormatting(
 					new int[] {
@@ -196,6 +202,9 @@ public class SESimulationSummaryGenerator extends Shared {
 		try (InputStream inputStream = new FileInputStream(report.getAbsolutePath());Workbook simulationWorkBook = new XSSFWorkbook(inputStream);) {
 			FormulaEvaluator evaluator = simulationWorkBook.getCreationHelper().createFormulaEvaluator();
 			Sheet resultSheet = simulationWorkBook.getSheet("Risultati");
+			CellStyle leftAligned = simulationWorkBook.createCellStyle();
+			leftAligned.setAlignment(HorizontalAlignment.LEFT);
+			int historicalUpdateDateColumnIndex = getCellIndex(resultSheet, SELotterySimpleSimulator.HISTORICAL_UPDATE_DATE_LABEL);
 			summaryWorkBookTemplate.addRow();
 			Cell cellForName = summaryWorkBookTemplate.addCell(report.getName()).get(0);
 			summaryWorkBookTemplate.setLinkForCell(
@@ -205,9 +214,14 @@ public class SESimulationSummaryGenerator extends Shared {
 			);
 			Set<Date> extractionDatesHolder = new LinkedHashSet<>();
 			int generatedSystemCounter = 0;
+			Set<Date> historicalUpdateDates = new TreeSet<>();
 			for (int i = SELotterySimpleSimulator.getHeaderSize(); i < resultSheet.getLastRowNum() + 1; i++) {
 				generatedSystemCounter++;
 				extractionDatesHolder.add(resultSheet.getRow(i).getCell(0).getDateCellValue());
+				Date historicalUpdateDate = resultSheet.getRow(i).getCell(historicalUpdateDateColumnIndex).getDateCellValue();
+				if (historicalUpdateDate != null) {
+					historicalUpdateDates.add(historicalUpdateDate);
+				}
 			}
 			summaryWorkBookTemplate.addCell(extractionDatesHolder.size(), "#,##0");
 			summaryWorkBookTemplate.addCell(generatedSystemCounter, "#,##0");
@@ -221,6 +235,10 @@ public class SESimulationSummaryGenerator extends Shared {
 						summaryWorkBookTemplate.addCell(simulationCellValue.getStringValue()).stream().findFirst().get().getCellStyle().setAlignment(HorizontalAlignment.RIGHT);
 					}
 				}
+			}
+			if (!historicalUpdateDates.isEmpty()) {
+				summaryWorkBookTemplate.addCell(String.join(", ", historicalUpdateDates.stream().map(TimeUtils.getDefaultDateFormat()::format).collect(Collectors.toList())))
+				.stream().findFirst().get().setCellStyle(leftAligned);
 			}
 		}
 	}
