@@ -651,129 +651,123 @@ public class SELotterySimpleSimulator extends Shared {
 					Row currentRow = sheet.getRow(rowIndex);
 					try {
 						currentRow.getCell(historicalReturnColIndex).setCellStyle(hyperLinkNumberCellStyle);
+						if (rowRefersTo(currentRow, configurationName)) {
+							Date dataAggStor = dateOffsetComputer.apply(currentRow.getCell(dataAggStoricoColIndex).getDateCellValue());
+							if (dataAggStor == null || dataAggStor.compareTo(sEStats.getLatestExtractionDate()) < 0) {
+								Map.Entry<Integer, Date> rowIndexAndExtractionDate = new AbstractMap.SimpleEntry<>(rowIndex, currentRow.getCell(extractionDateColIndex).getDateCellValue());
+								AtomicReference<PersistentStorage> storageWrapper = new AtomicReference<>();
+								storageWrapper.set(
+									PersistentStorage.restore(
+										configuration.getProperty("group"),
+										currentRow.getCell(fileColIndex).getStringCellValue()
+									)
+								);
+								String extractionDateFormattedForFile = TimeUtils.getDefaultDateFmtForFilePrefix().format(rowIndexAndExtractionDate.getValue());
+								if (storageWrapper.get() != null) {
+									Map<String, Object> premiumCountersData = premiumCountersForFile.computeIfAbsent(storageWrapper.get().getName() + extractionDateFormattedForFile, key -> {
+										PersistentStorage storage = storageWrapper.get();
+										File premiumCountersFile = new File(
+											new File(storage.getAbsolutePath()).getParentFile().getAbsolutePath() + File.separator + storage.getNameWithoutExtension() +
+											extractionDateFormattedForFile +
+											"-historical-data.json"
+										);
+										if (!premiumCountersFile.exists()) {
+											return computePremiumCountersData(sEStats, storage, rowIndexAndExtractionDate.getValue(), premiumCountersFile, premiumTypes);
+										} else {
+											Map<String, Object> data = null;
+											try {
+												data = readPremiumCountersData(storage, rowIndexAndExtractionDate.getValue(), premiumCountersFile);
+											} catch (IOException exc) {
+												LogUtils.error("Unable to read file " + premiumCountersFile.getAbsolutePath() + ": it will be deleted and recreated");
+												if (!premiumCountersFile.delete()) {
+													Throwables.sneakyThrow(exc);
+												}
+												return computePremiumCountersData(sEStats, storage, rowIndexAndExtractionDate.getValue(), premiumCountersFile, premiumTypes);
+											}
+											try {
+												if (dateOffsetComputer.apply(TimeUtils.getDefaultDateFormat().parse((String)data.get("referenceDate")))
+													.compareTo(sEStats.getLatestExtractionDate()) < 0
+												) {
+													return computePremiumCountersData(sEStats, storage, rowIndexAndExtractionDate.getValue(), premiumCountersFile, premiumTypes);
+												}
+											} catch (ParseException exc) {
+												return Throwables.sneakyThrow(exc);
+											}
+											return data;
+										}
+									});
+									if (!isSlave) {
+										++modifiedRowCounter;
+										Storage storage = storageWrapper.get();
+										if (storage.getName().equals(currentRow.getCell(fileColIndex).getStringCellValue())) {
+											Cell dataAggStoricoCell = currentRow.getCell(dataAggStoricoColIndex);
+											for (Map.Entry<Number, String> premiumData :  Premium.all().entrySet()) {
+												Cell historyDataCell =
+													currentRow.getCell(getOrPutAndGetCellIndex(sheet, getHistoryPremiumLabel(premiumData.getValue())));
+												Number premiumCounter = ((Map<Number,Integer>)premiumCountersData.get("premiumCounters.all")).get(premiumData.getKey());
+												if (premiumCounter != null) {
+													historyDataCell.setCellValue(premiumCounter.doubleValue());
+												} else {
+													historyDataCell.setCellValue(0d);
+												}
+												historyDataCell =
+													currentRow.getCell(getOrPutAndGetCellIndex(sheet, getFollowingProgressiveHistoricalPremiumLabel(premiumData.getValue())));
+												premiumCounter = ((Map<Number,Integer>)premiumCountersData.get("premiumCounters.fromExtractionDate")).get(premiumData.getKey());
+												if (premiumCounter != null) {
+													historyDataCell.setCellValue(premiumCounter.doubleValue());
+												} else {
+													historyDataCell.setCellValue(0d);
+												}
+												historyDataCell.setCellStyle(numberCellStyle);
+											}
+											Cell cell = currentRow.getCell(historicalCostColIndex);
+											cell.setCellStyle(numberCellStyle);
+											cell.setCellValue(
+												(Integer)premiumCountersData.get("premiumCounters.all.processedExtractionDateCounter") * currentRow.getCell(costColIndex).getNumericCellValue()
+											);
+											cell = currentRow.getCell(followingProgressiveHistoricalCostColIndex);
+											cell.setCellStyle(numberCellStyle);
+											cell.setCellValue(
+												(Integer)premiumCountersData.get("premiumCounters.fromExtractionDate.processedExtractionDateCounter") * currentRow.getCell(costColIndex).getNumericCellValue()
+											);
+											File reportDetailFileFromExtractionDate = (File) premiumCountersData.get("reportDetailFile.fromExtractionDate");
+											if (reportDetailFileFromExtractionDate != null) {
+												SimpleWorkbookTemplate.setLinkForCell(
+													workBook,
+													HyperlinkType.FILE,
+													currentRow.getCell(followingProgressiveHistoricalReturnColIndex),
+													hyperLinkNumberCellStyle,
+													reportDetailFileFromExtractionDate.getParentFile().getName() + File.separator + reportDetailFileFromExtractionDate.getName()
+												);
+											}
+											File reportDetailFile = (File) premiumCountersData.get("reportDetailFile.all");
+											if (reportDetailFile != null) {
+												SimpleWorkbookTemplate.setLinkForCell(
+													workBook,
+													HyperlinkType.FILE,
+													currentRow.getCell(historicalReturnColIndex),
+													hyperLinkNumberCellStyle,
+													reportDetailFile.getParentFile().getName() + File.separator + reportDetailFile.getName()
+												);
+											}
+											dataAggStoricoCell.setCellStyle(dateCellStyle);
+											dataAggStoricoCell.setCellValue(sEStats.getLatestExtractionDate());
+										}
+										if ((modifiedRowCounter % 10) == 0) {
+											LogUtils.info("Storing historical data of " + excelFileName);
+											store(excelFileName, workBook);
+										}
+									}
+								} else {
+									throw new IllegalStateException(currentRow.getCell(getOrPutAndGetCellIndex(sheet, FILE_LABEL)).getStringCellValue() + " missing");
+								}
+							}
+						}
 					} catch (Throwable exc) {
-						LogUtils.error("Exception occurred while processing row " + rowIndex + 1 + ": " + exc.getMessage());
+						LogUtils.error("Exception occurred while processing row " + (rowIndex + 1) + ": " + exc.getMessage());
 						if (!isSlave) {
 							LogUtils.warn("Row " + (rowIndex + 1) +" will be removed");
 							rowsToBeRemoved.add(rowIndex);
-						}
-					}
-					if (rowRefersTo(currentRow, configurationName)) {
-						Date dataAggStor = dateOffsetComputer.apply(currentRow.getCell(dataAggStoricoColIndex).getDateCellValue());
-						if (dataAggStor == null || dataAggStor.compareTo(sEStats.getLatestExtractionDate()) < 0) {
-							Map.Entry<Integer, Date> rowIndexAndExtractionDate = new AbstractMap.SimpleEntry<>(rowIndex, currentRow.getCell(extractionDateColIndex).getDateCellValue());
-							AtomicReference<PersistentStorage> storageWrapper = new AtomicReference<>();
-							storageWrapper.set(
-								PersistentStorage.restore(
-									configuration.getProperty("group"),
-									currentRow.getCell(fileColIndex).getStringCellValue()
-								)
-							);
-							String extractionDateFormattedForFile = TimeUtils.getDefaultDateFmtForFilePrefix().format(rowIndexAndExtractionDate.getValue());
-							if (storageWrapper.get() != null) {
-								Map<String, Object> premiumCountersData = premiumCountersForFile.computeIfAbsent(storageWrapper.get().getName() + extractionDateFormattedForFile, key -> {
-									PersistentStorage storage = storageWrapper.get();
-									File premiumCountersFile = new File(
-										new File(storage.getAbsolutePath()).getParentFile().getAbsolutePath() + File.separator + storage.getNameWithoutExtension() +
-										extractionDateFormattedForFile +
-										"-historical-data.json"
-									);
-									if (!premiumCountersFile.exists()) {
-										return computePremiumCountersData(sEStats, storage, rowIndexAndExtractionDate.getValue(), premiumCountersFile, premiumTypes);
-									} else {
-										Map<String, Object> data = null;
-										try {
-											data = readPremiumCountersData(storage, rowIndexAndExtractionDate.getValue(), premiumCountersFile);
-										} catch (IOException exc) {
-											LogUtils.error("Unable to read file " + premiumCountersFile.getAbsolutePath() + ": it will be deleted and recreated");
-											if (!premiumCountersFile.delete()) {
-												Throwables.sneakyThrow(exc);
-											}
-											return computePremiumCountersData(sEStats, storage, rowIndexAndExtractionDate.getValue(), premiumCountersFile, premiumTypes);
-										}
-										try {
-											if (dateOffsetComputer.apply(TimeUtils.getDefaultDateFormat().parse((String)data.get("referenceDate")))
-												.compareTo(sEStats.getLatestExtractionDate()) < 0
-											) {
-												return computePremiumCountersData(sEStats, storage, rowIndexAndExtractionDate.getValue(), premiumCountersFile, premiumTypes);
-											}
-										} catch (ParseException exc) {
-											return Throwables.sneakyThrow(exc);
-										}
-										return data;
-									}
-								});
-								if (!isSlave) {
-									++modifiedRowCounter;
-									Storage storage = storageWrapper.get();
-									if (storage.getName().equals(currentRow.getCell(fileColIndex).getStringCellValue())) {
-										Cell dataAggStoricoCell = currentRow.getCell(dataAggStoricoColIndex);
-										for (Map.Entry<Number, String> premiumData :  Premium.all().entrySet()) {
-											Cell historyDataCell =
-												currentRow.getCell(getOrPutAndGetCellIndex(sheet, getHistoryPremiumLabel(premiumData.getValue())));
-											Number premiumCounter = ((Map<Number,Integer>)premiumCountersData.get("premiumCounters.all")).get(premiumData.getKey());
-											if (premiumCounter != null) {
-												historyDataCell.setCellValue(premiumCounter.doubleValue());
-											} else {
-												historyDataCell.setCellValue(0d);
-											}
-											historyDataCell =
-												currentRow.getCell(getOrPutAndGetCellIndex(sheet, getFollowingProgressiveHistoricalPremiumLabel(premiumData.getValue())));
-											premiumCounter = ((Map<Number,Integer>)premiumCountersData.get("premiumCounters.fromExtractionDate")).get(premiumData.getKey());
-											if (premiumCounter != null) {
-												historyDataCell.setCellValue(premiumCounter.doubleValue());
-											} else {
-												historyDataCell.setCellValue(0d);
-											}
-											historyDataCell.setCellStyle(numberCellStyle);
-										}
-										Cell cell = currentRow.getCell(historicalCostColIndex);
-										cell.setCellStyle(numberCellStyle);
-										cell.setCellValue(
-											(Integer)premiumCountersData.get("premiumCounters.all.processedExtractionDateCounter") * currentRow.getCell(costColIndex).getNumericCellValue()
-										);
-										cell = currentRow.getCell(followingProgressiveHistoricalCostColIndex);
-										cell.setCellStyle(numberCellStyle);
-										cell.setCellValue(
-											(Integer)premiumCountersData.get("premiumCounters.fromExtractionDate.processedExtractionDateCounter") * currentRow.getCell(costColIndex).getNumericCellValue()
-										);
-										File reportDetailFileFromExtractionDate = (File) premiumCountersData.get("reportDetailFile.fromExtractionDate");
-										if (reportDetailFileFromExtractionDate != null) {
-											SimpleWorkbookTemplate.setLinkForCell(
-												workBook,
-												HyperlinkType.FILE,
-												currentRow.getCell(followingProgressiveHistoricalReturnColIndex),
-												hyperLinkNumberCellStyle,
-												reportDetailFileFromExtractionDate.getParentFile().getName() + File.separator + reportDetailFileFromExtractionDate.getName()
-											);
-										}
-										File reportDetailFile = (File) premiumCountersData.get("reportDetailFile.all");
-										if (reportDetailFile != null) {
-											SimpleWorkbookTemplate.setLinkForCell(
-												workBook,
-												HyperlinkType.FILE,
-												currentRow.getCell(historicalReturnColIndex),
-												hyperLinkNumberCellStyle,
-												reportDetailFile.getParentFile().getName() + File.separator + reportDetailFile.getName()
-											);
-										}
-										dataAggStoricoCell.setCellStyle(dateCellStyle);
-										dataAggStoricoCell.setCellValue(sEStats.getLatestExtractionDate());
-									}
-									if ((modifiedRowCounter % 10) == 0) {
-										LogUtils.info("Storing historical data of " + excelFileName);
-										store(excelFileName, workBook);
-									}
-								}
-							} else {
-								LogUtils.error(
-									"Warning! Missing file " + currentRow.getCell(getOrPutAndGetCellIndex(sheet, FILE_LABEL)).getStringCellValue() + " for row " + (rowIndex + 1)
-								);
-								if (!isSlave) {
-									LogUtils.warn("Row " + (rowIndex + 1) +" will be removed");
-									rowsToBeRemoved.add(rowIndex);
-								}
-							}
 						}
 					}
 					++rowProcessedCounter;
@@ -784,7 +778,11 @@ public class SELotterySimpleSimulator extends Shared {
 				}
 				if (!isSlave) {
 					for (Integer rowIndex : rowsToBeRemoved) {
-						sheet.removeRow(sheet.getRow(rowIndex));
+						try {
+							sheet.removeRow(sheet.getRow(rowIndex));
+						} catch (Throwable exc) {
+							LogUtils.error("Unable to remove row " + (rowIndex + 1) + ": " + exc.getMessage());
+						}
 					}
 				}
 			},
