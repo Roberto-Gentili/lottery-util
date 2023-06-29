@@ -607,7 +607,6 @@ public class SELotterySimpleSimulator extends Shared {
 		String configurationName,
 		Map<String, Map<String, Object>> premiumCountersForFile
 	) {
-		LogUtils fileLogger = LogUtils.ToFile.getLogger(configuration.getProperty("logger.file.name"));
 		List<Number> premiumTypeList = parseReportWinningInfoConfig(configuration.getProperty("report.winning-info", "all").replaceAll("\\s+",""));
 		Number[] premiumTypes = premiumTypeList.toArray(new Number[premiumTypeList.size()]);
 		boolean isSlave = CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false");
@@ -767,8 +766,10 @@ public class SELotterySimpleSimulator extends Shared {
 					} catch (Throwable exc) {
 						LogUtils.INSTANCE.error("Exception occurred while processing row " + (rowIndex + 1) + " of file " + excelFileName + ": " + exc.getMessage());
 						if (!isSlave) {
-							fileLogger.error("Exception occurred while processing row " + (rowIndex + 1) + " of file " + excelFileName + ": " + exc.getMessage());
-							fileLogger.warn("Row " + (rowIndex + 1) + " of file " + excelFileName + " will be removed");
+							LogUtils.ToFile.getLogger(configuration.getProperty("logger.file.name"))
+							.error("Exception occurred while processing row " + (rowIndex + 1) + " of file " + excelFileName + ": " + exc.getMessage());
+							LogUtils.ToFile.getLogger(configuration.getProperty("logger.file.name"))
+							.warn("Row " + (rowIndex + 1) + " of file " + excelFileName + " will be removed");
 							LogUtils.INSTANCE.warn("Row " + (rowIndex + 1) + " of file " + excelFileName + " will be removed");
 							rowsToBeRemoved.add(rowIndex);
 						}
@@ -784,7 +785,8 @@ public class SELotterySimpleSimulator extends Shared {
 						try {
 							sheet.removeRow(sheet.getRow(rowIndex));
 						} catch (Throwable exc) {
-							fileLogger.error("Unable to remove row " + (rowIndex + 1) + " for file " + excelFileName + ": " + exc.getMessage());
+							LogUtils.ToFile.getLogger(configuration.getProperty("logger.file.name"))
+							.error("Unable to remove row " + (rowIndex + 1) + " for file " + excelFileName + ": " + exc.getMessage());
 							LogUtils.INSTANCE.error("Unable to remove row " + (rowIndex + 1) + " for file " + excelFileName + ": " + exc.getMessage());
 						}
 					}
