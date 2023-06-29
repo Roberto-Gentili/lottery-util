@@ -757,7 +757,10 @@ public class SELotterySimpleSimulator extends Shared {
 									}
 								}
 							} else {
-								LogUtils.warn("Warning! Missing file " + currentRow.getCell(getOrPutAndGetCellIndex(sheet, FILE_LABEL)).getStringCellValue() + " for row " + (rowIndex + 1));
+								LogUtils.warn(
+									"Warning! Missing file " + currentRow.getCell(getOrPutAndGetCellIndex(sheet, FILE_LABEL)).getStringCellValue() + " for row " + (rowIndex + 1) + ". Row will be removed"
+								);
+								sheet.removeRow(currentRow);
 							}
 						}
 					}
