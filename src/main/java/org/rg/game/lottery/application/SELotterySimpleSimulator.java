@@ -645,6 +645,7 @@ public class SELotterySimpleSimulator extends Shared {
 				}
 				int rowProcessedCounter = 0;
 				int modifiedRowCounter = 0;
+				List<Integer> rowsToBeRemoved = new ArrayList<>();
 				for (int index = 0; index < rowsToBeProcessed.size(); index++) {
 					Integer rowIndex = rowsToBeProcessed.get(index);
 					Row currentRow = sheet.getRow(rowIndex);
@@ -760,7 +761,7 @@ public class SELotterySimpleSimulator extends Shared {
 								LogUtils.warn(
 									"Warning! Missing file " + currentRow.getCell(getOrPutAndGetCellIndex(sheet, FILE_LABEL)).getStringCellValue() + " for row " + (rowIndex + 1) + ". Row will be removed"
 								);
-								sheet.removeRow(currentRow);
+								rowsToBeRemoved.add(rowIndex);
 							}
 						}
 					}
@@ -769,6 +770,9 @@ public class SELotterySimpleSimulator extends Shared {
 					if (remainedRecords % 250 == 0) {
 						LogUtils.info("Historical update remained records of " + excelFileName + ": " + remainedRecords);
 					}
+				}
+				for (Integer rowIndex : rowsToBeRemoved) {
+					sheet.removeRow(sheet.getRow(rowIndex));
 				}
 			},
 			null,
