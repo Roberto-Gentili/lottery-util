@@ -805,6 +805,7 @@ public class SEStats {
 		@Override
 		public boolean load() throws Throwable {
 			if (forceLoadingFromExcel) {
+				LogUtils.INSTANCE.info("Loading data from internet is disabled");
 				return false;
 			}
 			Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone(TimeUtils.DEFAULT_TIME_ZONE));
