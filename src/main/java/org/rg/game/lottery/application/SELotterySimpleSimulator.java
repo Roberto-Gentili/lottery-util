@@ -649,7 +649,15 @@ public class SELotterySimpleSimulator extends Shared {
 				for (int index = 0; index < rowsToBeProcessed.size(); index++) {
 					Integer rowIndex = rowsToBeProcessed.get(index);
 					Row currentRow = sheet.getRow(rowIndex);
-					currentRow.getCell(historicalReturnColIndex).setCellStyle(hyperLinkNumberCellStyle);
+					try {
+						currentRow.getCell(historicalReturnColIndex).setCellStyle(hyperLinkNumberCellStyle);
+					} catch (Throwable exc) {
+						LogUtils.error("Exception occurred while processing row " + rowIndex + 1 + ": " + exc.getMessage());
+						if (!isSlave) {
+							LogUtils.warn("Row " + (rowIndex + 1) +" will be removed");
+							rowsToBeRemoved.add(rowIndex);
+						}
+					}
 					if (rowRefersTo(currentRow, configurationName)) {
 						Date dataAggStor = dateOffsetComputer.apply(currentRow.getCell(dataAggStoricoColIndex).getDateCellValue());
 						if (dataAggStor == null || dataAggStor.compareTo(sEStats.getLatestExtractionDate()) < 0) {
@@ -758,10 +766,13 @@ public class SELotterySimpleSimulator extends Shared {
 									}
 								}
 							} else {
-								LogUtils.warn(
-									"Warning! Missing file " + currentRow.getCell(getOrPutAndGetCellIndex(sheet, FILE_LABEL)).getStringCellValue() + " for row " + (rowIndex + 1) + ". Row will be removed"
+								LogUtils.error(
+									"Warning! Missing file " + currentRow.getCell(getOrPutAndGetCellIndex(sheet, FILE_LABEL)).getStringCellValue() + " for row " + (rowIndex + 1)
 								);
-								rowsToBeRemoved.add(rowIndex);
+								if (!isSlave) {
+									LogUtils.warn("Row " + (rowIndex + 1) +" will be removed");
+									rowsToBeRemoved.add(rowIndex);
+								}
 							}
 						}
 					}
@@ -771,8 +782,10 @@ public class SELotterySimpleSimulator extends Shared {
 						LogUtils.info("Historical update remained records of " + excelFileName + ": " + remainedRecords);
 					}
 				}
-				for (Integer rowIndex : rowsToBeRemoved) {
-					sheet.removeRow(sheet.getRow(rowIndex));
+				if (!isSlave) {
+					for (Integer rowIndex : rowsToBeRemoved) {
+						sheet.removeRow(sheet.getRow(rowIndex));
+					}
 				}
 			},
 			null,
