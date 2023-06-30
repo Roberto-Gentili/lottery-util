@@ -1282,7 +1282,7 @@ public class SELotterySimpleSimulator extends Shared {
 				}
 			});
 		} catch (Throwable exc) {
-			if (!(exc instanceof POIXMLException || exc instanceof EmptyFileException || exc instanceof ZipException || exc instanceof PartAlreadyExistsException ||
+			if (!(exc instanceof POIXMLException || exc instanceof EmptyFileException || exc instanceof ZipException || exc instanceof PartAlreadyExistsException || exc instanceof IllegalStateException ||
 				exc instanceof XmlValueDisconnectedException || exc instanceof RecordFormatException || (exc instanceof IOException && exc.getMessage().equalsIgnoreCase("Truncated ZIP file")))) {
 				LogUtils.INSTANCE.error("Unable to process file " + excelFileName);
 				Throwables.sneakyThrow(exc);
