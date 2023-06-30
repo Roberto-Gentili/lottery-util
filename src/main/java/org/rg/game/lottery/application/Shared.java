@@ -141,18 +141,19 @@ class Shared {
 	}
 
 	static void removeRow(Row row) {
-		removeRow(row.getSheet(), row.getRowNum());
-	}
-
-	static void removeRow(Sheet sheet, int rowIndex) {
-		Row row = sheet.getRow(rowIndex);
+		Sheet sheet = row.getSheet();
 		if (row != null) {
+			int rowIndex = row.getRowNum();
 			sheet.removeRow(row);
 			int lastRowNum = sheet.getLastRowNum();
 			if (rowIndex >= 0 && rowIndex < lastRowNum) {
 				sheet.shiftRows(rowIndex + 1, lastRowNum, -1);
 		    }
 		}
+	}
+
+	static void removeRow(Sheet sheet, int rowIndex) {
+		removeRow(sheet.getRow(rowIndex));
 	}
 
 	/*
