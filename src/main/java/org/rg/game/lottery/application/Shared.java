@@ -140,6 +140,10 @@ class Shared {
 		return cell;
 	}
 
+	static void removeRow(Sheet sheet, int rowIndex) {
+		removeRow(sheet.getRow(rowIndex));
+	}
+
 	static void removeRow(Row row) {
 		Sheet sheet = row.getSheet();
 		if (row != null) {
@@ -150,10 +154,6 @@ class Shared {
 				sheet.shiftRows(rowIndex + 1, lastRowNum, -1);
 		    }
 		}
-	}
-
-	static void removeRow(Sheet sheet, int rowIndex) {
-		removeRow(sheet.getRow(rowIndex));
 	}
 
 	/*
