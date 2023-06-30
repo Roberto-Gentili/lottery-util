@@ -519,7 +519,7 @@ public class SELotterySimpleSimulator extends Shared {
 			).apply(
 				systemProcessor
 			);
-		}		updateHistorical(configuration, excelFileName, configuration.getProperty("nameSuffix"), new LinkedHashMap<>());
+		}		updateHistorical(configuration, excelFileName);
 		if (!isSlave) {
 			readOrCreateExcel(
 				excelFileName,
@@ -603,15 +603,16 @@ public class SELotterySimpleSimulator extends Shared {
 
 	private static Integer updateHistorical(
 		Properties configuration,
-		String excelFileName,
-		String configurationName,
-		Map<String, Map<String, Object>> premiumCountersForFile
+		String excelFileName
 	) {
+		String configurationName = configuration.getProperty("nameSuffix");
+		Map<String, Map<String, Object>> premiumCountersForFile = new LinkedHashMap<>();
 		List<Number> premiumTypeList = parseReportWinningInfoConfig(configuration.getProperty("report.winning-info", "all").replaceAll("\\s+",""));
 		Number[] premiumTypes = premiumTypeList.toArray(new Number[premiumTypeList.size()]);
 		boolean isSlave = CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false");
 		SEStats sEStats = getSEStats(configuration);
 		Function<Date, Date> dateOffsetComputer = dateOffsetComputer(configuration);
+		AtomicReference<Integer> removedRowResult = new AtomicReference<>();
 		Integer result = readOrCreateExcel(
 			excelFileName,
 			workBook -> {
@@ -785,11 +786,15 @@ public class SELotterySimpleSimulator extends Shared {
 						try {
 							removeRow(sheet, rowIndex);
 						} catch (Throwable exc) {
+							removedRowResult.set(-3);
 							fileLogger.error("Unable to remove row " + (rowIndex + 1) + " for file " + excelFileName + ": " + exc.getMessage());
 							LogUtils.INSTANCE.error("Unable to remove row " + (rowIndex + 1) + " for file " + excelFileName + ": " + exc.getMessage());
 						}
 					}
 					if (!rowsToBeRemoved.isEmpty()) {
+						if (removedRowResult.get() == null) {
+							removedRowResult.set(-2);
+						}
 						fileLogger.error();
 					}
 				}
@@ -803,7 +808,9 @@ public class SELotterySimpleSimulator extends Shared {
 			},
 			isSlave
 		);
-		return 1;
+		return removedRowResult.get() == null ?
+			result :
+			removedRowResult.get();
 	}
 
 	protected static Row getFirstRow(Sheet sheet) {
