@@ -176,7 +176,7 @@ class SEIntegralSystemAnalyzer extends Shared {
 					if (systemsRank.size() > rankSize) {
 						Map.Entry<List<Integer>, Map<Number, Integer>> removedItem = systemsRank.pollLast();
 						if (removedItem != addedItem) {
-							store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock, rankSize);
+							//store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock, rankSize);
 							LogUtils.INSTANCE.info(
 								"Replaced data from rank:\n\t" + ComboHandler.toString(removedItem.getKey(), ", ") + ": " + removedItem.getValue() + "\n" +
 								"\t\twith\n"+
