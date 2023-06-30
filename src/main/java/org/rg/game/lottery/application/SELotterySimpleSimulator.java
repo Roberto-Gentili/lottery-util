@@ -766,9 +766,9 @@ public class SELotterySimpleSimulator extends Shared {
 					} catch (Throwable exc) {
 						LogUtils.INSTANCE.error("Exception occurred while processing row " + (rowIndex + 1) + " of file " + excelFileName + ": " + exc.getMessage());
 						if (!isSlave) {
-							/*LogUtils fileLogger = LogUtils.ToFile.getLogger(configuration.getProperty("logger.file.name"));
+							LogUtils fileLogger = LogUtils.ToFile.getLogger(configuration.getProperty("logger.file.name"));
 							fileLogger.error("Exception occurred while processing row " + (rowIndex + 1) + " of file " + excelFileName + ": " + exc.getMessage());
-							fileLogger.warn("Row " + (rowIndex + 1) + " of file " + excelFileName + " will be removed");*/
+							fileLogger.warn("Row " + (rowIndex + 1) + " of file " + excelFileName + " will be removed");
 							LogUtils.INSTANCE.warn("Row " + (rowIndex + 1) + " of file " + excelFileName + " will be removed");
 							rowsToBeRemoved.add(rowIndex);
 						}
