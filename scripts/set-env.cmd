@@ -19,3 +19,5 @@ endlocal & (
 )
 
 set XMX=5g
+
+set se-stats.force-loading-from-excel=false
