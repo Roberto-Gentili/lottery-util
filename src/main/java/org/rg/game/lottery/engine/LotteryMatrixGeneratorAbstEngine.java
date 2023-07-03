@@ -76,7 +76,6 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	}
 
 	public Function<LocalDate, Map<String, Object>> setup(Properties config, boolean cacheEngineAndConfiguration) {
-		combinationFilterPreProcessor = new ExpressionToPredicateEngine<>();
 		setupCombinationFilterPreProcessor();
 		comboSequencedIndexSelectorCounter = new AtomicInteger(0);
 		extractionArchiveStartDate = config.getProperty("competition.archive.start-date");
@@ -301,6 +300,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	}
 
 	protected void setupCombinationFilterPreProcessor() {
+		combinationFilterPreProcessor = new ExpressionToPredicateEngine<>();
 		combinationFilterPreProcessor.addSimpleExpressionPreprocessor(
 			expression ->
 				expression.split("lessExtCouple|lessExt|mostExtCouple|mostExt").length > 1,
