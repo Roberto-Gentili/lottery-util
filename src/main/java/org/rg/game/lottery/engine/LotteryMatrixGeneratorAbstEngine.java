@@ -73,11 +73,11 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 
 	LotteryMatrixGeneratorAbstEngine() {
 		engineIndex = getAllPreviousEngineAndConfigurations().size();
-		combinationFilterPreProcessor = new ExpressionToPredicateEngine<>();
-		setupCombinationFilterPreProcessor();
 	}
 
 	public Function<LocalDate, Map<String, Object>> setup(Properties config, boolean cacheEngineAndConfiguration) {
+		combinationFilterPreProcessor = new ExpressionToPredicateEngine<>();
+		setupCombinationFilterPreProcessor();
 		comboSequencedIndexSelectorCounter = new AtomicInteger(0);
 		extractionArchiveStartDate = config.getProperty("competition.archive.start-date");
 		extractionArchiveForSeedStartDate = config.getProperty("seed-data.start-date");
