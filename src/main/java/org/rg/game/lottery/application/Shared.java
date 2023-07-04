@@ -35,7 +35,7 @@ class Shared {
 
 	static String sEStatsDefaultDate = System.getenv("competition.archive.start-date") != null ?
 		System.getenv("competition.archive.start-date"):
-		new SELotteryMatrixGeneratorEngine().getExtractionArchiveStartDate();
+		SELotteryMatrixGeneratorEngine.DEFAULT_INSTANCE.getExtractionArchiveStartDate();
 
 	static String capitalizeFirstCharacter(String value) {
 		return Character.toString(value.charAt(0)).toUpperCase()
