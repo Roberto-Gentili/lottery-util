@@ -38,7 +38,6 @@ import org.rg.game.core.LogUtils;
 import org.rg.game.core.MathUtils;
 import org.rg.game.core.ResourceUtils;
 import org.rg.game.core.TimeUtils;
-import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.Premium;
 import org.rg.game.lottery.engine.SEComboHandler;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
@@ -64,14 +63,14 @@ public class SEMassiveVerifierAndQualityChecker extends Shared {
 		String endDateAsString,
 		Boolean printReportDetail
 	) {
-		LotteryMatrixGeneratorAbstEngine engine = new SELotteryMatrixGeneratorEngine();
+
 		LocalDate startDate = convert(startDateAsString);
 		LocalDate endDate =  convert(endDateAsString);
 		List<Map.Entry<LocalDate, Object>> dates = new ArrayList<>();
 		while (startDate.compareTo(endDate) <= 0) {
-			startDate = engine.computeNextExtractionDate(startDate, false);
+			startDate = SELotteryMatrixGeneratorEngine.DEFAULT_INSTANCE.computeNextExtractionDate(startDate, false);
 			dates.add(new AbstractMap.SimpleEntry<LocalDate, Object>(startDate, printReportDetail));
-			startDate =  engine.computeNextExtractionDate(startDate.plus(1, ChronoUnit.DAYS), false);
+			startDate =  SELotteryMatrixGeneratorEngine.DEFAULT_INSTANCE.computeNextExtractionDate(startDate.plus(1, ChronoUnit.DAYS), false);
 		}
 		//dates.add(new AbstractMap.SimpleEntry(LocalDate.parse("2023-04-24"), false));
 		return dates;
