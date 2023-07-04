@@ -1,5 +1,6 @@
 package org.rg.game.lottery.application;
 
+import java.time.LocalDate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -23,7 +24,8 @@ public class SEFilterAnalyzer extends Shared {
 			engine.preProcess(filter),
 			IntStream.rangeClosed(1, 90)
 		    .boxed().collect(Collectors.toList()),
-			true
+		    LocalDate.now(),
+		    true
 		);
 
 	}

@@ -117,7 +117,7 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 				String extractionDatesExpression = complexSimulationConfig.getProperty("simulation.children.dates");
 				if (extractionDatesExpression != null) {
 					List<LocalDate> extractionDates = new ArrayList<>(
-						new SELotteryMatrixGeneratorEngine().computeExtractionDates(extractionDatesExpression)
+						SELotteryMatrixGeneratorEngine.DEFAULT_INSTANCE.computeExtractionDates(extractionDatesExpression)
 					);
 					if (!extractionDates.isEmpty()) {
 						LocalDate nextAfterLatest = removeNextOfLatestExtractionDate(complexSimulationConfig, extractionDates);

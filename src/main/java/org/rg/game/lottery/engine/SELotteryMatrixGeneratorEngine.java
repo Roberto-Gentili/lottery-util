@@ -33,9 +33,27 @@ import org.rg.game.core.TimeUtils;
 
 public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEngine {
 	private static final List<Entry<Supplier<SELotteryMatrixGeneratorEngine>, Supplier<Properties>>> allPreviousEngineAndConfigurations;
+	public final static SELotteryMatrixGeneratorEngine DEFAULT_INSTANCE;
 
 	static {
 		allPreviousEngineAndConfigurations = new ArrayList<>();
+		DEFAULT_INSTANCE = new SELotteryMatrixGeneratorEngine() {
+			@Override
+			public synchronized ProcessingContext setup(Properties config, boolean cacheEngineAndConfiguration) {
+				throw new UnsupportedOperationException("Default instance cannot be initialized");
+			}
+
+			@Override
+			public ProcessingContext getProcessingContext() {
+				return null;
+			}
+
+			@Override
+			public Storage generate(ProcessingContext pC) {
+				throw new UnsupportedOperationException("Default instance cannot generate systems");
+			}
+
+		};
 	}
 
 	@Override
@@ -100,9 +118,9 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	public Map<String, Object> adjustSeed() {
 		//Per il calcolo del seed prendiamo sempre l'istanza SEStats più aggiornata
 		//In modo da avere le date corrette per i concorsi che hanno subito anticipi o posticipi
-		Map.Entry<LocalDate, Long> seedRecord = getSEStatsForSeed().getSeedData(extractionDate);
-		seedRecord.setValue(seedRecord.getValue() + seedShifter);
-		random = new Random(seedRecord.getValue());
+		Map.Entry<LocalDate, Long> seedRecord = getSEStatsForSeed().getSeedData(getProcessingContext().getCurrentProcessedExtractionDate());
+		seedRecord.setValue(seedRecord.getValue() + getProcessingContext().seedShifter);
+		getProcessingContext().random = new Random(seedRecord.getValue());
 		buildComboIndexSupplier();
 		Map<String, Object> seedData = new LinkedHashMap<>();
 		seedData.put("seed", seedRecord.getValue());
@@ -112,28 +130,28 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 
 
 	@Override
-	protected Function<String, Function<Integer, Function<Integer, Iterator<Integer>>>> getNumberGeneratorFactory() {
+	protected Function<String, Function<Integer, Function<Integer, Iterator<Integer>>>> getNumberGeneratorFactory(LocalDate extractionDate) {
 		return generatorType-> leftBound -> rightBound -> {
 			if (NumberProcessor.RANDOM_KEY.equals(generatorType)) {
-				return random.ints(leftBound , rightBound + 1).iterator();
+				return getProcessingContext().random.ints(leftBound , rightBound + 1).iterator();
 			} else if (NumberProcessor.MOST_EXTRACTED_KEY.equals(generatorType)) {
-				return new BoundedIterator(getSEStats().getExtractedNumberRank(), leftBound, rightBound);
+				return new BoundedIterator(getSEStats(extractionDate).getExtractedNumberRank(), leftBound, rightBound);
 			} else if (NumberProcessor.MOST_EXTRACTED_COUPLE_KEY.equals(generatorType)) {
-				return new BoundedIterator(getSEStats().getExtractedNumberFromMostExtractedCoupleRank(), leftBound, rightBound);
+				return new BoundedIterator(getSEStats(extractionDate).getExtractedNumberFromMostExtractedCoupleRank(), leftBound, rightBound);
 			} else if (NumberProcessor.MOST_EXTRACTED_TRIPLE_KEY.equals(generatorType)) {
-				return new BoundedIterator(getSEStats().getExtractedNumberFromMostExtractedTripleRank(), leftBound, rightBound);
+				return new BoundedIterator(getSEStats(extractionDate).getExtractedNumberFromMostExtractedTripleRank(), leftBound, rightBound);
 			} else if (NumberProcessor.LESS_EXTRACTED_KEY.equals(generatorType)) {
-				return new BoundedIterator(getSEStats().getExtractedNumberRankReversed(), leftBound, rightBound);
+				return new BoundedIterator(getSEStats(extractionDate).getExtractedNumberRankReversed(), leftBound, rightBound);
 			} else if (NumberProcessor.LESS_EXTRACTED_COUPLE_KEY.equals(generatorType)) {
-				return new BoundedIterator(getSEStats().getExtractedNumberFromMostExtractedCoupleRankReversed(), leftBound, rightBound);
+				return new BoundedIterator(getSEStats(extractionDate).getExtractedNumberFromMostExtractedCoupleRankReversed(), leftBound, rightBound);
 			} else if (NumberProcessor.LESS_EXTRACTED_TRIPLE_KEY.equals(generatorType)) {
-				return new BoundedIterator(getSEStats().getExtractedNumberFromMostExtractedTripleRankReversed(), leftBound, rightBound);
+				return new BoundedIterator(getSEStats(extractionDate).getExtractedNumberFromMostExtractedTripleRankReversed(), leftBound, rightBound);
 			} else if (NumberProcessor.NEAREST_FROM_RECORD_ABSENCE_PERCENTAGE_KEY.equals(generatorType)) {
-				return new BoundedIterator(getSEStats().getDistanceFromAbsenceRecordPercentageRankReversed(), leftBound, rightBound);
+				return new BoundedIterator(getSEStats(extractionDate).getDistanceFromAbsenceRecordPercentageRankReversed(), leftBound, rightBound);
 			} else if (NumberProcessor.BIGGEST_ABSENCE_RECORD_KEY.equals(generatorType)) {
-				return new BoundedIterator(getSEStats().getAbsencesRecordFromCompetitionsRank(), leftBound, rightBound);
+				return new BoundedIterator(getSEStats(extractionDate).getAbsencesRecordFromCompetitionsRank(), leftBound, rightBound);
 			} else if (NumberProcessor.SMALLEST_ABSENCE_RECORD_KEY.equals(generatorType)) {
-				return new BoundedIterator(getSEStats().getAbsencesRecordFromCompetitionsRankReversed(), leftBound, rightBound);
+				return new BoundedIterator(getSEStats(extractionDate).getAbsencesRecordFromCompetitionsRankReversed(), leftBound, rightBound);
 			}
 			throw new IllegalArgumentException("Unvalid generator type");
 		};
@@ -150,10 +168,10 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	@Override
-	public Map<String, Object> testEffectiveness(String filterAsString, List<Integer> numbers, boolean fineLog) {
+	public Map<String, Object> testEffectiveness(String filterAsString, List<Integer> numbers, LocalDate extractionDate, boolean fineLog) {
 		filterAsString = preProcess(filterAsString);
 		Predicate<List<Integer>> combinationFilter = CombinationFilterFactory.INSTANCE.parse(filterAsString, fineLog);
-		Set<Entry<Date, List<Integer>>> allWinningCombos = getSEStats().getAllWinningCombos().entrySet();
+		Set<Entry<Date, List<Integer>>> allWinningCombos = getSEStats(extractionDate).getAllWinningCombos().entrySet();
 		int discardedFromHistory = 0;
 		LogUtils.INSTANCE.info("Starting filter analysis\n");
 		Collection<Integer> comboSums = new TreeSet<>();
@@ -191,7 +209,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 					}
 				}
 				if (fineLog) {
-					LogUtils.INSTANCE.info("Processed " + integerFormat.format(i + 1) + " of combos");
+					LogUtils.INSTANCE.info("Processed " + getProcessingContext().integerFormat.format(i + 1) + " of combos");
 				}
 			}
 		}
@@ -202,7 +220,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 				}
 			}
 			if (fineLog && comboHandler.getSizeAsInt() >= elaborationUnitSize) {
-				LogUtils.INSTANCE.info("Processed " + integerFormat.format(comboHandler.getSizeAsInt()) + " of combo");
+				LogUtils.INSTANCE.info("Processed " + getProcessingContext().integerFormat.format(comboHandler.getSizeAsInt()) + " of combo");
 			}
 		}
 		if (fineLog && discardedFromHistory > 0) {
@@ -226,15 +244,15 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		/*double effectiveness = ((discardedFromIntegralSystem - discardedFromHistoryEstimation) * 100d) /
 				comboHandler.getSize();*/
 		StringBuffer report = new StringBuffer();
-		report.append("Total extractions analyzed:" + rightAlignedString(integerFormat.format(allWinningCombos.size()), 25) + "\n");
-		report.append("Discarded winning combos:" + rightAlignedString(integerFormat.format(discardedFromHistory), 27) + "\n");
-		report.append("Discarded winning combos percentage:" + rightAlignedString(decimalFormat.format(discardedPercentageFromHistory) + " %", 18) + "\n");
-		report.append("Maintained winning combos percentage:" + rightAlignedString(decimalFormat.format(maintainedPercentageFromHistory) + " %", 17) + "\n");
-		report.append("Estimated maintained winning combos:" + rightAlignedString(decimalFormat.format(maintainedFromHistoryEstimation), 16) + "\n");
-		report.append("Integral system total combos:" + rightAlignedString(decimalFormat.format(comboHandler.getSizeAsInt()), 23) + "\n");
-		report.append("Integral system discarded combos:" + rightAlignedString(decimalFormat.format(discardedFromIntegralSystem), 19) + "\n");
-		report.append("Integral system discarded combos percentage:" + rightAlignedString(decimalFormat.format(discardedFromIntegralSystemPercentage) + " %", 10) + "\n");
-		report.append("Effectiveness:" + rightAlignedString(decimalFormat.format(effectiveness) + " %", 40) +"\n");
+		report.append("Total extractions analyzed:" + rightAlignedString(getProcessingContext().integerFormat.format(allWinningCombos.size()), 25) + "\n");
+		report.append("Discarded winning combos:" + rightAlignedString(getProcessingContext().integerFormat.format(discardedFromHistory), 27) + "\n");
+		report.append("Discarded winning combos percentage:" + rightAlignedString(getProcessingContext().decimalFormat.format(discardedPercentageFromHistory) + " %", 18) + "\n");
+		report.append("Maintained winning combos percentage:" + rightAlignedString(getProcessingContext().decimalFormat.format(maintainedPercentageFromHistory) + " %", 17) + "\n");
+		report.append("Estimated maintained winning combos:" + rightAlignedString(getProcessingContext().decimalFormat.format(maintainedFromHistoryEstimation), 16) + "\n");
+		report.append("Integral system total combos:" + rightAlignedString(getProcessingContext().decimalFormat.format(comboHandler.getSizeAsInt()), 23) + "\n");
+		report.append("Integral system discarded combos:" + rightAlignedString(getProcessingContext().decimalFormat.format(discardedFromIntegralSystem), 19) + "\n");
+		report.append("Integral system discarded combos percentage:" + rightAlignedString(getProcessingContext().decimalFormat.format(discardedFromIntegralSystemPercentage) + " %", 10) + "\n");
+		report.append("Effectiveness:" + rightAlignedString(getProcessingContext().decimalFormat.format(effectiveness) + " %", 40) +"\n");
 		LogUtils.INSTANCE.info(report.toString() + "\nFilter analysis ended\n");
 
 		stats.put("totalExtractionsAnalyzed", allWinningCombos.size());
@@ -259,16 +277,16 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		List<Integer> numbersToBeTested = null;
 		if (expression.contains("lessExtCouple")) {
 			numbersToBeTested =
-				getSEStats().getExtractedNumberFromMostExtractedCoupleRankReversed();
+				getSEStats(getProcessingContext().getCurrentProcessedExtractionDate()).getExtractedNumberFromMostExtractedCoupleRankReversed();
 		} else if (expression.contains("lessExt")) {
 			numbersToBeTested =
-				getSEStats().getExtractedNumberRankReversed();
+				getSEStats(getProcessingContext().getCurrentProcessedExtractionDate()).getExtractedNumberRankReversed();
 		} else if (expression.contains("mostExtCouple")) {
 			numbersToBeTested =
-				getSEStats().getExtractedNumberFromMostExtractedCoupleRank();
+				getSEStats(getProcessingContext().getCurrentProcessedExtractionDate()).getExtractedNumberFromMostExtractedCoupleRank();
 		} else if (expression.contains("mostExt")) {
 			numbersToBeTested =
-				getSEStats().getExtractedNumberRank();
+				getSEStats(getProcessingContext().getCurrentProcessedExtractionDate()).getExtractedNumberRank();
 		}
 		String[] subRange = options[0].split("->");
 		if (subRange.length == 2) {
@@ -297,7 +315,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		if (options.length > 1) {
 			String[] groupOptions = options[1].split(":");
 			List<String> inClauses = new ArrayList<>();
-			for (List<Integer> winningCombo :getSEStats().getAllWinningCombos().values()) {
+			for (List<Integer> winningCombo :getSEStats(getProcessingContext().getCurrentProcessedExtractionDate()).getAllWinningCombos().values()) {
 				inClauses.add("in " + ComboHandler.toString(winningCombo, ",") + ":" + groupOptions[1]);
 			}
 			if (inClauses.isEmpty()) {//Storico non disponibile: probabilmente la data di inizio e fine sono la stessa. In questo caso controllare il file di configurazione
@@ -319,7 +337,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 				options[1], "sum", "rangeOfSum",
 				operationOptionValue -> {
 					Collection<Integer> sums = new TreeSet<>();
-					getSEStats().getAllWinningCombos().values().stream().forEach(combo ->
+					getSEStats(getProcessingContext().getCurrentProcessedExtractionDate()).getAllWinningCombos().values().stream().forEach(combo ->
 						sums.add(ComboHandler.sumValues(combo))
 					);
 					return sums;
@@ -330,7 +348,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 				options[1], "sumOfPower", "rangeOfSumPower",
 				operationOptionValue -> {
 					Collection<Integer> sums = new TreeSet<>();
-					getSEStats().getAllWinningCombos().values().stream().forEach(combo -> {
+					getSEStats(getProcessingContext().getCurrentProcessedExtractionDate()).getAllWinningCombos().values().stream().forEach(combo -> {
 						sums.add(ComboHandler.sumPowerOfValues(combo, operationOptionValue.get(0)));
 					});
 					return sums;
@@ -343,7 +361,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		return expression;
 	}
 
-	public SEStats getSEStats() {
+	public SEStats getSEStats(LocalDate extractionDate) {
 		SEStats sEStats = SEStats.get(getExtractionArchiveStartDate(), TimeUtils.defaultLocalDateFormat.format(extractionDate));
 		if (LocalDate.now().compareTo(extractionDate) >= 0) {
 			Date latestExtractionDate = sEStats.getLatestExtractionDate();
@@ -413,7 +431,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 
 	@Override
 	protected Map<String, Object> checkQuality(Storage storage) {
-		return getSEStats()
+		return getSEStats(getProcessingContext().getCurrentProcessedExtractionDate())
 			.checkQuality(storage::iterator);
 	}
 

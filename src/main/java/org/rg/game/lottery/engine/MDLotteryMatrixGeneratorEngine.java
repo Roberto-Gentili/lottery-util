@@ -64,6 +64,7 @@ public class MDLotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	public Map<String, Object> adjustSeed() {
 		long seed = 1L;
 		LocalDate seedStartDate = LocalDate.parse("2018-02-17");
+		LocalDate extractionDate = getProcessingContext().getCurrentProcessedExtractionDate();
 		if (seedStartDate.compareTo(extractionDate) >= 0) {
 			throw new IllegalArgumentException("Unvalid date: " + extractionDate);
 		}
@@ -71,7 +72,7 @@ public class MDLotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 			seedStartDate = seedStartDate.plus(getIncrementDays(seedStartDate), ChronoUnit.DAYS);
 			seed++;
 		}
-		random = new Random(seed);
+		getProcessingContext().random = new Random(seed);
 		buildComboIndexSupplier();
 		Map<String, Object> seedData = new LinkedHashMap<>();
 		seedData.put("seed", seed);
@@ -80,17 +81,17 @@ public class MDLotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	@Override
-	protected Function<String, Function<Integer, Function<Integer, Iterator<Integer>>>> getNumberGeneratorFactory() {
+	protected Function<String, Function<Integer, Function<Integer, Iterator<Integer>>>> getNumberGeneratorFactory(LocalDate extractionDate) {
 		return generatorType-> leftBound -> rightBound -> {
 			if (NumberProcessor.RANDOM_KEY.equals(generatorType)) {
-				return random.ints(leftBound , rightBound + 1).iterator();
+				return getProcessingContext().random.ints(leftBound , rightBound + 1).iterator();
 			}
 			throw new IllegalArgumentException("Unvalid generator type");
 		};
 	}
 
 	@Override
-	protected Map<String, Object> testEffectiveness(String combinationFilterRaw, List<Integer> numbers, boolean fineLog) {
+	protected Map<String, Object> testEffectiveness(String combinationFilterRaw, List<Integer> numbers, LocalDate extractionDate, boolean fineLog) {
 		throw new UnsupportedOperationException("Effectiveness test");
 
 	}

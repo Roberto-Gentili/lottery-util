@@ -265,13 +265,12 @@ public class SELotterySimpleSimulator extends Shared {
 				LogUtils.INSTANCE.info(info);
 			}
 			String excelFileName = retrieveExcelFileName(configuration);
-			SELotteryMatrixGeneratorEngine engine = engineSupplier.get();
 			String configFileName = configuration.getProperty("file.name").replace("." + configuration.getProperty("file.extension"), "");
 			configuration.setProperty(
 				"nameSuffix",
 				configFileName
 			);
-			Collection<LocalDate> competitionDatesFlat = engine.computeExtractionDates(configuration.getProperty("competition"));
+			Collection<LocalDate> competitionDatesFlat = SELotteryMatrixGeneratorEngine.DEFAULT_INSTANCE.computeExtractionDates(configuration.getProperty("competition"));
 			String redundantConfigValue = configuration.getProperty("simulation.redundancy");
 			cleanup(
 				configuration,
@@ -289,7 +288,7 @@ public class SELotterySimpleSimulator extends Shared {
 			AtomicBoolean firstSetupExecuted = new AtomicBoolean(false);
 			Runnable taskOperation = () -> {
 				LogUtils.INSTANCE.info("Computation of " + configuration.getProperty("file.name") + " started");
-				process(configuration, excelFileName, engine, competitionDates, firstSetupExecuted);
+				process(configuration, excelFileName, engineSupplier.get(), competitionDates, firstSetupExecuted);
 				LogUtils.INSTANCE.info("Computation of " + configuration.getProperty("file.name") + " succesfully finished");
 			};
 			String asyncFlag = configuration.getProperty("async", "false");
@@ -514,8 +513,7 @@ public class SELotterySimpleSimulator extends Shared {
 					datesToBeProcessed.stream().map(TimeUtils.defaultLocalDateFormat::format).collect(Collectors.toList())
 				)
 			);
-			engine.setup(configuration, false);
-			engine.getExecutor().apply(
+			engine.setup(configuration, false).getExecutor().apply(
 				extractionDatePredicate
 			).apply(
 				systemProcessor

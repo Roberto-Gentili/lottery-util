@@ -13,6 +13,7 @@ import org.rg.game.core.CollectionUtils;
 import org.rg.game.core.LogUtils;
 import org.rg.game.core.ResourceUtils;
 import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
+import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine.ProcessingContext;
 import org.rg.game.lottery.engine.MDLotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 
@@ -71,11 +72,11 @@ public class LotteryMatrixGenerator extends Shared {
 		LotteryMatrixGeneratorAbstEngine engine = engineSupplier.get();
 		configuration.setProperty("nameSuffix", configuration.getProperty("file.name")
 			.replace("." + configuration.getProperty("file.extension"), ""));
-		engine.setup(configuration, true);
+		ProcessingContext pC = engine.setup(configuration, true);
 		if (CollectionUtils.retrieveBoolean(configuration, "async", "false")) {
-			futures.add(CompletableFuture.runAsync(() -> engine.getExecutor().apply(null).apply(null)));
+			futures.add(CompletableFuture.runAsync(() -> pC.getExecutor().apply(null).apply(null)));
 		} else {
-			engine.getExecutor().apply(null).apply(null);
+			pC.getExecutor().apply(null).apply(null);
 		}
 	}
 

@@ -355,7 +355,7 @@ public class NumberProcessor {
 			E engine = allPreviousEngineAndConfigurations.get(index).getKey().get();
 			Properties configuration = allPreviousEngineAndConfigurations.get(index).getValue().get();
 			configuration.setProperty("competition", TimeUtils.defaultLocalDateFormat.format(extractionDate));
-			return (List<Integer>)engine.setup(configuration, false).apply(extractionDate).get(numbersCollectionName);
+			return (List<Integer>)engine.setup(configuration, false).basicDataSupplier.apply(extractionDate).get(numbersCollectionName);
 		}
 
 	}
