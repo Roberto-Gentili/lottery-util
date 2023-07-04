@@ -19,7 +19,6 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.rg.game.core.LogUtils;
 import org.rg.game.core.TimeUtils;
-import org.rg.game.lottery.engine.LotteryMatrixGeneratorAbstEngine;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 
 public class SEQualityCheckerForExcel extends Shared {
@@ -42,14 +41,13 @@ public class SEQualityCheckerForExcel extends Shared {
 		String endDateAsString,
 		Boolean printReportDetail
 	) {
-		LotteryMatrixGeneratorAbstEngine engine = new SELotteryMatrixGeneratorEngine();
 		LocalDate startDate = convert(startDateAsString);
 		LocalDate endDate =  convert(endDateAsString);
 		List<Map.Entry<LocalDate, Object>> dates = new ArrayList<>();
 		while (startDate.compareTo(endDate) <= 0) {
-			startDate = engine.computeNextExtractionDate(startDate, false);
+			startDate = SELotteryMatrixGeneratorEngine.DEFAULT_INSTANCE.computeNextExtractionDate(startDate, false);
 			dates.add(new AbstractMap.SimpleEntry<LocalDate, Object>(startDate, printReportDetail));
-			startDate =  engine.computeNextExtractionDate(startDate.plus(1, ChronoUnit.DAYS), false);
+			startDate =  SELotteryMatrixGeneratorEngine.DEFAULT_INSTANCE.computeNextExtractionDate(startDate.plus(1, ChronoUnit.DAYS), false);
 		}
 		return dates;
 	}
