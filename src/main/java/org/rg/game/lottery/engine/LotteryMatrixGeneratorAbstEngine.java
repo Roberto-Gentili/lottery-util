@@ -48,6 +48,9 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		numberProcessor = new NumberProcessor();
 	}
 
+	protected DecimalFormat decimalFormat = new DecimalFormat( "#,##0.##" );
+	protected DecimalFormat integerFormat = new DecimalFormat( "#,##0" );
+
 	Random random;
 	protected boolean reportEnabled;
 	protected boolean reportDetailEnabled;
@@ -55,8 +58,6 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	protected String comboIndexSelectorType;
 	protected AtomicInteger comboSequencedIndexSelectorCounter;
 
-	protected DecimalFormat decimalFormat = new DecimalFormat( "#,##0.##" );
-	protected DecimalFormat integerFormat = new DecimalFormat( "#,##0" );
 	protected DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 	protected String extractionArchiveStartDate;
 	protected String extractionArchiveForSeedStartDate;

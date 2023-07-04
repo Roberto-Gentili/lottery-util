@@ -37,8 +37,8 @@ public class NumberProcessor {
 		RANDOM_KEY + "|" + MOST_EXTRACTED_COUPLE_KEY + "|" + MOST_EXTRACTED_TRIPLE_KEY + "|" + MOST_EXTRACTED_KEY + "|" + LESS_EXTRACTED_COUPLE_KEY + "|" +
 		LESS_EXTRACTED_TRIPLE_KEY + "|" + LESS_EXTRACTED_KEY + "|" + NEAREST_FROM_RECORD_ABSENCE_PERCENTAGE_KEY + "|" + BIGGEST_ABSENCE_RECORD_KEY + "|" + SMALLEST_ABSENCE_RECORD_KEY;
 
-	public List<Integer> retrieveNumbersToBePlayed(
-		Context context,
+	public <E extends LotteryMatrixGeneratorAbstEngine> List<Integer> retrieveNumbersToBePlayed(
+		Context<E> context,
 		String numbersAsString,
 		LocalDate extractionDate,
 		boolean sorted
@@ -52,8 +52,8 @@ public class NumberProcessor {
 		);
 	}
 
-	public List<Integer> retrieveNumbersToBeExcluded(
-		Context context,
+	public <E extends LotteryMatrixGeneratorAbstEngine> List<Integer> retrieveNumbersToBeExcluded(
+		Context<E> context,
 		String numbersAsString,
 		LocalDate extractionDate,
 		List<Integer> numbersToBePlayed,
