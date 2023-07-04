@@ -50,8 +50,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	}
 
 	protected int engineIndex;
-	public ProcessingContext processingContext;
-
+	private ProcessingContext processingContext;
 
 
 	LotteryMatrixGeneratorAbstEngine() {
@@ -355,7 +354,6 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	public Storage generate(
 		ProcessingContext processingContext
 	) {
-		int chooseRandom = processingContext.chooseRandom;
 		Map<String, Object> data = processingContext.basicDataSupplier.apply(processingContext.getCurrentProcessedExtractionDate());
 		List<Integer> numbers = (List<Integer>)data.get("numbersToBePlayed");
 		List<Integer> notSelectedNumbersToBePlayed = new ArrayList<>(numbers);
@@ -562,6 +560,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 				storage.addLine("Combinazione magica:");
 				storage.addUnindexedCombo(randomCombo);
 			}
+			int chooseRandom = processingContext.chooseRandom;
 			if (chooseRandom > 0) {
 				//Resettiamo il Random e simuliamo una generazione pulita
 				processingContext.basicDataSupplier.apply(processingContext.getCurrentProcessedExtractionDate());
