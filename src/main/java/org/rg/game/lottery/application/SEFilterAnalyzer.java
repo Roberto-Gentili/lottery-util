@@ -21,7 +21,7 @@ public class SEFilterAnalyzer extends Shared {
 	public static void main(String[] args) {
 		LocalDate extractionDate = LocalDate.now();
 		SELotteryMatrixGeneratorEngine.DEFAULT_INSTANCE.testEffectiveness(
-			SELotteryMatrixGeneratorEngine.DEFAULT_INSTANCE.preProcess(filter, extractionDate),
+			filter,
 			IntStream.rangeClosed(1, 90)
 		    .boxed().collect(Collectors.toList()),
 		    extractionDate,

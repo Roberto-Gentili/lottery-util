@@ -54,6 +54,21 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 				throw new UnsupportedOperationException("Default instance cannot generate systems");
 			}
 
+			@Override
+			public Map<String, Object> testEffectiveness(
+				String filter,
+				List<Integer> numbers,
+				LocalDate extractionDate,
+				boolean fineLog
+			) {
+				return super.testEffectiveness(
+					preProcess(filter, extractionDate),
+					numbers,
+					extractionDate,
+					fineLog
+				);
+			}
+
 		};
 	}
 
