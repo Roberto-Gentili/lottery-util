@@ -57,7 +57,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		engineIndex = getAllPreviousEngineAndConfigurations().size();
 	}
 
-	public ProcessingContext getProcessingContext() {
+	ProcessingContext getProcessingContext() {
 		if (processingContext == null) {
 			LogUtils.INSTANCE.warn("Warning: the setup method was never called on " + this.getClass().getSimpleName() + " " + engineIndex);
 		}
