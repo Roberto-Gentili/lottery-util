@@ -19,12 +19,12 @@ public class SEFilterAnalyzer extends Shared {
 		"70 -> 79: 0,3;" +
 		"80 -> 90: 0,3;";
 	public static void main(String[] args) {
-		SELotteryMatrixGeneratorEngine engine = new SELotteryMatrixGeneratorEngine();
-		engine.testEffectiveness(
-			engine.preProcess(filter),
+		LocalDate extractionDate = LocalDate.now();
+		SELotteryMatrixGeneratorEngine.DEFAULT_INSTANCE.testEffectiveness(
+			SELotteryMatrixGeneratorEngine.DEFAULT_INSTANCE.preProcess(filter, extractionDate),
 			IntStream.rangeClosed(1, 90)
 		    .boxed().collect(Collectors.toList()),
-		    LocalDate.now(),
+		    extractionDate,
 		    true
 		);
 

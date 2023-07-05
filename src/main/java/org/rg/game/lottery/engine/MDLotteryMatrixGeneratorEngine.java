@@ -61,10 +61,9 @@ public class MDLotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	@Override
-	public Map<String, Object> adjustSeed() {
+	public Map<String, Object> adjustSeed(LocalDate extractionDate) {
 		long seed = 1L;
 		LocalDate seedStartDate = LocalDate.parse("2018-02-17");
-		LocalDate extractionDate = getProcessingContext().getCurrentProcessedExtractionDate();
 		if (seedStartDate.compareTo(extractionDate) >= 0) {
 			throw new IllegalArgumentException("Unvalid date: " + extractionDate);
 		}
@@ -102,7 +101,7 @@ public class MDLotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	@Override
-	protected Map<String, Object> checkQuality(Storage storage) {
+	protected Map<String, Object> checkQuality(Storage storage, LocalDate extractionDate) {
 		throw new UnsupportedOperationException("Check quality");
 	}
 

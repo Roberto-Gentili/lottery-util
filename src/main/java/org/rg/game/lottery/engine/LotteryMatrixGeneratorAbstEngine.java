@@ -50,7 +50,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	}
 
 	protected int engineIndex;
-	private ProcessingContext processingContext;
+	protected ProcessingContext processingContext;
 
 
 	LotteryMatrixGeneratorAbstEngine() {
@@ -65,7 +65,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	}
 
 	public synchronized ProcessingContext setup(Properties config, boolean cacheEngineAndConfiguration) {
-		ProcessingContext processingContext = this.processingContext = new ProcessingContext(new DecimalFormat( "#,##0.##" ), new DecimalFormat( "#,##0" ), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+		ProcessingContext processingContext = this.processingContext = newProcessingContext();
 		setupCombinationFilterPreProcessor();
 		processingContext.comboSequencedIndexSelectorCounter = new AtomicInteger(0);
 		processingContext.extractionArchiveStartDate = config.getProperty("competition.archive.start-date");
@@ -85,10 +85,10 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		processingContext.basicDataSupplier = extractionDate -> {
 			if (processingContext.combinationFilter == null) {
 				processingContext.combinationFilter = CombinationFilterFactory.INSTANCE.parse(
-					preProcess(combinationFilterRaw)
+					preProcess(combinationFilterRaw, extractionDate)
 				);
 			}
-			Map<String, Object> data = adjustSeed();
+			Map<String, Object> data = adjustSeed(extractionDate);
 			NumberProcessor.Context<?> numberProcessorContext = new NumberProcessor.Context<>(
 				getNumberGeneratorFactory(extractionDate), engineIndex, getAllPreviousEngineAndConfigurations()
 			);
@@ -196,8 +196,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 						continue;
 					}
 				}
-				processingContext.setCurrentProcessedExtractionDate(extractionDate);
-				Storage storage = generate(processingContext);
+				Storage storage = generate(processingContext, extractionDate);
 				storages.add(
 					storage
 				);
@@ -217,6 +216,10 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 			processingContext.avoidMode = 2;
 		}
 		return processingContext;
+	}
+
+	protected ProcessingContext newProcessingContext() {
+		return new ProcessingContext(new DecimalFormat( "#,##0.##" ), new DecimalFormat( "#,##0" ), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 	}
 
 	public Collection<LocalDate> computeExtractionDates(String extractionDatesAsString) {
@@ -283,8 +286,8 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 
 	protected abstract String getDefaultNumberRange();
 
-	public String preProcess(String filterAsString) {
-		return getProcessingContext().combinationFilterPreProcessor.preProcess(filterAsString);
+	public String preProcess(String filterAsString, LocalDate extractionDate) {
+		return getProcessingContext().combinationFilterPreProcessor.preProcess(filterAsString, extractionDate);
 	}
 
 	protected void setupCombinationFilterPreProcessor() {
@@ -294,33 +297,34 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 				expression.split("lessExtCouple|lessExt|mostExtCouple|mostExt").length > 1,
 			expression ->
 				parameters ->
-					processStatsExpression(expression)
+					processStatsExpression(expression, (LocalDate)parameters[0])
 		);
 		getProcessingContext().combinationFilterPreProcessor.addSimpleExpressionPreprocessor(
 			expression ->
 				expression.contains("sum"),
 			expression ->
 				parameters ->
-					processMathExpression(expression)
+					processMathExpression(expression, (LocalDate)parameters[0])
 		);
 		getProcessingContext().combinationFilterPreProcessor.addSimpleExpressionPreprocessor(
 			expression ->
 				expression.contains("in"),
 			expression ->
-				parameters ->
-					processInExpression(expression)
+				parameters -> {
+					return processInExpression(expression, (LocalDate)parameters[0]);
+				}
 		);
 	}
 
-	protected String processInExpression(String expression) {
+	protected String processInExpression(String expression, LocalDate extractionDate) {
 		throw new UnsupportedOperationException("Expression is not supported: " + expression);
 	}
 
-	protected String processMathExpression(String expression) {
+	protected String processMathExpression(String expression, LocalDate extractionDate) {
 		throw new UnsupportedOperationException("Expression is not supported: " + expression);
 	}
 
-	protected String processStatsExpression(String expression) {
+	protected String processStatsExpression(String expression, LocalDate extractionDate) {
 		throw new UnsupportedOperationException("Expression is not supported: " + expression);
 	}
 
@@ -352,16 +356,18 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	}
 
 	public Storage generate(
-		ProcessingContext processingContext
+		ProcessingContext processingContext,
+		LocalDate extractionDate
 	) {
-		Map<String, Object> data = processingContext.basicDataSupplier.apply(processingContext.getCurrentProcessedExtractionDate());
+		Map<String, Object> data = processingContext.basicDataSupplier.apply(extractionDate);
 		List<Integer> numbers = (List<Integer>)data.get("numbersToBePlayed");
 		List<Integer> notSelectedNumbersToBePlayed = new ArrayList<>(numbers);
 		Map<String, Object> effectivenessTestResults = null;
 		if (processingContext.combinationFilterRaw != null && processingContext.testFilter) {
 			effectivenessTestResults = testEffectiveness(
 				processingContext.combinationFilterRaw,
-				numbers, processingContext.getCurrentProcessedExtractionDate(),
+				numbers,
+				extractionDate,
 				processingContext.testFilterFineInfo
 			);
 		}
@@ -377,7 +383,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		Storage storageRef = null;
 		if (processingContext.overwriteIfExists < 1 && "filesystem".equalsIgnoreCase(processingContext.storageType)) {
 			storageRef = PersistentStorage.restore(processingContext.group, Storage.computeName(
-				processingContext.getCurrentProcessedExtractionDate(), processingContext.combinationComponents, numberOfCombos, processingContext.suffix)
+				extractionDate, processingContext.combinationComponents, numberOfCombos, processingContext.suffix)
 			);
 			if (storageRef != null) {
 				try {
@@ -546,7 +552,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 			if (processingContext.magicCombinationMinNumber != null && processingContext.magicCombinationMaxNumber != null) {
 				Set<Integer> randomNumbers = new TreeSet<>();
 				//Resettiamo il Random e simuliamo una generazione pulita
-				processingContext.basicDataSupplier.apply(processingContext.getCurrentProcessedExtractionDate());
+				processingContext.basicDataSupplier.apply(extractionDate);
 				moveRandomizerToLast(processingContext.equilibrateFlagSupplier, discoveredComboCounter, comboHandler);
 				Iterator<Integer> randomIntegers = processingContext.random.ints(processingContext.magicCombinationMinNumber, processingContext.magicCombinationMaxNumber + 1).iterator();
 				while (randomNumbers.size() < processingContext.combinationComponents) {
@@ -563,7 +569,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 			int chooseRandom = processingContext.chooseRandom;
 			if (chooseRandom > 0) {
 				//Resettiamo il Random e simuliamo una generazione pulita
-				processingContext.basicDataSupplier.apply(processingContext.getCurrentProcessedExtractionDate());
+				processingContext.basicDataSupplier.apply(extractionDate);
 				moveRandomizerToLast(processingContext.equilibrateFlagSupplier, discoveredComboCounter, comboHandler);
 				Iterator<Integer> randomIntegers = processingContext.random.ints(0, storageRef.size()).iterator();
 				storage.addLine();
@@ -575,7 +581,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 			}
 			storage.addLine(systemGeneralInfo);
 			if (processingContext.reportEnabled) {
-				Map<String, Object> report = checkQuality(storageRef);
+				Map<String, Object> report = checkQuality(storageRef, extractionDate);
 				if (processingContext.reportDetailEnabled) {
 					storage.addLine("\n");
 					storage.addLine(
@@ -604,7 +610,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		return storageRef;
 	}
 
-	protected abstract Map<String, Object> checkQuality(Storage storageRef);
+	protected abstract Map<String, Object> checkQuality(Storage storageRef, LocalDate extractionDate);
 
 	private List<Integer> getNextCombo(
 		AtomicReference<Iterator<List<Integer>>> combosIteratorWrapper,
@@ -652,8 +658,8 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		}
 	}
 
-	private Map<String, Object> resetRandomizer(Supplier<List<Integer>> numberSupplier) {
-		Map<String, Object> data = adjustSeed();
+	private Map<String, Object> resetRandomizer(Supplier<List<Integer>> numberSupplier, LocalDate extractionDate) {
+		Map<String, Object> data = adjustSeed(extractionDate);
 		data.put("numbersToBePlayed", numberSupplier.get());
 		return data;
 	}
@@ -763,7 +769,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 
 	protected abstract List<LocalDate> forWeekOf(LocalDate dayOfWeek);
 
-	public abstract Map<String, Object> adjustSeed();
+	public abstract Map<String, Object> adjustSeed(LocalDate extractionDate);
 
 	public abstract LocalDate computeNextExtractionDate(LocalDate startDate, boolean incrementIfExpired);
 
@@ -807,7 +813,6 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		private boolean notEquilibrateCombinationAtLeastOneNumberAmongThoseChosen;
 		private int overwriteIfExists;
 		private int waitingSomeoneForGenerationTimeout;
-		private LocalDate currentProcessedExtractionDate;
 
 		public ProcessingContext(
 			DecimalFormat decimalFormat,
@@ -823,14 +828,6 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 			return executor;
 		}
 
-		public LocalDate getCurrentProcessedExtractionDate() {
-			return currentProcessedExtractionDate;
-		}
-
-		public void setCurrentProcessedExtractionDate(LocalDate extractionDate) {
-			this.currentProcessedExtractionDate = extractionDate;
-
-		}
 	}
 
 }

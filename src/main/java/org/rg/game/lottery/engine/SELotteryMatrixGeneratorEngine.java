@@ -38,18 +38,19 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	static {
 		allPreviousEngineAndConfigurations = new ArrayList<>();
 		DEFAULT_INSTANCE = new SELotteryMatrixGeneratorEngine() {
+
+			{
+				this.processingContext = newProcessingContext();
+				setupCombinationFilterPreProcessor();
+			}
+
 			@Override
 			public synchronized ProcessingContext setup(Properties config, boolean cacheEngineAndConfiguration) {
 				throw new UnsupportedOperationException("Default instance cannot be initialized");
 			}
 
 			@Override
-			public ProcessingContext getProcessingContext() {
-				return null;
-			}
-
-			@Override
-			public Storage generate(ProcessingContext pC) {
+			public Storage generate(ProcessingContext pC, LocalDate extractionDate) {
 				throw new UnsupportedOperationException("Default instance cannot generate systems");
 			}
 
@@ -115,10 +116,10 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	@Override
-	public Map<String, Object> adjustSeed() {
+	public Map<String, Object> adjustSeed(LocalDate extractionDate) {
 		//Per il calcolo del seed prendiamo sempre l'istanza SEStats più aggiornata
 		//In modo da avere le date corrette per i concorsi che hanno subito anticipi o posticipi
-		Map.Entry<LocalDate, Long> seedRecord = getSEStatsForSeed().getSeedData(getProcessingContext().getCurrentProcessedExtractionDate());
+		Map.Entry<LocalDate, Long> seedRecord = getSEStatsForSeed().getSeedData(extractionDate);
 		seedRecord.setValue(seedRecord.getValue() + getProcessingContext().seedShifter);
 		getProcessingContext().random = new Random(seedRecord.getValue());
 		buildComboIndexSupplier();
@@ -169,7 +170,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 
 	@Override
 	public Map<String, Object> testEffectiveness(String filterAsString, List<Integer> numbers, LocalDate extractionDate, boolean fineLog) {
-		filterAsString = preProcess(filterAsString);
+		filterAsString = preProcess(filterAsString, extractionDate);
 		Predicate<List<Integer>> combinationFilter = CombinationFilterFactory.INSTANCE.parse(filterAsString, fineLog);
 		Set<Entry<Date, List<Integer>>> allWinningCombos = getSEStats(extractionDate).getAllWinningCombos().entrySet();
 		int discardedFromHistory = 0;
@@ -272,21 +273,21 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	@Override
-	protected String processStatsExpression(String expression) {
+	protected String processStatsExpression(String expression, LocalDate extractionDate) {
 		String[] options = expression.replaceAll("\\s+","").split("lessExtCouple|lessExt|mostExtCouple|mostExt");
 		List<Integer> numbersToBeTested = null;
 		if (expression.contains("lessExtCouple")) {
 			numbersToBeTested =
-				getSEStats(getProcessingContext().getCurrentProcessedExtractionDate()).getExtractedNumberFromMostExtractedCoupleRankReversed();
+				getSEStats(extractionDate).getExtractedNumberFromMostExtractedCoupleRankReversed();
 		} else if (expression.contains("lessExt")) {
 			numbersToBeTested =
-				getSEStats(getProcessingContext().getCurrentProcessedExtractionDate()).getExtractedNumberRankReversed();
+				getSEStats(extractionDate).getExtractedNumberRankReversed();
 		} else if (expression.contains("mostExtCouple")) {
 			numbersToBeTested =
-				getSEStats(getProcessingContext().getCurrentProcessedExtractionDate()).getExtractedNumberFromMostExtractedCoupleRank();
+				getSEStats(extractionDate).getExtractedNumberFromMostExtractedCoupleRank();
 		} else if (expression.contains("mostExt")) {
 			numbersToBeTested =
-				getSEStats(getProcessingContext().getCurrentProcessedExtractionDate()).getExtractedNumberRank();
+				getSEStats(extractionDate).getExtractedNumberRank();
 		}
 		String[] subRange = options[0].split("->");
 		if (subRange.length == 2) {
@@ -310,12 +311,12 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	@Override
-	protected String processInExpression(String expression) {
+	protected String processInExpression(String expression, LocalDate extractionDate) {
 		String[] options = expression.replaceAll("\\s+","").split("inallWinningCombos");
 		if (options.length > 1) {
 			String[] groupOptions = options[1].split(":");
 			List<String> inClauses = new ArrayList<>();
-			for (List<Integer> winningCombo :getSEStats(getProcessingContext().getCurrentProcessedExtractionDate()).getAllWinningCombos().values()) {
+			for (List<Integer> winningCombo :getSEStats(extractionDate).getAllWinningCombos().values()) {
 				inClauses.add("in " + ComboHandler.toString(winningCombo, ",") + ":" + groupOptions[1]);
 			}
 			if (inClauses.isEmpty()) {//Storico non disponibile: probabilmente la data di inizio e fine sono la stessa. In questo caso controllare il file di configurazione
@@ -327,7 +328,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	@Override
-	protected String processMathExpression(String expression) {
+	protected String processMathExpression(String expression, LocalDate extractionDate) {
 		String[] options = expression.split("allWinningCombos");
 		if (options.length > 1) {
 			options[1] = options[1].startsWith(".") ?
@@ -337,7 +338,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 				options[1], "sum", "rangeOfSum",
 				operationOptionValue -> {
 					Collection<Integer> sums = new TreeSet<>();
-					getSEStats(getProcessingContext().getCurrentProcessedExtractionDate()).getAllWinningCombos().values().stream().forEach(combo ->
+					getSEStats(extractionDate).getAllWinningCombos().values().stream().forEach(combo ->
 						sums.add(ComboHandler.sumValues(combo))
 					);
 					return sums;
@@ -348,7 +349,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 				options[1], "sumOfPower", "rangeOfSumPower",
 				operationOptionValue -> {
 					Collection<Integer> sums = new TreeSet<>();
-					getSEStats(getProcessingContext().getCurrentProcessedExtractionDate()).getAllWinningCombos().values().stream().forEach(combo -> {
+					getSEStats(extractionDate).getAllWinningCombos().values().stream().forEach(combo -> {
 						sums.add(ComboHandler.sumPowerOfValues(combo, operationOptionValue.get(0)));
 					});
 					return sums;
@@ -430,8 +431,8 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	@Override
-	protected Map<String, Object> checkQuality(Storage storage) {
-		return getSEStats(getProcessingContext().getCurrentProcessedExtractionDate())
+	protected Map<String, Object> checkQuality(Storage storage, LocalDate extractionDate) {
+		return getSEStats(extractionDate)
 			.checkQuality(storage::iterator);
 	}
 
