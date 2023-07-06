@@ -24,8 +24,8 @@ public interface LogUtils {
 	public final static LogUtils INSTANCE = retrieveConfiguredLogger();
 
 	static LogUtils retrieveConfiguredLogger() {
-		String loggerType = System.getenv("logger.type");
-		if (loggerType == null || loggerType.equalsIgnoreCase("console")) {
+		String loggerType = EnvironmentUtils.getVariable("logger.type", "console");
+		if (loggerType.equalsIgnoreCase("console")) {
 			return new LogUtils.ToConsole();
 		} else if (loggerType.equalsIgnoreCase("file")) {
 			return LogUtils.ToFile.getLogger("default-log.txt");

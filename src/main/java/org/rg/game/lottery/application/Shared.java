@@ -116,14 +116,6 @@ class Shared {
 		return SEStats.get(Shared.sEStatsDefaultDate, TimeUtils.getDefaultDateFormat().format(new Date()));
 	}
 
-	static String getSystemEnv(String key, String defaultValue) {
-		String value = System.getenv(key);
-		if (value == null) {
-			return defaultValue;
-		}
-		return value;
-	}
-
 	static String rightAlignedString(String value, int emptySpacesCount) {
 		return String.format("%" + emptySpacesCount + "s", value);
 	}

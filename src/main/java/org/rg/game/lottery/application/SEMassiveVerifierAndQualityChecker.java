@@ -34,6 +34,7 @@ import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.rg.game.core.EnvironmentUtils;
 import org.rg.game.core.LogUtils;
 import org.rg.game.core.MathUtils;
 import org.rg.game.core.ResourceUtils;
@@ -48,9 +49,9 @@ public class SEMassiveVerifierAndQualityChecker extends Shared {
 	public static void main(String[] args) throws IOException {
 		check(
 			forDate(
-				getSystemEnv(
+				EnvironmentUtils.getVariable(
 					"startDate", "14/02/2023"
-				), getSystemEnv(
+				), EnvironmentUtils.getVariable(
 					"endDate", "next+0*1"
 				),
 				false

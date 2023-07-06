@@ -1,4 +1,4 @@
-module testing {
+module org.rg.game.lottery {
 
     requires jdk.unsupported;
 	requires org.apache.poi.ooxml;
