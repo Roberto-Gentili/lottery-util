@@ -1,3 +1,4 @@
+set logger.type=window
 call "%~dp0set-env.cmd"
 
 set working-path.simulations.folder=%CURRENT_DIR_NAME%\config\simulations

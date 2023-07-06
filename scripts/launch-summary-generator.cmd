@@ -4,7 +4,7 @@ call "%~dp0set-env.cmd"
 
 set working-path.simulations.folder=Simulazioni
 
-call "%JAVA_HOME%\bin\java.exe" -Xmx%XMX% -cp %classPath%;%LIBS%;"%CURRENT_DIR%binaries.jar"; org.rg.game.lottery.application.SESimulationSummaryGenerator
+call "%JAVA_HOME%\bin\%JAVA_COMMAND%" -Xmx%XMX% -cp %classPath%;%LIBS%;"%CURRENT_DIR%binaries.jar"; org.rg.game.lottery.application.SESimulationSummaryGenerator
 echo:
 echo:
 
