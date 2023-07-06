@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
-import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -24,8 +23,12 @@ import java.util.stream.Collectors;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
+import javax.swing.JTextPane;
+import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 
 import org.rg.game.lottery.engine.PersistentStorage;
 
@@ -35,6 +38,7 @@ public interface LogUtils {
 
 	static LogUtils retrieveConfiguredLogger() {
 		String loggerType = EnvironmentUtils.getVariable("logger.type", "console");
+		loggerType = "window";
 		if (loggerType.equalsIgnoreCase("console")) {
 			return new LogUtils.ToConsole();
 		} else if (loggerType.equalsIgnoreCase("file")) {
@@ -255,7 +259,11 @@ public interface LogUtils {
 
 
 		private static class WindowHandler extends Handler {
-			private javax.swing.JTextArea textArea;
+		    private StyledDocument console;
+		    private final static SimpleAttributeSet debugTextStyle;
+		    private final static SimpleAttributeSet infoTextStyle;
+		    private final static SimpleAttributeSet warnTextStyle;
+		    private final static SimpleAttributeSet errorTextStyle;
 			private final static int maxRowSize = Integer.valueOf(EnvironmentUtils.getVariable("logger.window.max-row-size", "10000"));
 			private final static String backgroundColor = EnvironmentUtils.getVariable("logger.window.background-color", "67,159,54");
 			private final static String textColor = EnvironmentUtils.getVariable("logger.window.text-color", "253,195,17");
@@ -265,6 +273,20 @@ public interface LogUtils {
 			static {
 				com.formdev.flatlaf.FlatLightLaf.setup();
 				JFrame.setDefaultLookAndFeelDecorated(true);
+				debugTextStyle = new SimpleAttributeSet();
+			    StyleConstants.setForeground(debugTextStyle, Color.BLUE);
+			    //StyleConstants.setBackground(debugTextStyle, Color.YELLOW);
+
+			    infoTextStyle = new SimpleAttributeSet();
+			    StyleConstants.setForeground(infoTextStyle, Color.WHITE);
+
+			    warnTextStyle = new SimpleAttributeSet();
+			    StyleConstants.setForeground(warnTextStyle, Color.YELLOW);
+			    StyleConstants.setBold(warnTextStyle, true);
+
+			    errorTextStyle = new SimpleAttributeSet();
+			    StyleConstants.setForeground(errorTextStyle, Color.RED);
+			    StyleConstants.setBold(errorTextStyle, true);
 			}
 
 			private WindowHandler() {
@@ -273,36 +295,28 @@ public interface LogUtils {
 				//String level = manager.getProperty(className + ".level");
 				//setLevel(level != null ? Level.parse(level) : Level.ALL);
 				setLevel(Level.ALL);
-				if (textArea == null) {						javax.swing.JFrame window = new javax.swing.JFrame(EnvironmentUtils.getVariable("lottery.application.name", "Event logger")) {
+				if (console == null) {						javax.swing.JFrame window = new javax.swing.JFrame(EnvironmentUtils.getVariable("lottery.application.name", "Event logger")) {
 						private static final long serialVersionUID = 653831741693111851L;
 						{
-							setSize(800, 600);
+							setSize(1024, 768);
 						}
 					};
-					textArea = new javax.swing.JTextArea() {
-						private static final long serialVersionUID = -5669120951831828004L;
-
-						@Override
-						public void append(String value) {
-							super.append(value);
-							trunkTextIfMaxRowSizeReached(textArea);
-							window.validate();
-						};
-					};					javax.swing.text.DefaultCaret caret = (javax.swing.text.DefaultCaret)textArea.getCaret();
+					JTextPane textpane = new JTextPane();
+					console = textpane.getStyledDocument();					javax.swing.text.DefaultCaret caret = (javax.swing.text.DefaultCaret)textpane.getCaret();
 					caret.setUpdatePolicy(javax.swing.text.DefaultCaret.ALWAYS_UPDATE);
-					textArea.setBorder(
+					textpane.setBorder(
 						BorderFactory.createCompoundBorder(
-							textArea.getBorder(),
-							BorderFactory.createEmptyBorder(10, 10, 10, 10)
+							textpane.getBorder(),
+							BorderFactory.createEmptyBorder(5, 5, 5, 5)
 						)
 					);
 
-					textArea.setBackground(stringToColor(WindowHandler.backgroundColor));
-					textArea.setForeground(stringToColor(WindowHandler.textColor));
+					textpane.setBackground(stringToColor(WindowHandler.backgroundColor));
+					textpane.setForeground(stringToColor(WindowHandler.textColor));
 
-					textArea.setFont(new Font(textArea.getFont().getName(), Font.BOLD, textArea.getFont().getSize() + 2));
+					textpane.setFont(new Font(textpane.getFont().getName(), Font.PLAIN, textpane.getFont().getSize() + 2));
 
-					JScrollPane scrollPane = new javax.swing.JScrollPane(textArea);
+					JScrollPane scrollPane = new javax.swing.JScrollPane(textpane);
 					window.add(scrollPane);
 					window.getRootPane().putClientProperty("JRootPane.titleBarForeground", stringToColor(WindowHandler.barTextColor));
 					window.getRootPane().putClientProperty("JRootPane.titleBarBackground", stringToColor(WindowHandler.barBackgroundColor));
@@ -313,14 +327,6 @@ public interface LogUtils {
 					window.setVisible(true);
 					window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 				}
-				//setFormatter(new SimpleFormatter());
-				setFormatter(new Formatter() {
-
-					@Override
-					public String format(LogRecord record) {
-						return record.getMessage();
-					}
-				});
 			}
 
 			protected Color stringToColor(String colorAsString) {
@@ -343,27 +349,33 @@ public interface LogUtils {
 				return logger;
 			}
 
-			public void trunkTextIfMaxRowSizeReached(JTextArea txtWin) {
-			    int numLinesToTrunk = txtWin.getLineCount() - maxRowSize;
-			    if(numLinesToTrunk > 0) {
-			        try {
-			            int posOfLastLineToTrunk = txtWin.getLineEndOffset(numLinesToTrunk - 1);
-			            txtWin.replaceRange("",0,posOfLastLineToTrunk);
-			        }
-			        catch (BadLocationException ex) {
-			            ex.printStackTrace();
-			        }
-			    }
-			}
-
 			@Override
 			public synchronized void publish(LogRecord record) {
-				String message = null;
 				if (!isLoggable(record)) {
 					return;
 				}
-				message = getFormatter().format(record);
-				textArea.append(message);
+				try {
+					console.insertString(
+						console.getEndPosition().getOffset() -1,
+						record.getMessage(),
+						getSimpleAttributeSet(record.getLevel())
+					);
+				} catch (BadLocationException exc) {
+
+				}
+			}
+
+			private AttributeSet getSimpleAttributeSet(Level level) {
+				if (level == Level.FINE) {
+					return debugTextStyle;
+				} else if (level == Level.INFO) {
+					return infoTextStyle;
+				} else if (level == Level.WARNING) {
+					return warnTextStyle;
+				} else if (level == Level.SEVERE) {
+					return errorTextStyle;
+				}
+				return null;
 			}
 
 			@Override
