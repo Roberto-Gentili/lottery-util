@@ -70,7 +70,19 @@ public interface LogUtils {
 
 		@Override
 		public void error(Throwable exc, String... reports) {
-			exc.printStackTrace();
+			if (reports == null || reports.length == 0) {
+				System.err.println();
+			} else {
+				for (String report : reports) {
+					System.err.println(report);
+				}
+			}
+			if (exc.getMessage() != null) {
+				System.err.println(exc.getMessage());
+			}
+			for (StackTraceElement stackTraceElement : exc.getStackTrace()) {
+				System.err.println("\t" + stackTraceElement.toString());
+			}
 		}
 
 		private void log(PrintStream stream, String... reports) {
@@ -141,7 +153,23 @@ public interface LogUtils {
 
 		@Override
 		public void error(Throwable exc, String... reports) {
-			throw new UnsupportedOperationException();
+			try {
+				if (reports == null || reports.length == 0) {
+					writer.append("\n");
+				} else {
+					for (String report : reports) {
+						writer.append(report + "\n");
+					}
+				}
+				if (exc.getMessage() != null) {
+					writer.append(exc.getMessage() + "\n");
+				}
+				for (StackTraceElement stackTraceElement : exc.getStackTrace()) {
+					writer.append("\t" + stackTraceElement.toString());
+				}
+			} catch (Throwable innerExc) {
+				Throwables.sneakyThrow(exc);
+			}
 		}
 
 		private void log(String... reports) {
@@ -190,7 +218,19 @@ public interface LogUtils {
 
 		@Override
 		public void error(Throwable exc, String... reports) {
-			exc.printStackTrace();
+			if (reports == null || reports.length == 0) {
+				logger.severe("\n");
+			} else {
+				for (String report : reports) {
+					logger.severe(report + "\n");
+				}
+			}
+			if (exc.getMessage() != null) {
+				logger.severe(exc.getMessage());
+			}
+			for (StackTraceElement stackTraceElement : exc.getStackTrace()) {
+				logger.severe("\t" + stackTraceElement.toString() + "\n");
+			}
 		}
 
 		private void log(Consumer<String> logger, String... reports) {
