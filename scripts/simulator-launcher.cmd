@@ -1,6 +1,5 @@
 set logger.type=window
-set logger.window.max-row-size=20000
-
+set logger.window.max-number-of-characters=536870912
 call "%~dp0set-env.cmd"
 
 set working-path.simulations.folder=%CURRENT_DIR_NAME%\config\simulations
@@ -14,6 +13,8 @@ if [%forceMaster%]==[true] (
 ) else (
 	set firstWindowTile=SE Lottery simple simulator ^(slave mode^)
 	set secondWindowTile=SE Lottery complex simulator ^(slave mode^)
+	set logger.window.background-color=0,0,0
+	set logger.window.text-color=255,255,255
 )
 
 set lottery.application.name=%firstWindowTile%
