@@ -257,10 +257,10 @@ public interface LogUtils {
 		private static class WindowHandler extends Handler {
 			private javax.swing.JTextArea textArea;
 			private final static int maxRowSize = Integer.valueOf(EnvironmentUtils.getVariable("logger.window.max-row-size", "10000"));
-			private final static String backgroundColor = EnvironmentUtils.getVariable("logger.window.background-color", "67,159,54");
-			private final static String textColor = EnvironmentUtils.getVariable("logger.window.text-color", "253,195,17");
-			private final static String barBackgroundColor = EnvironmentUtils.getVariable("logger.window.bar.background-color", "253,195,17");
-			private final static String barTextColor = EnvironmentUtils.getVariable("logger.window.bar.text-color", "67,159,54");
+			private final static String backgroundColor = EnvironmentUtils.getVariable("logger.window.background-color", "67,159,54,255");
+			private final static String textColor = EnvironmentUtils.getVariable("logger.window.text-color", "253,195,17,255");
+			private final static String barBackgroundColor = EnvironmentUtils.getVariable("logger.window.bar.background-color", "253,195,17,255");
+			private final static String barTextColor = EnvironmentUtils.getVariable("logger.window.bar.text-color", "67,159,54,255");
 
 			static {
 				com.formdev.flatlaf.FlatLightLaf.setup();
@@ -297,28 +297,18 @@ public interface LogUtils {
 						)
 					);
 
-					List<Integer> rGBColor = Arrays.asList(backgroundColor.split(",")).stream().map(Integer::valueOf).collect(Collectors.toList());
-					Color backgroundColor = new Color(rGBColor.get(0), rGBColor.get(1), rGBColor.get(2));
-					textArea.setBackground(backgroundColor);
+					textArea.setBackground(stringToColor(WindowHandler.backgroundColor));
+					textArea.setForeground(stringToColor(WindowHandler.textColor));
 
-					rGBColor = Arrays.asList(textColor.split(",")).stream().map(Integer::valueOf).collect(Collectors.toList());
-					Color textColor = new Color(rGBColor.get(0), rGBColor.get(1), rGBColor.get(2));
-					textArea.setForeground(textColor);
 					textArea.setFont(new Font(textArea.getFont().getName(), Font.BOLD, textArea.getFont().getSize() + 2));
-					textArea.setEditable(false);
 
 					JScrollPane scrollPane = new javax.swing.JScrollPane(textArea);
 					window.add(scrollPane);
+					window.getRootPane().putClientProperty("JRootPane.titleBarForeground", stringToColor(WindowHandler.barTextColor));
+					window.getRootPane().putClientProperty("JRootPane.titleBarBackground", stringToColor(WindowHandler.barBackgroundColor));
 
-					rGBColor = Arrays.asList(barTextColor.split(",")).stream().map(Integer::valueOf).collect(Collectors.toList());
-					Color barTextColor = new Color(rGBColor.get(0), rGBColor.get(1), rGBColor.get(2));
-					window.getRootPane().putClientProperty("JRootPane.titleBarForeground", barTextColor);
-
-					rGBColor = Arrays.asList(barBackgroundColor.split(",")).stream().map(Integer::valueOf).collect(Collectors.toList());
-					Color barBackgroundColor = new Color(rGBColor.get(0), rGBColor.get(1), rGBColor.get(2));
-					window.getRootPane().putClientProperty("JRootPane.titleBarBackground", barBackgroundColor);
-					scrollPane.getHorizontalScrollBar().setBackground(barBackgroundColor);
-					scrollPane.getVerticalScrollBar().setBackground(barBackgroundColor);
+					scrollPane.getHorizontalScrollBar().setBackground(stringToColor(WindowHandler.barBackgroundColor));
+					scrollPane.getVerticalScrollBar().setBackground(stringToColor(WindowHandler.barBackgroundColor));
 
 					window.setVisible(true);
 					window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -331,6 +321,13 @@ public interface LogUtils {
 						return record.getMessage();
 					}
 				});
+			}
+
+			protected Color stringToColor(String colorAsString) {
+				List<Integer> rGBColor =
+					Arrays.asList(colorAsString.split(",")).stream()
+					.map(Integer::valueOf).collect(Collectors.toList());
+				return new Color(rGBColor.get(0), rGBColor.get(1), rGBColor.get(2), rGBColor.get(3));
 			}
 
 			public static Logger attachNewWindowToLogger(String loggerName) {
