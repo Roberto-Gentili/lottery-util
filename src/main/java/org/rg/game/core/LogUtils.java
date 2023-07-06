@@ -8,12 +8,26 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.channels.FileChannel;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
+import java.util.logging.Formatter;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
+
+import javax.swing.JFrame;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.text.DefaultCaret;
 
 import org.rg.game.lottery.engine.PersistentStorage;
 
 public interface LogUtils {
-	public final static LogUtils INSTANCE = new LogUtils.ToConsole();
+	//public final static LogUtils INSTANCE = new LogUtils.ToConsole();
+	public final static LogUtils INSTANCE = new LogUtils.ToWindow();
+
 
 	public void debug(String... reports);
 
@@ -63,7 +77,7 @@ public interface LogUtils {
 		}
 	}
 
-	public static class ToFile extends LogUtils.ToConsole {
+	public static class ToFile implements LogUtils {
 		public final static Map<String, ToFile> INSTANCES = new ConcurrentHashMap<>();
 		private BufferedWriter writer;
 
@@ -118,6 +132,11 @@ public interface LogUtils {
 			log(reports);
 		}
 
+		@Override
+		public void error(Throwable exc, String... reports) {
+			throw new UnsupportedOperationException();
+		}
+
 		private void log(String... reports) {
 			try {
 				if (reports == null || reports.length == 0) {
@@ -133,8 +152,115 @@ public interface LogUtils {
 			}
 		}
 
+	}
+
+	public static class ToWindow implements LogUtils {
+		private Logger logger;
+
+		ToWindow() {
+			logger = WindowHandler.attachNewWindowToLogger("logging.handler");
+		}
+
+		@Override
+		public void debug(String... reports) {
+			log(logger::fine, reports);
+		}
+
+		@Override
+		public void info(String... reports) {
+			log(logger::info, reports);
+		}
+
+		@Override
+		public void warn(String... reports) {
+			log(logger::warning, reports);
+		}
+
+		@Override
+		public void error(String... reports) {
+			log(logger::severe, reports);
+		}
+
+		@Override
+		public void error(Throwable exc, String... reports) {
+			exc.printStackTrace();
+		}
+
+		private void log(Consumer<String> logger, String... reports) {
+			if (reports == null || reports.length == 0) {
+				logger.accept("\n");
+				return;
+			}
+			for (String report : reports) {
+				logger.accept(report + "\n");
+			}
+		}
 
 
+		private static class WindowHandler extends Handler {
+			private JTextArea textArea;
+
+			private WindowHandler() {
+				//LogManager manager = LogManager.getLogManager();
+				//String className = this.getClass().getName();
+				//String level = manager.getProperty(className + ".level");
+				//setLevel(level != null ? Level.parse(level) : Level.ALL);
+				setLevel(Level.ALL);
+				if (textArea == null) {
+					JFrame window = new JFrame(Optional.ofNullable(System.getenv("lottery.application.name")).orElseGet(() -> "Event logger")) {
+						private static final long serialVersionUID = 653831741693111851L;
+						{
+							setSize(800, 600);
+						}
+					};
+					textArea = new JTextArea() {
+						private static final long serialVersionUID = -5669120951831828004L;
+
+						@Override
+						public void append(String value) {
+							super.append(value);
+							window.validate();
+						};
+					};
+					DefaultCaret caret = (DefaultCaret)textArea.getCaret();
+					caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+					window.add(new JScrollPane(textArea));
+					window.setVisible(true);
+				}
+				//setFormatter(new SimpleFormatter());
+				setFormatter(new Formatter() {
+
+					@Override
+					public String format(LogRecord record) {
+						return record.getMessage();
+					}
+				});
+			}
+
+			public static Logger attachNewWindowToLogger(String loggerName) {
+				WindowHandler WindowHandler = new WindowHandler();
+				Logger logger = Logger.getLogger(loggerName);
+				logger.addHandler(WindowHandler);
+				return logger;
+			}
+
+			@Override
+			public synchronized void publish(LogRecord record) {
+				String message = null;
+				if (!isLoggable(record)) {
+					return;
+				}
+				message = getFormatter().format(record);
+				textArea.append(message);
+			}
+
+			@Override
+			public void close() {}
+
+			@Override
+			public void flush() {}
+
+		}
 
 	}
 
