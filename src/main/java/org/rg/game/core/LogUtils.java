@@ -1,5 +1,7 @@
 package org.rg.game.core;
 
+import java.awt.Color;
+import java.awt.Font;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -7,6 +9,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.channels.FileChannel;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -15,8 +19,11 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
+import javax.swing.BorderFactory;
 import javax.swing.JFrame;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.text.BadLocationException;
 
@@ -28,6 +35,7 @@ public interface LogUtils {
 
 	static LogUtils retrieveConfiguredLogger() {
 		String loggerType = EnvironmentUtils.getVariable("logger.type", "console");
+		loggerType = "window";
 		if (loggerType.equalsIgnoreCase("console")) {
 			return new LogUtils.ToConsole();
 		} else if (loggerType.equalsIgnoreCase("file")) {
@@ -250,6 +258,13 @@ public interface LogUtils {
 		private static class WindowHandler extends Handler {
 			private javax.swing.JTextArea textArea;
 			private final static int maxRowSize = Integer.valueOf(EnvironmentUtils.getVariable("logger.window.max-row-size", "10000"));
+			private final static String backgroundColor = EnvironmentUtils.getVariable("logger.window.background-color", "67,159,54");
+			private final static String textColor = EnvironmentUtils.getVariable("logger.window.text-color", "253,195,17");
+
+			static {
+				com.formdev.flatlaf.FlatLightLaf.setup();
+				JFrame.setDefaultLookAndFeelDecorated(true);
+			}
 
 			private WindowHandler() {
 				//LogManager manager = LogManager.getLogManager();
@@ -274,6 +289,21 @@ public interface LogUtils {
 						};
 					};					javax.swing.text.DefaultCaret caret = (javax.swing.text.DefaultCaret)textArea.getCaret();
 					caret.setUpdatePolicy(javax.swing.text.DefaultCaret.ALWAYS_UPDATE);
+					textArea.setBorder(BorderFactory.createCompoundBorder(
+							textArea.getBorder(),
+					        BorderFactory.createEmptyBorder(10, 10, 10, 10)));
+					List<Integer> rGBColor = Arrays.asList(backgroundColor.split(",")).stream().map(Integer::valueOf).collect(Collectors.toList());
+					Color firstColor = new Color(rGBColor.get(0), rGBColor.get(1), rGBColor.get(2));
+					textArea.setBackground(firstColor);
+					rGBColor = Arrays.asList(textColor.split(",")).stream().map(Integer::valueOf).collect(Collectors.toList());
+					Color secondColor = new Color(rGBColor.get(0), rGBColor.get(1), rGBColor.get(2));
+					textArea.setForeground(secondColor);
+					textArea.setFont(new Font(textArea.getFont().getName(), Font.BOLD, textArea.getFont().getSize() + 2));
+
+					window.getRootPane().putClientProperty("JRootPane.titleBarBackground", secondColor);
+					window.getRootPane().putClientProperty("JRootPane.titleBarForeground", firstColor);
+					JScrollPane scrollPane = new javax.swing.JScrollPane(textArea);
+
 					window.add(new javax.swing.JScrollPane(textArea));
 					window.setVisible(true);
 					window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

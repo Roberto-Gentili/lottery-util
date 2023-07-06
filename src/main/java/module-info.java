@@ -9,6 +9,7 @@ module org.rg.game.lottery {
 	requires java.desktop;
 	requires java.logging;
 	requires javafx.graphics;
+	requires com.formdev.flatlaf;
 
 	opens org.rg.game.lottery.application to com.fasterxml.jackson.databind;
 
