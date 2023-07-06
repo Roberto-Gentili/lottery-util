@@ -17,16 +17,23 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-import javax.swing.JFrame;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.text.DefaultCaret;
-
 import org.rg.game.lottery.engine.PersistentStorage;
 
 public interface LogUtils {
 	//public final static LogUtils INSTANCE = new LogUtils.ToConsole();
-	public final static LogUtils INSTANCE = new LogUtils.ToWindow();
+	public final static LogUtils INSTANCE = retrieveConfiguredLogger();
+
+	static LogUtils retrieveConfiguredLogger() {
+		String loggerType = System.getenv("logger.type");
+		if (loggerType == null || loggerType.equalsIgnoreCase("console")) {
+			return new LogUtils.ToConsole();
+		} else if (loggerType.equalsIgnoreCase("file")) {
+			return LogUtils.ToFile.getLogger("default-log.txt");
+		} else if (loggerType.equalsIgnoreCase("window")) {
+			return new LogUtils.ToWindow();
+		}
+		throw new IllegalArgumentException(loggerType + " is not a valid logger type");
+	}
 
 
 	public void debug(String... reports);
@@ -81,7 +88,7 @@ public interface LogUtils {
 		public final static Map<String, ToFile> INSTANCES = new ConcurrentHashMap<>();
 		private BufferedWriter writer;
 
-		public ToFile(String absolutePath) {
+		private ToFile(String absolutePath) {
 			try {
 				try (FileChannel outChan = new FileOutputStream(absolutePath, true).getChannel()) {
 				  //outChan.truncate(0);
@@ -198,7 +205,7 @@ public interface LogUtils {
 
 
 		private static class WindowHandler extends Handler {
-			private JTextArea textArea;
+			private javax.swing.JTextArea textArea;
 
 			private WindowHandler() {
 				//LogManager manager = LogManager.getLogManager();
@@ -206,14 +213,13 @@ public interface LogUtils {
 				//String level = manager.getProperty(className + ".level");
 				//setLevel(level != null ? Level.parse(level) : Level.ALL);
 				setLevel(Level.ALL);
-				if (textArea == null) {
-					JFrame window = new JFrame(Optional.ofNullable(System.getenv("lottery.application.name")).orElseGet(() -> "Event logger")) {
+				if (textArea == null) {						javax.swing.JFrame window = new javax.swing.JFrame(Optional.ofNullable(System.getenv("lottery.application.name")).orElseGet(() -> "Event logger")) {
 						private static final long serialVersionUID = 653831741693111851L;
 						{
 							setSize(800, 600);
 						}
 					};
-					textArea = new JTextArea() {
+					textArea = new javax.swing.JTextArea() {
 						private static final long serialVersionUID = -5669120951831828004L;
 
 						@Override
@@ -221,10 +227,9 @@ public interface LogUtils {
 							super.append(value);
 							window.validate();
 						};
-					};
-					DefaultCaret caret = (DefaultCaret)textArea.getCaret();
-					caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
-					window.add(new JScrollPane(textArea));
+					};					javax.swing.text.DefaultCaret caret = (javax.swing.text.DefaultCaret)textArea.getCaret();
+					caret.setUpdatePolicy(javax.swing.text.DefaultCaret.ALWAYS_UPDATE);
+					window.add(new javax.swing.JScrollPane(textArea));
 					window.setVisible(true);
 				}
 				//setFormatter(new SimpleFormatter());
