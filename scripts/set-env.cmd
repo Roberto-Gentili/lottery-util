@@ -7,6 +7,13 @@ set CURRENT_UNIT=%CURRENT_DIR:~0,2%
 set JAVA_HOME=%CURRENT_DIR%jdk\20.0.1
 set lottery-util.working-path=%CURRENT_DIR%..
 set classPath="%CURRENT_DIR%bin"
+set logger.type=window
+
+if [%logger.type%]==[window] (
+	set JAVA_COMMAND=javaw.exe
+) else (
+	set JAVA_COMMAND=java.exe
+)
 
 setLocal EnableDelayedExpansion
 set LIBS="
