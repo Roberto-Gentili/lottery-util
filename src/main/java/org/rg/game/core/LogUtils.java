@@ -299,9 +299,8 @@ public interface LogUtils {
 					Color secondColor = new Color(rGBColor.get(0), rGBColor.get(1), rGBColor.get(2));
 					textArea.setForeground(secondColor);
 					textArea.setFont(new Font(textArea.getFont().getName(), Font.BOLD, textArea.getFont().getSize() + 2));
+					textArea.setEditable(false);
 
-					window.getRootPane().putClientProperty("JRootPane.titleBarBackground", secondColor);
-					window.getRootPane().putClientProperty("JRootPane.titleBarForeground", firstColor);
 					JScrollPane scrollPane = new javax.swing.JScrollPane(textArea);
 
 					window.add(new javax.swing.JScrollPane(textArea));
