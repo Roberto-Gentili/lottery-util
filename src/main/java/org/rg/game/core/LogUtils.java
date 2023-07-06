@@ -257,10 +257,10 @@ public interface LogUtils {
 		private static class WindowHandler extends Handler {
 			private javax.swing.JTextArea textArea;
 			private final static int maxRowSize = Integer.valueOf(EnvironmentUtils.getVariable("logger.window.max-row-size", "10000"));
-			private final static String backgroundColor = EnvironmentUtils.getVariable("logger.window.background-color", "67,159,54,255");
-			private final static String textColor = EnvironmentUtils.getVariable("logger.window.text-color", "253,195,17,255");
-			private final static String barBackgroundColor = EnvironmentUtils.getVariable("logger.window.bar.background-color", "253,195,17,255");
-			private final static String barTextColor = EnvironmentUtils.getVariable("logger.window.bar.text-color", "67,159,54,255");
+			private final static String backgroundColor = EnvironmentUtils.getVariable("logger.window.background-color", "67,159,54");
+			private final static String textColor = EnvironmentUtils.getVariable("logger.window.text-color", "253,195,17");
+			private final static String barBackgroundColor = EnvironmentUtils.getVariable("logger.window.bar.background-color", "253,195,17");
+			private final static String barTextColor = EnvironmentUtils.getVariable("logger.window.bar.text-color", "67,159,54");
 
 			static {
 				com.formdev.flatlaf.FlatLightLaf.setup();
@@ -327,7 +327,13 @@ public interface LogUtils {
 				List<Integer> rGBColor =
 					Arrays.asList(colorAsString.split(",")).stream()
 					.map(Integer::valueOf).collect(Collectors.toList());
-				return new Color(rGBColor.get(0), rGBColor.get(1), rGBColor.get(2), rGBColor.get(3));
+				if (rGBColor.size() == 3) {
+					return new Color(rGBColor.get(0), rGBColor.get(1), rGBColor.get(2));
+				} else if (rGBColor.size() == 4) {
+					return new Color(rGBColor.get(0), rGBColor.get(1), rGBColor.get(2), rGBColor.get(3));
+				} else {
+					throw new IllegalArgumentException("Unvalid color " + colorAsString);
+				}
 			}
 
 			public static Logger attachNewWindowToLogger(String loggerName) {
