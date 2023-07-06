@@ -26,6 +26,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
+import javax.swing.plaf.basic.BasicScrollBarUI;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.SimpleAttributeSet;
@@ -265,6 +266,7 @@ public interface LogUtils {
 		    private final static SimpleAttributeSet infoTextStyle;
 		    private final static SimpleAttributeSet warnTextStyle;
 		    private final static SimpleAttributeSet errorTextStyle;
+		    private final static Map<String, Color> cachedColors;
 			private final static int maxNumberOfCharacters = Integer.valueOf(EnvironmentUtils.getVariable("logger.window.max-number-of-characters", "524288"));
 			private final static String backgroundColor = EnvironmentUtils.getVariable("logger.window.background-color", "67,159,54");
 			private final static String textColor = EnvironmentUtils.getVariable("logger.window.text-color", "253,195,17");
@@ -272,6 +274,7 @@ public interface LogUtils {
 			private final static String barTextColor = EnvironmentUtils.getVariable("logger.window.bar.text-color", "67,159,54");
 
 			static {
+				cachedColors = new ConcurrentHashMap<>();
 				com.formdev.flatlaf.FlatLightLaf.setup();
 				JFrame.setDefaultLookAndFeelDecorated(true);
 				debugTextStyle = new SimpleAttributeSet();
@@ -324,8 +327,22 @@ public interface LogUtils {
 					window.getRootPane().putClientProperty("JRootPane.titleBarForeground", stringToColor(WindowHandler.barTextColor));
 					window.getRootPane().putClientProperty("JRootPane.titleBarBackground", stringToColor(WindowHandler.barBackgroundColor));
 
-					scrollPane.getHorizontalScrollBar().setBackground(stringToColor(WindowHandler.barBackgroundColor));
-					scrollPane.getVerticalScrollBar().setBackground(stringToColor(WindowHandler.barBackgroundColor));
+					scrollPane.getHorizontalScrollBar().setBackground(stringToColor(WindowHandler.backgroundColor));
+					scrollPane.getVerticalScrollBar().setBackground(stringToColor(WindowHandler.backgroundColor));
+
+					scrollPane.getHorizontalScrollBar().setUI(new BasicScrollBarUI() {
+					    @Override
+					    protected void configureScrollBarColors() {
+					        this.thumbColor = stringToColor(WindowHandler.barBackgroundColor);
+					    }
+					});
+
+					scrollPane.getVerticalScrollBar().setUI(new BasicScrollBarUI() {
+					    @Override
+					    protected void configureScrollBarColors() {
+					        this.thumbColor = stringToColor(WindowHandler.barBackgroundColor);
+					    }
+					});
 
 					window.setVisible(true);
 					window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -333,16 +350,18 @@ public interface LogUtils {
 			}
 
 			protected Color stringToColor(String colorAsString) {
-				List<Integer> rGBColor =
-					Arrays.asList(colorAsString.split(",")).stream()
-					.map(Integer::valueOf).collect(Collectors.toList());
-				if (rGBColor.size() == 3) {
-					return new Color(rGBColor.get(0), rGBColor.get(1), rGBColor.get(2));
-				} else if (rGBColor.size() == 4) {
-					return new Color(rGBColor.get(0), rGBColor.get(1), rGBColor.get(2), rGBColor.get(3));
-				} else {
-					throw new IllegalArgumentException("Unvalid color " + colorAsString);
-				}
+				return cachedColors.computeIfAbsent(colorAsString, cAS -> {
+					List<Integer> rGBColor =
+						Arrays.asList(cAS.split(",")).stream()
+						.map(Integer::valueOf).collect(Collectors.toList());
+					if (rGBColor.size() == 3) {
+						return new Color(rGBColor.get(0), rGBColor.get(1), rGBColor.get(2));
+					} else if (rGBColor.size() == 4) {
+						return new Color(rGBColor.get(0), rGBColor.get(1), rGBColor.get(2), rGBColor.get(3));
+					} else {
+						throw new IllegalArgumentException("Unvalid color " + colorAsString);
+					}
+				});
 			}
 
 			public static Logger attachNewWindowToLogger(String loggerName) {
