@@ -1,5 +1,6 @@
 package org.rg.game.core;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
 import java.io.BufferedWriter;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 import javax.swing.text.AttributeSet;
@@ -264,7 +266,7 @@ public interface LogUtils {
 		    private final static SimpleAttributeSet infoTextStyle;
 		    private final static SimpleAttributeSet warnTextStyle;
 		    private final static SimpleAttributeSet errorTextStyle;
-			private final static int maxNumberOfCharacters = Integer.valueOf(EnvironmentUtils.getVariable("logger.window.max-number-of-characters", "268435456"));
+			private final static int maxNumberOfCharacters = Integer.valueOf(EnvironmentUtils.getVariable("logger.window.max-number-of-characters", "134217728"));
 			private final static String backgroundColor = EnvironmentUtils.getVariable("logger.window.background-color", "67,159,54");
 			private final static String textColor = EnvironmentUtils.getVariable("logger.window.text-color", "253,195,17");
 			private final static String barBackgroundColor = EnvironmentUtils.getVariable("logger.window.bar.background-color", "253,195,17");
@@ -316,7 +318,9 @@ public interface LogUtils {
 
 					textpane.setFont(new Font(textpane.getFont().getName(), Font.PLAIN, textpane.getFont().getSize() + 2));
 
-					JScrollPane scrollPane = new javax.swing.JScrollPane(textpane);
+					JPanel noWrapPanel = new JPanel(new BorderLayout());
+					noWrapPanel.add(textpane);
+					JScrollPane scrollPane = new javax.swing.JScrollPane(noWrapPanel);
 					window.add(scrollPane);
 					window.getRootPane().putClientProperty("JRootPane.titleBarForeground", stringToColor(WindowHandler.barTextColor));
 					window.getRootPane().putClientProperty("JRootPane.titleBarBackground", stringToColor(WindowHandler.barBackgroundColor));
