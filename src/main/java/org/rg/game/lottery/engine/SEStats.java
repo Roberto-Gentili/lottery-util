@@ -831,13 +831,13 @@ public class SEStats {
 					if (!dateCell.isEmpty()) {
 						Date extractionDate = dateFmt.parse(year + dateCell.iterator().next().textNodes().get(0).text());
 						if (extractionDate.compareTo(startDate) >= 0 && extractionDate.compareTo(endDate) <= 0) {
-							//System.out.print(defaultFmt.format(fmt.parse(year + dateCell.iterator().next().textNodes().get(0).text())) + "\t");
+							//LogUtils.INSTANCE.info(TimeUtils.defaultLocalDateFormat.format(TimeUtils.defaultLocalDateFormat.parse(year + dateCell.iterator().next().textNodes().get(0).text())) + "\t");
 							List<Integer> extractedCombo = new ArrayList<>();
 							for (Element number : tableRow.select("ul[class=balls]").first().children()) {
 								String numberAsString = number.text();
 								Integer extractedNumber = Integer.parseInt(numberAsString);
 								extractedCombo.add(extractedNumber);
-								//System.out.print(extractedNumber + "\t");
+								//LogUtils.INSTANCE.info(extractedNumber + "\t");
 							}
 							Collections.sort(extractedCombo);
 							allWinningCombos.put(extractionDate, extractedCombo);
