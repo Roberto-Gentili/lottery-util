@@ -1,5 +1,5 @@
 set logger.type=window
-set logger.window.max-number-of-characters=50331648
+set logger.window.max-number-of-characters=1048576
 call "%~dp0set-env.cmd"
 
 set working-path.simulations.folder=%CURRENT_DIR_NAME%\config\simulations
