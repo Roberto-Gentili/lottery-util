@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.channels.FileChannel;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.logging.Formatter;
@@ -18,6 +17,8 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 import javax.swing.JFrame;
+import javax.swing.JTextArea;
+import javax.swing.text.BadLocationException;
 
 import org.rg.game.lottery.engine.PersistentStorage;
 
@@ -248,6 +249,7 @@ public interface LogUtils {
 
 		private static class WindowHandler extends Handler {
 			private javax.swing.JTextArea textArea;
+			private final static int maxRowSize = Integer.valueOf(EnvironmentUtils.getVariable("logger.window.max-row-size", "10000"));
 
 			private WindowHandler() {
 				//LogManager manager = LogManager.getLogManager();
@@ -255,7 +257,7 @@ public interface LogUtils {
 				//String level = manager.getProperty(className + ".level");
 				//setLevel(level != null ? Level.parse(level) : Level.ALL);
 				setLevel(Level.ALL);
-				if (textArea == null) {						javax.swing.JFrame window = new javax.swing.JFrame(Optional.ofNullable(System.getenv("lottery.application.name")).orElseGet(() -> "Event logger")) {
+				if (textArea == null) {						javax.swing.JFrame window = new javax.swing.JFrame(EnvironmentUtils.getVariable("lottery.application.name", "Event logger")) {
 						private static final long serialVersionUID = 653831741693111851L;
 						{
 							setSize(800, 600);
@@ -267,6 +269,7 @@ public interface LogUtils {
 						@Override
 						public void append(String value) {
 							super.append(value);
+							trunkTextIfMaxRowSizeReached(textArea);
 							window.validate();
 						};
 					};					javax.swing.text.DefaultCaret caret = (javax.swing.text.DefaultCaret)textArea.getCaret();
@@ -290,6 +293,19 @@ public interface LogUtils {
 				Logger logger = Logger.getLogger(loggerName);
 				logger.addHandler(WindowHandler);
 				return logger;
+			}
+
+			public void trunkTextIfMaxRowSizeReached(JTextArea txtWin) {
+			    int numLinesToTrunk = txtWin.getLineCount() - maxRowSize;
+			    if(numLinesToTrunk > 0) {
+			        try {
+			            int posOfLastLineToTrunk = txtWin.getLineEndOffset(numLinesToTrunk - 1);
+			            txtWin.replaceRange("",0,posOfLastLineToTrunk);
+			        }
+			        catch (BadLocationException ex) {
+			            ex.printStackTrace();
+			        }
+			    }
 			}
 
 			@Override
