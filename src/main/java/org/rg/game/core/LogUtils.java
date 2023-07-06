@@ -266,7 +266,7 @@ public interface LogUtils {
 		    private final static SimpleAttributeSet infoTextStyle;
 		    private final static SimpleAttributeSet warnTextStyle;
 		    private final static SimpleAttributeSet errorTextStyle;
-			private final static int maxNumberOfCharacters = Integer.valueOf(EnvironmentUtils.getVariable("logger.window.max-number-of-characters", "134217728"));
+			private final static int maxNumberOfCharacters = Integer.valueOf(EnvironmentUtils.getVariable("logger.window.max-number-of-characters", "25165824"));
 			private final static String backgroundColor = EnvironmentUtils.getVariable("logger.window.background-color", "67,159,54");
 			private final static String textColor = EnvironmentUtils.getVariable("logger.window.text-color", "253,195,17");
 			private final static String barBackgroundColor = EnvironmentUtils.getVariable("logger.window.bar.background-color", "253,195,17");
