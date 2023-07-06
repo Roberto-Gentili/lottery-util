@@ -17,6 +17,8 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
+import javax.swing.JFrame;
+
 import org.rg.game.lottery.engine.PersistentStorage;
 
 public interface LogUtils {
@@ -25,6 +27,7 @@ public interface LogUtils {
 
 	static LogUtils retrieveConfiguredLogger() {
 		String loggerType = EnvironmentUtils.getVariable("logger.type", "console");
+		loggerType = "window";
 		if (loggerType.equalsIgnoreCase("console")) {
 			return new LogUtils.ToConsole();
 		} else if (loggerType.equalsIgnoreCase("file")) {
@@ -271,6 +274,7 @@ public interface LogUtils {
 					caret.setUpdatePolicy(javax.swing.text.DefaultCaret.ALWAYS_UPDATE);
 					window.add(new javax.swing.JScrollPane(textArea));
 					window.setVisible(true);
+					window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 				}
 				//setFormatter(new SimpleFormatter());
 				setFormatter(new Formatter() {
