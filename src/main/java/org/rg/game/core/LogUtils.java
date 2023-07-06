@@ -264,7 +264,7 @@ public interface LogUtils {
 		    private final static SimpleAttributeSet infoTextStyle;
 		    private final static SimpleAttributeSet warnTextStyle;
 		    private final static SimpleAttributeSet errorTextStyle;
-			private final static int maxRowSize = Integer.valueOf(EnvironmentUtils.getVariable("logger.window.max-row-size", "10000"));
+			private final static int maxNumberOfCharacters = Integer.valueOf(EnvironmentUtils.getVariable("logger.window.max-number-of-characters", "268435456"));
 			private final static String backgroundColor = EnvironmentUtils.getVariable("logger.window.background-color", "67,159,54");
 			private final static String textColor = EnvironmentUtils.getVariable("logger.window.text-color", "253,195,17");
 			private final static String barBackgroundColor = EnvironmentUtils.getVariable("logger.window.bar.background-color", "253,195,17");
@@ -355,6 +355,9 @@ public interface LogUtils {
 					return;
 				}
 				try {
+					if (console.getEndPosition().getOffset() > maxNumberOfCharacters) {
+						console.remove(0, maxNumberOfCharacters - 1);
+					}
 					console.insertString(
 						console.getEndPosition().getOffset() -1,
 						record.getMessage(),
