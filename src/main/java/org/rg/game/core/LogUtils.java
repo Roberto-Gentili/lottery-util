@@ -228,7 +228,7 @@ public interface LogUtils {
 				}
 			}
 			if (exc.getMessage() != null) {
-				logger.severe(exc.getMessage());
+				logger.severe(exc.getMessage() + "\n");
 			}
 			for (StackTraceElement stackTraceElement : exc.getStackTrace()) {
 				logger.severe("\t" + stackTraceElement.toString() + "\n");
