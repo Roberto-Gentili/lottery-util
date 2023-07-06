@@ -175,7 +175,7 @@ public class SELotterySimpleSimulator extends Shared {
 		try {
 			executor.apply("se", futures).stream().forEach(CompletableFuture::join);
 		} catch (Throwable exc) {
-			exc.printStackTrace();
+			LogUtils.INSTANCE.error(exc);
 			executeRecursive(executor, futures);
 		}
 	}

@@ -33,7 +33,7 @@ public class SEQualityChecker extends Shared {
 				}
 				LogUtils.INSTANCE.info("\t" + ((String)report.get("report.summary")).replace("\n", "\n\t"));
 			} catch (Throwable exc) {
-				exc.printStackTrace();
+				LogUtils.INSTANCE.error(exc);
 			}
 		}
 	}

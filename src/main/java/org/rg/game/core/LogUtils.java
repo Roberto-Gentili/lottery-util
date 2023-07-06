@@ -32,6 +32,10 @@ public class LogUtils {
 		log(System.err, reports);
 	}
 
+	public void error(Throwable exc, String... reports) {
+		LogUtils.INSTANCE.error(exc);
+	}
+
 	private void log(PrintStream stream, String... reports) {
 		if (reports == null || reports.length == 0) {
 			stream.println();

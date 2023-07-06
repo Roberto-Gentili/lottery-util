@@ -144,7 +144,7 @@ public class Verifier {
 				LogUtils.INSTANCE.info();
 			}
 		} catch (Throwable exc) {
-			exc.printStackTrace();
+			LogUtils.INSTANCE.error(exc);
 		}
 	}
 

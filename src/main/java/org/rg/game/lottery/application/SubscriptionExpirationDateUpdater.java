@@ -176,7 +176,7 @@ public class SubscriptionExpirationDateUpdater extends Shared {
 			String label = "Importo debito: ";
 			LogUtils.INSTANCE.info(label + rightAlignedString(MathUtils.INSTANCE.decimalFormat.format(total), displaySize - label.length()) + "€");
 		} catch (Throwable exc) {
-			exc.printStackTrace();
+			LogUtils.INSTANCE.error(exc);
 		}
 	}
 

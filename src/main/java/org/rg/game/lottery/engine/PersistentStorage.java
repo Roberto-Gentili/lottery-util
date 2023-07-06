@@ -47,7 +47,7 @@ public class PersistentStorage implements Storage {
 		try (FileChannel outChan = new FileOutputStream(absolutePath, true).getChannel()) {
 		  outChan.truncate(0);
 		} catch (IOException exc) {
-			//exc.printStackTrace();
+			//LogUtils.INSTANCE.error(exc);
 		}
 		try {
 			bufferedWriter = new BufferedWriter(new FileWriter(absolutePath, false));
@@ -308,8 +308,8 @@ public class PersistentStorage implements Storage {
 	        while ((line = br.readLine()) != null) {
 	           LogUtils.INSTANCE.info(line);
 	        }
-	    } catch (IOException e) {
-			e.printStackTrace();
+	    } catch (IOException exc) {
+	    	LogUtils.INSTANCE.error(exc);
 		}
 	 }
 
@@ -343,8 +343,8 @@ public class PersistentStorage implements Storage {
 		try {
 			isClosed = true;
 			bufferedWriter.close();
-		} catch (IOException e) {
-			e.printStackTrace();
+		} catch (IOException exc) {
+			LogUtils.INSTANCE.error(exc);
 		}
 	}
 

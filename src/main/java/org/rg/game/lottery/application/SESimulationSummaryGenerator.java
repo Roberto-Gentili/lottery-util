@@ -121,7 +121,7 @@ public class SESimulationSummaryGenerator extends Shared {
 			LogUtils.INSTANCE.info("\n\nSummary file succesfully generated");
 		} catch (Throwable exc) {
 			LogUtils.INSTANCE.error("\n\nUnable to generate summary file");
-			exc.printStackTrace();
+			LogUtils.INSTANCE.error(exc);
 		}
 	}
 

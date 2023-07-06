@@ -37,7 +37,7 @@ public class IOUtils {
 		try (FileChannel outChan = new FileOutputStream(absolutePath, true).getChannel()) {
 		  outChan.truncate(0);
 		} catch (IOException exc) {
-			//exc.printStackTrace();
+			//LogUtils.INSTANCE.error(exc);
 		}
 		try (FileWriter fileWriter = new FileWriter(absolutePath, false);) {
 			fileWriter.write(value);

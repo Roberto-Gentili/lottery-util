@@ -185,7 +185,7 @@ public class SEStats {
 					LogUtils.INSTANCE.info(dataStorer.getClass() + " stored no data");
 				}
 			} catch (Throwable exc) {
-				exc.printStackTrace();
+				LogUtils.INSTANCE.error(exc);
 				LogUtils.INSTANCE.info(dataStorer.getClass() + " in unable to store extractions data: " + exc.getMessage());
 			}
 		}

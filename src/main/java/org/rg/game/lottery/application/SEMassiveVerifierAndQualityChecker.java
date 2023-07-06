@@ -225,7 +225,7 @@ public class SEMassiveVerifierAndQualityChecker extends Shared {
 						workbook.write(destFileOutputStream);
 					}
 				} catch (Throwable exc) {
-					exc.printStackTrace();
+					LogUtils.INSTANCE.error(exc);
 				}
 			}
 		}
