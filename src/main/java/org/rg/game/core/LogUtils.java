@@ -35,7 +35,6 @@ public interface LogUtils {
 
 	static LogUtils retrieveConfiguredLogger() {
 		String loggerType = EnvironmentUtils.getVariable("logger.type", "console");
-		loggerType = "window";
 		if (loggerType.equalsIgnoreCase("console")) {
 			return new LogUtils.ToConsole();
 		} else if (loggerType.equalsIgnoreCase("file")) {
@@ -260,6 +259,8 @@ public interface LogUtils {
 			private final static int maxRowSize = Integer.valueOf(EnvironmentUtils.getVariable("logger.window.max-row-size", "10000"));
 			private final static String backgroundColor = EnvironmentUtils.getVariable("logger.window.background-color", "67,159,54");
 			private final static String textColor = EnvironmentUtils.getVariable("logger.window.text-color", "253,195,17");
+			private final static String barBackgroundColor = EnvironmentUtils.getVariable("logger.window.bar.background-color", "253,195,17");
+			private final static String barTextColor = EnvironmentUtils.getVariable("logger.window.bar.text-color", "67,159,54");
 
 			static {
 				com.formdev.flatlaf.FlatLightLaf.setup();
@@ -289,21 +290,36 @@ public interface LogUtils {
 						};
 					};					javax.swing.text.DefaultCaret caret = (javax.swing.text.DefaultCaret)textArea.getCaret();
 					caret.setUpdatePolicy(javax.swing.text.DefaultCaret.ALWAYS_UPDATE);
-					textArea.setBorder(BorderFactory.createCompoundBorder(
+					textArea.setBorder(
+						BorderFactory.createCompoundBorder(
 							textArea.getBorder(),
-					        BorderFactory.createEmptyBorder(10, 10, 10, 10)));
+							BorderFactory.createEmptyBorder(10, 10, 10, 10)
+						)
+					);
+
 					List<Integer> rGBColor = Arrays.asList(backgroundColor.split(",")).stream().map(Integer::valueOf).collect(Collectors.toList());
-					Color firstColor = new Color(rGBColor.get(0), rGBColor.get(1), rGBColor.get(2));
-					textArea.setBackground(firstColor);
+					Color backgroundColor = new Color(rGBColor.get(0), rGBColor.get(1), rGBColor.get(2));
+					textArea.setBackground(backgroundColor);
+
 					rGBColor = Arrays.asList(textColor.split(",")).stream().map(Integer::valueOf).collect(Collectors.toList());
-					Color secondColor = new Color(rGBColor.get(0), rGBColor.get(1), rGBColor.get(2));
-					textArea.setForeground(secondColor);
+					Color textColor = new Color(rGBColor.get(0), rGBColor.get(1), rGBColor.get(2));
+					textArea.setForeground(textColor);
 					textArea.setFont(new Font(textArea.getFont().getName(), Font.BOLD, textArea.getFont().getSize() + 2));
 					textArea.setEditable(false);
 
 					JScrollPane scrollPane = new javax.swing.JScrollPane(textArea);
+					window.add(scrollPane);
 
-					window.add(new javax.swing.JScrollPane(textArea));
+					rGBColor = Arrays.asList(barTextColor.split(",")).stream().map(Integer::valueOf).collect(Collectors.toList());
+					Color barTextColor = new Color(rGBColor.get(0), rGBColor.get(1), rGBColor.get(2));
+					window.getRootPane().putClientProperty("JRootPane.titleBarForeground", barTextColor);
+
+					rGBColor = Arrays.asList(barBackgroundColor.split(",")).stream().map(Integer::valueOf).collect(Collectors.toList());
+					Color barBackgroundColor = new Color(rGBColor.get(0), rGBColor.get(1), rGBColor.get(2));
+					window.getRootPane().putClientProperty("JRootPane.titleBarBackground", barBackgroundColor);
+					scrollPane.getHorizontalScrollBar().setBackground(barBackgroundColor);
+					scrollPane.getVerticalScrollBar().setBackground(barBackgroundColor);
+
 					window.setVisible(true);
 					window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 				}
