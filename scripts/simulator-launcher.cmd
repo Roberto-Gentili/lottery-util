@@ -14,9 +14,13 @@ if [%forceMaster%]==[true] (
 	set secondWindowTile=SE Lottery complex simulator ^(slave mode^)
 )
 
+set lottery.application.name=%firstWindowTile%
 start "%firstWindowTile%" /D "%~dp0" "%JAVA_HOME%\bin\%JAVA_COMMAND%" -Xmx%XMX% -cp %classPath%;%LIBS%;"%CURRENT_DIR%binaries.jar"; org.rg.game.lottery.application.SELotterySimpleSimulator
+set lottery.application.name=%secondWindowTile%
 start "%secondWindowTile%" /D "%~dp0" "%JAVA_HOME%\bin\%JAVA_COMMAND%" -Xmx%XMX% -cp %classPath%;%LIBS%;"%CURRENT_DIR%binaries.jar"; org.rg.game.lottery.application.SELotteryComplexSimulator
 
 ::I comandi sottostanti anzichè aprire più finestre eseguono tutto nella finestra corrente
+::set lottery.application.name=%firstWindowTile%
 ::start "%firstWindowTile%" /D "%~dp0" /b "%JAVA_HOME%\bin\%JAVA_COMMAND%" -Xmx%XMX% -cp %classPath%;%LIBS%;"%CURRENT_DIR%binaries.jar"; org.rg.game.lottery.application.SELotterySimpleSimulator
+::set lottery.application.name=%secondWindowTile%
 ::start "%secondWindowTile%" /D "%~dp0" /b "%JAVA_HOME%\bin\%JAVA_COMMAND%" -Xmx%XMX% -cp %classPath%;%LIBS%;"%CURRENT_DIR%binaries.jar"; org.rg.game.lottery.application.SELotteryComplexSimulator
