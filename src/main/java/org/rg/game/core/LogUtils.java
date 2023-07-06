@@ -27,7 +27,6 @@ public interface LogUtils {
 
 	static LogUtils retrieveConfiguredLogger() {
 		String loggerType = EnvironmentUtils.getVariable("logger.type", "console");
-		loggerType = "window";
 		if (loggerType.equalsIgnoreCase("console")) {
 			return new LogUtils.ToConsole();
 		} else if (loggerType.equalsIgnoreCase("file")) {
