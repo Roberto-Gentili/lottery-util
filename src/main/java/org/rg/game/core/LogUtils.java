@@ -12,41 +12,58 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.rg.game.lottery.engine.PersistentStorage;
 
-public class LogUtils {
-	public final static LogUtils INSTANCE = new LogUtils();
+public interface LogUtils {
+	public final static LogUtils INSTANCE = new LogUtils.ToConsole();
 
+	public void debug(String... reports);
 
-	public void debug(String... reports) {
-		log(System.out, reports);
-	}
+	public void info(String... reports);
 
-	public void info(String... reports) {
-		log(System.out, reports);
-	}
+	public void warn(String... reports);
 
-	public void warn(String... reports) {
-		log(System.err, reports);
-	}
+	public void error(String... reports);
 
-	public void error(String... reports) {
-		log(System.err, reports);
-	}
+	public void error(Throwable exc, String... reports);
 
-	public void error(Throwable exc, String... reports) {
-		LogUtils.INSTANCE.error(exc);
-	}
+	public static class ToConsole implements LogUtils {
 
-	private void log(PrintStream stream, String... reports) {
-		if (reports == null || reports.length == 0) {
-			stream.println();
-			return;
+		@Override
+		public void debug(String... reports) {
+			log(System.out, reports);
 		}
-		for (String report : reports) {
-			stream.println(report);
+
+		@Override
+		public void info(String... reports) {
+			log(System.out, reports);
+		}
+
+		@Override
+		public void warn(String... reports) {
+			log(System.err, reports);
+		}
+
+		@Override
+		public void error(String... reports) {
+			log(System.err, reports);
+		}
+
+		@Override
+		public void error(Throwable exc, String... reports) {
+			exc.printStackTrace();
+		}
+
+		private void log(PrintStream stream, String... reports) {
+			if (reports == null || reports.length == 0) {
+				stream.println();
+				return;
+			}
+			for (String report : reports) {
+				stream.println(report);
+			}
 		}
 	}
 
-	public static class ToFile extends LogUtils {
+	public static class ToFile extends LogUtils.ToConsole {
 		public final static Map<String, ToFile> INSTANCES = new ConcurrentHashMap<>();
 		private BufferedWriter writer;
 
