@@ -162,6 +162,7 @@ public class SELotterySimpleSimulator extends Shared {
 	public static void main(String[] args) throws IOException {
 		Collection<CompletableFuture<Void>> futures = new CopyOnWriteArrayList<>();
 		executeRecursive(SELotterySimpleSimulator::execute, futures);
+		LogUtils.INSTANCE.warn("All activities are finished");
 	}
 
 	protected static void executeRecursive(

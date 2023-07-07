@@ -69,6 +69,7 @@ class SEIntegralSystemAnalyzer extends Shared {
 			ConcurrentUtils.waitUntil(futures, ft -> ft.size() >= maxParallelTasks);
 		}
 		futures.forEach(CompletableFuture::join);
+		LogUtils.INSTANCE.warn("All activities are finished");
 	}
 
 	protected static void analyze(Properties config) {

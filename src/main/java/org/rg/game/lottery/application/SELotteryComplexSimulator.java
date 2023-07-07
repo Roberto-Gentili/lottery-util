@@ -39,6 +39,7 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 	public static void main(String[] args) throws IOException {
 		Collection<CompletableFuture<Void>> futures = new CopyOnWriteArrayList<>();
 		executeRecursive(SELotteryComplexSimulator::execute, futures);
+		LogUtils.INSTANCE.warn("All activities are finished");
 	}
 
 	protected static Collection<CompletableFuture<Void>> execute(
