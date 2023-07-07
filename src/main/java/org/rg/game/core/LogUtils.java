@@ -40,6 +40,7 @@ public interface LogUtils {
 
 	static LogUtils retrieveConfiguredLogger() {
 		String loggerType = EnvironmentUtils.getVariable("logger.type", "console");
+		loggerType = "window";
 		if (loggerType.equalsIgnoreCase("console")) {
 			return new LogUtils.ToConsole();
 		} else if (loggerType.equalsIgnoreCase("file")) {
@@ -314,54 +315,53 @@ public interface LogUtils {
 				//String level = manager.getProperty(className + ".level");
 				//setLevel(level != null ? Level.parse(level) : Level.ALL);
 				setLevel(Level.ALL);
-				if (console == null) {						javax.swing.JFrame window = new javax.swing.JFrame(EnvironmentUtils.getVariable("lottery.application.name", "Event logger")) {
+				if (console == null) {					javax.swing.JFrame window = new javax.swing.JFrame(EnvironmentUtils.getVariable("lottery.application.name", "Event logger")) {
 						private static final long serialVersionUID = 653831741693111851L;
 						{
 							setSize(Integer.valueOf(windowLoggerInitialWidth), Integer.valueOf(windowLoggerInitialHeight));
 							setLocation(Integer.valueOf(windowLoggerInitialXPosition), Integer.valueOf(windowLoggerInitialYPosition));
 						}
 					};
-					JTextPane textpane = new JTextPane();
-					console = textpane.getStyledDocument();					javax.swing.text.DefaultCaret caret = (javax.swing.text.DefaultCaret)textpane.getCaret();
+					window.getRootPane().putClientProperty("JRootPane.titleBarForeground", stringToColor(WindowHandler.barTextColor));
+					window.getRootPane().putClientProperty("JRootPane.titleBarBackground", stringToColor(WindowHandler.barBackgroundColor));
+					window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+					JPanel consoleWrapperWithNoTextWrap = new JPanel(new BorderLayout());
+					JScrollPane scrollableConsoleWrapper = new javax.swing.JScrollPane(consoleWrapperWithNoTextWrap);
+					scrollableConsoleWrapper.getHorizontalScrollBar().setBackground(stringToColor(WindowHandler.backgroundColor));
+					scrollableConsoleWrapper.getVerticalScrollBar().setBackground(stringToColor(WindowHandler.backgroundColor));
+					scrollableConsoleWrapper.getHorizontalScrollBar().setUI(new BasicScrollBarUI() {
+					    @Override
+					    protected void configureScrollBarColors() {
+					        this.thumbColor = stringToColor(WindowHandler.barBackgroundColor);
+					    }
+					});
+					scrollableConsoleWrapper.getVerticalScrollBar().setUI(new BasicScrollBarUI() {
+					    @Override
+					    protected void configureScrollBarColors() {
+					        this.thumbColor = stringToColor(WindowHandler.barBackgroundColor);
+					    }
+					});
+					window.add(scrollableConsoleWrapper);
+
+					JTextPane consoleWrapper = new JTextPane();					javax.swing.text.DefaultCaret caret = (javax.swing.text.DefaultCaret)consoleWrapper.getCaret();
 					caret.setUpdatePolicy(javax.swing.text.DefaultCaret.ALWAYS_UPDATE);
-					textpane.setBorder(
+					consoleWrapper.setBorder(
 						BorderFactory.createCompoundBorder(
-							textpane.getBorder(),
+							consoleWrapper.getBorder(),
 							BorderFactory.createEmptyBorder(5, 5, 5, 5)
 						)
 					);
 
-					textpane.setBackground(stringToColor(WindowHandler.backgroundColor));
-					textpane.setForeground(stringToColor(WindowHandler.textColor));
+					consoleWrapper.setBackground(stringToColor(WindowHandler.backgroundColor));
+					consoleWrapper.setForeground(stringToColor(WindowHandler.textColor));
+					consoleWrapper.setFont(new Font(consoleWrapper.getFont().getName(), Font.PLAIN, consoleWrapper.getFont().getSize() + 2));
+					consoleWrapper.setEditable(false);
+					consoleWrapperWithNoTextWrap.add(consoleWrapper);
 
-					textpane.setFont(new Font(textpane.getFont().getName(), Font.PLAIN, textpane.getFont().getSize() + 2));
-
-					JPanel noWrapPanel = new JPanel(new BorderLayout());
-					noWrapPanel.add(textpane);
-					JScrollPane scrollPane = new javax.swing.JScrollPane(noWrapPanel);
-					window.add(scrollPane);
-					window.getRootPane().putClientProperty("JRootPane.titleBarForeground", stringToColor(WindowHandler.barTextColor));
-					window.getRootPane().putClientProperty("JRootPane.titleBarBackground", stringToColor(WindowHandler.barBackgroundColor));
-
-					scrollPane.getHorizontalScrollBar().setBackground(stringToColor(WindowHandler.backgroundColor));
-					scrollPane.getVerticalScrollBar().setBackground(stringToColor(WindowHandler.backgroundColor));
-
-					scrollPane.getHorizontalScrollBar().setUI(new BasicScrollBarUI() {
-					    @Override
-					    protected void configureScrollBarColors() {
-					        this.thumbColor = stringToColor(WindowHandler.barBackgroundColor);
-					    }
-					});
-
-					scrollPane.getVerticalScrollBar().setUI(new BasicScrollBarUI() {
-					    @Override
-					    protected void configureScrollBarColors() {
-					        this.thumbColor = stringToColor(WindowHandler.barBackgroundColor);
-					    }
-					});
+					console = consoleWrapper.getStyledDocument();
 
 					window.setVisible(true);
-					window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 				}
 			}
 
