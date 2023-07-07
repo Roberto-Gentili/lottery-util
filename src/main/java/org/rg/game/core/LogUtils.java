@@ -268,6 +268,10 @@ public interface LogUtils {
 		    private final static SimpleAttributeSet errorTextStyle;
 		    private final static Map<String, Color> cachedColors;
 			private final static int maxNumberOfCharacters = Integer.valueOf(EnvironmentUtils.getVariable("logger.window.max-number-of-characters", "524288"));
+			private final static String windowLoggerInitialWidth = EnvironmentUtils.getVariable("logger.window.initial-width", "800");
+			private final static String windowLoggerInitialHeight = EnvironmentUtils.getVariable("logger.window.initial-height", "600");
+			private final static String windowLoggerInitialXPosition = EnvironmentUtils.getVariable("logger.window.initial-x-position", "100");
+			private final static String windowLoggerInitialYPosition = EnvironmentUtils.getVariable("logger.window.initial-y-position", "100");
 			private final static String backgroundColor = EnvironmentUtils.getVariable("logger.window.background-color", "67,159,54");
 			private final static String textColor = EnvironmentUtils.getVariable("logger.window.text-color", "253,195,17");
 			private final static String barBackgroundColor = EnvironmentUtils.getVariable("logger.window.bar.background-color", "253,195,17");
@@ -302,7 +306,8 @@ public interface LogUtils {
 				if (console == null) {						javax.swing.JFrame window = new javax.swing.JFrame(EnvironmentUtils.getVariable("lottery.application.name", "Event logger")) {
 						private static final long serialVersionUID = 653831741693111851L;
 						{
-							setSize(1024, 768);
+							setSize(Integer.valueOf(windowLoggerInitialWidth), Integer.valueOf(windowLoggerInitialHeight));
+							setLocation(Integer.valueOf(windowLoggerInitialXPosition), Integer.valueOf(windowLoggerInitialYPosition));
 						}
 					};
 					JTextPane textpane = new JTextPane();
