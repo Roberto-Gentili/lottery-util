@@ -46,7 +46,9 @@ public interface LogUtils {
 		} else if (loggerType.equalsIgnoreCase("file")) {
 			return LogUtils.ToFile.getLogger("default-log.txt");
 		} else if (loggerType.equalsIgnoreCase("window")) {
-			return new LogUtils.ToWindow();
+			return new LogUtils.ToWindow(
+				EnvironmentUtils.getVariable("logger.window.attached-to", null)
+			);
 		}
 		throw new IllegalArgumentException(loggerType + " is not a valid logger type");
 	}
@@ -206,46 +208,56 @@ public interface LogUtils {
 	}
 
 	public static class ToWindow implements LogUtils {
-		private Logger logger;
+		private Consumer<String> debugLogger;
+		private Consumer<String> infoLogger;
+		private Consumer<String> warnLogger;
+		private Consumer<String> errorLogger;
 
-		ToWindow() {
-			logger = WindowHandler.attachNewWindowToLogger("logging.handler");
+		ToWindow(String loggerName) {
+			List<Consumer<String>> loggers =
+				loggerName != null?
+					WindowHandler.attachNewWindowToLogger(loggerName):
+					WindowHandler.newWindow();
+			debugLogger = loggers.get(0);
+			infoLogger = loggers.get(1);
+			warnLogger = loggers.get(2);
+			errorLogger = loggers.get(3);
 		}
 
 		@Override
 		public void debug(String... reports) {
-			log(logger::fine, reports);
+			log(debugLogger, reports);
 		}
 
 		@Override
 		public void info(String... reports) {
-			log(logger::info, reports);
+			log(infoLogger, reports);
 		}
 
 		@Override
 		public void warn(String... reports) {
-			log(logger::warning, reports);
+			log(warnLogger, reports);
 		}
 
 		@Override
 		public void error(String... reports) {
-			log(logger::severe, reports);
+			log(errorLogger, reports);
 		}
 
 		@Override
 		public void error(Throwable exc, String... reports) {
 			if (reports == null || reports.length == 0) {
-				logger.severe("\n");
+				errorLogger.accept("\n");
 			} else {
 				for (String report : reports) {
-					logger.severe(report + "\n");
+					errorLogger.accept(report + "\n");
 				}
 			}
 			if (exc.getMessage() != null) {
-				logger.severe(exc.getMessage() + "\n");
+				errorLogger.accept(exc.getMessage() + "\n");
 			}
 			for (StackTraceElement stackTraceElement : exc.getStackTrace()) {
-				logger.severe("\t" + stackTraceElement.toString() + "\n");
+				errorLogger.accept("\t" + stackTraceElement.toString() + "\n");
 			}
 		}
 
@@ -369,11 +381,30 @@ public interface LogUtils {
 				});
 			}
 
-			public static Logger attachNewWindowToLogger(String loggerName) {
+			public static List<Consumer<String>> attachNewWindowToLogger(String loggerName) {
 				WindowHandler WindowHandler = new WindowHandler();
 				Logger logger = Logger.getLogger(loggerName);
 				logger.addHandler(WindowHandler);
-				return logger;
+				return Arrays.asList(
+					logger::fine,
+					logger::info,
+					logger::warning,
+					logger::severe
+				);
+			}
+
+			public static List<Consumer<String>> newWindow() {
+				WindowHandler WindowHandler = new WindowHandler();
+				return Arrays.asList(
+					message ->
+						WindowHandler.publish(new LogRecord(Level.FINE, message)),
+					message ->
+						WindowHandler.publish(new LogRecord(Level.INFO, message)),
+					message ->
+						WindowHandler.publish(new LogRecord(Level.WARNING, message)),
+					message ->
+						WindowHandler.publish(new LogRecord(Level.SEVERE, message))
+				);
 			}
 
 			@Override
