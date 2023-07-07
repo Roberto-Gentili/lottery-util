@@ -36,7 +36,6 @@ import javax.swing.text.StyledDocument;
 import org.rg.game.lottery.engine.PersistentStorage;
 
 public interface LogUtils {
-	//public final static LogUtils INSTANCE = new LogUtils.ToConsole();
 	public final static LogUtils INSTANCE = retrieveConfiguredLogger();
 
 	static LogUtils retrieveConfiguredLogger() {
