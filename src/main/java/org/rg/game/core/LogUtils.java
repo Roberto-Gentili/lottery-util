@@ -268,8 +268,8 @@ public interface LogUtils {
 		    private final static SimpleAttributeSet errorTextStyle;
 		    private final static Map<String, Color> cachedColors;
 			private final static int maxNumberOfCharacters = Integer.valueOf(EnvironmentUtils.getVariable("logger.window.max-number-of-characters", "524288"));
-			private final static String windowLoggerInitialWidth = EnvironmentUtils.getVariable("logger.window.initial-width", "800");
-			private final static String windowLoggerInitialHeight = EnvironmentUtils.getVariable("logger.window.initial-height", "600");
+			private final static String windowLoggerInitialWidth = EnvironmentUtils.getVariable("logger.window.initial-width", "1280");
+			private final static String windowLoggerInitialHeight = EnvironmentUtils.getVariable("logger.window.initial-height", "720");
 			private final static String windowLoggerInitialXPosition = EnvironmentUtils.getVariable("logger.window.initial-x-position", "60");
 			private final static String windowLoggerInitialYPosition = EnvironmentUtils.getVariable("logger.window.initial-y-position", "60");
 			private final static String backgroundColor = EnvironmentUtils.getVariable("logger.window.background-color", "67,159,54");
