@@ -10,6 +10,7 @@ set classPath="%CURRENT_DIR%bin"
 
 if [%logger.type%]==[window] (
 	set JAVA_COMMAND=javaw.exe
+	set logger.window.max-number-of-characters=1048576
 ) else (
 	set JAVA_COMMAND=java.exe
 )
