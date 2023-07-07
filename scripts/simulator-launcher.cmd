@@ -20,10 +20,14 @@ if [%forceMaster%]==[true] (
 set lottery.application.name=%firstWindowTile%
 start "%firstWindowTile%" /D "%~dp0" "%JAVA_HOME%\bin\%JAVA_COMMAND%" -Xmx%XMX% -cp %classPath%;%LIBS%;"%CURRENT_DIR%binaries.jar"; org.rg.game.lottery.application.SELotterySimpleSimulator
 set lottery.application.name=%secondWindowTile%
+set logger.window.initial-x-position=120
+set logger.window.initial-y-position=120
 start "%secondWindowTile%" /D "%~dp0" "%JAVA_HOME%\bin\%JAVA_COMMAND%" -Xmx%XMX% -cp %classPath%;%LIBS%;"%CURRENT_DIR%binaries.jar"; org.rg.game.lottery.application.SELotteryComplexSimulator
 
 ::I comandi sottostanti anzichè aprire più finestre eseguono tutto nella finestra corrente
 ::set lottery.application.name=%firstWindowTile%
 ::start "%firstWindowTile%" /D "%~dp0" /b "%JAVA_HOME%\bin\%JAVA_COMMAND%" -Xmx%XMX% -cp %classPath%;%LIBS%;"%CURRENT_DIR%binaries.jar"; org.rg.game.lottery.application.SELotterySimpleSimulator
 ::set lottery.application.name=%secondWindowTile%
+::set logger.window.initial-x-position=120
+::set logger.window.initial-y-position=120
 ::start "%secondWindowTile%" /D "%~dp0" /b "%JAVA_HOME%\bin\%JAVA_COMMAND%" -Xmx%XMX% -cp %classPath%;%LIBS%;"%CURRENT_DIR%binaries.jar"; org.rg.game.lottery.application.SELotteryComplexSimulator
