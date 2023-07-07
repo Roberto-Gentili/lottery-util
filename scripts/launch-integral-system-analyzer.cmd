@@ -1,6 +1,6 @@
 @echo off
 
-set logger.type=console
+set logger.type=window
 call "%~dp0set-env.cmd"
 
 set working-path.integral-system-analysis.folder=Software\config\integralSystemsAnalysis
