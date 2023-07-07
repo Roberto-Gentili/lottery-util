@@ -40,7 +40,6 @@ public interface LogUtils {
 
 	static LogUtils retrieveConfiguredLogger() {
 		String loggerType = EnvironmentUtils.getVariable("logger.type", "console");
-		loggerType = "window";
 		if (loggerType.equalsIgnoreCase("console")) {
 			return new LogUtils.ToConsole();
 		} else if (loggerType.equalsIgnoreCase("file")) {
@@ -330,6 +329,9 @@ public interface LogUtils {
 					JScrollPane scrollableConsoleWrapper = new javax.swing.JScrollPane(consoleWrapperWithNoTextWrap);
 					scrollableConsoleWrapper.getHorizontalScrollBar().setBackground(stringToColor(WindowHandler.backgroundColor));
 					scrollableConsoleWrapper.getVerticalScrollBar().setBackground(stringToColor(WindowHandler.backgroundColor));
+					int scrollBarIncrementStep = 8;
+					scrollableConsoleWrapper.getVerticalScrollBar().setUnitIncrement(scrollBarIncrementStep);
+					scrollableConsoleWrapper.getHorizontalScrollBar().setUnitIncrement(scrollBarIncrementStep);
 					scrollableConsoleWrapper.getHorizontalScrollBar().setUI(new BasicScrollBarUI() {
 					    @Override
 					    protected void configureScrollBarColors() {
@@ -343,7 +345,6 @@ public interface LogUtils {
 					    }
 					});
 					window.add(scrollableConsoleWrapper);
-
 					JTextPane consoleWrapper = new JTextPane();					javax.swing.text.DefaultCaret caret = (javax.swing.text.DefaultCaret)consoleWrapper.getCaret();
 					caret.setUpdatePolicy(javax.swing.text.DefaultCaret.ALWAYS_UPDATE);
 					consoleWrapper.setBorder(
