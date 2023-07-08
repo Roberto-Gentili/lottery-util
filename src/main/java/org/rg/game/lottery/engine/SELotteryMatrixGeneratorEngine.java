@@ -2,7 +2,6 @@ package org.rg.game.lottery.engine;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -87,9 +86,8 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 			if (comparisonResult == 0) {
 				return startDate;
 			}
-			while (!(startDate.getDayOfWeek().getValue() == DayOfWeek.SATURDAY.getValue() ||
-				startDate.getDayOfWeek().getValue() == DayOfWeek.TUESDAY.getValue() ||
-				startDate.getDayOfWeek().getValue() == DayOfWeek.THURSDAY.getValue())) {
+
+			while (!SEStats.EXTRACTION_DAYS.contains(startDate.getDayOfWeek())) {
 				startDate = startDate.plus(1, ChronoUnit.DAYS);
 			}
 		} else {
@@ -117,12 +115,12 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 				}
 			}
 		}
-		return startDate.getDayOfWeek().getValue() == DayOfWeek.SATURDAY.getValue() ? 3 : 2;
+		return SEStats.computeDaysToNextExtractionDate(startDate);
 	}
 
 	@Override
 	protected List<LocalDate> forWeekOf(LocalDate dayOfWeek) {
-		LocalDate nextWeekStart = dayOfWeek.with(DayOfWeek.TUESDAY);
+		LocalDate nextWeekStart = dayOfWeek.with(SEStats.EXTRACTION_DAYS.get(0));
 		List<LocalDate> dates = new ArrayList<>();
 		dates.add(nextWeekStart);
 		dates.add(nextWeekStart.plus(getIncrementDays(nextWeekStart), ChronoUnit.DAYS));

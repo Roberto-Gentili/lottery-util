@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -30,6 +29,7 @@ import org.rg.game.core.LogUtils;
 import org.rg.game.core.MathUtils;
 import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.PersistentStorage;
+import org.rg.game.lottery.engine.SEStats;
 
 public class SubscriptionExpirationDateUpdater extends Shared {
 	static DateTimeFormatter datePattern = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
@@ -122,11 +122,11 @@ public class SubscriptionExpirationDateUpdater extends Shared {
 								}
 								if (updateInfo.getValue() > 0) {
 									for (int i = 0; i < updateInfo.getValue(); i++) {
-										expiryLocalDate = expiryLocalDate.plus(getIncrementDays(expiryLocalDate, true), ChronoUnit.DAYS);
+										expiryLocalDate = expiryLocalDate.plus(SEStats.computeDaysToNextExtractionDate(expiryLocalDate), ChronoUnit.DAYS);
 									}
 								} else {
 									for (int i = updateInfo.getValue(); i < 0; i++) {
-										expiryLocalDate = expiryLocalDate.minus(getIncrementDays(expiryLocalDate, false), ChronoUnit.DAYS);
+										expiryLocalDate = expiryLocalDate.plus(SEStats.computeDaysFromPreviousExtractionDate(expiryLocalDate), ChronoUnit.DAYS);
 									}
 								}
 								boolean expireSoon = expiryLocalDate.minus(7, ChronoUnit.DAYS).compareTo(LocalDate.now()) <= 0;
@@ -163,7 +163,7 @@ public class SubscriptionExpirationDateUpdater extends Shared {
 					LocalDate today = LocalDate.now();
 					if (today.compareTo(expiryLocalDate) <= 0) {
 						int extractionDateCounter = 0;
-						while ((today = today.plus(getIncrementDays(today, true), ChronoUnit.DAYS)).compareTo(expiryLocalDate) <= 0) {
+						while ((today = today.plus(SEStats.computeDaysToNextExtractionDate(today), ChronoUnit.DAYS)).compareTo(expiryLocalDate) <= 0) {
 							extractionDateCounter++;
 						}
 						String label = name + " " + extractionDateCounter + " estrazioni rimaste. Importo credito: ";
@@ -214,20 +214,4 @@ public class SubscriptionExpirationDateUpdater extends Shared {
 	static Integer computeIncrementation(int days, int weeks) {
 		return days + (weeks * 3);
 	}
-
-	private static int getIncrementDays(LocalDate startDate, boolean positive) {
-		int dayOfWeek = startDate.getDayOfWeek().getValue();
-		return positive?
-			(dayOfWeek == DayOfWeek.SATURDAY.getValue() ? 3 :
-				(dayOfWeek == DayOfWeek.TUESDAY.getValue() ||
-				dayOfWeek == DayOfWeek.THURSDAY.getValue() ||
-				dayOfWeek == DayOfWeek.SUNDAY.getValue()) ?
-					2 : 1) :
-			(dayOfWeek == DayOfWeek.TUESDAY.getValue() ? 3 :
-				(dayOfWeek == DayOfWeek.MONDAY.getValue() ||
-				dayOfWeek == DayOfWeek.THURSDAY.getValue() ||
-				dayOfWeek == DayOfWeek.SATURDAY.getValue()) ?
-					2 : 1);
-	}
-
 }

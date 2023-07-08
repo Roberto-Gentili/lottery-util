@@ -70,11 +70,19 @@ public class SEStats {
 	public static final Date FIRST_EXTRACTION_DATE_WITH_NEW_MACHINE = TimeUtils.toDate(FIRST_EXTRACTION_LOCAL_DATE_WITH_NEW_MACHINE);
 
 	private static boolean forceLoadingFromExcel;
+
+	public final static List<DayOfWeek> EXTRACTION_DAYS;
+
 	static {
 		SEStats.forceLoadingFromExcel =
 				Boolean.parseBoolean(System.getenv().getOrDefault("se-stats.force-loading-from-excel", "false"));
 		CACHE = new LinkedHashMap<>();
 		CACHE_MAX_SIZE = Optional.ofNullable(System.getenv("se-stats.cache.max-size")).map(Integer::parseInt).orElseGet(() -> 100);
+		EXTRACTION_DAYS = Arrays.asList(
+			DayOfWeek.TUESDAY,
+			DayOfWeek.THURSDAY,
+			DayOfWeek.SATURDAY
+		);
 	}
 
 	private boolean global;
@@ -1216,26 +1224,86 @@ public class SEStats {
 		if (counter > 0) {
 			return new AbstractMap.SimpleEntry<>(seedStartDate, size - counter);
 		} else {
+			if (seedStartDate == null) {
+				SEStats sEStats = SEStats.get(
+					TimeUtils.getDefaultDateFormat().format(this.startDate),
+					TimeUtils.getDefaultDateFormat().format(new Date())
+				);
+				if (!sEStats.allWinningCombos.isEmpty()) {
+					return sEStats.getSeedData(extractionDate);
+				} else {
+					seedStartDate = TimeUtils.toLocalDate(this.startDate);
+				}
+			}
 			counter = size;
 			while (seedStartDate.compareTo(extractionDate) < 0) {
-				seedStartDate = seedStartDate.plus(getIncrementDays(seedStartDate), ChronoUnit.DAYS);
+				seedStartDate = seedStartDate.plus(computeDaysToNextExtractionDateConsideringNotFoundAsModified(seedStartDate), ChronoUnit.DAYS);
 				counter++;
 			}
 		}
 		return new AbstractMap.SimpleEntry<>(seedStartDate, counter);
 	}
 
-	protected int getIncrementDays(LocalDate startDate) {
-		if (startDate.getDayOfWeek().getValue() == DayOfWeek.MONDAY.getValue() ||
-			startDate.getDayOfWeek().getValue() == DayOfWeek.WEDNESDAY.getValue()
-		) {
+	protected int computeDaysToNextExtractionDateConsideringNotFoundAsModified(LocalDate startDate) {
+		DayOfWeek currentDayOfWeek = startDate.getDayOfWeek();
+		List<DayOfWeek> extractionDates = EXTRACTION_DAYS;
+		if (!extractionDates.contains(currentDayOfWeek)) {
 			LogUtils.INSTANCE.info("Attenzione: il concorso eseguito in data " + TimeUtils.defaultLocalDateWithDayNameFormat.format(startDate) + " risulta essere anticipato");
-			return 3;
-		} else if (startDate.getDayOfWeek().getValue() == DayOfWeek.FRIDAY.getValue()) {
-			LogUtils.INSTANCE.info("Attenzione: il concorso eseguito in data " + TimeUtils.defaultLocalDateWithDayNameFormat.format(startDate) + " risulta essere anticipato");
-			return 4;
+			extractionDates = new ArrayList<>(EXTRACTION_DAYS);
+			DayOfWeek nextExctractionDay = null;
+			for (DayOfWeek extractionDay : extractionDates) {
+				if (currentDayOfWeek.compareTo(extractionDay) < 0) {
+					nextExctractionDay = extractionDay;
+					break;
+				}
+			}
+			if (nextExctractionDay != null) {
+				extractionDates.set(extractionDates.indexOf(nextExctractionDay), currentDayOfWeek);
+			}
 		}
-		return startDate.getDayOfWeek().getValue() == DayOfWeek.SATURDAY.getValue() ? 3 : 2;
+		return computeDaysToNextExtractionDate(startDate, extractionDates);
+	}
+
+
+	public static int computeDaysToNextExtractionDate(LocalDate startDate) {
+		return computeDaysToNextExtractionDate(startDate, EXTRACTION_DAYS);
+	}
+
+	private static int computeDaysToNextExtractionDate(LocalDate startDate, List<DayOfWeek> extractionDates) {
+		DayOfWeek currentDayOfWeek = startDate.getDayOfWeek();
+		DayOfWeek nextExctractionDay = null;
+		for (DayOfWeek extractionDay : extractionDates) {
+			if (currentDayOfWeek.compareTo(extractionDay) < 0) {
+				nextExctractionDay = extractionDay;
+				break;
+			}
+		}
+		if (nextExctractionDay != null) {
+			return nextExctractionDay.ordinal() - currentDayOfWeek.ordinal();
+		} else {
+			return (DayOfWeek.SUNDAY.ordinal() - currentDayOfWeek.ordinal()) + extractionDates.get(0).getValue();
+		}
+	}
+
+	public static int computeDaysFromPreviousExtractionDate(LocalDate startDate) {
+		return computeDaysFromPreviousExtractionDate(startDate, EXTRACTION_DAYS);
+	}
+
+	private static int computeDaysFromPreviousExtractionDate(LocalDate startDate, List<DayOfWeek> extractionDates) {
+		DayOfWeek currentDayOfWeek = startDate.getDayOfWeek();
+		DayOfWeek previousExctractionDay = null;
+		for (int i = extractionDates.size() - 1; i >= 0; i--) {
+			DayOfWeek extractionDay = extractionDates.get(i);
+			if (currentDayOfWeek.compareTo(extractionDay) > 0) {
+				previousExctractionDay = extractionDay;
+				break;
+			}
+		}
+		if (previousExctractionDay != null) {
+			return previousExctractionDay.ordinal() - currentDayOfWeek.ordinal();
+		} else {
+			return (currentDayOfWeek.getValue() + (DayOfWeek.SUNDAY.ordinal() - extractionDates.get(extractionDates.size()-1).ordinal())) * -1;
+		}
 	}
 
 }

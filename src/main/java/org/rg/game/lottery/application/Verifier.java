@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -34,6 +33,7 @@ import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.ComboHandler;
 import org.rg.game.lottery.engine.Premium;
 import org.rg.game.lottery.engine.SEComboHandler;
+import org.rg.game.lottery.engine.SEStats;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -66,9 +66,7 @@ public class Verifier {
 		if (extractionDate == null) {
 			LocalDate startDate = LocalDate.now();
 			if (competionName.equals("Superenalotto")) {
-				while (!(startDate.getDayOfWeek().getValue() == DayOfWeek.SATURDAY.getValue() ||
-					startDate.getDayOfWeek().getValue() == DayOfWeek.TUESDAY.getValue() ||
-					startDate.getDayOfWeek().getValue() == DayOfWeek.THURSDAY.getValue())) {
+				while (!SEStats.EXTRACTION_DAYS.contains(startDate.getDayOfWeek())) {
 					startDate = startDate.minus(1, ChronoUnit.DAYS);
 				}
 			} else if (competionName.equals("Million Day")) {
