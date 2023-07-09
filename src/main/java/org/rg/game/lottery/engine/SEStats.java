@@ -1245,7 +1245,7 @@ public class SEStats {
 		return new AbstractMap.SimpleEntry<>(seedStartDate, counter);
 	}
 
-	protected int computeDaysToNextExtractionDateConsideringNotFoundAsModified(LocalDate startDate) {
+	public static int computeDaysToNextExtractionDateConsideringNotFoundAsModified(LocalDate startDate) {
 		DayOfWeek currentDayOfWeek = startDate.getDayOfWeek();
 		List<DayOfWeek> extractionDates = EXTRACTION_DAYS;
 		if (!extractionDates.contains(currentDayOfWeek)) {
