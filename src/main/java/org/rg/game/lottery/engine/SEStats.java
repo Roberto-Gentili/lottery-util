@@ -1234,8 +1234,9 @@ public class SEStats {
 				} else {
 					seedStartDate = TimeUtils.toLocalDate(this.startDate);
 				}
+			} else {
+				counter = size;
 			}
-			counter = size;
 			while (seedStartDate.compareTo(extractionDate) < 0) {
 				seedStartDate = seedStartDate.plus(computeDaysToNextExtractionDateConsideringNotFoundAsModified(seedStartDate), ChronoUnit.DAYS);
 				counter++;
