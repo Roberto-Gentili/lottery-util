@@ -107,6 +107,12 @@ public class SELotterySimpleSimulator extends Shared {
 	static final String FILE_LABEL = "File";
 	static final String HISTORICAL_UPDATE_DATE_LABEL = "Data agg. storico";
 
+	static final int[] COLUMN_SIZE = {
+		3000,
+		3800,
+		24000
+	};
+
 	static final List<String> reportHeaderLabels;
 	static final List<String> summaryFormulas;
 	static final Map<String, Integer> cellIndexesCache;
@@ -1214,18 +1220,18 @@ public class SELotterySimpleSimulator extends Shared {
 			convertNumToColString(reportHeaderLabels.indexOf(HISTORICAL_BALANCE_LABEL)) + getMaxRowIndexInExcelFormat() +
 			")/" + convertNumToColString(reportHeaderLabels.indexOf(HISTORICAL_COST_LABEL)) + getHeaderSize() + "),\"###,00%\")"
 		);
-		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, EXTRACTION_DATE_LABEL), 3800);
-		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, COST_LABEL), 3000);
-		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, RETURN_LABEL), 3000);
-		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, BALANCE_LABEL), 3000);
-		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL), 3000);
-		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_RETURN_LABEL), 3000);
-		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_BALANCE_LABEL), 3000);
-		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, HISTORICAL_COST_LABEL), 3000);
-		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, HISTORICAL_RETURN_LABEL), 3000);
-		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, HISTORICAL_BALANCE_LABEL), 3000);
-		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, HISTORICAL_UPDATE_DATE_LABEL), 3800);
-		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, FILE_LABEL), 12000);
+		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, EXTRACTION_DATE_LABEL), COLUMN_SIZE[1]);
+		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, COST_LABEL), COLUMN_SIZE[0]);
+		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, RETURN_LABEL), COLUMN_SIZE[0]);
+		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, BALANCE_LABEL), COLUMN_SIZE[0]);
+		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL), COLUMN_SIZE[0]);
+		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_RETURN_LABEL), COLUMN_SIZE[0]);
+		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, FOLLOWING_PROGRESSIVE_HISTORICAL_BALANCE_LABEL), COLUMN_SIZE[0]);
+		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, HISTORICAL_COST_LABEL), COLUMN_SIZE[0]);
+		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, HISTORICAL_RETURN_LABEL), COLUMN_SIZE[0]);
+		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, HISTORICAL_BALANCE_LABEL), COLUMN_SIZE[0]);
+		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, HISTORICAL_UPDATE_DATE_LABEL), COLUMN_SIZE[1]);
+		sheet.setColumnWidth(getOrPutAndGetCellIndex(sheet, FILE_LABEL), COLUMN_SIZE[2]);
 		//LogUtils.INSTANCE.logInfo(PersistentStorage.buildWorkingPath() + File.separator + excelFileName + " succesfully created");
 	}
 
