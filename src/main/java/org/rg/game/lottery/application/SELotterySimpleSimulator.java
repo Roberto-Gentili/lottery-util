@@ -92,7 +92,7 @@ public class SELotterySimpleSimulator extends Shared {
 
 	static final String DATA_FOLDER_NAME = "data";
 
-	static final Map<String, Integer> savingOperationCounters = new ConcurrentHashMap<>();
+	public static final String RESULTS_LABEL = "Risultati";
 	static final String BALANCE_LABEL = "Saldo";
 	static final String RETURN_LABEL = "Ritorno";
 	static final String COST_LABEL = "Costo";
@@ -112,15 +112,20 @@ public class SELotterySimpleSimulator extends Shared {
 	static final Map<String, Integer> cellIndexesCache;
 	static final Map<Integer, String> indexToLetterCache;
 
-	static Pattern regexForExtractConfigFileName = Pattern.compile("\\[.*?\\]\\[.*?\\]\\[.*?\\](.*)\\.txt");
-	static String hostName;
-	static SEStats allTimeStats;
-	static List<List<String>> header;
+	static final Map<String, Integer> savingOperationCounters;
+	static final Pattern regexForExtractConfigFileName;
+	static final String hostName;
+	static final SEStats allTimeStats;
+	static final List<List<String>> header;
 
 	static {
 		cellIndexesCache = new ConcurrentHashMap<>();
 		indexToLetterCache = new ConcurrentHashMap<>();
+		savingOperationCounters = new ConcurrentHashMap<>();
 		hostName = NetworkUtils.INSTANCE.thisHostName();
+		regexForExtractConfigFileName = Pattern.compile("\\[.*?\\]\\[.*?\\]\\[.*?\\](.*)\\.txt");
+		allTimeStats = SEStats.get(SEStats.FIRST_EXTRACTION_DATE_AS_STRING, TimeUtils.getDefaultDateFormat().format(new Date()));
+		SEStats.get(SEStats.FIRST_EXTRACTION_DATE_WITH_NEW_MACHINE_AS_STRING, TimeUtils.getDefaultDateFormat().format(new Date()));
 
 		reportHeaderLabels = new ArrayList<>();
 		reportHeaderLabels.add(EXTRACTION_DATE_LABEL);
@@ -185,10 +190,6 @@ public class SELotterySimpleSimulator extends Shared {
 		String configFilePrefix,
 		Collection<CompletableFuture<Void>> futures
 	) {
-		//SEStats.forceLoadingFromExcel = false;
-		allTimeStats = SEStats.get(SEStats.FIRST_EXTRACTION_DATE_AS_STRING, TimeUtils.getDefaultDateFormat().format(new Date()));
-		SEStats.get(SEStats.FIRST_EXTRACTION_DATE_WITH_NEW_MACHINE_AS_STRING, TimeUtils.getDefaultDateFormat().format(new Date()));
-		//SEStats.forceLoadingFromExcel = true;
 		Supplier<SELotteryMatrixGeneratorEngine> engineSupplier = SELotteryMatrixGeneratorEngine::new;
 		String[] configurationFileFolders = ResourceUtils.INSTANCE.pathsFromSystemEnv(
 			"working-path.simulations.folder",
@@ -382,7 +383,7 @@ public class SELotterySimpleSimulator extends Shared {
 		readOrCreateExcel(
 			excelFileName,
 			workBook -> {
-				Iterator<Row> rowIterator = workBook.getSheet("Risultati").rowIterator();
+				Iterator<Row> rowIterator = workBook.getSheet(RESULTS_LABEL).rowIterator();
 				rowIterator.next();
 				rowIterator.next();
 				while (rowIterator.hasNext()) {
@@ -421,7 +422,7 @@ public class SELotterySimpleSimulator extends Shared {
 		readOrCreateExcel(
 			excelFileName,
 			workBook -> {
-				Sheet sheet = workBook.getSheet("Risultati");
+				Sheet sheet = workBook.getSheet(RESULTS_LABEL);
 				Iterator<Row> rowIterator = sheet.rowIterator();
 				rowIterator.next();
 				rowIterator.next();
@@ -525,7 +526,7 @@ public class SELotterySimpleSimulator extends Shared {
 				excelFileName,
 				workBook -> {
 					SimpleWorkbookTemplate workBookTemplate = new SimpleWorkbookTemplate(workBook);
-					Sheet sheet = workBookTemplate.getOrCreateSheet("Risultati", true);
+					Sheet sheet = workBookTemplate.getOrCreateSheet(RESULTS_LABEL, true);
 					workBookTemplate.setAutoFilter(1, getMaxRowIndex(), 0, reportHeaderLabels.size() - 1);
 					workBookTemplate.addSheetConditionalFormatting(
 						new int[] {
@@ -616,7 +617,7 @@ public class SELotterySimpleSimulator extends Shared {
 		Integer result = readOrCreateExcel(
 			excelFileName,
 			workBook -> {
-				Sheet sheet = workBook.getSheet("Risultati");
+				Sheet sheet = workBook.getSheet(RESULTS_LABEL);
 				if (sheet.getPhysicalNumberOfRows() < 3) {
 					return;
 				}
@@ -946,7 +947,7 @@ public class SELotterySimpleSimulator extends Shared {
 				excelFileName,
 				workBook -> {
 					SimpleWorkbookTemplate workBookTemplate = new SimpleWorkbookTemplate(workBook);
-					Sheet sheet = workBook.getSheet("Risultati");
+					Sheet sheet = workBook.getSheet(RESULTS_LABEL);
 					Storage storage = !storages.isEmpty() ? storages.get(storages.size() -1) : null;
 					if (storage != null) {
 						Row row = sheet.createRow(sheet.getPhysicalNumberOfRows());
@@ -1158,7 +1159,7 @@ public class SELotterySimpleSimulator extends Shared {
 		String configurationName,
 		LocalDate extractionDate
 	) {
-		Iterator<Row> rowIterator = workBook.getSheet("Risultati").rowIterator();
+		Iterator<Row> rowIterator = workBook.getSheet(RESULTS_LABEL).rowIterator();
 		rowIterator.next();
 		rowIterator.next();
 		while (rowIterator.hasNext()) {
@@ -1175,10 +1176,10 @@ public class SELotterySimpleSimulator extends Shared {
 
 	protected static void createWorkbook(Workbook workBook, String excelFileName) {
 		SimpleWorkbookTemplate workBookTemplate = new SimpleWorkbookTemplate(workBook);
-		Sheet sheet = workBookTemplate.getOrCreateSheet("Risultati", true);
+		Sheet sheet = workBookTemplate.getOrCreateSheet(RESULTS_LABEL, true);
 
 		workBookTemplate.createHeader(
-			"Risultati",
+			RESULTS_LABEL,
 			true,
 			header
 		);

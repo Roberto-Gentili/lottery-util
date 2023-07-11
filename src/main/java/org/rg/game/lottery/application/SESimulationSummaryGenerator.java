@@ -206,7 +206,7 @@ public class SESimulationSummaryGenerator extends Shared {
 		try (InputStream inputStream = new FileInputStream(report.getAbsolutePath());Workbook simulationWorkBook = new XSSFWorkbook(inputStream);) {
 			FormulaEvaluator evaluator = simulationWorkBook.getCreationHelper().createFormulaEvaluator();
 			leftAligned.setAlignment(HorizontalAlignment.LEFT);
-			Sheet resultSheet = simulationWorkBook.getSheet("Risultati");
+			Sheet resultSheet = simulationWorkBook.getSheet(SELotterySimpleSimulator.RESULTS_LABEL);
 			int historicalUpdateDateColumnIndex = getCellIndex(resultSheet, SELotterySimpleSimulator.HISTORICAL_UPDATE_DATE_LABEL);
 			summaryWorkBookTemplate.addRow();
 			Cell cellForName = summaryWorkBookTemplate.addCell(report.getName()).get(0);

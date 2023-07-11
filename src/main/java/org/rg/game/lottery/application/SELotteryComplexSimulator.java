@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -27,7 +26,6 @@ import org.rg.game.core.ResourceUtils;
 import org.rg.game.core.Throwables;
 import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
-import org.rg.game.lottery.engine.SEStats;
 
 
 
@@ -46,10 +44,6 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 		String configFilePrefix,
 		Collection<CompletableFuture<Void>> futures
 	) {
-		//SEStats.forceLoadingFromExcel = false;
-		allTimeStats = SEStats.get(SEStats.FIRST_EXTRACTION_DATE_AS_STRING, TimeUtils.getDefaultDateFormat().format(new Date()));
-		SEStats.get(SEStats.FIRST_EXTRACTION_DATE_WITH_NEW_MACHINE_AS_STRING, TimeUtils.getDefaultDateFormat().format(new Date()));
-		//SEStats.forceLoadingFromExcel = true;
 		String[] configurationFileFolders = ResourceUtils.INSTANCE.pathsFromSystemEnv(
 			"working-path.complex-simulations.folder",
 			"resources.complex-simulations.folder"
