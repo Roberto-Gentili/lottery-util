@@ -87,12 +87,11 @@ import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.databind.DatabindException;
 
 
-
 public class SELotterySimpleSimulator extends Shared {
 
 	static final String DATA_FOLDER_NAME = "data";
 
-	public static final String RESULTS_LABEL = "Risultati";
+	static final String RESULTS_LABEL = "Risultati";
 	static final String BALANCE_LABEL = "Saldo";
 	static final String RETURN_LABEL = "Ritorno";
 	static final String COST_LABEL = "Costo";
@@ -107,11 +106,11 @@ public class SELotterySimpleSimulator extends Shared {
 	static final String FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL = String.join(" ", Arrays.asList(COST_LABEL, FOLLOWING_PROGRESSIVE_HISTORICAL_LABEL));
 	static final String FILE_LABEL = "File";
 	static final String HISTORICAL_UPDATE_DATE_LABEL = "Data agg. storico";
+
 	static final List<String> reportHeaderLabels;
 	static final List<String> summaryFormulas;
 	static final Map<String, Integer> cellIndexesCache;
 	static final Map<Integer, String> indexToLetterCache;
-
 	static final Map<String, Integer> savingOperationCounters;
 	static final Pattern regexForExtractConfigFileName;
 	static final String hostName;
