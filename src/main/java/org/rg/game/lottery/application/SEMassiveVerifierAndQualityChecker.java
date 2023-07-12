@@ -49,9 +49,9 @@ public class SEMassiveVerifierAndQualityChecker extends Shared {
 	public static void main(String[] args) throws IOException {
 		check(
 			forDate(
-				EnvironmentUtils.getVariable(
+				EnvironmentUtils.INSTANCE.getVariable(
 					"startDate", "14/02/2023"
-				), EnvironmentUtils.getVariable(
+				), EnvironmentUtils.INSTANCE.getVariable(
 					"endDate", "next+0*1"
 				),
 				false
