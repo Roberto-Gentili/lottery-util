@@ -255,8 +255,8 @@ public class SELotterySimpleSimulator extends Shared {
 			}
 			setGroup(config);
 			config.setProperty("storage", "filesystem");
-			config.setProperty("overwrite-if-exists", String.valueOf(CollectionUtils.retrieveBoolean(config, "simulation.slave", "false")? -1 : 0));
-			if (CollectionUtils.retrieveBoolean(config, "simulation.enabled", "false")) {
+			config.setProperty("overwrite-if-exists", String.valueOf(CollectionUtils.INSTANCE.retrieveBoolean(config, "simulation.slave", "false")? -1 : 0));
+			if (CollectionUtils.INSTANCE.retrieveBoolean(config, "simulation.enabled", "false")) {
 				configurations.add(config);
 			}
 		}
@@ -265,7 +265,7 @@ public class SELotterySimpleSimulator extends Shared {
 		for (Properties configuration : configurations) {
 			LogUtils.INSTANCE.info(
 				"Processing file '" + configuration.getProperty("file.name") + "' located in '" + configuration.getProperty("file.parent.absolutePath") + "' in " +
-					(CollectionUtils.retrieveBoolean(configuration, "simulation.slave") ? "slave" : "master") + " mode"
+					(CollectionUtils.INSTANCE.retrieveBoolean(configuration, "simulation.slave") ? "slave" : "master") + " mode"
 			);
 			String info = configuration.getProperty("info");
 			if (info != null) {
@@ -287,7 +287,7 @@ public class SELotterySimpleSimulator extends Shared {
 				redundantConfigValue != null? Integer.valueOf(redundantConfigValue) : null
 			);
 			List<List<LocalDate>> competitionDates =
-				CollectionUtils.toSubLists(
+				CollectionUtils.INSTANCE.toSubLists(
 					new ArrayList<>(competitionDatesFlat),
 					redundantConfigValue != null? Integer.valueOf(redundantConfigValue) : 10
 				);
@@ -301,16 +301,16 @@ public class SELotterySimpleSimulator extends Shared {
 			String asyncFlag = configuration.getProperty("async", "false");
 			boolean async = false;
 			if (asyncFlag.equalsIgnoreCase("onSlave")) {
-				async = CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false");
+				async = CollectionUtils.INSTANCE.retrieveBoolean(configuration, "simulation.slave", "false");
 			} else {
-				async = CollectionUtils.retrieveBoolean(configuration, "async", "false");
+				async = CollectionUtils.INSTANCE.retrieveBoolean(configuration, "async", "false");
 			}
 			if (async) {
-				ConcurrentUtils.addTask(futures, taskOperation);
+				ConcurrentUtils.INSTANCE.addTask(futures, taskOperation);
 			} else {
 				taskOperation.run();
 			}
-			ConcurrentUtils.waitUntil(futures, ft -> ft.size() >= maxParallelTasks);
+			ConcurrentUtils.INSTANCE.waitUntil(futures, ft -> ft.size() >= maxParallelTasks);
 			if (!firstSetupExecuted.get()) {
 				synchronized (firstSetupExecuted) {
 					if (!firstSetupExecuted.get()) {
@@ -384,7 +384,7 @@ public class SELotterySimpleSimulator extends Shared {
 				excelFileName, configFileName, redundancy, competitionDates
 			);
 		}
-		boolean isSlave = CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false");
+		boolean isSlave = CollectionUtils.INSTANCE.retrieveBoolean(configuration, "simulation.slave", "false");
 		readOrCreateExcel(
 			excelFileName,
 			workBook -> {
@@ -419,11 +419,11 @@ public class SELotterySimpleSimulator extends Shared {
 
 	private static void cleanupRedundant(Properties configuration, String excelFileName, String configFileName, Integer redundancy, Collection<LocalDate> competitionDatesFlat) {
 		List<LocalDate> competionDateLatestBlock =
-			CollectionUtils.toSubLists(
+			CollectionUtils.INSTANCE.toSubLists(
 				new ArrayList<>(competitionDatesFlat),
 				redundancy
 			).stream().reduce((prev, next) -> next).orElse(null);
-		boolean isSlave = CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false");
+		boolean isSlave = CollectionUtils.INSTANCE.retrieveBoolean(configuration, "simulation.slave", "false");
 		readOrCreateExcel(
 			excelFileName,
 			workBook -> {
@@ -483,7 +483,7 @@ public class SELotterySimpleSimulator extends Shared {
 		AtomicBoolean firstSetupExecuted
 	) {
 		String redundantConfigValue = configuration.getProperty("simulation.redundancy");
-		boolean isSlave = CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false");
+		boolean isSlave = CollectionUtils.INSTANCE.retrieveBoolean(configuration, "simulation.slave", "false");
 		Function<LocalDate, Function<List<Storage>, Integer>> extractionDatePredicate = null;
 		Function<LocalDate, Consumer<List<Storage>>> systemProcessor = null;
 		AtomicInteger redundantCounter = new AtomicInteger(0);
@@ -615,7 +615,7 @@ public class SELotterySimpleSimulator extends Shared {
 		Map<String, Map<String, Object>> premiumCountersForFile = new LinkedHashMap<>();
 		List<Number> premiumTypeList = parseReportWinningInfoConfig(configuration.getProperty("report.winning-info", "all").replaceAll("\\s+",""));
 		Number[] premiumTypes = premiumTypeList.toArray(new Number[premiumTypeList.size()]);
-		boolean isSlave = CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false");
+		boolean isSlave = CollectionUtils.INSTANCE.retrieveBoolean(configuration, "simulation.slave", "false");
 		SEStats sEStats = getSEStats(configuration);
 		Function<Date, Date> dateOffsetComputer = dateOffsetComputer(configuration);
 		AtomicReference<Integer> removedRowResult = new AtomicReference<>();
@@ -946,7 +946,7 @@ public class SELotterySimpleSimulator extends Shared {
 	private static Function<LocalDate, Consumer<List<Storage>>> buildSystemProcessor(Properties configuration, String excelFileName) {
 		AtomicBoolean rowAddedFlag = new AtomicBoolean(false);
 		AtomicBoolean fileCreatedFlag = new AtomicBoolean(false);
-		boolean isSlave = CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false");
+		boolean isSlave = CollectionUtils.INSTANCE.retrieveBoolean(configuration, "simulation.slave", "false");
 		return extractionDate -> storages -> {
 			readOrCreateExcel(
 				excelFileName,
@@ -1121,7 +1121,7 @@ public class SELotterySimpleSimulator extends Shared {
 		AtomicInteger redundantCounter
 	) {
 		String configurationName = configuration.getProperty("nameSuffix");
-		boolean isSlave = CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false");
+		boolean isSlave = CollectionUtils.INSTANCE.retrieveBoolean(configuration, "simulation.slave", "false");
 		return extractionDate -> storages -> {
 			AtomicReference<Integer> checkResult = new AtomicReference<Integer>();
 			readOrCreateExcel(
@@ -1136,7 +1136,7 @@ public class SELotterySimpleSimulator extends Shared {
 						store(excelFileName, workBook);
 					}
 				},
-				CollectionUtils.retrieveBoolean(configuration, "simulation.slave", "false")
+				CollectionUtils.INSTANCE.retrieveBoolean(configuration, "simulation.slave", "false")
 			);
 			if (redundant != null) {
 				Integer redundantCounterValue = redundantCounter.getAndIncrement();

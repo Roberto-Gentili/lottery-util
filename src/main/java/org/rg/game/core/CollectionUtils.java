@@ -10,8 +10,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class CollectionUtils {
+	public static final CollectionUtils INSTANCE = new CollectionUtils();
 
-	public static <T> List<List<T>> toSubLists(List<T> inputList, int size) {
+	public <T> List<List<T>> toSubLists(List<T> inputList, int size) {
         final AtomicInteger counter = new AtomicInteger(0);
         List<List<T>> subLists = new ArrayList<>(inputList.stream()
                     .collect(Collectors.groupingBy((s -> counter.getAndIncrement()/size), LinkedHashMap::new, Collectors.toList()))
@@ -19,22 +20,22 @@ public class CollectionUtils {
         return subLists;
 	}
 
-	public static boolean retrieveBoolean(Properties config, String key) {
+	public boolean retrieveBoolean(Properties config, String key) {
 		return retrieveBoolean(config, key, null);
 	}
 
-	public static boolean retrieveBoolean(Properties config, String key, String defaultValue) {
+	public boolean retrieveBoolean(Properties config, String key, String defaultValue) {
 		return Boolean.parseBoolean((defaultValue != null ? config.getProperty(key, defaultValue) : config.getProperty(key)).toLowerCase().replaceAll("\\s+",""));
 	}
 
-	public static <T> T getLastElement(final Iterable<T> elements) {
+	public <T> T getLastElement(final Iterable<T> elements) {
 	    T lastElement = null;
 	    for (T element : elements) {
 	        lastElement = element;
 	    }
 	    return lastElement;
 	}
-	public static <T> Collection<T> even(Collection<T> elements) {
+	public <T> Collection<T> even(Collection<T> elements) {
 		Collection<T> items = new ArrayList<>();
 		Iterator<T> elementsIterator = elements.iterator();
 		int j = 0;
@@ -47,7 +48,7 @@ public class CollectionUtils {
 		return items;
 	}
 
-	public static <T> Collection<T> odd(Collection<T> elements) {
+	public <T> Collection<T> odd(Collection<T> elements) {
 		Collection<T> items = new ArrayList<>();
 		Iterator<T> elementsIterator = elements.iterator();
 		int j = 0;

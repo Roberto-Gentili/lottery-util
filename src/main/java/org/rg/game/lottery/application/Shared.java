@@ -46,7 +46,9 @@ class Shared {
 		if (dateAsString.equals("today")) {
 			return LocalDateTime.now(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE)).toLocalDate();
 		}
-		return CollectionUtils.getLastElement(SELotteryMatrixGeneratorEngine.DEFAULT_INSTANCE.computeExtractionDates(dateAsString));
+		return CollectionUtils.INSTANCE.getLastElement(
+			SELotteryMatrixGeneratorEngine.DEFAULT_INSTANCE.computeExtractionDates(dateAsString)
+		);
 	}
 
 	static String getMonth(String date) {

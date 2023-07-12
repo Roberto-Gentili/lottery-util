@@ -6,8 +6,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 
 public class ConcurrentUtils {
+	public static final ConcurrentUtils INSTANCE = new ConcurrentUtils();
 
-	public static void addTask(Collection<CompletableFuture<Void>> futures, Runnable taskOperation) {
+	public void addTask(Collection<CompletableFuture<Void>> futures, Runnable taskOperation) {
 		AtomicReference<CompletableFuture<Void>> taskWrapper = new AtomicReference<>();
 		taskWrapper.set(
 			CompletableFuture.runAsync(
@@ -44,7 +45,7 @@ public class ConcurrentUtils {
 		}
 	}
 
-	public static void waitUntil(
+	public void waitUntil(
 		Collection<CompletableFuture<Void>> futures,
 		Predicate<Collection<CompletableFuture<Void>>> futuresPredicate
 	) {

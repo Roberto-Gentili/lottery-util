@@ -57,7 +57,7 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 				),
 				"simulation.slave"
 			)) {
-				if (!CollectionUtils.retrieveBoolean(complexSimulationConfig, "simulation.enabled")) {
+				if (!CollectionUtils.INSTANCE.retrieveBoolean(complexSimulationConfig, "simulation.enabled")) {
 					continue;
 				}
 				String[] childrenSimulationsFilters = complexSimulationConfig.getProperty("simulation.children", "allEnabledInSameFolder").replaceAll("\\s+","").split(",");
@@ -77,7 +77,7 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 							Iterator<File> simpleConfigFileIterator = simpleConfigurationFiles.iterator();
 							while (simpleConfigFileIterator.hasNext()) {
 								Properties simpleConfig = ResourceUtils.INSTANCE.toProperties(simpleConfigFileIterator.next());
-								if (childrenSimulationsFilter.equals("allEnabledInSameFolder") && !CollectionUtils.retrieveBoolean(simpleConfig, "simulation.enabled", "false")) {
+								if (childrenSimulationsFilter.equals("allEnabledInSameFolder") && !CollectionUtils.INSTANCE.retrieveBoolean(simpleConfig, "simulation.enabled", "false")) {
 									simpleConfigFileIterator.remove();
 								} else if (childrenSimulationsFilter.equals("allInSameFolder")) {
 									simpleConfig.setProperty("simulation.enabled", "true");
@@ -141,7 +141,7 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 							new File(
 								PersistentStorage.buildWorkingPath() + File.separator + retrieveExcelFileName(complexSimulationConfig, "simulation.group")
 							),
-							CollectionUtils.retrieveBoolean(complexSimulationConfig, "simulation.slave", "false")
+							CollectionUtils.INSTANCE.retrieveBoolean(complexSimulationConfig, "simulation.slave", "false")
 						);*/
 					}
 				} else {
@@ -177,7 +177,7 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 						new File(
 							PersistentStorage.buildWorkingPath() + File.separator + retrieveExcelFileName(complexSimulationConfig, "simulation.group")
 						),
-						CollectionUtils.retrieveBoolean(complexSimulationConfig, "simulation.slave", "false")
+						CollectionUtils.INSTANCE.retrieveBoolean(complexSimulationConfig, "simulation.slave", "false")
 					);*/
 				}
 			}

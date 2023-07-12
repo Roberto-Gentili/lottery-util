@@ -57,16 +57,16 @@ class SEIntegralSystemAnalyzer extends Shared {
 				.orElseGet(() -> Math.max((Runtime.getRuntime().availableProcessors() / 2) - 1, 1));
 		Collection<CompletableFuture<Void>> futures = new CopyOnWriteArrayList<>();
 		for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles)) {
-			if (CollectionUtils.retrieveBoolean(config, "enabled", "false")) {
+			if (CollectionUtils.INSTANCE.retrieveBoolean(config, "enabled", "false")) {
 				Runnable task = () ->
 					analyze(config);
-				if (CollectionUtils.retrieveBoolean(config, "async", "false")) {
-					ConcurrentUtils.addTask(futures, task);
+				if (CollectionUtils.INSTANCE.retrieveBoolean(config, "async", "false")) {
+					ConcurrentUtils.INSTANCE.INSTANCE.addTask(futures, task);
 				} else {
 					task.run();
 				}
 			}
-			ConcurrentUtils.waitUntil(futures, ft -> ft.size() >= maxParallelTasks);
+			ConcurrentUtils.INSTANCE.INSTANCE.waitUntil(futures, ft -> ft.size() >= maxParallelTasks);
 		}
 		futures.forEach(CompletableFuture::join);
 		LogUtils.INSTANCE.warn("All activities are finished");
@@ -220,7 +220,7 @@ class SEIntegralSystemAnalyzer extends Shared {
 
 	protected static BigInteger remainedSystems(Record record) {
 		BigInteger processedSystemsCounter = processedSystemsCounter(record);
-		Block latestBlock = CollectionUtils.getLastElement(record.blocks);
+		Block latestBlock = CollectionUtils.INSTANCE.getLastElement(record.blocks);
 		return latestBlock.end.subtract(processedSystemsCounter);
 	}
 
@@ -250,13 +250,13 @@ class SEIntegralSystemAnalyzer extends Shared {
 				if (blockAssigneeInfo[0].equalsIgnoreCase(thisHostName)) {
 					for (String blockIndex : blockAssigneeInfo[1].split(",")) {
 						if (blockIndex.equalsIgnoreCase("odd")) {
-							blocks.addAll(CollectionUtils.odd(cacheRecordTemp.blocks));
+							blocks.addAll(CollectionUtils.INSTANCE.odd(cacheRecordTemp.blocks));
 						} else if (blockIndex.equalsIgnoreCase("even")) {
-							blocks.addAll(CollectionUtils.even(cacheRecordTemp.blocks));
+							blocks.addAll(CollectionUtils.INSTANCE.even(cacheRecordTemp.blocks));
 						} else if (blockIndex.contains("/")) {
 							String[] subListsInfo = blockIndex.split("/");
 							List<List<Block>> subList =
-								CollectionUtils.toSubLists((List<Block>)cacheRecordTemp.blocks,
+								CollectionUtils.INSTANCE.toSubLists((List<Block>)cacheRecordTemp.blocks,
 									Double.valueOf(Math.ceil(((List<Block>)cacheRecordTemp.blocks).size() / Double.valueOf(subListsInfo[1]))).intValue()
 								);
 							blocks.addAll(subList.get(Integer.valueOf(subListsInfo[0]) - 1));
