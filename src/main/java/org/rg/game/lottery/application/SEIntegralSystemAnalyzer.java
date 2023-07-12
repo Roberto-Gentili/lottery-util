@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -61,23 +62,31 @@ class SEIntegralSystemAnalyzer extends Shared {
 				Runnable task = () ->
 					analyze(config);
 				if (CollectionUtils.INSTANCE.retrieveBoolean(config, "async", "false")) {
-					ConcurrentUtils.INSTANCE.INSTANCE.addTask(futures, task);
+					ConcurrentUtils.INSTANCE.addTask(futures, task);
 				} else {
 					task.run();
 				}
 			}
-			ConcurrentUtils.INSTANCE.INSTANCE.waitUntil(futures, ft -> ft.size() >= maxParallelTasks);
+			ConcurrentUtils.INSTANCE.waitUntil(futures, ft -> ft.size() >= maxParallelTasks);
 		}
 		futures.forEach(CompletableFuture::join);
 		LogUtils.INSTANCE.warn("All activities are finished");
 	}
 
 	protected static void analyze(Properties config) {
+		String premiumsToBeAnalyzed = config.getProperty(
+			"rank.premiums",
+			String.join(",", Premium.allTypesListReversed().stream().map(Object::toString).collect(Collectors.toList()))
+		).replaceAll("\\s+","");
+		Number[] orderedPremiumsToBeAnalyzed =
+			Arrays.asList(
+				premiumsToBeAnalyzed.split(",")
+			).stream().map(Premium::parseType).toArray(Number[]::new);
 		long combinationSize = Long.valueOf(config.getProperty("combination.components"));
 		ComboHandler comboHandler = new ComboHandler(IntStream.range(1, 91).boxed().collect(Collectors.toList()), combinationSize);
 		BigInteger modderForSkipLog = BigInteger.valueOf(1_000_000_000);
 		BigInteger modderForAutoSave = new BigInteger(config.getProperty("autosave-every", "1000000"));
-		int rankSize = Integer.valueOf(config.getProperty("rank-size", "100"));
+		int rankSize = Integer.valueOf(config.getProperty("rank.size", "100"));
 		SEStats sEStats = SEStats.get(
 			config.getProperty("competition.archive.start-date"),
 			config.getProperty("competition.archive.end-date")
@@ -85,8 +94,8 @@ class SEIntegralSystemAnalyzer extends Shared {
 		Collection<List<Integer>> allWinningCombos = sEStats.getAllWinningCombosWithJollyAndSuperstar().values();
 		LogUtils.INSTANCE.info("All " + combinationSize + " based integral systems size (" + comboHandler.getNumbers().size() + " numbers): " +  MathUtils.INSTANCE.format(comboHandler.getSize()));
 		String basePath = PersistentStorage.buildWorkingPath("Analisi sistemi integrali");
-		String cacheKey = buildCacheKey(comboHandler, sEStats);
-		TreeSet<Map.Entry<List<Integer>, Map<Number, Integer>>> systemsRank = buildDataCollection();
+		String cacheKey = buildCacheKey(comboHandler, sEStats, premiumsToBeAnalyzed, rankSize);
+		TreeSet<Map.Entry<List<Integer>, Map<Number, Integer>>> systemsRank = buildDataCollection(orderedPremiumsToBeAnalyzed);
 		Record cacheRecord = prepareCacheRecord(
 			basePath,
 			cacheKey,
@@ -151,7 +160,7 @@ class SEIntegralSystemAnalyzer extends Shared {
 				currentBlock.counter = iterationData.getCounter();
 				List<Integer> combo = iterationData.getCombo();
 				Map<Number, Integer> allPremiums = new LinkedHashMap<>();
-				for (Number premiumType : Premium.allTypesReversed()) {
+				for (Number premiumType : orderedPremiumsToBeAnalyzed) {
 					allPremiums.put(premiumType, 0);
 				}
 				for (List<Integer> winningComboWithSuperStar : allWinningCombos) {
@@ -202,8 +211,9 @@ class SEIntegralSystemAnalyzer extends Shared {
 		//LogUtils.INSTANCE.info(processedSystemsCounterWrapper.get() + " of combinations analyzed");
 	}
 
-	protected static String buildCacheKey(ComboHandler comboHandler, SEStats sEStats) {
+	protected static String buildCacheKey(ComboHandler comboHandler, SEStats sEStats, String premiumsToBeAnalyzed, int rankSize) {
 		return "[" + MathUtils.INSTANCE.format(comboHandler.getSize()).replace(".", "_") + "][" + comboHandler.getCombinationSize() + "]" +
+				"[" + premiumsToBeAnalyzed.replace(".", "_") + "]" + "[" + rankSize + "]" +
 				"[" + TimeUtils.getAlternativeDateFormat().format(sEStats.getStartDate()) + "]" +
 				"[" + TimeUtils.getAlternativeDateFormat().format(sEStats.getEndDate()) + "]";
 	}
@@ -280,10 +290,10 @@ class SEIntegralSystemAnalyzer extends Shared {
 		return blocks;
 	}
 
-	protected static TreeSet<Map.Entry<List<Integer>, Map<Number, Integer>>> buildDataCollection() {
+	protected static TreeSet<Map.Entry<List<Integer>, Map<Number, Integer>>> buildDataCollection(Number[] orderedPremiumsToBeAnalyzed) {
 		TreeSet<Map.Entry<List<Integer>, Map<Number, Integer>>> bestSystems = new TreeSet<>((itemOne, itemTwo) -> {
 			if (itemOne != itemTwo) {
-				for(Number type : Premium.allTypesReversed()) {
+				for(Number type : orderedPremiumsToBeAnalyzed) {
 					int comparitionResult = itemOne.getValue().getOrDefault(type, 0).compareTo(itemTwo.getValue().getOrDefault(type, 0));
 					if (comparitionResult != 0) {
 						return comparitionResult * -1;

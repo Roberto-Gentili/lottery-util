@@ -78,6 +78,10 @@ public class Premium {
 		return allTypesReversed;
 	}
 
+	public static List<Number> allTypesListReversed() {
+		return allTypesListReversed;
+	}
+
 	public static List<Number> allHighTypesList() {
 		return allHighTypesList;
 	}
