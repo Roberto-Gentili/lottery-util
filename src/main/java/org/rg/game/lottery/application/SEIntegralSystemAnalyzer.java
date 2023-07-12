@@ -103,6 +103,7 @@ class SEIntegralSystemAnalyzer extends Shared {
 			systemsRank
 		);
 		List<Block> assignedBlocks = retrieveAssignedBlocks(config, cacheRecord);
+		AtomicReference<String> previousLogWrapper = new AtomicReference<>();
 		while (!assignedBlocks.isEmpty()) {
 			AtomicReference<Block> currentBlockWrapper = new AtomicReference<>();
 			AtomicBoolean blockNotAlignedWrapper = new AtomicBoolean(false);
@@ -151,7 +152,7 @@ class SEIntegralSystemAnalyzer extends Shared {
 								"Cache succesfully restored, starting from index " + MathUtils.INSTANCE.format(iterationData.getCounter()) + ". " +
 								MathUtils.INSTANCE.format(remainedSystems(cacheRecord)) + " systems remained."
 							);
-							printData(cacheRecord);
+							printDataIfChanged(cacheRecord, previousLogWrapper);
 							return;
 						}
 					}
@@ -200,7 +201,7 @@ class SEIntegralSystemAnalyzer extends Shared {
 				}
 				if (iterationData.getCounter().mod(modderForAutoSave).compareTo(BigInteger.ZERO) == 0 || iterationData.getCounter().compareTo(currentBlock.end) == 0) {
 					store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock, rankSize);
-					printData(cacheRecord);
+					printDataIfChanged(cacheRecord, previousLogWrapper);
 					LogUtils.INSTANCE.info(MathUtils.INSTANCE.format(processedSystemsCounter(cacheRecord)) + " of systems have been processed");
 	    		}
 			});
@@ -311,26 +312,28 @@ class SEIntegralSystemAnalyzer extends Shared {
 		return bestSystems;
 	}
 
-	protected static void printData(
-		Record record
+	protected static void printDataIfChanged(
+		Record record,
+		AtomicReference<String> previousLogWrapper
 	) {
-		LogUtils.INSTANCE.info("\nBlocks (size: " + record.blocks.size() + ") status:");
-		LogUtils.INSTANCE.info(
+		String currentLog = "\nBlocks (size: " + record.blocks.size() + ") status:\n" +
 			"\t" + String.join(
 				"\n\t",
 				record.blocks.stream().map(Object::toString).collect(Collectors.toList())
-			)
-		);
-		LogUtils.INSTANCE.info("Rank (size: " + record.data.size() + "):");
-		LogUtils.INSTANCE.info(
+			) + "\n" +
+			"Rank (size: " + record.data.size() + "):\n" +
 			"\t" + String.join(
 				"\n\t",
 				record.data.stream().map(entry ->
 					ComboHandler.toString(entry.getKey(), ", ") + ": " + Premium.toString(entry.getValue(), "=", ", ")
-					//ComboHandler.toString(entry.getKey(), ", ") + ": " + entry.getValue().toString().replace("{", "").replace("}", "")
 				).collect(Collectors.toList())
 			) + "\n"
-		);
+		;
+		String previousLog = previousLogWrapper.get();
+		if (previousLog == null || !previousLog.equals(currentLog)) {
+			LogUtils.INSTANCE.info(currentLog);
+		}
+		previousLogWrapper.set(currentLog);
 	}
 
 	protected static void store(
