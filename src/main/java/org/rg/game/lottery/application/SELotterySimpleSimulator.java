@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -248,18 +250,21 @@ public class SELotterySimpleSimulator extends Shared {
 		List<Properties> configurationProperties
 	) throws IOException {
 		List<Properties> configurations = new ArrayList<>();
+		Set<String> groupsToBeProcessed = new TreeSet<>();
 		for (Properties config : configurationProperties) {
 			String simulationDates = config.getProperty("simulation.dates");
 			if (simulationDates != null) {
 				config.setProperty("competition", simulationDates);
 			}
-			setGroup(config);
+			String group = setGroup(config);
 			config.setProperty("storage", "filesystem");
 			config.setProperty("overwrite-if-exists", String.valueOf(CollectionUtils.INSTANCE.retrieveBoolean(config, "simulation.slave", "false")? -1 : 0));
 			if (CollectionUtils.INSTANCE.retrieveBoolean(config, "simulation.enabled", "false")) {
 				configurations.add(config);
+				groupsToBeProcessed.add(group);
 			}
 		}
+		LogUtils.INSTANCE.info("Total groups that will be processed: " + groupsToBeProcessed.size() + "\n\n\t" + String.join("\n\t", groupsToBeProcessed));
 		int maxParallelTasks = Optional.ofNullable(System.getenv("tasks.max-parallel")).map(Integer::valueOf)
 			.orElseGet(() -> Math.max((Runtime.getRuntime().availableProcessors() / 2) - 1, 1));
 		for (Properties configuration : configurations) {
@@ -336,7 +341,7 @@ public class SELotterySimpleSimulator extends Shared {
 		return groupName + File.separator + reportFileName;
 	}
 
-	protected static void setGroup(Properties config) {
+	protected static String setGroup(Properties config) {
 		String simulationGroup = config.getProperty("simulation.group");
 		if (simulationGroup == null) {
 			simulationGroup = config.getProperty("file.name").replace("." + config.getProperty("file.extension"), "");
@@ -347,6 +352,7 @@ public class SELotterySimpleSimulator extends Shared {
 			"group",
 			simulationGroup + "/" + DATA_FOLDER_NAME
 		);
+		return simulationGroup;
 	}
 
 
