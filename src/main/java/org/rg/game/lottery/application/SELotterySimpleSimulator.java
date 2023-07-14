@@ -264,7 +264,10 @@ public class SELotterySimpleSimulator extends Shared {
 				groupsToBeProcessed.add(group);
 			}
 		}
-		LogUtils.INSTANCE.info("Total groups that will be processed: " + groupsToBeProcessed.size() + "\n\n\t" + String.join("\n\t", groupsToBeProcessed));
+		LogUtils.INSTANCE.info(
+			"Total groups that will be processed: " + groupsToBeProcessed.size() + "\n\n" +
+			"\t" + String.join("\n\t", groupsToBeProcessed) + "\n"
+		);
 		int maxParallelTasks = Optional.ofNullable(System.getenv("tasks.max-parallel")).map(Integer::valueOf)
 			.orElseGet(() -> Math.max((Runtime.getRuntime().availableProcessors() / 2) - 1, 1));
 		for (Properties configuration : configurations) {
