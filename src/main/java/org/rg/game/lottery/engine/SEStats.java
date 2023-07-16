@@ -526,7 +526,7 @@ public class SEStats {
 		if (winningCombo == null) {
 			return results;
 		}
-		Integer jolly = winningCombo.get(6);
+		Integer jolly = getJollyOf(extractionDate);
 		Iterator<List<Integer>> systemIterator = systemIteratorSupplier.get();
 		while (systemIterator.hasNext()) {
 			List<Integer> currentCombo = systemIterator.next();
