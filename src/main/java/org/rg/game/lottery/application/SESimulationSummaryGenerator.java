@@ -226,6 +226,9 @@ public class SESimulationSummaryGenerator extends Shared {
 					historicalUpdateDates.add(historicalUpdateDate);
 				}
 			}
+			if (!historicalUpdateDates.isEmpty()) {
+				historicalUpdateDates = new LinkedHashSet<>(Arrays.asList(historicalUpdateDates.iterator().next()));
+			}
 			summaryWorkBookTemplate.addCell(extractionDatesHolder.size(), "#,##0");
 			summaryWorkBookTemplate.addCell(generatedSystemCounter, "#,##0");
 			for (String cellLabel : SELotterySimpleSimulator.reportHeaderLabels) {
