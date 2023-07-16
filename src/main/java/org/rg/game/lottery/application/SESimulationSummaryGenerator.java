@@ -18,7 +18,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import org.apache.poi.common.usermodel.HyperlinkType;
-import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.poi.ss.formula.BaseFormulaEvaluator;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -40,10 +39,6 @@ import org.rg.game.lottery.engine.SimpleWorkbookTemplate;
 public class SESimulationSummaryGenerator extends Shared {
 	static final String EXTRACTION_COUNTER_LABEL = "Conteggio estrazioni";
 	static final String SYSTEM_COUNTER_LABEL = "Conteggio sistemi";
-
-	static {
-		ZipSecureFile.setMinInflateRatio(0);
-	}
 
 	public static void main(String[] args) {
 		try {
@@ -84,8 +79,8 @@ public class SESimulationSummaryGenerator extends Shared {
 			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL), 3000);
 			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.FOLLOWING_PROGRESSIVE_HISTORICAL_RETURN_LABEL), 3000);
 			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.HISTORICAL_COST_LABEL), 3000);
-			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.HISTORICAL_RETURN_LABEL), 3000);
-			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.HISTORICAL_UPDATE_DATE_LABEL), 9000);
+			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.HISTORICAL_RETURN_LABEL), 3100);
+			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.HISTORICAL_UPDATE_DATE_LABEL), 3000);
 			try (OutputStream destFileOutputStream = new FileOutputStream(simulationSummaryFile)){
 				workBookTemplate.addSheetConditionalFormatting(
 					new int[] {
