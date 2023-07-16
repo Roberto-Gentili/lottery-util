@@ -526,6 +526,7 @@ public class SEStats {
 		if (winningCombo == null) {
 			return results;
 		}
+		Integer jolly = winningCombo.get(6);
 		Iterator<List<Integer>> systemIterator = systemIteratorSupplier.get();
 		while (systemIterator.hasNext()) {
 			List<Integer> currentCombo = systemIterator.next();
@@ -537,7 +538,7 @@ public class SEStats {
 			}
 			if (hit.intValue() > 1) {
 				if (hit.intValue() == Premium.TYPE_FIVE.intValue()) {
-					if (currentCombo.contains(winningCombo.get(6))) {
+					if (currentCombo.contains(jolly)) {
 						hit = Premium.TYPE_FIVE_PLUS;
 					}
 				}
