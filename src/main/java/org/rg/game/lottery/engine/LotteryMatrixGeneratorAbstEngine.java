@@ -71,7 +71,6 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		processingContext.extractionArchiveStartDate = config.getProperty("competition.archive.start-date");
 		processingContext.extractionArchiveForSeedStartDate = config.getProperty("seed-data.start-date");
 		processingContext.seedShifter = Integer.valueOf(config.getProperty("seed-data.seed-shift", "0"));
-		processingContext.comboIndexSelectorType = config.getProperty("combination.selector", "random");
 		String extractionDatesAsString = config.getProperty("competition");
 		Collection<LocalDate> extractionDates = computeExtractionDates(extractionDatesAsString);
 		/*LogUtils.INSTANCE.info(
@@ -81,6 +80,14 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 			)
 		);*/
 		processingContext.storageType = config.getProperty("storage", "memory").replaceAll("\\s+","");
+		String combinationCountConfigValue = config.getProperty("combination.count");
+		if (combinationCountConfigValue != null && combinationCountConfigValue.replaceAll("\\s+","").equalsIgnoreCase("integral")) {
+			config.remove("combination.filter");
+			config.setProperty("combination.equilibrate", "false");
+			config.setProperty("combination.selector", "sequence");
+			config.setProperty("combination.count", combinationCountConfigValue = "-1");
+		}
+		processingContext.comboIndexSelectorType = config.getProperty("combination.selector", "random");
 		String combinationFilterRaw = config.getProperty("combination.filter");
 		processingContext.basicDataSupplier = extractionDate -> {
 			if (processingContext.combinationFilter == null) {
@@ -149,7 +156,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		processingContext.testFilterFineInfo = CollectionUtils.INSTANCE.retrieveBoolean(config, "combination.filter.test.fine-info", "true");
 		processingContext.combinationComponents = Integer.valueOf(config.getProperty("combination.components"));
 		processingContext.occurrencesNumberRequested = Optional.ofNullable(config.getProperty("numbers.occurrences")).map(Double::parseDouble).orElseGet(() -> null);
-		processingContext.numberOfCombosRequested = Optional.ofNullable(config.getProperty("combination.count"))
+		processingContext.numberOfCombosRequested = Optional.ofNullable(combinationCountConfigValue)
 			.filter(value -> !value.replaceAll("\\s+","").isEmpty()).map(Integer::parseInt).orElseGet(() -> null);
 		processingContext.chooseRandom = Integer.valueOf(config.getProperty("combination.choose-random.count", "0"));
 		processingContext.equilibrateFlagSupplier = () -> {
@@ -371,6 +378,10 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 				processingContext.testFilterFineInfo
 			);
 		}
+		ComboHandler comboHandler = new ComboHandler(numbers, processingContext.combinationComponents);
+		if (processingContext.numberOfCombosRequested != null && processingContext.numberOfCombosRequested.compareTo(-1) == 0) {
+			processingContext.numberOfCombosRequested = comboHandler.getSizeAsInt();
+		}
 		Double ratio;
 		Double occurrencesNumber = processingContext.occurrencesNumberRequested;
 		Integer numberOfCombos = processingContext.numberOfCombosRequested;
@@ -417,7 +428,6 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		}
 		AtomicInteger discoveredComboCounter = new AtomicInteger(0);
 		AtomicLong fromFilterDiscardedComboCounter = new AtomicLong(0);
-		ComboHandler comboHandler = new ComboHandler(numbers, processingContext.combinationComponents);
 		try (Storage storage = buildStorage(((LocalDate)data.get("seedStartDate")), processingContext.combinationComponents, numberOfCombos, processingContext.group, processingContext.suffix);) {
 			storageRef = storage;
 			boolean equilibrate = processingContext.equilibrateFlagSupplier.getAsBoolean();
