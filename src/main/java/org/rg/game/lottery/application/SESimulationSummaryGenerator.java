@@ -75,11 +75,11 @@ public class SESimulationSummaryGenerator extends Shared {
 				headersToBeSkipped,
 				reportCounter
 			);
-			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.FILE_LABEL), 25000);
+			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.FILE_LABEL), 23000);
 			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL), 3000);
 			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.FOLLOWING_PROGRESSIVE_HISTORICAL_RETURN_LABEL), 3000);
 			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.HISTORICAL_COST_LABEL), 3000);
-			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.HISTORICAL_RETURN_LABEL), 3200);
+			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.HISTORICAL_RETURN_LABEL), 3300);
 			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.HISTORICAL_UPDATE_DATE_LABEL), 3000);
 			try (OutputStream destFileOutputStream = new FileOutputStream(simulationSummaryFile)){
 				workBookTemplate.addSheetConditionalFormatting(
