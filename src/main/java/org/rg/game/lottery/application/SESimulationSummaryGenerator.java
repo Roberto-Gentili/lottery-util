@@ -75,11 +75,11 @@ public class SESimulationSummaryGenerator extends Shared {
 				headersToBeSkipped,
 				reportCounter
 			);
-			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.FILE_LABEL), 15000);
+			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.FILE_LABEL), 25000);
 			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.FOLLOWING_PROGRESSIVE_HISTORICAL_COST_LABEL), 3000);
 			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.FOLLOWING_PROGRESSIVE_HISTORICAL_RETURN_LABEL), 3000);
 			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.HISTORICAL_COST_LABEL), 3000);
-			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.HISTORICAL_RETURN_LABEL), 3100);
+			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.HISTORICAL_RETURN_LABEL), 3200);
 			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.HISTORICAL_UPDATE_DATE_LABEL), 3000);
 			try (OutputStream destFileOutputStream = new FileOutputStream(simulationSummaryFile)){
 				workBookTemplate.addSheetConditionalFormatting(
@@ -127,7 +127,8 @@ public class SESimulationSummaryGenerator extends Shared {
 		List<String> headersToBeSkipped,
 		AtomicInteger reportCounter
 	) {
-		CellStyle leftAligned = workBookTemplate.getWorkbook().createCellStyle();
+		CellStyle centerAligned = workBookTemplate.getWorkbook().createCellStyle();
+		centerAligned.setAlignment(HorizontalAlignment.CENTER);
 		for (File singleSimFolder : new File(folderAbsolutePath).listFiles(
 			(file, name) -> {
 				File currentIteratedFile = new File(file, name);
@@ -145,7 +146,7 @@ public class SESimulationSummaryGenerator extends Shared {
 					process(
 						singleSimFolderRelPath,
 						workBookTemplate,
-						leftAligned,
+						centerAligned,
 						headersToBeSkipped,
 						singleSimFolder,
 						report
@@ -161,7 +162,7 @@ public class SESimulationSummaryGenerator extends Shared {
 								process(
 									singleSimFolderRelPath,
 									workBookTemplate,
-									leftAligned,
+									centerAligned,
 									headersToBeSkipped,
 									singleSimFolder,
 									backup
@@ -193,14 +194,13 @@ public class SESimulationSummaryGenerator extends Shared {
 	protected static void process(
 		String singleSimFolderRelPath,
 		SimpleWorkbookTemplate summaryWorkBookTemplate,
-		CellStyle leftAligned,
+		CellStyle centerAligned,
 		List<String> headersToBeSkipped,
 		File singleSimFolder,
 		File report
 	) throws IOException {
 		try (InputStream inputStream = new FileInputStream(report.getAbsolutePath());Workbook simulationWorkBook = new XSSFWorkbook(inputStream);) {
 			FormulaEvaluator evaluator = simulationWorkBook.getCreationHelper().createFormulaEvaluator();
-			leftAligned.setAlignment(HorizontalAlignment.LEFT);
 			Sheet resultSheet = simulationWorkBook.getSheet(SELotterySimpleSimulator.RESULTS_LABEL);
 			int historicalUpdateDateColumnIndex = getCellIndex(resultSheet, SELotterySimpleSimulator.HISTORICAL_UPDATE_DATE_LABEL);
 			summaryWorkBookTemplate.addRow();
@@ -239,7 +239,7 @@ public class SESimulationSummaryGenerator extends Shared {
 			}
 			if (!historicalUpdateDates.isEmpty()) {
 				summaryWorkBookTemplate.addCell(String.join(", ", historicalUpdateDates.stream().map(TimeUtils.getDefaultDateFormat()::format).collect(Collectors.toList())))
-				.stream().findFirst().get().setCellStyle(leftAligned);
+				.stream().findFirst().get().setCellStyle(centerAligned);
 			}
 		}
 	}
