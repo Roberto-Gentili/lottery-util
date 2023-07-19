@@ -8,7 +8,7 @@ import java.util.function.Predicate;
 public class ConcurrentUtils {
 	public static final ConcurrentUtils INSTANCE = new ConcurrentUtils();
 
-	public void addTask(Collection<CompletableFuture<Void>> futures, Runnable taskOperation) {
+	public ConcurrentUtils addTask(Collection<CompletableFuture<Void>> futures, Runnable taskOperation) {
 		AtomicReference<CompletableFuture<Void>> taskWrapper = new AtomicReference<>();
 		taskWrapper.set(
 			CompletableFuture.runAsync(
@@ -43,9 +43,10 @@ public class ConcurrentUtils {
 				Throwables.sneakyThrow(exc);
 			}
 		}
+		return this;
 	}
 
-	public void waitUntil(
+	public ConcurrentUtils waitUntil(
 		Collection<CompletableFuture<Void>> futures,
 		Predicate<Collection<CompletableFuture<Void>>> futuresPredicate
 	) {
@@ -60,7 +61,16 @@ public class ConcurrentUtils {
 				}
 			}
 		}
+		return this;
+	}
 
+	public ConcurrentUtils sleep(long millis) {
+		try {
+			Thread.sleep(millis);
+		} catch (InterruptedException exc) {
+			Throwables.sneakyThrow(exc);
+		}
+		return this;
 	}
 
 }

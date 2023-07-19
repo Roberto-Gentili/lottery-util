@@ -6,6 +6,7 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
 import java.util.Comparator;
+import java.util.concurrent.CompletableFuture;
 
 public class MathUtils {
 
@@ -48,6 +49,11 @@ public class MathUtils {
 		}
 	}
 
+
+	public BigInteger factorial(BigInteger number) {
+		return FactorialComputer.of(number).compute();
+	}
+	/*
 	public BigInteger factorial(BigInteger number) {
 		BigInteger factorial = BigInteger.ONE;
 		BigInteger divisor = BigInteger.valueOf(100_000);
@@ -62,7 +68,7 @@ public class MathUtils {
 			}
 		}
 		return factorial;
-	}
+	}*/
 
 	public BigInteger factorial(Number number) {
 		return factorial(BigInteger.valueOf(number.longValue()));
@@ -73,6 +79,55 @@ public class MathUtils {
 			return "null";
 		}
 		return String.format("%,d", value);
+	}
+
+	public static class FactorialComputer {
+		private final static BigInteger loggerStartingThreshold = BigInteger.valueOf(200000);
+		BigInteger factorial;
+		BigInteger initialValue;
+		BigInteger number;
+		boolean computed;
+
+		private FactorialComputer(BigInteger number) {
+			initialValue = number;
+			this.number = number;
+		}
+
+		public static FactorialComputer of(BigInteger number) {
+			return new FactorialComputer(number);
+		}
+
+		FactorialComputer startLogging() {
+			CompletableFuture.runAsync(() -> {
+				while (!computed) {
+					ConcurrentUtils.INSTANCE.sleep(10000);
+					if (computed) {
+						continue;
+					}
+					BigInteger processedNumbers = initialValue.subtract(number);
+					LogUtils.INSTANCE.info("Processed " + processedNumbers
+							.toString() + " numbers - Factorial: " + factorial.toString());
+				}
+			});
+			return this;
+		}
+
+		public BigInteger compute() {
+			if (factorial != null) {
+				return factorial;
+			}
+			if (number.compareTo(loggerStartingThreshold) >= 0) {
+				startLogging();
+			}
+			factorial = BigInteger.ONE;
+			while (number.compareTo(BigInteger.ZERO) > 0) {
+				factorial = factorial.multiply(number);
+				number = number.subtract(BigInteger.ONE);
+			}
+			computed = true;
+			return factorial;
+		}
+
 	}
 
 }
