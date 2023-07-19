@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -124,6 +125,12 @@ public class SELotterySimpleSimulator extends Shared {
 	static final String hostName;
 	static final SEStats allTimeStats;
 	static final List<List<String>> header;
+
+	static final Comparator<Row> rowsForDateComparator = (rowOne, rowTwo) -> {
+		return rowOne.getCell(getCellIndex(rowOne.getSheet(), EXTRACTION_DATE_LABEL)).getDateCellValue().compareTo(
+			rowTwo.getCell(getCellIndex(rowTwo.getSheet(), EXTRACTION_DATE_LABEL)).getDateCellValue()
+		);
+	};
 
 	static {
 		cellIndexesCache = new ConcurrentHashMap<>();
@@ -437,15 +444,13 @@ public class SELotterySimpleSimulator extends Shared {
 			excelFileName,
 			workBook -> {
 				Sheet sheet = workBook.getSheet(RESULTS_LABEL);
-				Iterator<Row> rowIterator = sheet.rowIterator();
-				rowIterator.next();
-				rowIterator.next();
+				Iterator<Row> rowIterator = sortRowsForDate(sheet).iterator();
 				Map<String, List<Row>> groupedForRedundancyRows = new LinkedHashMap<>();
 				while (rowIterator.hasNext()) {
 					Row row = rowIterator.next();
 					if (rowRefersTo(row, configFileName)) {
 						groupedForRedundancyRows.computeIfAbsent(
-							row.getCell(row.getLastCellNum()-1).getStringCellValue(),
+							row.getCell(getCellIndex(sheet, FILE_LABEL)).getStringCellValue(),
 							key -> new ArrayList<>()
 						).add(row);
 					}
@@ -453,18 +458,34 @@ public class SELotterySimpleSimulator extends Shared {
 				List<List<Row>> allGroupedForRedundancyRows = new ArrayList<>(groupedForRedundancyRows.values());
 				List<Row> latestGroupOfRows = allGroupedForRedundancyRows.stream().reduce((prev, next) -> next).orElse(null);
 				allGroupedForRedundancyRows.remove(latestGroupOfRows);
+				List<Row> toBeRemoved = new ArrayList<>();
 				for (List<Row> rows : allGroupedForRedundancyRows) {
 					if (rows.size() < redundancy) {
 						for (Row row : rows) {
-							removeRow(row);
+							toBeRemoved.add(row);
 						}
 					}
 				}
 				if (latestGroupOfRows != null && latestGroupOfRows.size() != redundancy && latestGroupOfRows.size() != competionDateLatestBlock.size()) {
 					for (Row row : latestGroupOfRows) {
-						removeRow(row);
+						toBeRemoved.add(row);
 					}
 				}
+				LogUtils fileLogger = LogUtils.ToFile.getLogger(configuration.getProperty("logger.file.name"));
+				removeRows(
+					toBeRemoved,
+					rowsForDateComparator,
+					(row, exception) -> {
+						int rowIndex = row.getRowNum();
+						if (exception == null) {
+							fileLogger.warn("Row " + (rowIndex + 1) + " of file " + excelFileName + " has been removed");
+							LogUtils.INSTANCE.warn("Row " + (rowIndex + 1) + " of file " + excelFileName + " has been removed");
+						} else {
+							fileLogger.error("Unable to remove row " + (rowIndex + 1) + " for file " + excelFileName + ": " + exception.getMessage());
+							LogUtils.INSTANCE.error("Unable to remove row " + (rowIndex + 1) + " for file " + excelFileName + ": " + exception.getMessage());
+						}
+					}
+				);
 			},
 			workBook ->
 				createWorkbook(workBook, excelFileName),
@@ -475,6 +496,22 @@ public class SELotterySimpleSimulator extends Shared {
 			},
 			isSlave
 		);
+	}
+
+	static List<Row> sortRowsForDate(Sheet sheet) {
+		return sortRowsForDate(sheet, false);
+	}
+
+	static List<Row> sortRowsForDate(Sheet sheet, boolean reversed) {
+		Iterator<Row> rowIterator = sheet.rowIterator();
+		for (int i = 0; i < header.size(); i++) {
+			rowIterator.next();
+		}
+		List<Row> orderedForDateRows = new ArrayList<>();
+		while (rowIterator.hasNext()) {
+			orderedForDateRows.add(rowIterator.next());
+		}
+		return sortRows(orderedForDateRows, rowsForDateComparator, reversed);
 	}
 
 	private static boolean rowRefersTo(Row row, String configurationName) {
@@ -661,7 +698,7 @@ public class SELotterySimpleSimulator extends Shared {
 				}
 				int rowProcessedCounter = 0;
 				int modifiedRowCounter = 0;
-				List<Integer> rowsToBeRemoved = new ArrayList<>();
+				List<Row> rowsToBeRemoved = new ArrayList<>();
 				for (int index = 0; index < rowsToBeProcessed.size(); index++) {
 					Integer rowIndex = rowsToBeProcessed.get(index);
 					Row currentRow = sheet.getRow(rowIndex);
@@ -786,7 +823,7 @@ public class SELotterySimpleSimulator extends Shared {
 							fileLogger.error("Exception occurred while processing row " + (rowIndex + 1) + " of file " + excelFileName + ": " + exc.getMessage());
 							fileLogger.warn("Row " + (rowIndex + 1) + " of file " + excelFileName + " will be removed");
 							LogUtils.INSTANCE.warn("Row " + (rowIndex + 1) + " of file " + excelFileName + " will be removed");
-							rowsToBeRemoved.add(rowIndex);
+							rowsToBeRemoved.add(currentRow);
 						}
 					}
 					++rowProcessedCounter;
@@ -797,15 +834,21 @@ public class SELotterySimpleSimulator extends Shared {
 				}
 				if (!isSlave) {
 					LogUtils fileLogger = LogUtils.ToFile.getLogger(configuration.getProperty("logger.file.name"));
-					for (Integer rowIndex : rowsToBeRemoved) {
-						try {
-							removeRow(sheet, rowIndex);
-						} catch (Throwable exc) {
-							removedRowResult.set(-3);
-							fileLogger.error("Unable to remove row " + (rowIndex + 1) + " for file " + excelFileName + ": " + exc.getMessage());
-							LogUtils.INSTANCE.error("Unable to remove row " + (rowIndex + 1) + " for file " + excelFileName + ": " + exc.getMessage());
+					removeRows(
+						rowsToBeRemoved,
+						rowsForDateComparator,
+						(row, exception) -> {
+							int rowIndex = row.getRowNum();
+							if (exception == null) {
+
+							} else {
+								removedRowResult.set(-3);
+								fileLogger.error("Unable to remove row " + (rowIndex + 1) + " for file " + excelFileName + ": " + exception.getMessage());
+								LogUtils.INSTANCE.error("Unable to remove row " + (rowIndex + 1) + " for file " + excelFileName + ": " + exception.getMessage());
+							}
 						}
-					}
+					);
+					Collections.sort(rowsToBeRemoved, Collections.reverseOrder());
 					if (!rowsToBeRemoved.isEmpty()) {
 						if (removedRowResult.get() == null) {
 							removedRowResult.set(-2);

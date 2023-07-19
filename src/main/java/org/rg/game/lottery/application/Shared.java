@@ -5,9 +5,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.TextStyle;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
+import java.util.function.BiConsumer;
 
 import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.poi.ss.usermodel.Cell;
@@ -21,6 +25,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.util.IOUtils;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.rg.game.core.CollectionUtils;
+import org.rg.game.core.Throwables;
 import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.PersistentStorage;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
@@ -134,11 +139,46 @@ class Shared {
 		return cell;
 	}
 
-	static void removeRow(Sheet sheet, int rowIndex) {
-		removeRow(sheet.getRow(rowIndex));
+	static void removeRows(
+		List<Row> rows,
+		Comparator<Row> rowsComparator
+	) {
+		removeRows(
+			rows,
+			rowsComparator,
+			(row, exception) -> {
+				if (exception != null) {
+					Throwables.sneakyThrow(exception);
+				}
+			}
+		);
 	}
 
-	static void removeRow(Row row) {
+
+	static void removeRows(
+		List<Row> rows,
+		Comparator<Row> rowsComparator,
+		BiConsumer<Row, Throwable> postProcessing
+	) {
+		for (Row row : sortRows(rows, rowsComparator, true)) {
+			try {
+				removeRow(row);
+				postProcessing.accept(row, null);
+			} catch (Throwable exc) {
+				postProcessing.accept(row, exc);
+			}
+		}
+	}
+
+	static List<Row> sortRows(List<Row> sortedRows, Comparator<Row> rowsComparator, boolean reversed) {
+		int transformer = reversed ? -1 : 1;
+		Collections.sort(sortedRows, (rowOne, rowTwo) -> {
+			return rowsComparator.compare(rowOne, rowTwo) * transformer;
+		});
+		return sortedRows;
+	}
+
+	private static void removeRow(Row row) {
 		Sheet sheet = row.getSheet();
 		if (row != null) {
 			int rowIndex = row.getRowNum();
