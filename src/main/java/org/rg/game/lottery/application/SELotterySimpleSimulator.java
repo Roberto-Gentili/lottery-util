@@ -476,13 +476,13 @@ public class SELotterySimpleSimulator extends Shared {
 					toBeRemoved,
 					rowsForDateComparator,
 					(row, exception) -> {
-						int rowIndex = row.getRowNum();
+						int rowNum = row.getRowNum() + 1;
 						if (exception == null) {
-							fileLogger.warn("Row " + (rowIndex + 1) + " of file " + excelFileName + " has been removed");
-							LogUtils.INSTANCE.warn("Row " + (rowIndex + 1) + " of file " + excelFileName + " has been removed");
+							fileLogger.warn("Row " + rowNum + " of file " + excelFileName + " has been removed");
+							LogUtils.INSTANCE.warn("Row " + rowNum + " of file " + excelFileName + " has been removed");
 						} else {
-							fileLogger.error("Unable to remove row " + (rowIndex + 1) + " for file " + excelFileName + ": " + exception.getMessage());
-							LogUtils.INSTANCE.error("Unable to remove row " + (rowIndex + 1) + " for file " + excelFileName + ": " + exception.getMessage());
+							fileLogger.error("Unable to remove row " + rowNum + " for file " + excelFileName + ": " + exception.getMessage());
+							LogUtils.INSTANCE.error("Unable to remove row " + rowNum + " for file " + excelFileName + ": " + exception.getMessage());
 						}
 					}
 				);
@@ -838,13 +838,13 @@ public class SELotterySimpleSimulator extends Shared {
 						rowsToBeRemoved,
 						rowsForDateComparator,
 						(row, exception) -> {
-							int rowIndex = row.getRowNum();
+							int rowNum = row.getRowNum();
 							if (exception == null) {
 
 							} else {
 								removedRowResult.set(-3);
-								fileLogger.error("Unable to remove row " + (rowIndex + 1) + " for file " + excelFileName + ": " + exception.getMessage());
-								LogUtils.INSTANCE.error("Unable to remove row " + (rowIndex + 1) + " for file " + excelFileName + ": " + exception.getMessage());
+								fileLogger.error("Unable to remove row " + rowNum + " for file " + excelFileName + ": " + exception.getMessage());
+								LogUtils.INSTANCE.error("Unable to remove row " + rowNum + " for file " + excelFileName + ": " + exception.getMessage());
 							}
 						}
 					);
