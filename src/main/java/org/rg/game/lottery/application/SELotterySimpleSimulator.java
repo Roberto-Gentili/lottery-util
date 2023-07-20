@@ -475,8 +475,8 @@ public class SELotterySimpleSimulator extends Shared {
 				removeRows(
 					toBeRemoved,
 					rowsForDateComparator,
-					(row, exception) -> {
-						int rowNum = row.getRowNum() + 1;
+					row -> rowIndex -> exception -> {
+						int rowNum = rowIndex + 1;
 						if (exception == null) {
 							fileLogger.warn("Row " + rowNum + " of file " + excelFileName + " has been removed");
 							LogUtils.INSTANCE.warn("Row " + rowNum + " of file " + excelFileName + " has been removed");
@@ -837,8 +837,8 @@ public class SELotterySimpleSimulator extends Shared {
 					removeRows(
 						rowsToBeRemoved,
 						rowsForDateComparator,
-						(row, exception) -> {
-							int rowNum = row.getRowNum();
+						row -> rowIndex -> exception -> {
+							int rowNum = rowIndex + 1;
 							if (exception == null) {
 
 							} else {
@@ -1322,15 +1322,15 @@ public class SELotterySimpleSimulator extends Shared {
 						workBook = new XSSFWorkbook();
 						createAction.accept(workBook);
 					}
+					if (workBook != null && finallyAction!= null) {
+						try {
+							finallyAction.accept(workBook);
+						} catch (Throwable exc) {
+							Throwables.sneakyThrow(exc);
+						}
+					}
 				} finally {
 					if (workBook != null) {
-						if (finallyAction!= null) {
-							try {
-								finallyAction.accept(workBook);
-							} catch (Throwable exc) {
-								Throwables.sneakyThrow(exc);
-							}
-						}
 						try {
 							workBook.close();
 						} catch (IOException exc) {

@@ -11,7 +11,8 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.poi.ss.usermodel.Cell;
@@ -146,7 +147,7 @@ class Shared {
 		removeRows(
 			rows,
 			rowsComparator,
-			(row, exception) -> {
+			row -> rowIndex -> exception -> {
 				if (exception != null) {
 					Throwables.sneakyThrow(exception);
 				}
@@ -158,14 +159,16 @@ class Shared {
 	static void removeRows(
 		List<Row> rows,
 		Comparator<Row> rowsComparator,
-		BiConsumer<Row, Throwable> postProcessing
+		Function<Row, Function<Integer, Consumer<Throwable>>> postProcessing
 	) {
 		for (Row row : sortRows(rows, rowsComparator, true)) {
+			Integer rowIndex = null;
 			try {
+				rowIndex = row.getRowNum();
 				removeRow(row);
-				postProcessing.accept(row, null);
+				postProcessing.apply(row).apply(rowIndex).accept(null);
 			} catch (Throwable exc) {
-				postProcessing.accept(row, exc);
+				postProcessing.apply(row).apply(rowIndex).accept(exc);
 			}
 		}
 	}
