@@ -105,8 +105,10 @@ public class MathUtils {
 						continue;
 					}
 					BigInteger processedNumbers = initialValue.subtract(number);
-					LogUtils.INSTANCE.info("Processed " + processedNumbers
-							.toString() + " numbers - Factorial: " + factorial.toString());
+					LogUtils.INSTANCE.info(
+						"Processed " + processedNumbers
+						.toString() + " numbers - Factorial: " + factorial.toString()
+					);
 				}
 			});
 			return this;
