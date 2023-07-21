@@ -51,7 +51,7 @@ public class MathUtils {
 
 
 	public BigInteger factorial(BigInteger number) {
-		return FactorialComputer.of(number).compute();
+		return Factorial.of(number).get();
 	}
 	/*
 	public BigInteger factorial(BigInteger number) {
@@ -81,23 +81,23 @@ public class MathUtils {
 		return String.format("%,d", value);
 	}
 
-	public static class FactorialComputer {
+	public static class Factorial {
 		private final static BigInteger loggerStartingThreshold = BigInteger.valueOf(200000);
 		BigInteger factorial;
 		BigInteger initialValue;
 		BigInteger number;
 		boolean computed;
 
-		private FactorialComputer(BigInteger number) {
+		private Factorial(BigInteger number) {
 			initialValue = number;
 			this.number = number;
 		}
 
-		public static FactorialComputer of(BigInteger number) {
-			return new FactorialComputer(number);
+		public static Factorial of(BigInteger number) {
+			return new Factorial(number);
 		}
 
-		FactorialComputer startLogging() {
+		Factorial startLogging() {
 			CompletableFuture.runAsync(() -> {
 				while (!computed) {
 					ConcurrentUtils.INSTANCE.sleep(10000);
@@ -112,7 +112,7 @@ public class MathUtils {
 			return this;
 		}
 
-		public BigInteger compute() {
+		public BigInteger get() {
 			if (factorial != null) {
 				return factorial;
 			}
