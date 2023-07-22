@@ -381,9 +381,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		LocalDate today = TimeUtils.today();
 		if (today.compareTo(extractionDate) >= 0) {
 			Date latestExtractionDate = sEStats.getLatestExtractionDate();
-			if (latestExtractionDate != null && latestExtractionDate.toInstant()
-				.atZone(TimeUtils.DEFAULT_TIME_ZONE)
-			    .toLocalDate().compareTo(extractionDate) == 0 &&
+			if (latestExtractionDate != null && TimeUtils.toLocalDate(latestExtractionDate).compareTo(extractionDate) == 0 &&
 			    !(extractionDate.compareTo(today) > 0 ||
 				    (extractionDate.compareTo(today) == 0 && TimeUtils.now().compareTo(
 						TimeUtils.now().with(extractionDate).withHour(21).withMinute(0).withSecond(0).withNano(0)
