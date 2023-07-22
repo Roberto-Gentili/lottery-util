@@ -852,8 +852,6 @@ public class SELotterySimpleSimulator extends Shared {
 							}
 						);
 					}
-					//Verificare se effettivamente serve
-					Collections.sort(rowsToBeRemoved, Collections.reverseOrder());
 					if (!rowsToBeRemoved.isEmpty()) {
 						if (removedRowResult.get() == null) {
 							removedRowResult.set(-2);
