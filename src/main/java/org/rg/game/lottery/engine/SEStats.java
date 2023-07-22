@@ -1218,7 +1218,7 @@ public class SEStats {
 		long counter = 0;
 		LocalDate seedStartDate = null;
 		for (Map.Entry<Date, List<Integer>> extractionData : allWinningCombos.entrySet()) {
-			seedStartDate = extractionData.getKey().toInstant().atZone(TimeUtils.DEFAULT_TIME_ZONE).toLocalDate();
+			seedStartDate = TimeUtils.toLocalDate(extractionData.getKey());
 			if (seedStartDate.compareTo(extractionDate) <= 0) {
 				break;
 			}
