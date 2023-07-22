@@ -1294,7 +1294,7 @@ public class SEStats {
 		} else {
 			if (checkIfIsToday) {
 				LocalDateTime now = TimeUtils.now();
-				if (now.toLocalDate().compareTo(startDate) == 0 && isExtractionDate && now.compareTo(now.withHour(19).withMinute(0).withSecond(0).withNano(0)) < 0) {
+				if (now.toLocalDate().compareTo(startDate) == 0 && isExtractionDate && now.compareTo(SEStats.toClosingTime(now)) < 0) {
 					return 0;
 				}
 			}
@@ -1329,12 +1329,24 @@ public class SEStats {
 		} else {
 			if (checkIfIsToday) {
 				LocalDateTime now = TimeUtils.now();
-				if (now.toLocalDate().compareTo(startDate) == 0 && isExtractionDate && now.compareTo(now.withHour(19).withMinute(0).withSecond(0).withNano(0)) > 0) {
+				if (now.toLocalDate().compareTo(startDate) == 0 && isExtractionDate && now.compareTo(toClosingTime(now)) > 0) {
 					return 0;
 				}
 			}
 			return (currentDayOfWeek.getValue() + (DayOfWeek.SUNDAY.ordinal() - extractionDates.get(extractionDates.size()-1).ordinal())) * -1;
 		}
+	}
+
+	public static LocalDateTime toClosingTime(LocalDateTime time) {
+		return time.withHour(19).withMinute(0).withSecond(0).withNano(0);
+	}
+
+	public static LocalDateTime toClosingTime(LocalDate date) {
+		return TimeUtils.now().with(date).withHour(19).withMinute(0).withSecond(0).withNano(0);
+	}
+
+	public static LocalDateTime toAfterExtraction(LocalDate extractionDate) {
+		return TimeUtils.now().with(extractionDate).withHour(21).withMinute(0).withSecond(0).withNano(0);
 	}
 
 }

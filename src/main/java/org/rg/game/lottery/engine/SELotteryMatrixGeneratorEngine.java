@@ -3,6 +3,7 @@ package org.rg.game.lottery.engine;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -71,9 +72,10 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 
 	@Override
 	public LocalDate computeNextExtractionDate(LocalDate startDate, boolean incrementIfExpired) {
+		LocalDateTime now = TimeUtils.now();
 		if (incrementIfExpired) {
-			while (TimeUtils.now().compareTo(
-				TimeUtils.now().with(startDate).withHour(19).withMinute(0).withSecond(0).withNano(0)
+			while (now.compareTo(
+				SEStats.toClosingTime(startDate)
 			) > 0) {
 				startDate = startDate.plus(1, ChronoUnit.DAYS);
 			}
@@ -384,7 +386,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 			if (latestExtractionDate != null && TimeUtils.toLocalDate(latestExtractionDate).compareTo(extractionDate) == 0 &&
 			    !(extractionDate.compareTo(today) > 0 ||
 				    (extractionDate.compareTo(today) == 0 && TimeUtils.now().compareTo(
-						TimeUtils.now().with(extractionDate).withHour(21).withMinute(0).withSecond(0).withNano(0)
+				    	SEStats.toAfterExtraction(extractionDate)
 					) < 0)
 			    )
 			) {

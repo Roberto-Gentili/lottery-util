@@ -2,6 +2,7 @@ package org.rg.game.lottery.engine;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -29,9 +30,10 @@ public class MDLotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 
 	@Override
 	public LocalDate computeNextExtractionDate(LocalDate startDate, boolean incrementIfExpired) {
+		LocalDateTime now = TimeUtils.now();
 		if (incrementIfExpired) {
-			while (TimeUtils.now().compareTo(
-				TimeUtils.now().with(startDate).withHour(18).withMinute(45).withSecond(0).withNano(0)
+			while (now.compareTo(
+				now.with(startDate).withHour(18).withMinute(45).withSecond(0).withNano(0)
 			) > 0) {
 				startDate = startDate.plus(1, ChronoUnit.DAYS);
 			}
