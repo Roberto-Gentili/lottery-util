@@ -12,7 +12,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.ZoneId;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -473,7 +473,7 @@ public class SEStats {
 	}
 
 	public List<Integer> getWinningComboOf(LocalDate date) {
-		return getWinningComboOf(Date.from(date.atStartOfDay(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE)).toInstant()));
+		return getWinningComboOf(Date.from(date.atStartOfDay(TimeUtils.DEFAULT_TIME_ZONE).toInstant()));
 	}
 
 	public List<Integer> getWinningComboWithJollyAndSuperstarOf(Date date) {
@@ -483,7 +483,7 @@ public class SEStats {
 	}
 
 	public List<Integer> getWinningComboWithJollyAndSuperstarOf(LocalDate date) {
-		return getWinningComboWithJollyAndSuperstarOf(Date.from(date.atStartOfDay(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE)).toInstant()));
+		return getWinningComboWithJollyAndSuperstarOf(Date.from(date.atStartOfDay(TimeUtils.DEFAULT_TIME_ZONE).toInstant()));
 	}
 
 	public Integer getJollyOf(Date date) {
@@ -1218,7 +1218,7 @@ public class SEStats {
 		long counter = 0;
 		LocalDate seedStartDate = null;
 		for (Map.Entry<Date, List<Integer>> extractionData : allWinningCombos.entrySet()) {
-			seedStartDate = extractionData.getKey().toInstant().atZone(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE)).toLocalDate();
+			seedStartDate = extractionData.getKey().toInstant().atZone(TimeUtils.DEFAULT_TIME_ZONE).toLocalDate();
 			if (seedStartDate.compareTo(extractionDate) <= 0) {
 				break;
 			}
@@ -1265,18 +1265,25 @@ public class SEStats {
 				extractionDates.set(extractionDates.indexOf(nextExctractionDay), currentDayOfWeek);
 			}
 		}
-		return computeDaysToNextExtractionDate(startDate, extractionDates);
+		return computeDaysToNextExtractionDate(startDate, extractionDates, false);
 	}
-
 
 	public static int computeDaysToNextExtractionDate(LocalDate startDate) {
-		return computeDaysToNextExtractionDate(startDate, EXTRACTION_DAYS);
+		return computeDaysToNextExtractionDate(startDate, false);
 	}
 
-	private static int computeDaysToNextExtractionDate(LocalDate startDate, List<DayOfWeek> extractionDates) {
+	public static int computeDaysToNextExtractionDate(LocalDate startDate, boolean checkIfIsToday) {
+		return computeDaysToNextExtractionDate(startDate, EXTRACTION_DAYS, checkIfIsToday);
+	}
+
+	private static int computeDaysToNextExtractionDate(LocalDate startDate, List<DayOfWeek> extractionDates, boolean checkIfIsToday) {
 		DayOfWeek currentDayOfWeek = startDate.getDayOfWeek();
 		DayOfWeek nextExctractionDay = null;
+		boolean isExtractionDate = false;
 		for (DayOfWeek extractionDay : extractionDates) {
+			if (currentDayOfWeek.compareTo(extractionDay) == 0) {
+				isExtractionDate = true;
+			}
 			if (currentDayOfWeek.compareTo(extractionDay) < 0) {
 				nextExctractionDay = extractionDay;
 				break;
@@ -1285,19 +1292,33 @@ public class SEStats {
 		if (nextExctractionDay != null) {
 			return nextExctractionDay.ordinal() - currentDayOfWeek.ordinal();
 		} else {
+			if (checkIfIsToday) {
+				LocalDateTime now = TimeUtils.now();
+				if (now.toLocalDate().compareTo(startDate) == 0 && isExtractionDate && now.compareTo(now.withHour(19).withMinute(0).withSecond(0).withNano(0)) < 0) {
+					return 0;
+				}
+			}
 			return (DayOfWeek.SUNDAY.ordinal() - currentDayOfWeek.ordinal()) + extractionDates.get(0).getValue();
 		}
 	}
 
 	public static int computeDaysFromPreviousExtractionDate(LocalDate startDate) {
-		return computeDaysFromPreviousExtractionDate(startDate, EXTRACTION_DAYS);
+		return computeDaysFromPreviousExtractionDate(startDate, false);
 	}
 
-	private static int computeDaysFromPreviousExtractionDate(LocalDate startDate, List<DayOfWeek> extractionDates) {
+	public static int computeDaysFromPreviousExtractionDate(LocalDate startDate, boolean checkIfIsToday) {
+		return computeDaysFromPreviousExtractionDate(startDate, EXTRACTION_DAYS, checkIfIsToday);
+	}
+
+	private static int computeDaysFromPreviousExtractionDate(LocalDate startDate, List<DayOfWeek> extractionDates, boolean checkIfIsToday) {
 		DayOfWeek currentDayOfWeek = startDate.getDayOfWeek();
 		DayOfWeek previousExctractionDay = null;
+		boolean isExtractionDate = false;
 		for (int i = extractionDates.size() - 1; i >= 0; i--) {
 			DayOfWeek extractionDay = extractionDates.get(i);
+			if (currentDayOfWeek.compareTo(extractionDay) == 0) {
+				isExtractionDate = true;
+			}
 			if (currentDayOfWeek.compareTo(extractionDay) > 0) {
 				previousExctractionDay = extractionDay;
 				break;
@@ -1306,6 +1327,12 @@ public class SEStats {
 		if (previousExctractionDay != null) {
 			return previousExctractionDay.ordinal() - currentDayOfWeek.ordinal();
 		} else {
+			if (checkIfIsToday) {
+				LocalDateTime now = TimeUtils.now();
+				if (now.toLocalDate().compareTo(startDate) == 0 && isExtractionDate && now.compareTo(now.withHour(19).withMinute(0).withSecond(0).withNano(0)) > 0) {
+					return 0;
+				}
+			}
 			return (currentDayOfWeek.getValue() + (DayOfWeek.SUNDAY.ordinal() - extractionDates.get(extractionDates.size()-1).ordinal())) * -1;
 		}
 	}

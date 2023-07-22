@@ -2,8 +2,6 @@ package org.rg.game.lottery.engine;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -15,6 +13,8 @@ import java.util.Properties;
 import java.util.Random;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import org.rg.game.core.TimeUtils;
 
 public class MDLotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEngine {
 	private static final List<Map.Entry<Supplier<MDLotteryMatrixGeneratorEngine>, Properties>> allPreviousEngineAndConfigurations;
@@ -30,8 +30,8 @@ public class MDLotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	@Override
 	public LocalDate computeNextExtractionDate(LocalDate startDate, boolean incrementIfExpired) {
 		if (incrementIfExpired) {
-			while (LocalDateTime.now(ZoneId.of("Europe/Rome")).compareTo(
-				LocalDateTime.now(ZoneId.of("Europe/Rome")).with(startDate).withHour(18).withMinute(45).withSecond(0).withNano(0)
+			while (TimeUtils.now().compareTo(
+				TimeUtils.now().with(startDate).withHour(18).withMinute(45).withSecond(0).withNano(0)
 			) > 0) {
 				startDate = startDate.plus(1, ChronoUnit.DAYS);
 			}

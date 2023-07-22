@@ -81,7 +81,7 @@ public class SEMassiveVerifierAndQualityChecker extends Shared {
 		Map<String, Map<Number,List<List<Integer>>>> historyData = new LinkedHashMap<>();
 		Map<Number, List<List<Integer>>> globalData = new LinkedHashMap<>();
 		Map<Integer,Map<String, Map<Number, Integer>>> dataForTime = new LinkedHashMap<>();
-		LocalDateTime backupTime = LocalDateTime.now();
+		LocalDateTime backupTime = TimeUtils.now();
 		for (List<Map.Entry<LocalDate, Object>> dateGroup: dateGroupsList) {
 			for (Map.Entry<LocalDate, Object> dateInfo : dateGroup) {
 				String extractionDate = TimeUtils.defaultLocalDateFormat.format(dateInfo.getKey());

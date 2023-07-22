@@ -2,8 +2,6 @@ package org.rg.game.lottery.application;
 
 import java.io.File;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.TextStyle;
 import java.util.Collections;
 import java.util.Comparator;
@@ -50,7 +48,7 @@ class Shared {
 
 	static LocalDate convert(String dateAsString) {
 		if (dateAsString.equals("today")) {
-			return LocalDateTime.now(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE)).toLocalDate();
+			return TimeUtils.today();
 		}
 		return CollectionUtils.INSTANCE.getLastElement(
 			SELotteryMatrixGeneratorEngine.DEFAULT_INSTANCE.computeExtractionDates(dateAsString)

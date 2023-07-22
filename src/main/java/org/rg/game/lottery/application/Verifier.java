@@ -7,8 +7,6 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -70,7 +68,7 @@ public class Verifier {
 					startDate = startDate.minus(1, ChronoUnit.DAYS);
 				}
 			} else if (competionName.equals("Million Day")) {
-				if (LocalDateTime.now(ZoneId.of("Europe/Rome")).compareTo(TimeUtils.today().atTime(20, 30)) < 0) {
+				if (TimeUtils.now().compareTo(TimeUtils.today().atTime(20, 30)) < 0) {
 					startDate = startDate.minus(1, ChronoUnit.DAYS);
 				}
 			}

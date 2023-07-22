@@ -3,8 +3,6 @@ package org.rg.game.lottery.engine;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -74,8 +72,8 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	@Override
 	public LocalDate computeNextExtractionDate(LocalDate startDate, boolean incrementIfExpired) {
 		if (incrementIfExpired) {
-			while (LocalDateTime.now(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE)).compareTo(
-				LocalDateTime.now(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE)).with(startDate).withHour(19).withMinute(0).withSecond(0).withNano(0)
+			while (TimeUtils.now().compareTo(
+				TimeUtils.now().with(startDate).withHour(19).withMinute(0).withSecond(0).withNano(0)
 			) > 0) {
 				startDate = startDate.plus(1, ChronoUnit.DAYS);
 			}
@@ -376,16 +374,19 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	public SEStats getSEStats(LocalDate extractionDate) {
-		SEStats sEStats = SEStats.get(getExtractionArchiveStartDate(), TimeUtils.defaultLocalDateFormat.format(extractionDate));
+		SEStats sEStats = SEStats.get(
+			getExtractionArchiveStartDate(),
+			TimeUtils.defaultLocalDateFormat.format(extractionDate)
+		);
 		LocalDate today = TimeUtils.today();
 		if (today.compareTo(extractionDate) >= 0) {
 			Date latestExtractionDate = sEStats.getLatestExtractionDate();
 			if (latestExtractionDate != null && latestExtractionDate.toInstant()
-				.atZone(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE))
+				.atZone(TimeUtils.DEFAULT_TIME_ZONE)
 			    .toLocalDate().compareTo(extractionDate) == 0 &&
 			    !(extractionDate.compareTo(today) > 0 ||
-				    (extractionDate.compareTo(today) == 0 && LocalDateTime.now(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE)).compareTo(
-						LocalDateTime.now(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE)).with(extractionDate).withHour(21).withMinute(0).withSecond(0).withNano(0)
+				    (extractionDate.compareTo(today) == 0 && TimeUtils.now().compareTo(
+						TimeUtils.now().with(extractionDate).withHour(21).withMinute(0).withSecond(0).withNano(0)
 					) < 0)
 			    )
 			) {

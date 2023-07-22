@@ -2,6 +2,7 @@ package org.rg.game.core;
 
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -11,7 +12,7 @@ import java.util.Date;
 
 public class TimeUtils {
 
-	public static final String DEFAULT_TIME_ZONE = "Europe/Rome";
+	public static final ZoneId DEFAULT_TIME_ZONE = ZoneId.of("Europe/Rome");
 	private static ThreadLocal<SimpleDateFormat> defaultDateFmtForFilePrefix = ThreadLocal.withInitial(() -> new SimpleDateFormat("[yyyy][MM][dd]"));
 	public static DateTimeFormatter dateTimeFormatForBackup = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
 	private static ThreadLocal<SimpleDateFormat> defaultDateFormat = ThreadLocal.withInitial(() -> new SimpleDateFormat("dd/MM/yyyy"));
@@ -22,11 +23,11 @@ public class TimeUtils {
 	public static Comparator<LocalDate> reversedLocalDateComparator = Collections.reverseOrder((dateOne, dateTwo) -> dateOne.compareTo(dateTwo));
 
 	public static Date toDate(LocalDate date) {
-		return Date.from(date.atStartOfDay(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE)).toInstant());
+		return Date.from(date.atStartOfDay(DEFAULT_TIME_ZONE).toInstant());
 	}
 
 	public static LocalDate toLocalDate(Date date) {
-		return date.toInstant().atZone(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE)).toLocalDate();
+		return date.toInstant().atZone(DEFAULT_TIME_ZONE).toLocalDate();
 	}
 
 	public static long differenceInDays(Date startDate, Date endDate) {
@@ -58,7 +59,11 @@ public class TimeUtils {
 	}
 
 	public static LocalDate today() {
-		return LocalDate.now(ZoneId.of("Europe/Rome"));
+		return LocalDate.now(DEFAULT_TIME_ZONE);
+	}
+
+	public static LocalDateTime now() {
+		return LocalDateTime.now(DEFAULT_TIME_ZONE);
 	}
 
 }

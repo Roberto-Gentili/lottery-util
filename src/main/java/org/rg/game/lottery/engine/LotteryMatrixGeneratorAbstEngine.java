@@ -698,7 +698,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 			}
 		}
 		LogUtils.INSTANCE.info(
-			getProcessingContext().formatter.format(LocalDateTime.now()) +
+			getProcessingContext().formatter.format(TimeUtils.now()) +
 			" - " + getProcessingContext().integerFormat.format(uniqueIndexCounter.get()) + " unique indexes generated on " +
 			getProcessingContext().integerFormat.format(indexGeneratorCallsCounter.get()) + " calls. " +
 			getProcessingContext().integerFormat.format(indexesToBeProcessed.size()) + " indexes will be processed in the current iteration."
