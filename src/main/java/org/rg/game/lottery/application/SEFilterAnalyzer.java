@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 
 public class SEFilterAnalyzer extends Shared {
@@ -19,7 +20,7 @@ public class SEFilterAnalyzer extends Shared {
 		"70 -> 79: 0,3;" +
 		"80 -> 90: 0,3;";
 	public static void main(String[] args) {
-		LocalDate extractionDate = LocalDate.now();
+		LocalDate extractionDate = TimeUtils.today();
 		SELotteryMatrixGeneratorEngine.DEFAULT_INSTANCE.testEffectiveness(
 			filter,
 			IntStream.rangeClosed(1, 90)

@@ -108,8 +108,9 @@ public class SEStats {
 
 	public static final SEStats get(String startDate, String endDate) {
 		boolean isGlobal = false;
-		if (LocalDate.parse(endDate, TimeUtils.defaultLocalDateFormat).compareTo(LocalDate.now()) >= 0) {
-			endDate = TimeUtils.defaultLocalDateFormat.format(LocalDate.now());
+		LocalDate today = TimeUtils.today();
+		if (LocalDate.parse(endDate, TimeUtils.defaultLocalDateFormat).compareTo(today) >= 0) {
+			endDate = TimeUtils.defaultLocalDateFormat.format(today);
 			isGlobal = startDate.equals(FIRST_EXTRACTION_DATE_AS_STRING) || startDate.equals(FIRST_EXTRACTION_DATE_WITH_NEW_MACHINE_AS_STRING);
 		}
 		String key = startDate+"->"+endDate;
@@ -883,12 +884,13 @@ public class SEStats {
 
 		@Override
 		public boolean load() throws Throwable {
+			LocalDate today = TimeUtils.today();
 			if (TimeUtils.toLocalDate(startDate).compareTo(FIRST_EXTRACTION_LOCAL_DATE) == 0 &&
-				TimeUtils.toLocalDate(endDate).compareTo(LocalDate.now()) == 0
+				TimeUtils.toLocalDate(endDate).compareTo(today) == 0
 			) {
 				return false;
 			}
-			SEStats sEStats = SEStats.get(FIRST_EXTRACTION_DATE_AS_STRING, TimeUtils.defaultLocalDateFormat.format(LocalDate.now()));
+			SEStats sEStats = SEStats.get(FIRST_EXTRACTION_DATE_AS_STRING, TimeUtils.defaultLocalDateFormat.format(today));
 			for (Map.Entry<Date, List<Integer>> winningComboInfo : sEStats.allWinningCombos.entrySet()) {
 				if (winningComboInfo.getKey().compareTo(startDate) >= 0 && winningComboInfo.getKey().compareTo(endDate) <= 0) {
 					this.allWinningCombos.put(winningComboInfo.getKey(), winningComboInfo.getValue());

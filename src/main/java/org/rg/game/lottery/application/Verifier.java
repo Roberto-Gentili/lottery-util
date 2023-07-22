@@ -64,13 +64,13 @@ public class Verifier {
 			connection.disconnect();
 		}
 		if (extractionDate == null) {
-			LocalDate startDate = LocalDate.now();
+			LocalDate startDate = TimeUtils.today();
 			if (competionName.equals("Superenalotto")) {
 				while (!SEStats.EXTRACTION_DAYS.contains(startDate.getDayOfWeek())) {
 					startDate = startDate.minus(1, ChronoUnit.DAYS);
 				}
 			} else if (competionName.equals("Million Day")) {
-				if (LocalDateTime.now(ZoneId.of("Europe/Rome")).compareTo(LocalDate.now(ZoneId.of("Europe/Rome")).atTime(20, 30)) < 0) {
+				if (LocalDateTime.now(ZoneId.of("Europe/Rome")).compareTo(TimeUtils.today().atTime(20, 30)) < 0) {
 					startDate = startDate.minus(1, ChronoUnit.DAYS);
 				}
 			}

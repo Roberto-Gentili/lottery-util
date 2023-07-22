@@ -932,7 +932,7 @@ public class SELotterySimpleSimulator extends Shared {
 			configuration.getProperty(
 				"competition.archive.start-date",
 				new SELotteryMatrixGeneratorEngine().getDefaultExtractionArchiveStartDate()
-			), TimeUtils.defaultLocalDateFormat.format(LocalDate.now())
+			), TimeUtils.defaultLocalDateFormat.format(TimeUtils.today())
 		);
 	}
 

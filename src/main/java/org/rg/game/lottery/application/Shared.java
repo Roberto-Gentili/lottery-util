@@ -228,7 +228,7 @@ class Shared {
 			}
 		}
 		SELotteryMatrixGeneratorEngine engine = new SELotteryMatrixGeneratorEngine();
-		engine.extractionDate = LocalDate.now();
+		engine.extractionDate = TimeUtils.today();
 		engine.adjustSeed();
 		List<String> inClauses = new ArrayList<>();
 		for (List<Integer> winningCombo : system) {

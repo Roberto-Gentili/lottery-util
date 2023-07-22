@@ -57,4 +57,8 @@ public class TimeUtils {
 		return toDate(toLocalDate(dateCellValue).plus(daysOffset, chronoUnit));
 	}
 
+	public static LocalDate today() {
+		return LocalDate.now(ZoneId.of("Europe/Rome"));
+	}
+
 }

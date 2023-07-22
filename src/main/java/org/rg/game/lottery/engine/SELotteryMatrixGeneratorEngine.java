@@ -377,13 +377,14 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 
 	public SEStats getSEStats(LocalDate extractionDate) {
 		SEStats sEStats = SEStats.get(getExtractionArchiveStartDate(), TimeUtils.defaultLocalDateFormat.format(extractionDate));
-		if (LocalDate.now().compareTo(extractionDate) >= 0) {
+		LocalDate today = TimeUtils.today();
+		if (today.compareTo(extractionDate) >= 0) {
 			Date latestExtractionDate = sEStats.getLatestExtractionDate();
 			if (latestExtractionDate != null && latestExtractionDate.toInstant()
 				.atZone(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE))
 			    .toLocalDate().compareTo(extractionDate) == 0 &&
-			    !(extractionDate.compareTo(LocalDate.now()) > 0 ||
-				    (extractionDate.compareTo(LocalDate.now()) == 0 && LocalDateTime.now(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE)).compareTo(
+			    !(extractionDate.compareTo(today) > 0 ||
+				    (extractionDate.compareTo(today) == 0 && LocalDateTime.now(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE)).compareTo(
 						LocalDateTime.now(ZoneId.of(TimeUtils.DEFAULT_TIME_ZONE)).with(extractionDate).withHour(21).withMinute(0).withSecond(0).withNano(0)
 					) < 0)
 			    )
@@ -405,7 +406,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	public SEStats getSEStatsForSeed() {
-		return SEStats.get(getExtractionArchiveForSeedStartDate(),  TimeUtils.defaultLocalDateFormat.format(LocalDate.now()));
+		return SEStats.get(getExtractionArchiveForSeedStartDate(),  TimeUtils.defaultLocalDateFormat.format(TimeUtils.today()));
 	}
 
 	private String processMathManipulationExpression(

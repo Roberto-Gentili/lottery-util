@@ -232,7 +232,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	public Collection<LocalDate> computeExtractionDates(String extractionDatesAsString) {
 		Collection<LocalDate> extractionDates = new LinkedHashSet<>();
 		if (extractionDatesAsString == null || extractionDatesAsString.isEmpty()) {
-			extractionDates.add(LocalDate.now());
+			extractionDates.add(TimeUtils.today());
 		} else {
 			for(String expressionRaw : extractionDatesAsString.replaceAll("\\s+","").split(",")) {
 				Collection<LocalDate> extractionDatesForExpression = new LinkedHashSet<>();
@@ -256,7 +256,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 					}
 				} else {
 					LocalDate extractionDate = "next".equalsIgnoreCase(dateWithOffset[0])?
-						computeNextExtractionDate(LocalDate.now(), true) :
+						computeNextExtractionDate(TimeUtils.today(), true) :
 						computeNextExtractionDate(LocalDate.parse(dateWithOffset[0],  TimeUtils.defaultLocalDateFormat), false);
 					if (dateWithOffset.length == 2) {
 						String[] range = dateWithOffset[1].split("\\*");
@@ -338,7 +338,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	protected abstract Map<String, Object> testEffectiveness(String combinationFilterRaw, List<Integer> numbers, LocalDate extractionDate, boolean fineLog);
 
 	private List<LocalDate> forThisWeek() {
-		return forWeekOf(LocalDate.now());
+		return forWeekOf(TimeUtils.today());
 	}
 
 	private List<LocalDate> forNextWeek() {
@@ -346,7 +346,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	}
 
 	private List<LocalDate> forNextWeek(int offset) {
-		return forWeekOf(LocalDate.now().plus(offset, ChronoUnit.WEEKS));
+		return forWeekOf(TimeUtils.today().plus(offset, ChronoUnit.WEEKS));
 	}
 
 	private Storage buildStorage(

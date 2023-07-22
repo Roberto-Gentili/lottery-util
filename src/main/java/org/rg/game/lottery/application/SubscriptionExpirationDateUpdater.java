@@ -42,7 +42,7 @@ public class SubscriptionExpirationDateUpdater extends Shared {
 		//addUpdateInfo(computeIncrementationOfWeeks(10), "Ingegneri Giuseppe")
 		//addUpdateInfo(computeIncrementationOfWeeks(10), "Berni Riccardo"),
 		//addUpdateInfo(computeIncrementationOfWeeks(4), "Berni Valentina")
-		//addUpdateInfo(computeIncrementationOfWeeks(1), "Corinti Massimo"),
+		addUpdateInfo(computeIncrementationOfWeeks(1), "Corinti Massimo")
 		//addUpdateInfo(computeIncrementationOfWeeks(6), "Dante Marco")
 		//addUpdateInfo(computeIncrementationOfWeeks(4), "Fusi Francesco")
 		//addUpdateInfo(computeIncrementationOfWeeks(1), "Pistella Maria Anna")
@@ -114,11 +114,11 @@ public class SubscriptionExpirationDateUpdater extends Shared {
 							if (expiryDate != null) {
 								LocalDate expiryLocalDate = TimeUtils.toLocalDate(expiryDate);
 								LocalDate startExpiryDate = expiryLocalDate;
-								if (LocalDate.now().compareTo(expiryLocalDate) > 0) {
+								if (TimeUtils.today().compareTo(expiryLocalDate) > 0) {
 									if (name.equalsIgnoreCase("all")) {
 										continue;
 									}
-									expiryLocalDate = LocalDate.now();
+									expiryLocalDate = TimeUtils.today();
 								}
 								if (updateInfo.getValue() > 0) {
 									for (int i = 0; i < updateInfo.getValue(); i++) {
@@ -129,7 +129,7 @@ public class SubscriptionExpirationDateUpdater extends Shared {
 										expiryLocalDate = expiryLocalDate.plus(SEStats.computeDaysFromPreviousExtractionDate(expiryLocalDate), ChronoUnit.DAYS);
 									}
 								}
-								boolean expireSoon = expiryLocalDate.minus(7, ChronoUnit.DAYS).compareTo(LocalDate.now()) <= 0;
+								boolean expireSoon = expiryLocalDate.minus(7, ChronoUnit.DAYS).compareTo(TimeUtils.today()) <= 0;
 								LogUtils.INSTANCE.info(
 									(expireSoon ? "*" : "") + row.getCell(nameColumnIndex).getStringCellValue() + (expireSoon ? "*" : "") +" da " + startExpiryDate.format(TimeUtils.defaultLocalDateFormat) +
 									" a " + (expireSoon ? "*" : "") +expiryLocalDate.format(TimeUtils.defaultLocalDateFormat) + (expireSoon ? "*" : "")
@@ -160,7 +160,7 @@ public class SubscriptionExpirationDateUpdater extends Shared {
 				Date expiryDate = expiryCell.getDateCellValue();
 				if (expiryDate != null) {
 					LocalDate expiryLocalDate = TimeUtils.toLocalDate(expiryDate);
-					LocalDate today = LocalDate.now();
+					LocalDate today = TimeUtils.today();
 					if (today.compareTo(expiryLocalDate) <= 0) {
 						int extractionDateCounter = 0;
 						while ((today = today.plus(SEStats.computeDaysToNextExtractionDate(today), ChronoUnit.DAYS)).compareTo(expiryLocalDate) <= 0) {
