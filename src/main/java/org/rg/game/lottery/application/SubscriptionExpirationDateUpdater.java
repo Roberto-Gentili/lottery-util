@@ -139,7 +139,7 @@ public class SubscriptionExpirationDateUpdater extends Shared {
 									(expireSoon ? "*" : "") + row.getCell(nameColumnIndex).getStringCellValue() + (expireSoon ? "*" : "") +" da " + startExpiryDate.format(TimeUtils.defaultLocalDateFormat) +
 									" a " + (expireSoon ? "*" : "") +expiryLocalDate.format(TimeUtils.defaultLocalDateFormat) + (expireSoon ? "*" : "")
 								);
-								expiryCell.setCellValue(Date.from(expiryLocalDate.atStartOfDay().atZone(TimeUtils.DEFAULT_TIME_ZONE).toInstant()));
+								expiryCell.setCellValue(TimeUtils.toDate(expiryLocalDate));
 							}
 						}
 					}

@@ -473,7 +473,7 @@ public class SEStats {
 	}
 
 	public List<Integer> getWinningComboOf(LocalDate date) {
-		return getWinningComboOf(Date.from(date.atStartOfDay(TimeUtils.DEFAULT_TIME_ZONE).toInstant()));
+		return getWinningComboOf(TimeUtils.toDate(date));
 	}
 
 	public List<Integer> getWinningComboWithJollyAndSuperstarOf(Date date) {
@@ -483,7 +483,7 @@ public class SEStats {
 	}
 
 	public List<Integer> getWinningComboWithJollyAndSuperstarOf(LocalDate date) {
-		return getWinningComboWithJollyAndSuperstarOf(Date.from(date.atStartOfDay(TimeUtils.DEFAULT_TIME_ZONE).toInstant()));
+		return getWinningComboWithJollyAndSuperstarOf(TimeUtils.toDate(date));
 	}
 
 	public Integer getJollyOf(Date date) {
