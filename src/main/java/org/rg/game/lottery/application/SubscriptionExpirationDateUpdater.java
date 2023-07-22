@@ -66,7 +66,7 @@ public class SubscriptionExpirationDateUpdater extends Shared {
 	);
 
 	public static void main(String[] args) {
-		LocalDate today = TimeUtils.today();
+		final LocalDate today = TimeUtils.today();
 		if (args.length > 0) {
 			updateInfos = new ArrayList<>();
 			for (String updateInfoRaw : args[0].split(";")) {
@@ -121,17 +121,17 @@ public class SubscriptionExpirationDateUpdater extends Shared {
 								}
 								if (updateInfo.getValue() > 0) {
 									for (int i = 0; i < updateInfo.getValue(); i++) {
-										int daysToNextExtractionDate = i == 0 && expiryLocalDate.compareTo(today) == 0 ?
-											SEStats.computeDaysToNextExtractionDate(expiryLocalDate, true) :
-											SEStats.computeDaysToNextExtractionDate(expiryLocalDate, false);
-										expiryLocalDate = expiryLocalDate.plus(daysToNextExtractionDate, ChronoUnit.DAYS);
+										expiryLocalDate = expiryLocalDate.plus(
+											SEStats.computeDaysToNextExtractionDate(expiryLocalDate, i == 0 && expiryLocalDate.compareTo(today) == 0),
+											ChronoUnit.DAYS
+										);
 									}
 								} else {
 									for (int i = updateInfo.getValue(); i < 0; i++) {
-										int daysToNextExtractionDate = i == 0 && expiryLocalDate.compareTo(today) == 0 ?
-											SEStats.computeDaysToNextExtractionDate(expiryLocalDate, true) :
-											SEStats.computeDaysToNextExtractionDate(expiryLocalDate, false);
-										expiryLocalDate = expiryLocalDate.plus(daysToNextExtractionDate, ChronoUnit.DAYS);
+										expiryLocalDate = expiryLocalDate.plus(
+											SEStats.computeDaysFromPreviousExtractionDate(expiryLocalDate, i == 0 && expiryLocalDate.compareTo(today) == 0),
+											ChronoUnit.DAYS
+										);
 									}
 								}
 								boolean expireSoon = expiryLocalDate.minus(7, ChronoUnit.DAYS).compareTo(TimeUtils.today()) <= 0;
@@ -164,11 +164,14 @@ public class SubscriptionExpirationDateUpdater extends Shared {
 				Cell expiryCell = row.getCell(expiryColumnIndex);
 				Date expiryDate = expiryCell.getDateCellValue();
 				if (expiryDate != null) {
-					LocalDate expiryLocalDate = TimeUtils.toLocalDate(expiryDate);;
+					LocalDate expiryLocalDate = TimeUtils.toLocalDate(expiryDate);
+					LocalDate todayTemp = today;
 					if (today.compareTo(expiryLocalDate) <= 0) {
 						int extractionDateCounter = 0;
-						while ((today = today.plus(SEStats.computeDaysToNextExtractionDate(today), ChronoUnit.DAYS)).compareTo(expiryLocalDate) <= 0) {
+						int i = 0;
+						while ((todayTemp = todayTemp.plus(SEStats.computeDaysToNextExtractionDate(todayTemp, i == 0 && todayTemp.compareTo(today) == 0), ChronoUnit.DAYS)).compareTo(expiryLocalDate) <= 0) {
 							extractionDateCounter++;
+							i++;
 						}
 						String label = name + " " + extractionDateCounter + " estrazioni rimaste. Importo credito: ";
 						LogUtils.INSTANCE.info(label + rightAlignedString(MathUtils.INSTANCE.decimalFormat.format(extractionCost * extractionDateCounter), displaySize - label.length()) + "€");
