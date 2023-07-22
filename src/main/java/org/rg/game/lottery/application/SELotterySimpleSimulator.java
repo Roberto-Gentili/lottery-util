@@ -834,20 +834,25 @@ public class SELotterySimpleSimulator extends Shared {
 				}
 				if (!isSlave) {
 					LogUtils fileLogger = LogUtils.ToFile.getLogger(configuration.getProperty("logger.file.name"));
-					removeRows(
-						rowsToBeRemoved,
-						rowsForDateComparator,
-						row -> rowIndex -> exception -> {
-							int rowNum = rowIndex + 1;
-							if (exception == null) {
-
-							} else {
-								removedRowResult.set(-3);
-								fileLogger.error("Unable to remove row " + rowNum + " for file " + excelFileName + ": " + exception.getMessage());
-								LogUtils.INSTANCE.error("Unable to remove row " + rowNum + " for file " + excelFileName + ": " + exception.getMessage());
+					if (!rowsToBeRemoved.isEmpty()) {
+						removeRows(
+							rowsToBeRemoved,
+							rowsForDateComparator,
+							row -> rowIndex -> exception -> {
+								int rowNum = rowIndex + 1;
+								if (exception == null) {
+									fileLogger.warn("Row " + rowNum + " of file " + excelFileName + " has been removed");
+									LogUtils.INSTANCE.warn("Row " + rowNum + " of file " + excelFileName + " has been removed");
+									store(excelFileName, workBook);
+								} else {
+									removedRowResult.set(-3);
+									fileLogger.error("Unable to remove row " + rowNum + " for file " + excelFileName + ": " + exception.getMessage());
+									LogUtils.INSTANCE.error("Unable to remove row " + rowNum + " for file " + excelFileName + ": " + exception.getMessage());
+								}
 							}
-						}
-					);
+						);
+					}
+					//Verificare se effettivamente serve
 					Collections.sort(rowsToBeRemoved, Collections.reverseOrder());
 					if (!rowsToBeRemoved.isEmpty()) {
 						if (removedRowResult.get() == null) {
