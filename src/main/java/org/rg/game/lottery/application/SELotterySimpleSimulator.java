@@ -720,9 +720,10 @@ public class SELotterySimpleSimulator extends Shared {
 									Map<String, Object> premiumCountersData = premiumCountersForFile.computeIfAbsent(storageWrapper.get().getName() + extractionDateFormattedForFile, key -> {
 										PersistentStorage storage = storageWrapper.get();
 										File premiumCountersFile = new File(
-											new File(storage.getAbsolutePath()).getParentFile().getAbsolutePath() + File.separator + storage.getNameWithoutExtension() +
-											extractionDateFormattedForFile +
-											"-historical-data.json"
+											new File(
+											storage.getAbsolutePath()).getParentFile().getAbsolutePath() + File.separator + storage.getNameWithoutExtension() +
+											"-historical-data" +
+											extractionDateFormattedForFile + ".json"
 										);
 										if (!premiumCountersFile.exists()) {
 											return computePremiumCountersData(sEStats, storage, rowIndexAndExtractionDate.getValue(), premiumCountersFile, premiumTypes);
