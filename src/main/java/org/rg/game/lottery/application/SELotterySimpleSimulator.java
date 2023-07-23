@@ -257,7 +257,9 @@ public class SELotterySimpleSimulator extends Shared {
 		List<Properties> configurationProperties
 	) throws IOException {
 		List<Properties> configurations = new ArrayList<>();
+		List<String> configurationFileNames = new ArrayList<>();
 		Set<String> groupsToBeProcessed = new TreeSet<>();
+		boolean isFirst = true;
 		for (Properties config : configurationProperties) {
 			String simulationDates = config.getProperty("simulation.dates");
 			if (simulationDates != null) {
@@ -269,14 +271,20 @@ public class SELotterySimpleSimulator extends Shared {
 			if (CollectionUtils.INSTANCE.retrieveBoolean(config, "simulation.enabled", "false")) {
 				configurations.add(config);
 				groupsToBeProcessed.add(group);
+				configurationFileNames.add(config.getProperty("file.name"));
 			}
 		}
+		LogUtils.INSTANCE.info(
+			"Total files that will be processed: " + configurationFileNames.size() + "\n\n" +
+			"\t" + String.join("\n\t", configurationFileNames) + "\n"
+		);
 		LogUtils.INSTANCE.info(
 			"Total groups that will be processed: " + groupsToBeProcessed.size() + "\n\n" +
 			"\t" + String.join("\n\t", groupsToBeProcessed) + "\n"
 		);
-		int maxParallelTasks = Optional.ofNullable(System.getenv("tasks.max-parallel")).map(Integer::valueOf)
-			.orElseGet(() -> Math.max((Runtime.getRuntime().availableProcessors() / 2) - 1, 1));
+		int maxParallelTasks = Optional.ofNullable(
+			System.getenv("tasks.max-parallel")
+		).map(Integer::valueOf).orElseGet(() -> Math.max((Runtime.getRuntime().availableProcessors() / 2) - 1, 1));
 		for (Properties configuration : configurations) {
 			LogUtils.INSTANCE.info(
 				"Processing file '" + configuration.getProperty("file.name") + "' located in '" + configuration.getProperty("file.parent.absolutePath") + "' in " +
