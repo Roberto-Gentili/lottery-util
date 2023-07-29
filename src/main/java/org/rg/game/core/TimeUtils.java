@@ -12,7 +12,7 @@ import java.util.Date;
 
 public class TimeUtils {
 
-	public static final ZoneId DEFAULT_TIME_ZONE = ZoneId.of(EnvironmentUtils.INSTANCE.getVariable("", "Europe/Rome"));
+	public static final ZoneId DEFAULT_TIME_ZONE = ZoneId.of(System.getenv().getOrDefault("TZ", "Europe/Rome"));
 	private static ThreadLocal<SimpleDateFormat> defaultDateFmtForFilePrefix = ThreadLocal.withInitial(() -> new SimpleDateFormat("[yyyy][MM][dd]"));
 	public static DateTimeFormatter dateTimeFormatForBackup = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
 	private static ThreadLocal<SimpleDateFormat> defaultDateFormat = ThreadLocal.withInitial(() -> new SimpleDateFormat("dd/MM/yyyy"));

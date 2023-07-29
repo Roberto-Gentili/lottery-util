@@ -80,7 +80,7 @@ public class SESimulationSummaryGenerator extends Shared {
 			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.FOLLOWING_PROGRESSIVE_HISTORICAL_RETURN_LABEL), 3000);
 			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.HISTORICAL_COST_LABEL), 3000);
 			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.HISTORICAL_RETURN_LABEL), 3300);
-			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.HISTORICAL_UPDATE_DATE_LABEL), 3000);
+			summarySheet.setColumnWidth(getCellIndex(summarySheet, SELotterySimpleSimulator.HISTORICAL_UPDATE_DATE_LABEL), 18000);
 			try (OutputStream destFileOutputStream = new FileOutputStream(simulationSummaryFile)){
 				workBookTemplate.addSheetConditionalFormatting(
 					new int[] {
@@ -221,9 +221,9 @@ public class SESimulationSummaryGenerator extends Shared {
 					historicalUpdateDates.add(historicalUpdateDate);
 				}
 			}
-			if (!historicalUpdateDates.isEmpty()) {
+			/*if (!historicalUpdateDates.isEmpty()) {
 				historicalUpdateDates = new LinkedHashSet<>(Arrays.asList(historicalUpdateDates.iterator().next()));
-			}
+			}*/
 			summaryWorkBookTemplate.addCell(extractionDatesHolder.size(), "#,##0");
 			summaryWorkBookTemplate.addCell(generatedSystemCounter, "#,##0");
 			for (String cellLabel : SELotterySimpleSimulator.reportHeaderLabels) {

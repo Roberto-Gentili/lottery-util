@@ -39,14 +39,14 @@ public interface LogUtils {
 	public final static LogUtils INSTANCE = retrieveConfiguredLogger();
 
 	static LogUtils retrieveConfiguredLogger() {
-		String loggerType = EnvironmentUtils.INSTANCE.getVariable("logger.type", "console");
+		String loggerType = System.getenv().getOrDefault("logger.type", "console");
 		if (loggerType.equalsIgnoreCase("console")) {
 			return new LogUtils.ToConsole();
 		} else if (loggerType.equalsIgnoreCase("file")) {
 			return LogUtils.ToFile.getLogger("default-log.txt");
 		} else if (loggerType.equalsIgnoreCase("window")) {
 			return new LogUtils.ToWindow(
-				EnvironmentUtils.INSTANCE.getVariable("logger.window.attached-to", null)
+				System.getenv().getOrDefault("logger.window.attached-to", null)
 			);
 		}
 		throw new IllegalArgumentException(loggerType + " is not a valid logger type");
@@ -278,15 +278,15 @@ public interface LogUtils {
 		    private final static SimpleAttributeSet warnTextStyle;
 		    private final static SimpleAttributeSet errorTextStyle;
 		    private final static Map<String, Color> cachedColors;
-			private final static int maxNumberOfCharacters = Integer.valueOf(EnvironmentUtils.INSTANCE.getVariable("logger.window.max-number-of-characters", "524288"));
-			private final static String windowLoggerInitialWidth = EnvironmentUtils.INSTANCE.getVariable("logger.window.initial-width", "1024");
-			private final static String windowLoggerInitialHeight = EnvironmentUtils.INSTANCE.getVariable("logger.window.initial-height", "576");
-			private final static String windowLoggerInitialXPosition = EnvironmentUtils.INSTANCE.getVariable("logger.window.initial-x-position", "60");
-			private final static String windowLoggerInitialYPosition = EnvironmentUtils.INSTANCE.getVariable("logger.window.initial-y-position", "60");
-			private final static String backgroundColor = EnvironmentUtils.INSTANCE.getVariable("logger.window.background-color", "67,159,54");
-			private final static String textColor = EnvironmentUtils.INSTANCE.getVariable("logger.window.text-color", "253,195,17");
-			private final static String barBackgroundColor = EnvironmentUtils.INSTANCE.getVariable("logger.window.bar.background-color", "253,195,17");
-			private final static String barTextColor = EnvironmentUtils.INSTANCE.getVariable("logger.window.bar.text-color", "67,159,54");
+			private final static int maxNumberOfCharacters = Integer.valueOf(System.getenv().getOrDefault("logger.window.max-number-of-characters", "524288"));
+			private final static String windowLoggerInitialWidth = System.getenv().getOrDefault("logger.window.initial-width", "1024");
+			private final static String windowLoggerInitialHeight = System.getenv().getOrDefault("logger.window.initial-height", "576");
+			private final static String windowLoggerInitialXPosition = System.getenv().getOrDefault("logger.window.initial-x-position", "60");
+			private final static String windowLoggerInitialYPosition = System.getenv().getOrDefault("logger.window.initial-y-position", "60");
+			private final static String backgroundColor = System.getenv().getOrDefault("logger.window.background-color", "67,159,54");
+			private final static String textColor = System.getenv().getOrDefault("logger.window.text-color", "253,195,17");
+			private final static String barBackgroundColor = System.getenv().getOrDefault("logger.window.bar.background-color", "253,195,17");
+			private final static String barTextColor = System.getenv().getOrDefault("logger.window.bar.text-color", "67,159,54");
 
 			static {
 				cachedColors = new ConcurrentHashMap<>();
@@ -314,7 +314,7 @@ public interface LogUtils {
 				//String level = manager.getProperty(className + ".level");
 				//setLevel(level != null ? Level.parse(level) : Level.ALL);
 				setLevel(Level.ALL);
-				if (console == null) {					javax.swing.JFrame window = new javax.swing.JFrame(EnvironmentUtils.INSTANCE.getVariable("lottery.application.name", "Event logger")) {
+				if (console == null) {					javax.swing.JFrame window = new javax.swing.JFrame(System.getenv().getOrDefault("lottery.application.name", "Event logger")) {
 						private static final long serialVersionUID = 653831741693111851L;
 						{
 							setSize(Integer.valueOf(windowLoggerInitialWidth), Integer.valueOf(windowLoggerInitialHeight));
