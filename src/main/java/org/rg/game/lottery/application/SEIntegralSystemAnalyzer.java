@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.time.LocalDate;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,7 +15,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.PrimitiveIterator.OfLong;
 import java.util.Properties;
+import java.util.Random;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -22,7 +25,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import org.rg.game.core.CollectionUtils;
 import org.rg.game.core.ConcurrentUtils;
@@ -36,6 +38,7 @@ import org.rg.game.lottery.engine.ComboHandler;
 import org.rg.game.lottery.engine.ComboHandler.IterationData;
 import org.rg.game.lottery.engine.PersistentStorage;
 import org.rg.game.lottery.engine.Premium;
+import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.SEPremium;
 import org.rg.game.lottery.engine.SEStats;
 
@@ -83,7 +86,7 @@ class SEIntegralSystemAnalyzer extends Shared {
 				premiumsToBeAnalyzed.split(",")
 			).stream().map(Premium::parseType).toArray(Number[]::new);
 		long combinationSize = Long.valueOf(config.getProperty("combination.components"));
-		ComboHandler comboHandler = new ComboHandler(IntStream.range(1, 91).boxed().collect(Collectors.toList()), combinationSize);
+		ComboHandler comboHandler = new ComboHandler(SEStats.NUMBERS, combinationSize);
 		BigInteger modderForSkipLog = BigInteger.valueOf(1_000_000_000);
 		BigInteger modderForAutoSave = new BigInteger(config.getProperty("autosave-every", "1000000"));
 		int rankSize = Integer.valueOf(config.getProperty("rank.size", "100"));
@@ -104,6 +107,29 @@ class SEIntegralSystemAnalyzer extends Shared {
 		);
 		List<Block> assignedBlocks = retrieveAssignedBlocks(config, cacheRecord);
 		AtomicReference<String> previousLoggedRankWrapper = new AtomicReference<>();
+		if (!cacheRecord.data.isEmpty() && cacheRecord.data.size() >= rankSize) {
+			LocalDate nextExtractionDate = SELotteryMatrixGeneratorEngine.DEFAULT_INSTANCE.computeNextExtractionDate(LocalDate.now(), false);
+			Map.Entry<LocalDate, Long> seedData = getSEAllStats().getSeedData(nextExtractionDate);
+			seedData.getValue();
+			Long size = cacheRecord.blocks.stream().reduce((first, second) -> second)
+			  .orElse(null).end.longValue();
+			Random random = new Random(seedData.getValue());
+			OfLong randomizer = random.longs(1L, size + 1).iterator();
+			long nextLong = -1;
+			while (nextLong > rankSize || nextLong < 0) {
+				nextLong = randomizer.nextLong();
+			}
+			Map.Entry<List<Integer>, Map<Number, Integer>> combo = new ArrayList<>(cacheRecord.data).get(Long.valueOf(nextLong).intValue());
+			ComboHandler cH = new ComboHandler(combo.getKey(), 6);
+			LogUtils.INSTANCE.info(
+				"La combinazione scelta per il concorso " + seedData.getValue() + " del " +
+				TimeUtils.defaultLocalDateFormat.format(nextExtractionDate) + " è:\n\t" + ComboHandler.toString(combo.getKey(), ", ") +
+				" posizionata al " + nextLong + "° posto.\nIl relativo sistema è:\n"
+			);
+			cH.iterate(iterationData -> {
+				LogUtils.INSTANCE.info("\t" + ComboHandler.toString(iterationData.getCombo()));
+			});
+		}
 		while (!assignedBlocks.isEmpty()) {
 			AtomicReference<Block> currentBlockWrapper = new AtomicReference<>();
 			AtomicBoolean blockNotAlignedWrapper = new AtomicBoolean(false);

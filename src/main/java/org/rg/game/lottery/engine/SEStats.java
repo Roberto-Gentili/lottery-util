@@ -70,6 +70,8 @@ public class SEStats {
 	public static final LocalDate FIRST_EXTRACTION_LOCAL_DATE_WITH_NEW_MACHINE = LocalDate.parse(FIRST_EXTRACTION_DATE_WITH_NEW_MACHINE_AS_STRING, TimeUtils.defaultLocalDateFormat);
 	public static final Date FIRST_EXTRACTION_DATE_WITH_NEW_MACHINE = TimeUtils.toDate(FIRST_EXTRACTION_LOCAL_DATE_WITH_NEW_MACHINE);
 
+	public static final List<Integer> NUMBERS = IntStream.range(1, 91).boxed().collect(Collectors.toList());
+
 	private static boolean forceLoadingFromExcel;
 
 	public final static List<DayOfWeek> EXTRACTION_DAYS;
@@ -215,7 +217,7 @@ public class SEStats {
 	}
 
 	private Map<String, Integer> buildExtractedNumberPairCountersMap() {
-		ComboHandler comboHandler = new ComboHandler(IntStream.range(1, 91).boxed().collect(Collectors.toList()), 2);
+		ComboHandler comboHandler = new ComboHandler(SEStats.NUMBERS, 2);
 		Collection<List<Integer>> allCouples = comboHandler.find(LongStream.range(0, comboHandler.getSizeAsLong()).boxed().collect(Collectors.toList()), true).values();
 		Map<String, Integer> extractedNumberPairCountersMap = allCouples.stream().map(couple ->
 			String.join("-", couple.stream().map(Object::toString).collect(Collectors.toList()))
@@ -224,7 +226,7 @@ public class SEStats {
 	}
 
 	private Map<String, Integer> buildExtractedNumberTripleCountersMap() {
-		ComboHandler comboHandler = new ComboHandler(IntStream.range(1, 91).boxed().collect(Collectors.toList()), 3);
+		ComboHandler comboHandler = new ComboHandler(SEStats.NUMBERS, 3);
 		Collection<List<Integer>> allTriples = comboHandler.find(LongStream.range(0, comboHandler.getSizeAsLong()).boxed().collect(Collectors.toList()), true).values();
 		Map<String, Integer> extractedNumberPairCountersMap = allTriples.stream().map(couple ->
 			String.join("-", couple.stream().map(Object::toString).collect(Collectors.toList()))
@@ -238,7 +240,7 @@ public class SEStats {
 		Map<String, Integer> extractedNumberCountersMap = new LinkedHashMap<>();
 		Map<String, Integer> counterOfAbsencesFromCompetitionsMap = new LinkedHashMap<>();
 		Map<String, Integer> absencesRecordFromCompetitionsMap = new LinkedHashMap<>();
-		IntStream.range(1, 91).boxed().forEach(number -> {
+		NUMBERS.forEach(number -> {
 			counterOfAbsencesFromCompetitionsMap.put(number.toString(), 0);
 			absencesRecordFromCompetitionsMap.put(number.toString(), 0);
 		});
