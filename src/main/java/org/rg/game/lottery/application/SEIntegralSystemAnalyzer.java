@@ -124,7 +124,7 @@ class SEIntegralSystemAnalyzer extends Shared {
 			LogUtils.INSTANCE.info(
 				"La combinazione scelta per il concorso " + seedData.getValue() + " del " +
 				TimeUtils.defaultLocalDateFormat.format(nextExtractionDate) + " è:\n\t" + ComboHandler.toString(combo.getKey(), ", ") +
-				" posizionata al " + nextLong + "° posto.\nIl relativo sistema è:\n"
+				"\nposizionata al " + nextLong + "° posto. Il relativo sistema è:\n"
 			);
 			cH.iterate(iterationData -> {
 				LogUtils.INSTANCE.info("\t" + ComboHandler.toString(iterationData.getCombo()));
