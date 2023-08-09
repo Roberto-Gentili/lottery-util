@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -290,7 +291,7 @@ class SEIntegralSystemAnalyzer extends Shared {
 
 	protected static List<Block> retrieveAssignedBlocks(Properties config, Record cacheRecordTemp) {
 		String blockAssignees = config.getProperty("blocks.assegnee");
-		List<Block> blocks = new ArrayList<>();
+		Collection<Block> blocks = new LinkedHashSet<>();
 		boolean random = false;
 		if (blockAssignees != null) {
 			String thisHostName = NetworkUtils.INSTANCE.thisHostName();
@@ -300,22 +301,28 @@ class SEIntegralSystemAnalyzer extends Shared {
 					random = true;
 					blockAssigneeInfo[1] = blockAssigneeInfo[1].replace("random", "").replace("[", "").replace("]", "");
 				}
-				if (blockAssigneeInfo[0].equalsIgnoreCase(thisHostName)) {
-					for (String blockIndex : blockAssigneeInfo[1].split(",")) {
-						if (blockIndex.equalsIgnoreCase("odd")) {
-							blocks.addAll(CollectionUtils.INSTANCE.odd(cacheRecordTemp.blocks));
-						} else if (blockIndex.equalsIgnoreCase("even")) {
-							blocks.addAll(CollectionUtils.INSTANCE.even(cacheRecordTemp.blocks));
-						} else if (blockIndex.contains("/")) {
-							String[] subListsInfo = blockIndex.split("/");
-							List<List<Block>> subList =
-								CollectionUtils.INSTANCE.toSubLists((List<Block>)cacheRecordTemp.blocks,
-									Double.valueOf(Math.ceil(((List<Block>)cacheRecordTemp.blocks).size() / Double.valueOf(subListsInfo[1]))).intValue()
-								);
-							blocks.addAll(subList.get(Integer.valueOf(subListsInfo[0]) - 1));
-						} else {
-							blocks.add(cacheRecordTemp.getBlock(Integer.valueOf(blockIndex) - 1));
+				if (blockAssigneeInfo[0].equalsIgnoreCase(thisHostName) || blockAssigneeInfo[0].equals("all")) {
+					if (blockAssigneeInfo[1].isEmpty() || blockAssigneeInfo[1].equals("all")) {
+						blocks.addAll(cacheRecordTemp.blocks);
+					} else {
+						blocks.clear();
+						for (String blockIndex : blockAssigneeInfo[1].split(",")) {
+							if (blockIndex.equalsIgnoreCase("odd")) {
+								blocks.addAll(CollectionUtils.INSTANCE.odd(cacheRecordTemp.blocks));
+							} else if (blockIndex.equalsIgnoreCase("even")) {
+								blocks.addAll(CollectionUtils.INSTANCE.even(cacheRecordTemp.blocks));
+							} else if (blockIndex.contains("/")) {
+								String[] subListsInfo = blockIndex.split("/");
+								List<List<Block>> subList =
+									CollectionUtils.INSTANCE.toSubLists((List<Block>)cacheRecordTemp.blocks,
+										Double.valueOf(Math.ceil(((List<Block>)cacheRecordTemp.blocks).size() / Double.valueOf(subListsInfo[1]))).intValue()
+									);
+								blocks.addAll(subList.get(Integer.valueOf(subListsInfo[0]) - 1));
+							} else {
+								blocks.add(cacheRecordTemp.getBlock(Integer.valueOf(blockIndex) - 1));
+							}
 						}
+						break;
 					}
 				} else if (blockAssigneeInfo[0].contains("random")) {
 					blocks.addAll(cacheRecordTemp.blocks);
@@ -333,10 +340,11 @@ class SEIntegralSystemAnalyzer extends Shared {
 				blocksIterator.remove();
 			}
 		}
+		List<Block> toBeProcessed = new ArrayList<>(blocks);
 		if (random) {
-			Collections.shuffle(blocks) ;
+			Collections.shuffle(toBeProcessed) ;
 		}
-		return blocks;
+		return toBeProcessed;
 	}
 
 	protected static TreeSet<Map.Entry<List<Integer>, Map<Number, Integer>>> buildDataCollection(Number[] orderedPremiumsToBeAnalyzed) {
