@@ -278,7 +278,12 @@ class SEIntegralSystemAnalyzer extends Shared {
 			cacheRecordTemp = new Record();
 		}
 		if (cacheRecordTemp.blocks == null) {
-			cacheRecordTemp.blocks = divide(cH.getSize(), cH.getCombinationSize() * 2);
+			long blockNumbers = cH.getCombinationSize() * 2;
+			BigInteger aHundredMillion = BigInteger.valueOf(100_000_000L);
+			if (cH.getSize().compareTo(aHundredMillion) > 0) {
+				blockNumbers = cH.getSize().divide(aHundredMillion).longValue();
+			}
+			cacheRecordTemp.blocks = divide(cH.getSize(), blockNumbers);
 		}
 		return cacheRecordTemp;
 	}
