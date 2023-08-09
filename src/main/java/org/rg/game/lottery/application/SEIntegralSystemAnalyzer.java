@@ -9,6 +9,7 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -108,27 +109,7 @@ class SEIntegralSystemAnalyzer extends Shared {
 		List<Block> assignedBlocks = retrieveAssignedBlocks(config, cacheRecord);
 		AtomicReference<String> previousLoggedRankWrapper = new AtomicReference<>();
 		if (!cacheRecord.data.isEmpty() && cacheRecord.data.size() >= rankSize) {
-			LocalDate nextExtractionDate = SELotteryMatrixGeneratorEngine.DEFAULT_INSTANCE.computeNextExtractionDate(LocalDate.now(), false);
-			Map.Entry<LocalDate, Long> seedData = getSEAllStats().getSeedData(nextExtractionDate);
-			seedData.getValue();
-			Long size = cacheRecord.blocks.stream().reduce((first, second) -> second)
-			  .orElse(null).end.longValue();
-			Random random = new Random(seedData.getValue());
-			OfLong randomizer = random.longs(1L, size + 1).iterator();
-			long nextLong = -1;
-			while (nextLong > rankSize || nextLong < 0) {
-				nextLong = randomizer.nextLong();
-			}
-			Map.Entry<List<Integer>, Map<Number, Integer>> combo = new ArrayList<>(cacheRecord.data).get(Long.valueOf(nextLong).intValue());
-			ComboHandler cH = new ComboHandler(combo.getKey(), 6);
-			LogUtils.INSTANCE.info(
-				"La combinazione scelta per il concorso " + seedData.getValue() + " del " +
-				TimeUtils.defaultLocalDateFormat.format(nextExtractionDate) + " è:\n\t" + ComboHandler.toString(combo.getKey(), ", ") +
-				"\nposizionata al " + nextLong + "° posto. Il relativo sistema è:"
-			);
-			cH.iterate(iterationData -> {
-				LogUtils.INSTANCE.info("\t" + ComboHandler.toString(iterationData.getCombo()));
-			});
+			chooseAndPrintNextCompetitionSystem(cacheRecord, rankSize);
 		}
 		while (!assignedBlocks.isEmpty()) {
 			AtomicReference<Block> currentBlockWrapper = new AtomicReference<>();
@@ -239,6 +220,30 @@ class SEIntegralSystemAnalyzer extends Shared {
 		//LogUtils.INSTANCE.info(processedSystemsCounterWrapper.get() + " of combinations analyzed");
 	}
 
+	protected static void chooseAndPrintNextCompetitionSystem(Record cacheRecord, int rankSize) {
+		LocalDate nextExtractionDate = SELotteryMatrixGeneratorEngine.DEFAULT_INSTANCE.computeNextExtractionDate(LocalDate.now(), false);
+		Map.Entry<LocalDate, Long> seedData = getSEAllStats().getSeedData(nextExtractionDate);
+		seedData.getValue();
+		Long size = cacheRecord.blocks.stream().reduce((first, second) -> second)
+		  .orElse(null).end.longValue();
+		Random random = new Random(seedData.getValue());
+		OfLong randomizer = random.longs(1L, size + 1).iterator();
+		long nextLong = -1;
+		while (nextLong > rankSize || nextLong < 0) {
+			nextLong = randomizer.nextLong();
+		}
+		Map.Entry<List<Integer>, Map<Number, Integer>> combo = new ArrayList<>(cacheRecord.data).get(Long.valueOf(nextLong).intValue());
+		ComboHandler cH = new ComboHandler(combo.getKey(), 6);
+		LogUtils.INSTANCE.info(
+			"La combinazione scelta per il concorso " + seedData.getValue() + " del " +
+			TimeUtils.defaultLocalDateFormat.format(nextExtractionDate) + " è:\n\t" + ComboHandler.toString(combo.getKey(), ", ") +
+			"\nposizionata al " + nextLong + "° posto. Il relativo sistema è:"
+		);
+		cH.iterate(iterationData -> {
+			LogUtils.INSTANCE.info("\t" + ComboHandler.toString(iterationData.getCombo()));
+		});
+	}
+
 	protected static String buildCacheKey(ComboHandler comboHandler, SEStats sEStats, String premiumsToBeAnalyzed, int rankSize) {
 		return "[" + MathUtils.INSTANCE.format(comboHandler.getSize()).replace(".", "_") + "][" + comboHandler.getCombinationSize() + "]" +
 				"[" + premiumsToBeAnalyzed.replace(".", "_") + "]" + "[" + rankSize + "]" +
@@ -281,10 +286,15 @@ class SEIntegralSystemAnalyzer extends Shared {
 	protected static List<Block> retrieveAssignedBlocks(Properties config, Record cacheRecordTemp) {
 		String blockAssignees = config.getProperty("blocks.assegnee");
 		List<Block> blocks = new ArrayList<>();
+		boolean random = false;
 		if (blockAssignees != null) {
 			String thisHostName = NetworkUtils.INSTANCE.thisHostName();
-			for (String blockAssignee : blockAssignees.split(";")) {
-				String[] blockAssigneeInfo = blockAssignee.replaceAll("\\s+","").split(":");
+			for (String blockAssignee : blockAssignees.replaceAll("\\s+","").split(";")) {
+				String[] blockAssigneeInfo = blockAssignee.split(":");
+				if (blockAssigneeInfo.length > 1 && blockAssigneeInfo[1].contains("random")) {
+					random = true;
+					blockAssigneeInfo[1] = blockAssigneeInfo[1].replace("random", "").replace("[", "").replace("]", "");
+				}
 				if (blockAssigneeInfo[0].equalsIgnoreCase(thisHostName)) {
 					for (String blockIndex : blockAssigneeInfo[1].split(",")) {
 						if (blockIndex.equalsIgnoreCase("odd")) {
@@ -302,6 +312,9 @@ class SEIntegralSystemAnalyzer extends Shared {
 							blocks.add(cacheRecordTemp.getBlock(Integer.valueOf(blockIndex) - 1));
 						}
 					}
+				} else if (blockAssigneeInfo[0].contains("random")) {
+					blocks.addAll(cacheRecordTemp.blocks);
+					random = true;
 				}
 			}
 		} else {
@@ -314,6 +327,9 @@ class SEIntegralSystemAnalyzer extends Shared {
 			if (counter != null && counter.compareTo(block.end) == 0) {
 				blocksIterator.remove();
 			}
+		}
+		if (random) {
+			Collections.shuffle(blocks) ;
 		}
 		return blocks;
 	}
