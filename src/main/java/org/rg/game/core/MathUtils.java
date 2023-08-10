@@ -6,6 +6,8 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 public class MathUtils {
@@ -82,6 +84,8 @@ public class MathUtils {
 	}
 
 	public static class Factorial {
+		private final static Map<String, Factorial> CACHE = new HashMap<>();
+
 		private final static BigInteger loggerStartingThreshold = BigInteger.valueOf(200000);
 		BigInteger factorial;
 		BigInteger initialValue;
@@ -94,7 +98,17 @@ public class MathUtils {
 		}
 
 		public static Factorial of(BigInteger number) {
-			return new Factorial(number);
+			String numberAsString = number.toString();
+			Factorial factorial = CACHE.get(numberAsString);
+			if (factorial == null) {
+				synchronized (CACHE) {
+					factorial = CACHE.get(numberAsString);
+					if (factorial == null) {
+						CACHE.put(numberAsString, factorial = new Factorial(number));
+					}
+				}
+			}
+			return factorial;
 		}
 
 		Factorial startLogging() {
@@ -115,19 +129,24 @@ public class MathUtils {
 		}
 
 		public BigInteger get() {
-			if (factorial != null) {
+			if (computed) {
 				return factorial;
 			}
-			if (number.compareTo(loggerStartingThreshold) >= 0) {
-				startLogging();
+			synchronized(this) {
+				if (computed) {
+					return factorial;
+				}
+				if (number.compareTo(loggerStartingThreshold) >= 0) {
+					startLogging();
+				}
+				factorial = BigInteger.ONE;
+				while (number.compareTo(BigInteger.ZERO) > 0) {
+					factorial = factorial.multiply(number);
+					number = number.subtract(BigInteger.ONE);
+				}
+				computed = true;
+				return factorial;
 			}
-			factorial = BigInteger.ONE;
-			while (number.compareTo(BigInteger.ZERO) > 0) {
-				factorial = factorial.multiply(number);
-				number = number.subtract(BigInteger.ONE);
-			}
-			computed = true;
-			return factorial;
 		}
 
 	}
