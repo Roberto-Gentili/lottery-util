@@ -14,8 +14,8 @@ public class MathUtils {
 
 	public static final MathUtils INSTANCE = new MathUtils();
 
-	public DecimalFormat decimalFormat = new DecimalFormat( "#,##0.##" );
-	public DecimalFormat integerFormat = new DecimalFormat( "#,##0" );
+	public final DecimalFormat decimalFormat = new DecimalFormat( "#,##0.##" );
+	public final DecimalFormat integerFormat = new DecimalFormat( "#,##0" );
 	public Comparator<Number> numberComparator = (numberOne, numberTwo) -> {
 		double numberOneAsDouble = numberOne.doubleValue();
 		double numberTwoAsDouble = numberTwo.doubleValue();
