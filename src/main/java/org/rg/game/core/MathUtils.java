@@ -55,6 +55,19 @@ public class MathUtils {
 	public BigInteger factorial(BigInteger number) {
 		return Factorial.of(number).get();
 	}
+
+	public BigInteger factorial(String number) {
+		return factorial(new BigInteger(number));
+	}
+
+	public BigInteger factorial(long number) {
+		return factorial(BigInteger.valueOf(number));
+	}
+
+	public BigInteger factorial(int number) {
+		return factorial(BigInteger.valueOf(number));
+	}
+
 	/*
 	public BigInteger factorial(BigInteger number) {
 		BigInteger factorial = BigInteger.ONE;
