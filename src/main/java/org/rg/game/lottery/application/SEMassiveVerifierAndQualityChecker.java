@@ -541,7 +541,7 @@ public class SEMassiveVerifierAndQualityChecker extends Shared {
 				}
 			}
 		}
-		results.append("Storico prg. ant", boldFont);
+		results.append("Storico prg. ant.", boldFont);
 		results.append(":\n");
 		Map<Number,List<List<Integer>>> systemResultsInHistory = historyData.get(extractionDateAsString);
 		if (systemResultsInHistory != null) {
@@ -592,7 +592,8 @@ public class SEMassiveVerifierAndQualityChecker extends Shared {
 				}
 			}
 		}
-		results.append("Storico", boldFont);
+		//allWinningCombosWithJollyAndSuperstar.entrySet().stream().reduce((first,second) -> second).get().getKey()
+		results.append("Storico dal " + sEStatsDefaultDate, boldFont);
 		results.append(":\n");
 		Map<Number,List<List<Integer>>> systemResultsInHistory = historyData.get(extractionDateAsString);
 		if (systemResultsInHistory != null) {
