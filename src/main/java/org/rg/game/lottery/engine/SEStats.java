@@ -1280,11 +1280,14 @@ public class SEStats {
 		DayOfWeek currentDayOfWeek = startDate.getDayOfWeek();
 		DayOfWeek nextExctractionDay = null;
 		boolean isExtractionDate = false;
+		LocalDateTime now = TimeUtils.now();
 		for (DayOfWeek extractionDay : extractionDates) {
 			if (currentDayOfWeek.compareTo(extractionDay) == 0) {
 				isExtractionDate = true;
 			}
-			if (currentDayOfWeek.compareTo(extractionDay) < 0) {
+			if (currentDayOfWeek.compareTo(extractionDay) < 0 ||
+				(checkIfIsToday && currentDayOfWeek.compareTo(extractionDay) == 0 && now.getDayOfWeek().compareTo(extractionDay) == 0 && now.compareTo(SEStats.toClosingTime(now)) < 0))
+			{
 				nextExctractionDay = extractionDay;
 				break;
 			}
@@ -1293,7 +1296,6 @@ public class SEStats {
 			return nextExctractionDay.ordinal() - currentDayOfWeek.ordinal();
 		} else {
 			if (checkIfIsToday) {
-				LocalDateTime now = TimeUtils.now();
 				if (now.toLocalDate().compareTo(startDate) == 0 && isExtractionDate && now.compareTo(SEStats.toClosingTime(now)) < 0) {
 					return 0;
 				}
