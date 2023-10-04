@@ -24,19 +24,6 @@
 			<version>5.2.3</version>
 		</dependency>
 		
-		<!--
-		<dependency>
-			<groupId>org.burningwave</groupId>
-			<artifactId>tools</artifactId>
-			<version>0.25.8</version>
-		</dependency>
-		
-		<dependency>
-		    <groupId>dnsjava</groupId>
-		    <artifactId>dnsjava</artifactId>
-		    <version>3.5.1</version>
-		</dependency>
-		-->
 		<dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
