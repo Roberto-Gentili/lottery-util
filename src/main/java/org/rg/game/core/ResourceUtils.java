@@ -124,13 +124,16 @@ public class ResourceUtils {
 			properties.setProperty("file.extension", ResourceUtils.INSTANCE.getExtension(file));
 			String baseProps = properties.getProperty("base");
 			if (baseProps != null) {
+				Properties merged = new Properties();
 				for (String base : baseProps.split(";")) {
-					Properties parentProperties = toProperties(
-						toFile(file.getParentFile().getAbsolutePath(), base)
+					merged.putAll(
+						toProperties(
+							toFile(file.getParentFile().getAbsolutePath(), base)
+						)
 					);
-					parentProperties.putAll(properties);
-					properties = parentProperties;
 				}
+				merged.putAll(properties);
+				properties = merged;
 				properties.remove("base");
 			}
 			return properties;
