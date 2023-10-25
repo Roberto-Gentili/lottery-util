@@ -299,21 +299,21 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 
 	protected void setupCombinationFilterPreProcessor() {
 		getProcessingContext().combinationFilterPreProcessor = new ExpressionToPredicateEngine<>();
-		getProcessingContext().combinationFilterPreProcessor.addSimpleExpressionPreprocessor(
+		getProcessingContext().combinationFilterPreProcessor.addSimpleExpressionPreProcessor(
 			expression ->
 				expression.split("lessExtCouple|lessExt|mostExtCouple|mostExt").length > 1,
 			expression ->
 				parameters ->
 					processStatsExpression(expression, (LocalDate)parameters[0])
 		);
-		getProcessingContext().combinationFilterPreProcessor.addSimpleExpressionPreprocessor(
+		getProcessingContext().combinationFilterPreProcessor.addSimpleExpressionPreProcessor(
 			expression ->
 				expression.contains("sum"),
 			expression ->
 				parameters ->
 					processMathExpression(expression, (LocalDate)parameters[0])
 		);
-		getProcessingContext().combinationFilterPreProcessor.addSimpleExpressionPreprocessor(
+		getProcessingContext().combinationFilterPreProcessor.addSimpleExpressionPreProcessor(
 			expression ->
 				expression.contains("in"),
 			expression ->

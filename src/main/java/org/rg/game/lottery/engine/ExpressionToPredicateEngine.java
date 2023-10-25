@@ -12,12 +12,12 @@ public class ExpressionToPredicateEngine<I> {
 	protected final static Pattern andOrSlashSplitter = Pattern.compile("(.*?)(&|\\||\\/)");
 
 
-	protected Map<Predicate<String>, Function<String, Function<Object[], String>>> simpleExpressionsPreprocessors;
+	protected Map<Predicate<String>, Function<String, Function<Object[], String>>> simpleExpressionsPreProcessors;
 	protected Map<Predicate<String>, Function<String, Function<Object[], Predicate<I>>>> simpleExpressionsParsers;
 
 
 	public ExpressionToPredicateEngine() {
-		simpleExpressionsPreprocessors = new LinkedHashMap<>();
+		simpleExpressionsPreProcessors = new LinkedHashMap<>();
 		simpleExpressionsParsers = new LinkedHashMap<>();
 	}
 
@@ -28,11 +28,11 @@ public class ExpressionToPredicateEngine<I> {
 		simpleExpressionsParsers.put(simpleExpressionsParserPredicate, parser);
 	}
 
-	public void addSimpleExpressionPreprocessor(
+	public void addSimpleExpressionPreProcessor(
 		Predicate<String> simpleExpressionsParserPredicate,
 		Function<String, Function<Object[], String>> preprocessor
 	) {
-		simpleExpressionsPreprocessors.put(simpleExpressionsParserPredicate, preprocessor);
+		simpleExpressionsPreProcessors.put(simpleExpressionsParserPredicate, preprocessor);
 	}
 
 	public Predicate<I> parse(String expression, Object... additionalParamters) {
@@ -155,7 +155,7 @@ public class ExpressionToPredicateEngine<I> {
 	}
 
 	private String preProcessSimpleExpression(String expression, Object... additionalParamters) {
-		for (Entry<Predicate<String>, Function<String, Function<Object[], String>>> expressionToPredicateEntry : simpleExpressionsPreprocessors.entrySet()) {
+		for (Entry<Predicate<String>, Function<String, Function<Object[], String>>> expressionToPredicateEntry : simpleExpressionsPreProcessors.entrySet()) {
 			if (expressionToPredicateEntry.getKey().test(expression)) {
 				return expressionToPredicateEntry.getValue().apply(expression).apply(additionalParamters);
 			}
