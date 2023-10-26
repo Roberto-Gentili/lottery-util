@@ -5,6 +5,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 
+import org.burningwave.Throwables;
+
 public class ConcurrentUtils {
 	public static final ConcurrentUtils INSTANCE = new ConcurrentUtils();
 
@@ -18,7 +20,7 @@ public class ConcurrentUtils {
 							try {
 								taskWrapper.wait();
 							} catch (InterruptedException exc) {
-								Throwables.sneakyThrow(exc);
+								Throwables.INSTANCE.throwException(exc);
 							}
 						}
 						futures.add(taskWrapper.get());
@@ -40,7 +42,7 @@ public class ConcurrentUtils {
 			try {
 				taskWrapper.wait();
 			} catch (InterruptedException exc) {
-				Throwables.sneakyThrow(exc);
+				Throwables.INSTANCE.throwException(exc);
 			}
 		}
 		return this;
@@ -56,7 +58,7 @@ public class ConcurrentUtils {
 					try {
 						futures.wait();
 					} catch (InterruptedException exc) {
-						Throwables.sneakyThrow(exc);
+						Throwables.INSTANCE.throwException(exc);
 					}
 				}
 			}
@@ -68,7 +70,7 @@ public class ConcurrentUtils {
 		try {
 			Thread.sleep(millis);
 		} catch (InterruptedException exc) {
-			Throwables.sneakyThrow(exc);
+			Throwables.INSTANCE.throwException(exc);
 		}
 		return this;
 	}

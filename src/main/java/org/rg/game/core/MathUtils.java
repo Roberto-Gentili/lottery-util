@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+import org.burningwave.Throwables;
+
 public class MathUtils {
 
 	public static final MathUtils INSTANCE = new MathUtils();
@@ -48,7 +50,7 @@ public class MathUtils {
 		try {
 			return ((BigDecimal)decimalFormat.parse(value));
 		} catch (ParseException exc) {
-			return Throwables.sneakyThrow(exc);
+			return Throwables.INSTANCE.throwException(exc);
 		}
 	}
 

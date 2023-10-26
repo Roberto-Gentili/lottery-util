@@ -19,10 +19,10 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.TreeSet;
 
+import org.burningwave.Synchronizer;
+import org.burningwave.Throwables;
 import org.rg.game.core.LogUtils;
 import org.rg.game.core.MathUtils;
-import org.rg.game.core.Synchronizer;
-import org.rg.game.core.Throwables;
 
 public class PersistentStorage implements Storage {
 	private static String workingPath;
@@ -52,7 +52,7 @@ public class PersistentStorage implements Storage {
 		try {
 			bufferedWriter = new BufferedWriter(new FileWriter(absolutePath, false));
 		} catch (IOException exc) {
-			Throwables.sneakyThrow(exc);
+			Throwables.INSTANCE.throwException(exc);
 		}
 		occurrences = new LinkedHashMap<>();
 	}
@@ -172,7 +172,7 @@ public class PersistentStorage implements Storage {
 				}
 			}
 		} catch (IOException exc) {
-			Throwables.sneakyThrow(exc);
+			Throwables.INSTANCE.throwException(exc);
 		}
 		return null;
 	}
@@ -210,7 +210,7 @@ public class PersistentStorage implements Storage {
 					try {
 						bufferedReader.close();
 					} catch (IOException exc) {
-						Throwables.sneakyThrow(exc);
+						Throwables.INSTANCE.throwException(exc);
 					}
 				}
 
@@ -230,12 +230,12 @@ public class PersistentStorage implements Storage {
 						}
 						return null;
 					} catch (IOException exc) {
-						return Throwables.sneakyThrow(exc);
+						return Throwables.INSTANCE.throwException(exc);
 					}
 				}
 			};
 		} catch (FileNotFoundException exc) {
-			return Throwables.sneakyThrow(exc);
+			return Throwables.INSTANCE.throwException(exc);
 		}
 	}
 /*
@@ -267,7 +267,7 @@ public class PersistentStorage implements Storage {
 					occurrences.put(number, counter);
 				}
 			} catch (IOException exc) {
-				Throwables.sneakyThrow(exc);
+				Throwables.INSTANCE.throwException(exc);
 			}
 			return true;
 		}
@@ -280,7 +280,7 @@ public class PersistentStorage implements Storage {
 			bufferedWriter.write("\n" + ComboHandler.toString(selectedCombo));
 			bufferedWriter.flush();
 		} catch (IOException exc) {
-			Throwables.sneakyThrow(exc);
+			Throwables.INSTANCE.throwException(exc);
 		}
 	}
 
@@ -296,7 +296,7 @@ public class PersistentStorage implements Storage {
 				return true;
 			}
 		} catch (IOException exc) {
-			Throwables.sneakyThrow(exc);
+			Throwables.INSTANCE.throwException(exc);
 		}
 		return false;
 	}
@@ -331,7 +331,7 @@ public class PersistentStorage implements Storage {
 			           }
 			        }
 			    } catch (IOException e) {
-					Throwables.sneakyThrow(e);
+					Throwables.INSTANCE.throwException(e);
 				}
 			}
 		}
@@ -354,7 +354,7 @@ public class PersistentStorage implements Storage {
 			bufferedWriter.write("\n" + value);
 			bufferedWriter.flush();
 		} catch (IOException e) {
-			Throwables.sneakyThrow(e);
+			Throwables.INSTANCE.throwException(e);
 		}
 		return true;
 	}
@@ -365,7 +365,7 @@ public class PersistentStorage implements Storage {
 			bufferedWriter.write("\n");
 			bufferedWriter.flush();
 		} catch (IOException e) {
-			Throwables.sneakyThrow(e);
+			Throwables.INSTANCE.throwException(e);
 		}
 		return true;
 	}
@@ -375,7 +375,7 @@ public class PersistentStorage implements Storage {
 		try {
 			bufferedWriter.close();
 		} catch (IOException e) {
-			Throwables.sneakyThrow(e);
+			Throwables.INSTANCE.throwException(e);
 		}
 		new File(absolutePath).delete();
 	}
@@ -443,7 +443,7 @@ public class PersistentStorage implements Storage {
 				           }
 				        }
 				    } catch (Throwable e) {
-						Throwables.sneakyThrow(e);
+						Throwables.INSTANCE.throwException(e);
 					}
 					this.historicalPremiums = historicalPremiums;
 				}

@@ -20,14 +20,12 @@ import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.burningwave.Throwables;
 import org.rg.game.core.CollectionUtils;
 import org.rg.game.core.LogUtils;
 import org.rg.game.core.ResourceUtils;
-import org.rg.game.core.Throwables;
 import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
-
-
 
 public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 
@@ -182,7 +180,7 @@ public class SELotteryComplexSimulator extends SELotterySimpleSimulator {
 				}
 			}
 		} catch (IOException exc) {
-			Throwables.sneakyThrow(exc);
+			Throwables.INSTANCE.throwException(exc);
 		}
 		return futures;
 	}

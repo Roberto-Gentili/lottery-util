@@ -3,6 +3,8 @@ package org.rg.game.core;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import org.burningwave.Throwables;
+
 public class NetworkUtils {
 	public static final NetworkUtils INSTANCE = new NetworkUtils();
 
@@ -11,7 +13,7 @@ public class NetworkUtils {
 		try {
 			return InetAddress.getLocalHost().getHostName();
 		} catch (UnknownHostException exc) {
-			return Throwables.sneakyThrow(exc);
+			return Throwables.INSTANCE.throwException(exc);
 		}
 	}
 

@@ -19,7 +19,7 @@ import org.rg.game.core.LogUtils;
 
 public class CombinationFilterFactory {
 	public static final CombinationFilterFactory INSTANCE;
-	private ExpressionToPredicateEngine<List<Integer>> expressionEngine;
+	private PredicateExpressionParser<List<Integer>> expressionEngine;
 
 	static {
 		INSTANCE = new CombinationFilterFactory();
@@ -29,7 +29,7 @@ public class CombinationFilterFactory {
 	protected DecimalFormat integerFormat = new DecimalFormat( "#,##0" );
 
 	private CombinationFilterFactory() {
-		expressionEngine = new ExpressionToPredicateEngine<>();
+		expressionEngine = new PredicateExpressionParser<>();
 		setupExpressionEngine();
 	}
 
@@ -41,7 +41,7 @@ public class CombinationFilterFactory {
 		if (filterAsString == null || filterAsString.isEmpty()) {
 			return numbers -> true;
 		}
-		Predicate<List<Integer>> filter = expressionEngine.parseComplexExpression(filterAsString.replace("\t", " ").replace("\n", "").replace("\r", ""), logFalseResults);
+		Predicate<List<Integer>> filter = expressionEngine.processComplex(filterAsString.replace("\t", " ").replace("\n", "").replace("\r", ""), logFalseResults);
 		return combo -> {
 			Collections.sort(combo);
 			return filter.test(combo);
@@ -50,77 +50,77 @@ public class CombinationFilterFactory {
 
 
 	private void setupExpressionEngine() {
-		expressionEngine.addSimpleExpressionParser(
+		expressionEngine.addSimpleExpression(
 			expression ->
 				expression.contains("emainder"),
 			expression ->
 				paramters ->
 				buildPredicate(expression, this::buildRemainderFilter, (boolean)paramters[0])
 		);
-		expressionEngine.addSimpleExpressionParser(
+		expressionEngine.addSimpleExpression(
 			expression ->
 				expression.contains("sameLastDigit"),
 			expression ->
 				paramters ->
 					buildPredicate(expression, this::buildSameLastDigitFilter, (boolean)paramters[0])
 		);
-		expressionEngine.addSimpleExpressionParser(
+		expressionEngine.addSimpleExpression(
 			expression ->
 				expression.contains("consecutiveLastDigit"),
 			expression ->
 				paramters ->
 				buildPredicate(expression, this::buildConsecutiveLastDigitFilter, (boolean)paramters[0])
 		);
-		expressionEngine.addSimpleExpressionParser(
+		expressionEngine.addSimpleExpression(
 			expression ->
 				expression.contains("consecutiveNumber"),
 			expression ->
 				paramters ->
 				buildPredicate(expression, this::buildConsecutiveNumberFilter, (boolean)paramters[0])
 		);
-		expressionEngine.addSimpleExpressionParser(
+		expressionEngine.addSimpleExpression(
 			expression ->
 				expression.contains("radius"),
 			expression ->
 				paramters ->
 					buildPredicate(expression, this::buildRadiusFilter, (boolean)paramters[0])
 		);
-		expressionEngine.addSimpleExpressionParser(
+		expressionEngine.addSimpleExpression(
 			expression ->
 				expression.contains("sumOfPower"),
 			expression ->
 				paramters ->
 					buildPredicate(expression, this::buildSumOfPowerFilter, (boolean)paramters[0])
 		);
-		expressionEngine.addSimpleExpressionParser(
+		expressionEngine.addSimpleExpression(
 			expression ->
 				expression.contains("sum"),
 			expression ->
 				paramters ->
 					buildPredicate(expression, this::buildSumFilter, (boolean)paramters[0])
 		);
-		expressionEngine.addSimpleExpressionParser(
+		expressionEngine.addSimpleExpression(
 			expression ->
 				expression.contains("in"),
 			expression ->
 				paramters ->
 					buildPredicate(expression, this::inFilter, (boolean)paramters[0])
 		);
-		expressionEngine.addSimpleExpressionParser(
+		expressionEngine.addSimpleExpression(
 			expression ->
 				expression.contains("->"),
 			expression ->
 				paramters ->
 					buildPredicate(expression, this::buildNumberGroupFilter, (boolean)paramters[0])
 		);
-		expressionEngine.addSimpleExpressionParser(
+		expressionEngine.addSimpleExpression(
 			expression ->
 				expression.contains("true"),
 			expression ->
 				paramters ->
 					buildPredicate(expression, exp -> combo -> true, (boolean)paramters[0])
 		);
-		expressionEngine.addSimpleExpressionParser(
+		expressionEngine.addSimpleExpression(
 			expression ->
 				expression.contains("false"),
 			expression ->

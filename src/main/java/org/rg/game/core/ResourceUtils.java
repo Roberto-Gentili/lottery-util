@@ -21,6 +21,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.burningwave.Throwables;
 import org.rg.game.lottery.engine.PersistentStorage;
 
 public class ResourceUtils {
@@ -44,7 +45,7 @@ public class ResourceUtils {
 			}
 			return resourceFolder;
 		} catch (URISyntaxException e) {
-			return Throwables.sneakyThrow(e);
+			return Throwables.INSTANCE.throwException(e);
 		}
 	}
 
@@ -175,7 +176,7 @@ public class ResourceUtils {
 			}
 			return null;
 		} catch (IOException e) {
-			return Throwables.sneakyThrow(e);
+			return Throwables.INSTANCE.throwException(e);
 		}
 	}
 

@@ -48,13 +48,13 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.burningwave.Throwables;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.rg.game.core.LogUtils;
 import org.rg.game.core.MathUtils;
-import org.rg.game.core.Throwables;
 import org.rg.game.core.TimeUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -212,7 +212,7 @@ public class SEStats {
 		try {
 			return TimeUtils.getDefaultDateFormat().parse(dateAsString);
 		} catch (ParseException exc) {
-			return Throwables.sneakyThrow(exc);
+			return Throwables.INSTANCE.throwException(exc);
 		}
 	}
 
@@ -808,7 +808,7 @@ public class SEStats {
 				winningCombo.add(Integer.valueOf((String)winningComboData.get("superstar")));
 				return new AbstractMap.SimpleEntry<>(extractionDate, winningCombo);
 			} catch (IOException exc) {
-				return Throwables.sneakyThrow(exc);
+				return Throwables.INSTANCE.throwException(exc);
 			}
 		}
 

@@ -23,8 +23,8 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.util.IOUtils;
 import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.burningwave.Throwables;
 import org.rg.game.core.CollectionUtils;
-import org.rg.game.core.Throwables;
 import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.PersistentStorage;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
@@ -151,7 +151,7 @@ class Shared {
 			rowsComparator,
 			row -> rowIndex -> exception -> {
 				if (exception != null) {
-					Throwables.sneakyThrow(exception);
+					Throwables.INSTANCE.throwException(exception);
 				}
 			}
 		);

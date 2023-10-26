@@ -5,7 +5,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.time.temporal.ChronoUnit;
@@ -35,10 +34,10 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.burningwave.Throwables;
 import org.rg.game.core.CollectionUtils;
 import org.rg.game.core.LogUtils;
 import org.rg.game.core.NetworkUtils;
-import org.rg.game.core.Throwables;
 import org.rg.game.core.TimeUtils;
 
 public abstract class LotteryMatrixGeneratorAbstEngine {
@@ -238,7 +237,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 				Collection<LocalDate> extractionDatesForExpression = new LinkedHashSet<>();
 				String[] expressions = expressionRaw.split(":");
 				Map<String, Object> nestedExpressionsData = new LinkedHashMap<>();
-				String expression = ExpressionToPredicateEngine.findAndReplaceNextBracketArea(expressions[0], nestedExpressionsData);
+				String expression = PredicateExpressionParser.findAndReplaceNextBracketArea(expressions[0], nestedExpressionsData);
 				expression = (String)nestedExpressionsData.getOrDefault(expression, expression);
 				String[] dateWithOffset = expression.split("\\+");
 				if ("thisWeek".equalsIgnoreCase(dateWithOffset[0])) {
@@ -298,22 +297,23 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 	}
 
 	protected void setupCombinationFilterPreProcessor() {
-		getProcessingContext().combinationFilterPreProcessor = new ExpressionToPredicateEngine<>();
-		getProcessingContext().combinationFilterPreProcessor.addSimpleExpressionPreProcessor(
+		getProcessingContext().combinationFilterPreProcessor = new PredicateExpressionParser<>();
+		PredicateExpressionParser.PreProcessor preProcessor = getProcessingContext().combinationFilterPreProcessor.newPreProcessor();
+		preProcessor.addSimpleExpression(
 			expression ->
 				expression.split("lessExtCouple|lessExt|mostExtCouple|mostExt").length > 1,
 			expression ->
 				parameters ->
 					processStatsExpression(expression, (LocalDate)parameters[0])
 		);
-		getProcessingContext().combinationFilterPreProcessor.addSimpleExpressionPreProcessor(
+		preProcessor.addSimpleExpression(
 			expression ->
 				expression.contains("sum"),
 			expression ->
 				parameters ->
 					processMathExpression(expression, (LocalDate)parameters[0])
 		);
-		getProcessingContext().combinationFilterPreProcessor.addSimpleExpressionPreProcessor(
+		preProcessor.addSimpleExpression(
 			expression ->
 				expression.contains("in"),
 			expression ->
@@ -404,7 +404,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 							LogUtils.INSTANCE.info("Waiting a maximum of " + timeout/1000 + " seconds for " + storageRef.getName() + " prepared by someone else");
 							Thread.sleep(timeout - (timeout -= 1000));
 						} catch (InterruptedException e) {
-							Throwables.sneakyThrow(e);
+							Throwables.INSTANCE.throwException(e);
 						}
 					}
 					if (storageRef.isClosed()) {
@@ -807,7 +807,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		private Function<Function<LocalDate, Function<List<Storage>, Integer>>, Function<Function<LocalDate, Consumer<List<Storage>>>, List<Storage>>> executor;
 		private Integer avoidMode;
 		private Predicate<List<Integer>> combinationFilter;
-		private ExpressionToPredicateEngine<List<Integer>> combinationFilterPreProcessor;
+		private PredicateExpressionParser<List<Integer>> combinationFilterPreProcessor;
 		private String combinationFilterRaw;
 		private boolean testFilter;
 		private boolean testFilterFineInfo;

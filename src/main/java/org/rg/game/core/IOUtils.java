@@ -14,6 +14,8 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.nio.channels.FileChannel;
 
+import org.burningwave.Throwables;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class IOUtils {
@@ -29,7 +31,7 @@ public class IOUtils {
 				output.write(buffer, 0, bytesRead);
 			}
 		} catch (IOException e) {
-			Throwables.sneakyThrow(e);
+			Throwables.INSTANCE.throwException(e);
 		}
 	}
 
@@ -43,7 +45,7 @@ public class IOUtils {
 			fileWriter.write(value);
 			fileWriter.flush();
 		} catch (IOException exc) {
-			Throwables.sneakyThrow(exc);
+			Throwables.INSTANCE.throwException(exc);
 		}
 		return new File(absolutePath);
 	}
@@ -63,7 +65,7 @@ public class IOUtils {
 			oos.writeObject(object);
 			LogUtils.INSTANCE.info("Object with id '" + key + "' stored in the physical cache");
 		} catch (Throwable exc) {
-			Throwables.sneakyThrow(exc);
+			Throwables.INSTANCE.throwException(exc);
 		}
 	}
 
@@ -76,7 +78,7 @@ public class IOUtils {
 		} catch (FileNotFoundException exc) {
 			return null;
 		} catch (Throwable exc) {
-			return Throwables.sneakyThrow(exc);
+			return Throwables.INSTANCE.throwException(exc);
 		}
 	}
 
@@ -84,7 +86,7 @@ public class IOUtils {
 		try {
 			return objectMapper.readValue(premiumCountersFile, cls);
 		} catch (IOException exc) {
-			return Throwables.sneakyThrow(exc);
+			return Throwables.INSTANCE.throwException(exc);
 		}
 	}
 
@@ -92,7 +94,7 @@ public class IOUtils {
 		try {
 			objectMapper.writeValue(premiumCountersFile, object);
 		} catch (IOException exc) {
-			Throwables.sneakyThrow(exc);
+			Throwables.INSTANCE.throwException(exc);
 		}
 	}
 
@@ -100,7 +102,7 @@ public class IOUtils {
 		try {
 			objectMapper.writerWithDefaultPrettyPrinter().writeValue(premiumCountersFile, object);
 		} catch (IOException exc) {
-			Throwables.sneakyThrow(exc);
+			Throwables.INSTANCE.throwException(exc);
 		}
 	}
 

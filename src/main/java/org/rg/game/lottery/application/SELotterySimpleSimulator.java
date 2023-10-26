@@ -68,16 +68,16 @@ import org.apache.poi.util.RecordFormatException;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.xmlbeans.impl.values.XmlValueDisconnectedException;
+import org.burningwave.Synchronizer;
+import org.burningwave.Synchronizer.Mutex;
+import org.burningwave.Throwables;
+import org.burningwave.ThrowingConsumer;
 import org.rg.game.core.CollectionUtils;
 import org.rg.game.core.ConcurrentUtils;
 import org.rg.game.core.IOUtils;
 import org.rg.game.core.LogUtils;
 import org.rg.game.core.NetworkUtils;
 import org.rg.game.core.ResourceUtils;
-import org.rg.game.core.Synchronizer;
-import org.rg.game.core.Synchronizer.Mutex;
-import org.rg.game.core.Throwables;
-import org.rg.game.core.ThrowingConsumer;
 import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.PersistentStorage;
 import org.rg.game.lottery.engine.Premium;
@@ -88,7 +88,6 @@ import org.rg.game.lottery.engine.Storage;
 
 import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.databind.DatabindException;
-
 
 public class SELotterySimpleSimulator extends Shared {
 
@@ -225,7 +224,7 @@ public class SELotterySimpleSimulator extends Shared {
 				)
 			);
 		} catch (IOException exc) {
-			Throwables.sneakyThrow(exc);
+			Throwables.INSTANCE.throwException(exc);
 		}
 		return futures;
 	}
@@ -340,7 +339,7 @@ public class SELotterySimpleSimulator extends Shared {
 						try {
 							firstSetupExecuted.wait();
 						} catch (InterruptedException exc) {
-							Throwables.sneakyThrow(exc);
+							Throwables.INSTANCE.throwException(exc);
 						}
 					}
 				}
@@ -742,7 +741,7 @@ public class SELotterySimpleSimulator extends Shared {
 											} catch (IOException exc) {
 												LogUtils.INSTANCE.error("Unable to read file " + premiumCountersFile.getAbsolutePath() + ": it will be deleted and recreated");
 												if (!premiumCountersFile.delete()) {
-													Throwables.sneakyThrow(exc);
+													Throwables.INSTANCE.throwException(exc);
 												}
 												return computePremiumCountersData(sEStats, storage, rowIndexAndExtractionDate.getValue(), premiumCountersFile, premiumTypes);
 											}
@@ -753,7 +752,7 @@ public class SELotterySimpleSimulator extends Shared {
 													return computePremiumCountersData(sEStats, storage, rowIndexAndExtractionDate.getValue(), premiumCountersFile, premiumTypes);
 												}
 											} catch (ParseException exc) {
-												return Throwables.sneakyThrow(exc);
+												return Throwables.INSTANCE.throwException(exc);
 											}
 											return data;
 										}
@@ -1150,7 +1149,7 @@ public class SELotterySimpleSimulator extends Shared {
 		try {
 			hyperLink.setAddress(URLEncoder.encode(new File(storage.getAbsolutePath()).getParentFile().getName() + File.separator + storage.getName(), "UTF-8").replace("+", "%20"));
 		} catch (UnsupportedEncodingException exc) {
-			Throwables.sneakyThrow(exc);
+			Throwables.INSTANCE.throwException(exc);
 		}
 		cell = row.createCell(getOrPutAndGetCellIndex(row.getSheet(), FILE_LABEL));
 		cell.setCellValue(storage.getName());
@@ -1338,7 +1337,7 @@ public class SELotterySimpleSimulator extends Shared {
 						try {
 							finallyAction.accept(workBook);
 						} catch (Throwable exc) {
-							Throwables.sneakyThrow(exc);
+							Throwables.INSTANCE.throwException(exc);
 						}
 					}
 				} finally {
@@ -1346,7 +1345,7 @@ public class SELotterySimpleSimulator extends Shared {
 						try {
 							workBook.close();
 						} catch (IOException exc) {
-							Throwables.sneakyThrow(exc);
+							Throwables.INSTANCE.throwException(exc);
 						}
 					}
 				}
@@ -1355,7 +1354,7 @@ public class SELotterySimpleSimulator extends Shared {
 			if (!(exc instanceof POIXMLException || exc instanceof EmptyFileException || exc instanceof ZipException || exc instanceof PartAlreadyExistsException || exc instanceof IllegalStateException ||
 				exc instanceof NotOfficeXmlFileException || exc instanceof XmlValueDisconnectedException || exc instanceof RecordFormatException || (exc instanceof IOException && exc.getMessage().equalsIgnoreCase("Truncated ZIP file")))) {
 				LogUtils.INSTANCE.error("Unable to process file " + excelFileName);
-				Throwables.sneakyThrow(exc);
+				Throwables.INSTANCE.throwException(exc);
 			}
 			if (isSlave) {
 				Mutex mutex = Synchronizer.INSTANCE.getMutex(excelFileName);
@@ -1369,7 +1368,7 @@ public class SELotterySimpleSimulator extends Shared {
 							return -1;
 						}
 					} catch (InterruptedException e) {
-						Throwables.sneakyThrow(e);
+						Throwables.INSTANCE.throwException(e);
 					}
 				}
 			} else {
@@ -1382,14 +1381,14 @@ public class SELotterySimpleSimulator extends Shared {
 				}
 				if (backups.isEmpty()) {
 					LogUtils.INSTANCE.error("Error in Excel file '" + excelFileAbsolutePath + "'. No backup found");
-					Throwables.sneakyThrow(exc);
+					Throwables.INSTANCE.throwException(exc);
 				}
 				Iterator<File> backupsIterator = backups.iterator();
 				File backup = backupsIterator.next();
 				LogUtils.INSTANCE.warn("Error in Excel file '" + excelFileAbsolutePath + "'.\nTrying to restore previous backup: '" + backup.getAbsolutePath() + "'");
 				File processedFile = new File(excelFileAbsolutePath);
 				if (!processedFile.delete() || !backup.renameTo(processedFile)) {
-					Throwables.sneakyThrow(exc);
+					Throwables.INSTANCE.throwException(exc);
 				}
 				backupsIterator.remove();
 			}
@@ -1409,7 +1408,7 @@ public class SELotterySimpleSimulator extends Shared {
 			BaseFormulaEvaluator.evaluateAllFormulaCells(workBook);
 			workBook.write(destFileOutputStream);
 		} catch (IOException e) {
-			Throwables.sneakyThrow(e);
+			Throwables.INSTANCE.throwException(e);
 		}
 	}
 

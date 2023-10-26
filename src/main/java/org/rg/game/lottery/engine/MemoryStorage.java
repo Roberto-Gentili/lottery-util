@@ -10,10 +10,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 
+import org.burningwave.Synchronizer;
+import org.burningwave.Throwables;
 import org.rg.game.core.LogUtils;
 import org.rg.game.core.MathUtils;
-import org.rg.game.core.Synchronizer;
-import org.rg.game.core.Throwables;
 
 public class MemoryStorage implements Storage {
 
@@ -179,7 +179,7 @@ public class MemoryStorage implements Storage {
 				           }
 				        }
 				    } catch (Throwable e) {
-						Throwables.sneakyThrow(e);
+						Throwables.INSTANCE.throwException(e);
 					}
 					this.historicalPremiums = historicalPremiums;
 				}

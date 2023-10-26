@@ -33,6 +33,7 @@ import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
+import org.burningwave.Throwables;
 import org.rg.game.lottery.engine.PersistentStorage;
 
 public interface LogUtils {
@@ -122,11 +123,11 @@ public interface LogUtils {
 				try (FileChannel outChan = new FileOutputStream(absolutePath, true).getChannel()) {
 				  //outChan.truncate(0);
 				} catch (IOException exc) {
-					Throwables.sneakyThrow(exc);
+					Throwables.INSTANCE.throwException(exc);
 				}
 				writer = new BufferedWriter(new FileWriter(absolutePath, true));
 			} catch (IOException exc) {
-				Throwables.sneakyThrow(exc);
+				Throwables.INSTANCE.throwException(exc);
 			}
 		}
 
@@ -185,7 +186,7 @@ public interface LogUtils {
 					writer.append("\t" + stackTraceElement.toString());
 				}
 			} catch (Throwable innerExc) {
-				Throwables.sneakyThrow(exc);
+				Throwables.INSTANCE.throwException(exc);
 			}
 		}
 
@@ -200,7 +201,7 @@ public interface LogUtils {
 				}
 				writer.flush();
 			} catch (Throwable exc) {
-				Throwables.sneakyThrow(exc);
+				Throwables.INSTANCE.throwException(exc);
 			}
 		}
 
