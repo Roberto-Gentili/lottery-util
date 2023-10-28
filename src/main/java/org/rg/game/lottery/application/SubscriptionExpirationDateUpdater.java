@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.AbstractMap;
@@ -31,6 +32,8 @@ import org.rg.game.lottery.engine.SEStats;
 
 public class SubscriptionExpirationDateUpdater extends Shared {
 	static DateTimeFormatter datePattern = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
+	static final LocalDateTime launchingTime = TimeUtils.now();
+	static final LocalDate launchingDay = launchingTime.toLocalDate();
 
 	static List<Map.Entry<List<String>, Integer>> updateInfos = Arrays.asList(
 		//addUpdateInfo(computeIncrementationOfWeeks(12), "Tomarelli Gianluca")
@@ -66,7 +69,6 @@ public class SubscriptionExpirationDateUpdater extends Shared {
 	);
 
 	public static void main(String[] args) {
-		final LocalDate today = TimeUtils.today();
 		if (args.length > 0) {
 			updateInfos = new ArrayList<>();
 			for (String updateInfoRaw : args[0].split(";")) {
@@ -113,23 +115,23 @@ public class SubscriptionExpirationDateUpdater extends Shared {
 							if (expiryDate != null) {
 								LocalDate expiryLocalDate = TimeUtils.toLocalDate(expiryDate);
 								LocalDate startExpiryDate = expiryLocalDate;
-								if (today.compareTo(expiryLocalDate) > 0) {
+								if (launchingDay.compareTo(expiryLocalDate) > 0) {
 									if (name.equalsIgnoreCase("all")) {
 										continue;
 									}
-									expiryLocalDate = today;
+									expiryLocalDate = launchingDay;
 								}
 								if (updateInfo.getValue() > 0) {
 									for (int i = 0; i < updateInfo.getValue(); i++) {
 										expiryLocalDate = expiryLocalDate.plus(
-											SEStats.computeDaysToNextExtractionDate(expiryLocalDate, i == 0 && expiryLocalDate.compareTo(today) == 0),
+											SEStats.computeDaysToNextExtractionDate(expiryLocalDate, i == 0 && shouldCheckIfToday(expiryLocalDate)),
 											ChronoUnit.DAYS
 										);
 									}
 								} else {
 									for (int i = updateInfo.getValue(); i < 0; i++) {
 										expiryLocalDate = expiryLocalDate.plus(
-											SEStats.computeDaysFromPreviousExtractionDate(expiryLocalDate, i == 0 && expiryLocalDate.compareTo(today) == 0),
+											SEStats.computeDaysFromPreviousExtractionDate(expiryLocalDate, i == 0 && shouldCheckIfToday(expiryLocalDate)),
 											ChronoUnit.DAYS
 										);
 									}
@@ -165,11 +167,19 @@ public class SubscriptionExpirationDateUpdater extends Shared {
 				Date expiryDate = expiryCell.getDateCellValue();
 				if (expiryDate != null) {
 					LocalDate expiryLocalDate = TimeUtils.toLocalDate(expiryDate);
-					LocalDate todayTemp = today;
-					if (today.compareTo(expiryLocalDate) <= 0) {
+					LocalDate todayTemp = launchingDay;
+					if (launchingDay.compareTo(expiryLocalDate) <= 0) {
 						int extractionDateCounter = 0;
 						int i = 0;
-						while ((todayTemp = todayTemp.plus(SEStats.computeDaysToNextExtractionDate(todayTemp, i == 0 && todayTemp.compareTo(today) == 0), ChronoUnit.DAYS)).compareTo(expiryLocalDate) <= 0) {
+						while ((todayTemp =
+								todayTemp.plus(
+									SEStats.computeDaysToNextExtractionDate(
+										todayTemp,
+										i == 0 && shouldCheckIfToday(todayTemp)
+									),
+									ChronoUnit.DAYS
+								)
+								).compareTo(expiryLocalDate) <= 0) {
 							extractionDateCounter++;
 							i++;
 						}
@@ -185,6 +195,10 @@ public class SubscriptionExpirationDateUpdater extends Shared {
 		} catch (Throwable exc) {
 			LogUtils.INSTANCE.error(exc);
 		}
+	}
+
+	protected static boolean shouldCheckIfToday(LocalDate expiryLocalDate) {
+		return expiryLocalDate.compareTo(launchingDay) == 0 && launchingTime.compareTo(SEStats.toClosingTime(launchingTime)) >= 0;
 	}
 
 	private static Supplier<Integer> parseIncrementation(String value) {
