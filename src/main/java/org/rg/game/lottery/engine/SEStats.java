@@ -1268,9 +1268,6 @@ public class SEStats {
 		return computeDaysToNextExtractionDate(startDate, extractionDates, false);
 	}
 
-	public static int computeDaysToNextExtractionDate(LocalDate startDate) {
-		return computeDaysToNextExtractionDate(startDate, false);
-	}
 
 	public static int computeDaysToNextExtractionDate(LocalDate startDate, boolean checkIfIsToday) {
 		return computeDaysToNextExtractionDate(startDate, EXTRACTION_DAYS, checkIfIsToday);

@@ -42,7 +42,7 @@ public class MDLotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	@Override
-	protected int getIncrementDays(LocalDate startDate) {
+	protected int getIncrementDays(LocalDate startDate, boolean checkIfIsToday) {
 		return 1;
 	}
 
@@ -57,7 +57,7 @@ public class MDLotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		LocalDate nextWeekStart = dayOfWeek.with(DayOfWeek.MONDAY);
 		dates.add(nextWeekStart);
 		for (int i = 0; i < 6; i++) {
-			dates.add(nextWeekStart = nextWeekStart.plus(getIncrementDays(nextWeekStart), ChronoUnit.DAYS));
+			dates.add(nextWeekStart = nextWeekStart.plus(getIncrementDays(nextWeekStart, false), ChronoUnit.DAYS));
 		}
 		return dates;
 	}
@@ -70,7 +70,7 @@ public class MDLotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 			throw new IllegalArgumentException("Unvalid date: " + extractionDate);
 		}
 		while (seedStartDate.compareTo(extractionDate) < 0) {
-			seedStartDate = seedStartDate.plus(getIncrementDays(seedStartDate), ChronoUnit.DAYS);
+			seedStartDate = seedStartDate.plus(getIncrementDays(seedStartDate, false), ChronoUnit.DAYS);
 			seed++;
 		}
 		getProcessingContext().random = new Random(seed);

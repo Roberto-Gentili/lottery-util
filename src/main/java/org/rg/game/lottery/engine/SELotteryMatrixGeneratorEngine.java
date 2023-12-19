@@ -103,7 +103,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 	}
 
 	@Override
-	protected int getIncrementDays(LocalDate startDate) {
+	protected int getIncrementDays(LocalDate startDate, boolean checkIfIsToday) {
 		SEStats sEStats = getSEStatsForSeed();
 		int comparisonResult = TimeUtils.toDate(startDate).compareTo(sEStats.getLatestExtractionDate());
 		if (comparisonResult < 0) {
@@ -115,7 +115,7 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 				}
 			}
 		}
-		return SEStats.computeDaysToNextExtractionDate(startDate);
+		return SEStats.computeDaysToNextExtractionDate(startDate, checkIfIsToday);
 	}
 
 	@Override
@@ -123,8 +123,8 @@ public class SELotteryMatrixGeneratorEngine extends LotteryMatrixGeneratorAbstEn
 		LocalDate nextWeekStart = dayOfWeek.with(SEStats.EXTRACTION_DAYS.get(0));
 		List<LocalDate> dates = new ArrayList<>();
 		dates.add(nextWeekStart);
-		dates.add(nextWeekStart.plus(getIncrementDays(nextWeekStart), ChronoUnit.DAYS));
-		dates.add(dates.get(1).plus(getIncrementDays(nextWeekStart), ChronoUnit.DAYS));
+		dates.add(nextWeekStart.plus(getIncrementDays(nextWeekStart, false), ChronoUnit.DAYS));
+		dates.add(dates.get(1).plus(getIncrementDays(nextWeekStart, false), ChronoUnit.DAYS));
 		return dates;
 	}
 

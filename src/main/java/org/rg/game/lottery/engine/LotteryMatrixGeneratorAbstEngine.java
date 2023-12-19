@@ -256,16 +256,16 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 				} else {
 					LocalDate extractionDate = "next".equalsIgnoreCase(dateWithOffset[0])?
 						computeNextExtractionDate(TimeUtils.today(), true) :
-						computeNextExtractionDate(LocalDate.parse(dateWithOffset[0],  TimeUtils.defaultLocalDateFormat), false);
+						computeNextExtractionDate(LocalDate.parse(dateWithOffset[0], TimeUtils.defaultLocalDateFormat), false);
 					if (dateWithOffset.length == 2) {
 						String[] range = dateWithOffset[1].split("\\*");
 						for (int i = 0; i < Integer.parseInt(range[0]); i++) {
-							extractionDate = extractionDate.plus(getIncrementDays(extractionDate), ChronoUnit.DAYS);
+							extractionDate = extractionDate.plus(getIncrementDays(extractionDate, i == 0), ChronoUnit.DAYS);
 						}
 						if (range.length == 2) {
 							for (int i = 0; i < Integer.parseInt(range[1]); i++) {
 								extractionDatesForExpression.add(extractionDate);
-								extractionDate = extractionDate.plus(getIncrementDays(extractionDate), ChronoUnit.DAYS);
+								extractionDate = extractionDate.plus(getIncrementDays(extractionDate, i == 0), ChronoUnit.DAYS);
 							}
 						} else {
 							extractionDatesForExpression.add(extractionDate);
@@ -783,7 +783,7 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 
 	public abstract LocalDate computeNextExtractionDate(LocalDate startDate, boolean incrementIfExpired);
 
-	protected abstract int getIncrementDays(LocalDate startDate);
+	protected abstract int getIncrementDays(LocalDate startDate, boolean checkIfIsToday);
 
 	protected abstract Function<String, Function<Integer, Function<Integer, Iterator<Integer>>>> getNumberGeneratorFactory(LocalDate extractionDate);
 
