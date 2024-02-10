@@ -109,7 +109,7 @@ class SEIntegralSystemAnalyzer extends Shared {
 		);
 		List<Block> assignedBlocks = retrieveAssignedBlocks(config, cacheRecord);
 		AtomicReference<String> previousLoggedRankWrapper = new AtomicReference<>();
-		if (!cacheRecord.data.isEmpty() && cacheRecord.data.size() >= rankSize) {
+		if (cacheRecord.data != null && !cacheRecord.data.isEmpty() && cacheRecord.data.size() >= rankSize) {
 			chooseAndPrintNextCompetitionSystem(cacheRecord, rankSize);
 		}
 		while (!assignedBlocks.isEmpty()) {
