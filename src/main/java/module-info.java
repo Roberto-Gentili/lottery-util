@@ -4,7 +4,6 @@ module org.rg.game.lottery {
 	requires com.formdev.flatlaf;
 	requires java.desktop;
 	requires java.logging;
-	requires javafx.graphics;
     requires jdk.unsupported;
 	requires org.apache.poi.ooxml;
 	requires org.apache.poi.poi;
