@@ -207,7 +207,7 @@ public class ResourceUtils {
 	}
 
 	public String[] pathsFromSystemEnv(String... keys) {
-		return pathsFromSystemEnv(null, keys);
+		return pathsFromSystemEnv(null, new String[] {"integralSystemsAnalysis"});
 	}
 
 	public String[] pathsFromSystemEnv(List<String> values, String... keys) {
