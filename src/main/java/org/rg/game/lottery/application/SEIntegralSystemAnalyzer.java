@@ -68,12 +68,12 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			/*FileInputStream serviceAccount =
 					new FileInputStream("C:\\Users\\rgentili\\Desktop\\lottery-util-dd398-firebase-adminsdk-z09lu-9f02863f3a.json");*/
 			InputStream serviceAccount = new ByteArrayInputStream(
-				Optional.ofNullable(System.getenv().get("firebase.credentials")).orElseGet(() -> System.getenv().get("FIREBASE_CREDENTIALS")
+				Optional.ofNullable(System.getenv().get("integral-system-analysis.firebase.credentials")).orElseGet(() -> System.getenv().get("INTEGRAL_SYSTEM_ANALYSIS_FIREBASE_CREDENTIALS")
 			).getBytes());
 
 			FirebaseOptions options = FirebaseOptions.builder()
 				  .setCredentials(com.google.auth.oauth2.GoogleCredentials.fromStream(serviceAccount))
-				  .setDatabaseUrl(Optional.ofNullable(System.getenv().get("firebase.url")).orElseGet(() -> System.getenv().get("FIREBASE_URL")))
+				  .setDatabaseUrl(Optional.ofNullable(System.getenv().get("integral-system-analysis.firebase.url")).orElseGet(() -> System.getenv().get("INTEGRAL_SYSTEM_ANALYSIS_FIREBASE_URL")))
 				  .build();
 
 			FirebaseApp.initializeApp(options);
