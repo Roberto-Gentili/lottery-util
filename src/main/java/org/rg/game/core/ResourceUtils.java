@@ -216,9 +216,9 @@ public class ResourceUtils {
 		for (String key : keys) {
 			String value = System.getenv(key);
 			if (value != null) {
-				if (key.startsWith("working-path.")) {
+				if (key.startsWith("working-path.") || key.startsWith("WORKING-PATH_")) {
 					values.add(PersistentStorage.buildWorkingPath(value));
-				} else if (key.startsWith("resources.")) {
+				} else if (key.startsWith("resources.") || key.startsWith("RESOURCES_")) {
 					values.add(ResourceUtils.INSTANCE.getResource(value).getAbsolutePath());
 				}
 			}

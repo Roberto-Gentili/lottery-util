@@ -141,7 +141,9 @@ public class SEIntegralSystemAnalyzer extends Shared {
 
 		String[] configurationFileFolders = ResourceUtils.INSTANCE.pathsFromSystemEnv(
 			"working-path.integral-system-analysis.folder",
-			Optional.ofNullable(System.getenv().get("resources.integral-system-analysis.folder")).orElseGet(() -> System.getenv().get("RESOURCES_INTEGRAL-SYSTEM-ANALYSIS_FOLDER"))
+			"WORKING-PATH_INTEGRAL-SYSTEM-ANALYSIS_FOLDER",
+			"resources.integral-system-analysis.folder",
+			"RESOURCES_INTEGRAL-SYSTEM-ANALYSIS_FOLDER"
 		);
 		LogUtils.INSTANCE.info("Set configuration files folder to " + String.join(", ", configurationFileFolders) + "\n");
 		List<File> configurationFiles =
