@@ -45,6 +45,6 @@ jobs:
             ${{ runner.os }}-maven-
       - name: Build and launch
         env:
-           firebase.credentials: ${{ secrets.LOTTERY_UTIL_GOOGLE_CREDENTIAL }}
-           resources.integral-system-analysis.folder: 'integralSystemsAnalysis'
+           FIREBASE_CREDENTIALS: ${{ secrets.LOTTERY_UTIL_GOOGLE_CREDENTIAL }}
+           RESOURCES_INTEGRAL-SYSTEM-ANALYSIS_FOLDER: 'integralSystemsAnalysis'
         run: mvn -B compile exec:java -P integral-system-analysis --file pom.xml
