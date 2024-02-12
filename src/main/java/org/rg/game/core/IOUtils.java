@@ -90,11 +90,27 @@ public class IOUtils {
 		}
 	}
 
+	public <T> T readFromJSONFormat(String premiumCountersValue, Class<T> cls) {
+		try {
+			return objectMapper.readValue(premiumCountersValue, cls);
+		} catch (IOException exc) {
+			return Throwables.INSTANCE.throwException(exc);
+		}
+	}
+
 	public void writeToJSONFormat(File premiumCountersFile, Object object) {
 		try {
 			objectMapper.writeValue(premiumCountersFile, object);
 		} catch (IOException exc) {
 			Throwables.INSTANCE.throwException(exc);
+		}
+	}
+
+	public String writeToJSONFormat(Object object) {
+		try {
+			return objectMapper.writeValueAsString(object);
+		} catch (IOException exc) {
+			return Throwables.INSTANCE.throwException(exc);
 		}
 	}
 

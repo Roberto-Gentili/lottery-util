@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.rg.game.core.MathUtils;
 
@@ -217,6 +218,10 @@ public class ComboHandler {
 		    .map(Object::toString)
 		    .collect(Collectors.toList())
 		);
+	}
+
+	public static List<Integer> fromString(String values) {
+		return Stream.of(values.replaceAll("\\s+","").split(",")).map(Integer::valueOf).collect(Collectors.toCollection(ArrayList::new));
 	}
 
 	public static int sumValues(List<Integer> combo) {
