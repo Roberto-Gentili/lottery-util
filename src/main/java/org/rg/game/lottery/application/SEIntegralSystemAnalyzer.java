@@ -103,12 +103,16 @@ class SEIntegralSystemAnalyzer extends Shared {
 					);
 				}
 				Collection<Map.Entry<List<Integer>, Map<Number, Integer>>> data = new ArrayList<>();
-				for (Map<String, Map<Number, Integer>> comboForResultAsRawValue : (Collection<Map<String, Map<Number, Integer>>>) recordAsRawValue.get("data")) {
-					Map.Entry<String, Map<Number, Integer>> comboForResultAsRawValueEntry = comboForResultAsRawValue.entrySet().iterator().next();
+				for (Map<String, Map<String, Integer>> comboForResultAsRawValue : (Collection<Map<String, Map<String, Integer>>>) recordAsRawValue.get("data")) {
+					Map.Entry<String, Map<String, Integer>> comboForResultAsRawValueEntry = comboForResultAsRawValue.entrySet().iterator().next();
+					Map<Number, Integer> premiums = new LinkedHashMap<>();
+					for (Map.Entry<String, Integer> premium : comboForResultAsRawValueEntry.getValue().entrySet()) {
+						premiums.put(Premium.parseType(premium.getKey()), premium.getValue());
+					}
 					data.add(
 						new AbstractMap.SimpleEntry<>(
 							ComboHandler.fromString(comboForResultAsRawValueEntry.getKey().replaceAll("\\[|\\]", "")),
-							comboForResultAsRawValueEntry.getValue()
+							premiums
 						)
 					);
 				}
