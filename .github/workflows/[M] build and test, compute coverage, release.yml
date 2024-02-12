@@ -1,0 +1,40 @@
+name: Build and test -> Compute coverage -> Release
+
+on:
+  watch:
+    types: [started]
+
+jobs:
+            
+  ask-for-authorization:
+    name: Ask for authorization
+    runs-on: windows-latest
+    steps:
+    - uses: octokit/request-action@v2.0.0
+      with:
+        route: GET /repos/:repository/collaborators/${{ github.actor }}
+        repository: ${{ github.repository }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  launch-integral-system-analysis:
+    name: Build -> Test (JVM ${{ matrix.java }}, ${{ matrix.os }})
+    needs: [ask-for-authorization]
+    strategy:
+      fail-fast: true
+      max-parallel: 15
+      matrix:
+        os: [windows-latest]
+        java: [21,21,21,21,21,21,21,21,21,21,21,21]
+        architecture: [x64]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v3
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: 'zulu'
+          architecture: ${{ matrix.architecture }}
+      - name: Build and test with
+        run: mvn -B clean package --file pom.xml
