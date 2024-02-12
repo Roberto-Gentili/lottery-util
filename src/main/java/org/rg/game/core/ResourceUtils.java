@@ -40,6 +40,7 @@ public class ResourceUtils {
 			File resourceFolder = Paths.get(IOUtils.class.getResource("/" +
 				IOUtils.class.getName().replace(".", "/") + ".class"
 			).toURI()).toFile();
+			LogUtils.INSTANCE.info("resource folder ", resourceFolder.getAbsolutePath());
 			for (String pathSegment : IOUtils.class.getName().split("\\.")) {
 				resourceFolder = resourceFolder.getParentFile();
 			}

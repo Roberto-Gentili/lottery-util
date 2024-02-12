@@ -47,5 +47,4 @@ jobs:
         env:
            LOTTERY_UTIL_GOOGLE_CREDENTIAL: ${{ secrets.LOTTERY_UTIL_GOOGLE_CREDENTIAL }}
            resources.integral-system-analysis.folder: 'integralSystemsAnalysis'
-           working-path.integral-system-analysis.folder: '/home/runner/work/data'
         run: mvn -B compile exec:java -P integral-system-analysis --file pom.xml
