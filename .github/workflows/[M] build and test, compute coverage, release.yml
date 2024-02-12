@@ -46,4 +46,4 @@ jobs:
       - name: Build and launch
         env: # Or as an environment variable
            LOTTERY_UTIL_GOOGLE_CREDENTIAL: ${{ secrets.LOTTERY_UTIL_GOOGLE_CREDENTIAL }}
-        run: mvn -B compile exec:java -P integral-system-analysis --file pom.xml
+        run: mvn -B compile exec:java -P integral-system-analysis -Dresources.integral-system-analysis.folder=integralSystemsAnalysis --file pom.xml
