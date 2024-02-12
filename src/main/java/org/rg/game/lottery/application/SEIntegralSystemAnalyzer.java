@@ -151,7 +151,8 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				"se-integral-systems-analysis", "properties",
 				configurationFileFolders
 			);
-		int maxParallelTasks = Optional.ofNullable(System.getenv("tasks.max-parallel")).map(Integer::valueOf)
+		String taskMaxParallel = Optional.ofNullable(System.getenv().get("tasks.max-parallel")).orElseGet(() -> System.getenv().get("TASKS_MAX_PARALLEL"));
+		int maxParallelTasks = Optional.ofNullable(taskMaxParallel).map(Integer::valueOf)
 				.orElseGet(() -> Math.max((Runtime.getRuntime().availableProcessors() / 2) - 1, 1));
 		Collection<CompletableFuture<Void>> futures = new CopyOnWriteArrayList<>();
 		for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles)) {
