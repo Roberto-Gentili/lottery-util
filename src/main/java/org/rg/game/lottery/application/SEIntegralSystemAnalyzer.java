@@ -2,6 +2,7 @@ package org.rg.game.lottery.application;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.math.BigInteger;
@@ -62,7 +63,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 	private static BiFunction<String, String, Record> recordLoader;
 	private static BiFunction<String, String, Consumer<Record>> recordWriter;
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		try {
 			/*FileInputStream serviceAccount =
 					new FileInputStream("C:\\Users\\rgentili\\Desktop\\lottery-util-dd398-firebase-adminsdk-z09lu-9f02863f3a.json");*/
@@ -76,7 +77,6 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			FirebaseApp.initializeApp(options);
 			Firestore firestore = FirestoreClient.getFirestore();
 			recordLoader = (String key, String basePath) -> {
-				LogUtils.INSTANCE.info("Trying to load remote item ", key);
 				DocumentReference recordAsDocumentWrapper = firestore.collection("IntegralSystemStats").document(key);
 				ApiFuture<DocumentSnapshot> ap = recordAsDocumentWrapper.get();
 				DocumentSnapshot recordAsDocument;
@@ -119,7 +119,6 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				return new Record(blocks, data);
 			};
 			recordWriter = (String key, String basePath) -> record -> {
-				LogUtils.INSTANCE.info("Trying to store remote item ", key);
 				DocumentReference recordAsDocumentWrapper = firestore.collection("IntegralSystemStats").document(key);
 				Map<String, Object> recordAsRawValue = new LinkedHashMap<>();
 				recordAsRawValue.put("value", IOUtils.INSTANCE.writeToJSONFormat(record));
@@ -137,37 +136,35 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				IOUtils.INSTANCE.writeToJSONPrettyFormat(new File(basePath + "/" + key + ".json"), record);
 			};
 		}
-		try {
-			String[] configurationFileFolders = ResourceUtils.INSTANCE.pathsFromSystemEnv(
-				"working-path.integral-system-analysis.folder",
-				"resources.integral-system-analysis.folder"
+
+		String[] configurationFileFolders = ResourceUtils.INSTANCE.pathsFromSystemEnv(
+			"working-path.integral-system-analysis.folder",
+			"resources.integral-system-analysis.folder"
+		);
+		LogUtils.INSTANCE.info("Set configuration files folder to " + String.join(", ", configurationFileFolders) + "\n");
+		List<File> configurationFiles =
+			ResourceUtils.INSTANCE.find(
+				"se-integral-systems-analysis", "properties",
+				configurationFileFolders
 			);
-			LogUtils.INSTANCE.info("Set configuration files folder to " + String.join(", ", configurationFileFolders) + "\n");
-			List<File> configurationFiles =
-				ResourceUtils.INSTANCE.find(
-					"se-integral-systems-analysis", "properties",
-					configurationFileFolders
-				);
-			int maxParallelTasks = Optional.ofNullable(System.getenv("tasks.max-parallel")).map(Integer::valueOf)
-					.orElseGet(() -> Math.max((Runtime.getRuntime().availableProcessors() / 2) - 1, 1));
-			Collection<CompletableFuture<Void>> futures = new CopyOnWriteArrayList<>();
-			for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles)) {
-				if (CollectionUtils.INSTANCE.retrieveBoolean(config, "enabled", "false")) {
-					Runnable task = () ->
-						analyze(config);
-					if (CollectionUtils.INSTANCE.retrieveBoolean(config, "async", "false")) {
-						ConcurrentUtils.INSTANCE.addTask(futures, task);
-					} else {
-						task.run();
-					}
+		int maxParallelTasks = Optional.ofNullable(System.getenv("tasks.max-parallel")).map(Integer::valueOf)
+				.orElseGet(() -> Math.max((Runtime.getRuntime().availableProcessors() / 2) - 1, 1));
+		Collection<CompletableFuture<Void>> futures = new CopyOnWriteArrayList<>();
+		for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles)) {
+			if (CollectionUtils.INSTANCE.retrieveBoolean(config, "enabled", "false")) {
+				Runnable task = () ->
+					analyze(config);
+				if (CollectionUtils.INSTANCE.retrieveBoolean(config, "async", "false")) {
+					ConcurrentUtils.INSTANCE.addTask(futures, task);
+				} else {
+					task.run();
 				}
-				ConcurrentUtils.INSTANCE.waitUntil(futures, ft -> ft.size() >= maxParallelTasks);
 			}
-			futures.forEach(CompletableFuture::join);
-			LogUtils.INSTANCE.warn("All activities are finished");
-		} catch (Throwable exc) {
-			Throwables.INSTANCE.throwException(exc);
+			ConcurrentUtils.INSTANCE.waitUntil(futures, ft -> ft.size() >= maxParallelTasks);
 		}
+		futures.forEach(CompletableFuture::join);
+		LogUtils.INSTANCE.warn("All activities are finished");
+
 	}
 
 	protected static void analyze(Properties config) {
