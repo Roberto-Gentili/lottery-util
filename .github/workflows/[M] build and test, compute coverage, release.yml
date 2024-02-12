@@ -22,7 +22,7 @@ jobs:
     needs: [ask-for-authorization]
     strategy:
       fail-fast: true
-      max-parallel: 15
+#      max-parallel: 15
       matrix:
         os: [ubuntu-latest]
         java: [21,21,21,21,21,21,21,21,21,21,21,21,21,21,21]
