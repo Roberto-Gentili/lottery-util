@@ -62,7 +62,7 @@ class SEIntegralSystemAnalyzer extends Shared {
 	private static BiFunction<String, String, Record> recordLoader;
 	private static BiFunction<String, String, Consumer<Record>> recordWriter;
 
-	public static void main(String[] args) throws Throwable {
+	public static void main(String[] args) {
 		try {
 			/*FileInputStream serviceAccount =
 					new FileInputStream("C:\\Users\\rgentili\\Desktop\\lottery-util-dd398-firebase-adminsdk-z09lu-9f02863f3a.json");*/
@@ -136,33 +136,37 @@ class SEIntegralSystemAnalyzer extends Shared {
 				IOUtils.INSTANCE.writeToJSONPrettyFormat(new File(basePath + "/" + key + ".json"), record);
 			};
 		}
-		String[] configurationFileFolders = ResourceUtils.INSTANCE.pathsFromSystemEnv(
-			"working-path.integral-system-analysis.folder",
-			"resources.integral-system-analysis.folder"
-		);
-		LogUtils.INSTANCE.info("Set configuration files folder to " + String.join(", ", configurationFileFolders) + "\n");
-		List<File> configurationFiles =
-			ResourceUtils.INSTANCE.find(
-				"se-integral-systems-analysis", "properties",
-				configurationFileFolders
+		try {
+			String[] configurationFileFolders = ResourceUtils.INSTANCE.pathsFromSystemEnv(
+				"working-path.integral-system-analysis.folder",
+				"resources.integral-system-analysis.folder"
 			);
-		int maxParallelTasks = Optional.ofNullable(System.getenv("tasks.max-parallel")).map(Integer::valueOf)
-				.orElseGet(() -> Math.max((Runtime.getRuntime().availableProcessors() / 2) - 1, 1));
-		Collection<CompletableFuture<Void>> futures = new CopyOnWriteArrayList<>();
-		for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles)) {
-			if (CollectionUtils.INSTANCE.retrieveBoolean(config, "enabled", "false")) {
-				Runnable task = () ->
-					analyze(config);
-				if (CollectionUtils.INSTANCE.retrieveBoolean(config, "async", "false")) {
-					ConcurrentUtils.INSTANCE.addTask(futures, task);
-				} else {
-					task.run();
+			LogUtils.INSTANCE.info("Set configuration files folder to " + String.join(", ", configurationFileFolders) + "\n");
+			List<File> configurationFiles =
+				ResourceUtils.INSTANCE.find(
+					"se-integral-systems-analysis", "properties",
+					configurationFileFolders
+				);
+			int maxParallelTasks = Optional.ofNullable(System.getenv("tasks.max-parallel")).map(Integer::valueOf)
+					.orElseGet(() -> Math.max((Runtime.getRuntime().availableProcessors() / 2) - 1, 1));
+			Collection<CompletableFuture<Void>> futures = new CopyOnWriteArrayList<>();
+			for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles)) {
+				if (CollectionUtils.INSTANCE.retrieveBoolean(config, "enabled", "false")) {
+					Runnable task = () ->
+						analyze(config);
+					if (CollectionUtils.INSTANCE.retrieveBoolean(config, "async", "false")) {
+						ConcurrentUtils.INSTANCE.addTask(futures, task);
+					} else {
+						task.run();
+					}
 				}
+				ConcurrentUtils.INSTANCE.waitUntil(futures, ft -> ft.size() >= maxParallelTasks);
 			}
-			ConcurrentUtils.INSTANCE.waitUntil(futures, ft -> ft.size() >= maxParallelTasks);
+			futures.forEach(CompletableFuture::join);
+			LogUtils.INSTANCE.warn("All activities are finished");
+		} catch (Throwable exc) {
+			Throwables.INSTANCE.throwException(exc);
 		}
-		futures.forEach(CompletableFuture::join);
-		LogUtils.INSTANCE.warn("All activities are finished");
 	}
 
 	protected static void analyze(Properties config) {
