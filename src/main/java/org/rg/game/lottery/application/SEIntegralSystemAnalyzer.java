@@ -1,7 +1,8 @@
 package org.rg.game.lottery.application;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.time.LocalDate;
@@ -23,11 +24,15 @@ import java.util.Random;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.burningwave.Throwables;
 import org.rg.game.core.CollectionUtils;
 import org.rg.game.core.ConcurrentUtils;
 import org.rg.game.core.IOUtils;
@@ -45,10 +50,88 @@ import org.rg.game.lottery.engine.SEPremium;
 import org.rg.game.lottery.engine.SEStats;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.api.core.ApiFuture;
+import com.google.cloud.firestore.DocumentReference;
+import com.google.cloud.firestore.DocumentSnapshot;
+import com.google.cloud.firestore.Firestore;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.FirebaseOptions;
+import com.google.firebase.cloud.FirestoreClient;
 
 class SEIntegralSystemAnalyzer extends Shared {
+	private static BiFunction<String, String, Record> recordLoader;
+	private static BiFunction<String, String, Consumer<Record>> recordWriter;
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws Throwable {
+		try {
+			/*FileInputStream serviceAccount =
+					new FileInputStream("C:\\Users\\rgentili\\Desktop\\lottery-util-dd398-firebase-adminsdk-z09lu-9f02863f3a.json");*/
+			InputStream serviceAccount = new ByteArrayInputStream(System.getenv().get("LOTTERY_UTIL_GOOGLE_CREDENTIAL").getBytes());
+
+			FirebaseOptions options = FirebaseOptions.builder()
+				  .setCredentials(com.google.auth.oauth2.GoogleCredentials.fromStream(serviceAccount))
+				  .setDatabaseUrl("https://lottery-util-dd398-default-rtdb.europe-west1.firebasedatabase.app")
+				  .build();
+
+			FirebaseApp.initializeApp(options);
+			Firestore firestore = FirestoreClient.getFirestore();
+			recordLoader = (String key, String basePath) -> {
+				DocumentReference recordAsDocumentWrapper = firestore.collection("IntegralSystemStats")
+					.document(key);
+				ApiFuture<DocumentSnapshot> ap = recordAsDocumentWrapper.get();
+				DocumentSnapshot recordAsDocument;
+				try {
+					recordAsDocument = ap.get();
+				} catch (InterruptedException | ExecutionException exc) {
+					return Throwables.INSTANCE.throwException(exc);
+				}
+				String recordAsFlatRawValue = (String)recordAsDocument.get("value");
+				if (recordAsFlatRawValue == null) {
+					return null;
+				}
+				Map<String, Object> recordAsRawValue = IOUtils.INSTANCE.readFromJSONFormat(recordAsFlatRawValue, Map.class);
+				Collection<Block> blocks = new ArrayList<>();
+				for (Map<String, Number> blocksAsRawValue : (Collection<Map<String, Number>>)recordAsRawValue.get("blocks")) {
+					blocks.add(
+						new Block(
+							BigInteger.valueOf(((Number)blocksAsRawValue.get("start")).longValue()),
+							BigInteger.valueOf(((Number)blocksAsRawValue.get("end")).longValue()),
+							Optional.ofNullable(
+								(Number)blocksAsRawValue.get("counter")
+							).map(Number::longValue).map(BigInteger::valueOf).orElseGet(() -> null)
+						)
+					);
+				}
+				Collection<Map.Entry<List<Integer>, Map<Number, Integer>>> data = new ArrayList<>();
+				for (Map<String, Map<Number, Integer>> comboForResultAsRawValue : (Collection<Map<String, Map<Number, Integer>>>) recordAsRawValue.get("data")) {
+					Map.Entry<String, Map<Number, Integer>> comboForResultAsRawValueEntry = comboForResultAsRawValue.entrySet().iterator().next();
+					data.add(
+						new AbstractMap.SimpleEntry<>(
+							ComboHandler.fromString(comboForResultAsRawValueEntry.getKey().replaceAll("\\[|\\]", "")),
+							comboForResultAsRawValueEntry.getValue()
+						)
+					);
+				}
+				return new Record(blocks, data);
+			};
+			recordWriter = (String key, String basePath) -> record -> {
+				DocumentReference recordAsDocumentWrapper = firestore.collection("IntegralSystemStats").document(key);
+				Map<String, Object> recordAsRawValue = new LinkedHashMap<>();
+				recordAsRawValue.put("value", IOUtils.INSTANCE.writeToJSONFormat(record));
+				try {
+					recordAsDocumentWrapper.set(recordAsRawValue).get();
+				} catch (InterruptedException | ExecutionException exc) {
+					Throwables.INSTANCE.throwException(exc);
+				}
+			};
+		} catch (Throwable exc) {
+			LogUtils.INSTANCE.error(exc, "Unable to connect to Firebase");
+			recordLoader = (String key, String basePath) -> IOUtils.INSTANCE.load(key, basePath);
+			recordWriter = (String key, String basePath) -> record -> {
+				IOUtils.INSTANCE.store(key, record, basePath);
+				IOUtils.INSTANCE.writeToJSONPrettyFormat(new File(basePath + "/" + key + ".json"), record);
+			};
+		}
 		String[] configurationFileFolders = ResourceUtils.INSTANCE.pathsFromSystemEnv(
 			"working-path.integral-system-analysis.folder",
 			"resources.integral-system-analysis.folder"
@@ -271,8 +354,8 @@ class SEIntegralSystemAnalyzer extends Shared {
 	protected static Record prepareCacheRecord(
 		String basePath, String cacheKey, ComboHandler cH,
 		TreeSet<Map.Entry<List<Integer>, Map<Number, Integer>>> systemsRank
-	) {
-		Record cacheRecordTemp = IOUtils.INSTANCE.load(cacheKey, basePath);
+	){
+		Record cacheRecordTemp = recordLoader.apply(cacheKey, basePath);
 		if (cacheRecordTemp != null) {
 			systemsRank.addAll(cacheRecordTemp.data);
 		} else {
@@ -423,6 +506,9 @@ class SEIntegralSystemAnalyzer extends Shared {
 		IOUtils.INSTANCE.store(cacheKey, cacheRecord, basePath);
 	}
 
+	private static Record load(String cacheKey, String basePath) {
+		return null;
+	}
 
 	private static void store(
 		String basePath,
@@ -432,8 +518,8 @@ class SEIntegralSystemAnalyzer extends Shared {
 		Record toBeCached,
 		Block currentBlock,
 		int rankSize
-	) {
-		Record cacheRecord = IOUtils.INSTANCE.load(cacheKey, basePath);
+	){
+		Record cacheRecord = recordLoader.apply(cacheKey, basePath);
 		if (cacheRecord != null) {
 			systemsRank.addAll(cacheRecord.data);
 			List<Block> cachedBlocks = (List<Block>)cacheRecord.blocks;
@@ -453,8 +539,7 @@ class SEIntegralSystemAnalyzer extends Shared {
 			systemsRank.pollLast();
 		}
 		toBeCached.data = new ArrayList<>(systemsRank);
-		IOUtils.INSTANCE.store(cacheKey, toBeCached, basePath);
-		IOUtils.INSTANCE.writeToJSONPrettyFormat(new File(basePath + "/" + cacheKey + ".json"), toBeCached);
+		recordWriter.apply(cacheKey, basePath).accept(toBeCached);
 	}
 
 	public static List<Block> divide(BigInteger size, long blockNumber) {
@@ -476,6 +561,13 @@ class SEIntegralSystemAnalyzer extends Shared {
 	public static class Record implements Serializable {
 
 		private static final long serialVersionUID = -5223969149097163659L;
+
+		Record() {}
+
+		Record(Collection<Block> blocks, Collection<Map.Entry<List<Integer>, Map<Number, Integer>>> data) {
+			this.blocks = blocks;
+			this.data = data;
+		}
 
 		@JsonProperty("blocks")
 		private Collection<Block> blocks;

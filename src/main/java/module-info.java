@@ -12,6 +12,12 @@ module org.rg.game.lottery {
 	requires org.burningwave.json;
 	requires org.burningwave.reflection;
 	requires org.jsoup;
+	requires firebase.admin;
+    requires google.cloud.core;
+    requires google.cloud.firestore;
+    requires com.google.auth;
+    requires com.google.api.apicommon;
+    requires com.google.auth.oauth2;
 
 	opens org.rg.game.lottery.application to com.fasterxml.jackson.databind;
 
