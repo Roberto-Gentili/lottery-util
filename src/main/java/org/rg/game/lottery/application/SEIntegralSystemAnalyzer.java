@@ -67,7 +67,9 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		try {
 			/*FileInputStream serviceAccount =
 					new FileInputStream("C:\\Users\\rgentili\\Desktop\\lottery-util-dd398-firebase-adminsdk-z09lu-9f02863f3a.json");*/
-			InputStream serviceAccount = new ByteArrayInputStream(System.getenv().get("firebase.credentials").getBytes());
+			InputStream serviceAccount = new ByteArrayInputStream(
+				Optional.ofNullable(System.getenv().get("firebase.credentials")).orElseGet(() -> System.getenv().get("FIREBASE_CREDENTIALS")
+			).getBytes());
 
 			FirebaseOptions options = FirebaseOptions.builder()
 				  .setCredentials(com.google.auth.oauth2.GoogleCredentials.fromStream(serviceAccount))
@@ -139,7 +141,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 
 		String[] configurationFileFolders = ResourceUtils.INSTANCE.pathsFromSystemEnv(
 			"working-path.integral-system-analysis.folder",
-			"resources.integral-system-analysis.folder"
+			Optional.ofNullable(System.getenv().get("resources.integral-system-analysis.folder")).orElseGet(() -> System.getenv().get("RESOURCES_INTEGRAL-SYSTEM-ANALYSIS_FOLDER"))
 		);
 		LogUtils.INSTANCE.info("Set configuration files folder to " + String.join(", ", configurationFileFolders) + "\n");
 		List<File> configurationFiles =
