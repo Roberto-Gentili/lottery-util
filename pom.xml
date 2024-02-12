@@ -98,5 +98,26 @@
 		</dependency>
 		
 	</dependencies>
-
+	
+	<profiles>
+		<profile>
+			<id>integral-system-analysis</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+			</activation>
+			<build>
+			    <plugins>
+			        <plugin>
+			            <groupId>org.codehaus.mojo</groupId>
+			            <artifactId>exec-maven-plugin</artifactId>
+			            <version>3.1.0</version>
+			            <configuration>
+			                <mainClass>org.rg.game.lottery.application.SEIntegralSystemAnalyzer</mainClass>
+			            </configuration>
+			        </plugin>
+			    </plugins>
+			</build>
+		</profile>		
+	</profiles>
+	
 </project>
