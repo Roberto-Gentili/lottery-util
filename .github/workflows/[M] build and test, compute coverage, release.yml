@@ -1,4 +1,4 @@
-name: Build and test -> Compute coverage -> Release
+name: Launch integral system analysis
 
 on:
   watch:
@@ -36,5 +36,12 @@ jobs:
           java-version: ${{ matrix.java }}
           distribution: 'zulu'
           architecture: ${{ matrix.architecture }}
-      - name: Build and test with
+      - name: Cache local Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      - name: Build and launch
         run: mvn -B clean package --file pom.xml
