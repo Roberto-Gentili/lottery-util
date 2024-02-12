@@ -20,5 +20,6 @@ module org.rg.game.lottery {
     requires com.google.auth.oauth2;
 
 	opens org.rg.game.lottery.application to com.fasterxml.jackson.databind;
+	exports org.rg.game.lottery.application;
 
 }

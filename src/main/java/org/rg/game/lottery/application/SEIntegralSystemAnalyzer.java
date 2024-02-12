@@ -58,7 +58,7 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.cloud.FirestoreClient;
 
-class SEIntegralSystemAnalyzer extends Shared {
+public class SEIntegralSystemAnalyzer extends Shared {
 	private static BiFunction<String, String, Record> recordLoader;
 	private static BiFunction<String, String, Consumer<Record>> recordWriter;
 
