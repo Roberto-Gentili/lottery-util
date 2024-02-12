@@ -40,7 +40,6 @@ public class ResourceUtils {
 			File resourceFolder = Paths.get(IOUtils.class.getResource("/" +
 				IOUtils.class.getName().replace(".", "/") + ".class"
 			).toURI()).toFile();
-			LogUtils.INSTANCE.info("resource folder ", resourceFolder.getAbsolutePath());
 			for (String pathSegment : IOUtils.class.getName().split("\\.")) {
 				resourceFolder = resourceFolder.getParentFile();
 			}
@@ -207,7 +206,7 @@ public class ResourceUtils {
 	}
 
 	public String[] pathsFromSystemEnv(String... keys) {
-		return pathsFromSystemEnv(null, new String[] {"integralSystemsAnalysis"});
+		return pathsFromSystemEnv(null, keys);
 	}
 
 	public String[] pathsFromSystemEnv(List<String> values, String... keys) {
