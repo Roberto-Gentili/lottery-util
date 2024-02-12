@@ -73,7 +73,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 
 			FirebaseOptions options = FirebaseOptions.builder()
 				  .setCredentials(com.google.auth.oauth2.GoogleCredentials.fromStream(serviceAccount))
-				  .setDatabaseUrl("https://lottery-util-dd398-default-rtdb.europe-west1.firebasedatabase.app")
+				  .setDatabaseUrl(Optional.ofNullable(System.getenv().get("firebase.url")).orElseGet(() -> System.getenv().get("FIREBASE_URL")))
 				  .build();
 
 			FirebaseApp.initializeApp(options);
