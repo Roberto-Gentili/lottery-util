@@ -7,6 +7,7 @@ import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -96,7 +97,7 @@ public class MathUtils {
 		if (value == null) {
 			return "null";
 		}
-		return String.format("%,d", value);
+		return String.format(Locale.ITALY, "%,d", value);
 	}
 
 	public static class Factorial {
