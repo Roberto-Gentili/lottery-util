@@ -67,7 +67,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		try {
 			/*FileInputStream serviceAccount =
 					new FileInputStream("C:\\Users\\rgentili\\Desktop\\lottery-util-dd398-firebase-adminsdk-z09lu-9f02863f3a.json");*/
-			InputStream serviceAccount = new ByteArrayInputStream(System.getenv().get("LOTTERY_UTIL_GOOGLE_CREDENTIAL").getBytes());
+			InputStream serviceAccount = new ByteArrayInputStream(System.getenv().get("firebase.credentials").getBytes());
 
 			FirebaseOptions options = FirebaseOptions.builder()
 				  .setCredentials(com.google.auth.oauth2.GoogleCredentials.fromStream(serviceAccount))
