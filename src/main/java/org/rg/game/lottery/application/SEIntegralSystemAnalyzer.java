@@ -76,8 +76,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			FirebaseApp.initializeApp(options);
 			Firestore firestore = FirestoreClient.getFirestore();
 			recordLoader = (String key, String basePath) -> {
-				DocumentReference recordAsDocumentWrapper = firestore.collection("IntegralSystemStats")
-					.document(key);
+				DocumentReference recordAsDocumentWrapper = firestore.collection("IntegralSystemStats").document(key);
 				ApiFuture<DocumentSnapshot> ap = recordAsDocumentWrapper.get();
 				DocumentSnapshot recordAsDocument;
 				try {
