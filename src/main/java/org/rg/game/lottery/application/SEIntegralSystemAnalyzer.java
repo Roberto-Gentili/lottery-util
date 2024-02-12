@@ -76,6 +76,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			FirebaseApp.initializeApp(options);
 			Firestore firestore = FirestoreClient.getFirestore();
 			recordLoader = (String key, String basePath) -> {
+				LogUtils.INSTANCE.info("Trying to load remote item ", key);
 				DocumentReference recordAsDocumentWrapper = firestore.collection("IntegralSystemStats").document(key);
 				ApiFuture<DocumentSnapshot> ap = recordAsDocumentWrapper.get();
 				DocumentSnapshot recordAsDocument;
@@ -118,6 +119,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				return new Record(blocks, data);
 			};
 			recordWriter = (String key, String basePath) -> record -> {
+				LogUtils.INSTANCE.info("Trying to store remote item ", key);
 				DocumentReference recordAsDocumentWrapper = firestore.collection("IntegralSystemStats").document(key);
 				Map<String, Object> recordAsRawValue = new LinkedHashMap<>();
 				recordAsRawValue.put("value", IOUtils.INSTANCE.writeToJSONFormat(record));
