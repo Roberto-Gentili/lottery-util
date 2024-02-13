@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.AbstractMap;
@@ -20,6 +21,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.PrimitiveIterator.OfLong;
 import java.util.Properties;
@@ -69,6 +71,9 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		try {
 			String firebaseUrl = Optional.ofNullable(System.getenv().get("integral-system-analysis.firebase.url"))
 				.orElseGet(() -> System.getenv().get("INTEGRAL_SYSTEM_ANALYSIS_FIREBASE_URL"));
+			if (firebaseUrl == null) {
+				throw new NoSuchElementException("Firebase URL not set");
+			}
 			LogUtils.INSTANCE.info("Database URL " + firebaseUrl);
 			InputStream serviceAccount;
 			try {
@@ -105,38 +110,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				} catch (InterruptedException | ExecutionException exc) {
 					return Throwables.INSTANCE.throwException(exc);
 				}
-				String recordAsFlatRawValue = (String)recordAsDocument.get("value");
-				if (recordAsFlatRawValue == null) {
-					return null;
-				}
-				Map<String, Object> recordAsRawValue = IOUtils.INSTANCE.readFromJSONFormat(recordAsFlatRawValue, Map.class);
-				Collection<Block> blocks = new ArrayList<>();
-				for (Map<String, Number> blocksAsRawValue : (Collection<Map<String, Number>>)recordAsRawValue.get("blocks")) {
-					blocks.add(
-						new Block(
-							BigInteger.valueOf(((Number)blocksAsRawValue.get("start")).longValue()),
-							BigInteger.valueOf(((Number)blocksAsRawValue.get("end")).longValue()),
-							Optional.ofNullable(
-								(Number)blocksAsRawValue.get("counter")
-							).map(Number::longValue).map(BigInteger::valueOf).orElseGet(() -> null)
-						)
-					);
-				}
-				Collection<Map.Entry<List<Integer>, Map<Number, Integer>>> data = new ArrayList<>();
-				for (Map<String, Map<String, Integer>> comboForResultAsRawValue : (Collection<Map<String, Map<String, Integer>>>) recordAsRawValue.get("data")) {
-					Map.Entry<String, Map<String, Integer>> comboForResultAsRawValueEntry = comboForResultAsRawValue.entrySet().iterator().next();
-					Map<Number, Integer> premiums = new LinkedHashMap<>();
-					for (Map.Entry<String, Integer> premium : comboForResultAsRawValueEntry.getValue().entrySet()) {
-						premiums.put(Premium.parseType(premium.getKey()), premium.getValue());
-					}
-					data.add(
-						new AbstractMap.SimpleEntry<>(
-							ComboHandler.fromString(comboForResultAsRawValueEntry.getKey().replaceAll("\\[|\\]", "")),
-							premiums
-						)
-					);
-				}
-				return new Record(blocks, data);
+				return readFromJson((String)recordAsDocument.get("value"));
 			};
 			recordWriter = (String key, String basePath) -> record -> {
 				DocumentReference recordAsDocumentWrapper = firestore.collection("IntegralSystemStats").document(key);
@@ -148,13 +122,12 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					Throwables.INSTANCE.throwException(exc);
 				}
 			};
+		} catch (NoSuchElementException exc) {
+			LogUtils.INSTANCE.info(exc.getMessage());
+			setDefaultRecordLoaderAndWriter();
 		} catch (Throwable exc) {
 			LogUtils.INSTANCE.error(exc, "Unable to connect to Firebase");
-			recordLoader = (String key, String basePath) -> IOUtils.INSTANCE.load(key, basePath);
-			recordWriter = (String key, String basePath) -> record -> {
-				IOUtils.INSTANCE.store(key, record, basePath);
-				IOUtils.INSTANCE.writeToJSONPrettyFormat(new File(basePath + "/" + key + ".json"), record);
-			};
+			setDefaultRecordLoaderAndWriter();
 		}
 
 		String[] configurationFileFolders = ResourceUtils.INSTANCE.pathsFromSystemEnv(
@@ -188,6 +161,26 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		futures.forEach(CompletableFuture::join);
 		LogUtils.INSTANCE.warn("All activities are finished");
 
+	}
+
+	protected static void setDefaultRecordLoaderAndWriter() {
+		recordLoader = (String key, String basePath) -> {
+			Record record =
+				IOUtils.INSTANCE.load(basePath, key);
+			if (record == null) {
+				record = readFromJson(
+					IOUtils.INSTANCE.fileToString(
+						basePath + "/" + key + ".json",
+						StandardCharsets.UTF_8
+					)
+				);
+			}
+			return record;
+		};
+		recordWriter = (String key, String basePath) -> record -> {
+			IOUtils.INSTANCE.store(key, record, basePath);
+			IOUtils.INSTANCE.writeToJSONPrettyFormat(new File(basePath + "/" + key + ".json"), record);
+		};
 	}
 
 	protected static void analyze(Properties config) {
@@ -331,6 +324,40 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		}
 		printData(cacheRecord);
 		//LogUtils.INSTANCE.info(processedSystemsCounterWrapper.get() + " of combinations analyzed");
+	}
+
+	protected static Record readFromJson(String recordAsFlatRawValue) {
+		if (recordAsFlatRawValue == null) {
+			return null;
+		}
+		Map<String, Object> recordAsRawValue = IOUtils.INSTANCE.readFromJSONFormat(recordAsFlatRawValue, Map.class);
+		Collection<Block> blocks = new ArrayList<>();
+		for (Map<String, Number> blocksAsRawValue : (Collection<Map<String, Number>>)recordAsRawValue.get("blocks")) {
+			blocks.add(
+				new Block(
+					BigInteger.valueOf(((Number)blocksAsRawValue.get("start")).longValue()),
+					BigInteger.valueOf(((Number)blocksAsRawValue.get("end")).longValue()),
+					Optional.ofNullable(
+						(Number)blocksAsRawValue.get("counter")
+					).map(Number::longValue).map(BigInteger::valueOf).orElseGet(() -> null)
+				)
+			);
+		}
+		Collection<Map.Entry<List<Integer>, Map<Number, Integer>>> data = new ArrayList<>();
+		for (Map<String, Map<String, Integer>> comboForResultAsRawValue : (Collection<Map<String, Map<String, Integer>>>) recordAsRawValue.get("data")) {
+			Map.Entry<String, Map<String, Integer>> comboForResultAsRawValueEntry = comboForResultAsRawValue.entrySet().iterator().next();
+			Map<Number, Integer> premiums = new LinkedHashMap<>();
+			for (Map.Entry<String, Integer> premium : comboForResultAsRawValueEntry.getValue().entrySet()) {
+				premiums.put(Premium.parseType(premium.getKey()), premium.getValue());
+			}
+			data.add(
+				new AbstractMap.SimpleEntry<>(
+					ComboHandler.fromString(comboForResultAsRawValueEntry.getKey().replaceAll("\\[|\\]", "")),
+					premiums
+				)
+			);
+		}
+		return new Record(blocks, data);
 	}
 
 	protected static void chooseAndPrintNextCompetitionSystem(Record cacheRecord, int rankSize) {
