@@ -13,6 +13,10 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Paths;
 
 import org.burningwave.Throwables;
 
@@ -57,6 +61,17 @@ public class IOUtils {
 		}
 	}
 
+	public String fileToString(String absolutePath, Charset encoding) {
+		try {
+			return new String(Files.readAllBytes(Paths.get(absolutePath)), encoding);
+		} catch (NoSuchFileException exc) {
+			return null;
+		} catch (IOException exc) {
+			return Throwables.INSTANCE.throwException(exc);
+		}
+
+	}
+
 	public void store(String key, Serializable object, String basePath) {
 		try (
 			FileOutputStream fout = new FileOutputStream(basePath + "/" + key /*Base64.getEncoder().encodeToString(key.getBytes(StandardCharsets.UTF_8))*/ + ".ser");
@@ -69,7 +84,7 @@ public class IOUtils {
 		}
 	}
 
-	public <T extends Serializable> T load(String key, String basePath) {
+	public <T extends Serializable> T load(String basePath, String key) {
 		try (FileInputStream fIS = new FileInputStream(basePath + "/" + key /*Base64.getEncoder().encodeToString(key.getBytes(StandardCharsets.UTF_8))*/ + ".ser");
 			ObjectInputStream oIS = new ObjectInputStream(fIS)) {
 			T effectiveItem = (T) oIS.readObject();
@@ -82,25 +97,28 @@ public class IOUtils {
 		}
 	}
 
-	public <T> T readFromJSONFormat(File premiumCountersFile, Class<T> cls) {
+	public <T> T readFromJSONFormat(File jsonFile, Class<T> cls) {
 		try {
-			return objectMapper.readValue(premiumCountersFile, cls);
+			if (jsonFile.exists()) {
+				return objectMapper.readValue(jsonFile, cls);
+			}
+			return null;
 		} catch (IOException exc) {
 			return Throwables.INSTANCE.throwException(exc);
 		}
 	}
 
-	public <T> T readFromJSONFormat(String premiumCountersValue, Class<T> cls) {
+	public <T> T readFromJSONFormat(String jsonContent, Class<T> cls) {
 		try {
-			return objectMapper.readValue(premiumCountersValue, cls);
+			return objectMapper.readValue(jsonContent, cls);
 		} catch (IOException exc) {
 			return Throwables.INSTANCE.throwException(exc);
 		}
 	}
 
-	public void writeToJSONFormat(File premiumCountersFile, Object object) {
+	public void writeToJSONFormat(File jsonFile, Object object) {
 		try {
-			objectMapper.writeValue(premiumCountersFile, object);
+			objectMapper.writeValue(jsonFile, object);
 		} catch (IOException exc) {
 			Throwables.INSTANCE.throwException(exc);
 		}
@@ -114,9 +132,9 @@ public class IOUtils {
 		}
 	}
 
-	public void writeToJSONPrettyFormat(File premiumCountersFile, Object object) {
+	public void writeToJSONPrettyFormat(File jsonFile, Object object) {
 		try {
-			objectMapper.writerWithDefaultPrettyPrinter().writeValue(premiumCountersFile, object);
+			objectMapper.writerWithDefaultPrettyPrinter().writeValue(jsonFile, object);
 		} catch (IOException exc) {
 			Throwables.INSTANCE.throwException(exc);
 		}
