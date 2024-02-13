@@ -72,7 +72,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					Optional.ofNullable(System.getenv().get("integral-system-analysis.firebase.credentials"))
 					.orElseGet(() -> System.getenv().get("INTEGRAL_SYSTEM_ANALYSIS_FIREBASE_CREDENTIALS")
 				).getBytes());
-				LogUtils.INSTANCE.info("Credentials loaded from ", "integral-system-analysis.firebase.credentials");
+				LogUtils.INSTANCE.info("Credentials loaded from integral-system-analysis.firebase.credentials");
 			} catch (Throwable exc) {
 				String credentialsFilePath = Optional.ofNullable(System.getenv().get("integral-system-analysis.firebase.credentials.file"))
 						.orElseGet(() -> System.getenv().get("INTEGRAL_SYSTEM_ANALYSIS_FIREBASE_CREDENTIALS_FILE"));
@@ -80,7 +80,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					new FileInputStream(
 						credentialsFilePath
 					);
-				LogUtils.INSTANCE.info("Credentials loaded from ", credentialsFilePath);
+				LogUtils.INSTANCE.info("Credentials loaded from " + credentialsFilePath);
 			}
 
 			FirebaseOptions options = FirebaseOptions.builder()
