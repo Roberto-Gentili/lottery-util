@@ -201,7 +201,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		BigInteger counter = BigInteger.ZERO;
 		for (Block block : processingContext.record.blocks) {
 			if (block.counter != null) {
-				counter = counter.add(block.counter.subtract(block.start));
+				counter = counter.add(block.counter.subtract(block.start)).add(BigInteger.ONE);
 			}
 		}
 		LogUtils.INSTANCE.info(
