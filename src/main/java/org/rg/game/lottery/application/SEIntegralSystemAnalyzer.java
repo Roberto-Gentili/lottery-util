@@ -160,6 +160,10 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				}
 			}
 		}
+		if (timeoutRawValue == null) {
+			timeoutRawValue = Optional.ofNullable(System.getenv().get("timeout"))
+				.orElseGet(() -> System.getenv().get("TIMEOUT"));
+		}
 		if (timeoutRawValue != null) {
 			long timeout = Long.valueOf(timeoutRawValue);
 			Thread exiter = new Thread(() -> {
