@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -74,8 +75,11 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				).getBytes());
 				LogUtils.INSTANCE.info("Credentials loaded from integral-system-analysis.firebase.credentials");
 			} catch (Throwable exc) {
-				String credentialsFilePath = Optional.ofNullable(System.getenv().get("integral-system-analysis.firebase.credentials.file"))
-						.orElseGet(() -> System.getenv().get("INTEGRAL_SYSTEM_ANALYSIS_FIREBASE_CREDENTIALS_FILE"));
+				String credentialsFilePath =
+					Paths.get(
+						Optional.ofNullable(System.getenv().get("integral-system-analysis.firebase.credentials.file"))
+							.orElseGet(() -> System.getenv().get("INTEGRAL_SYSTEM_ANALYSIS_FIREBASE_CREDENTIALS_FILE"))
+					).normalize().toAbsolutePath().toString();
 				serviceAccount =
 					new FileInputStream(
 						credentialsFilePath
