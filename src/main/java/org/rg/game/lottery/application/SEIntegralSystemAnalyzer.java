@@ -41,6 +41,7 @@ import org.burningwave.Throwables;
 import org.rg.game.core.CollectionUtils;
 import org.rg.game.core.ConcurrentUtils;
 import org.rg.game.core.IOUtils;
+import org.rg.game.core.Info;
 import org.rg.game.core.LogUtils;
 import org.rg.game.core.MathUtils;
 import org.rg.game.core.NetworkUtils;
@@ -183,7 +184,20 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			exiter.start();
 		}
 		for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles)) {
-			if (CollectionUtils.INSTANCE.retrieveBoolean(config, "enabled", "false")) {
+			String[] enabledRawValues = config.getProperty("enabled", "false").split(";");
+			boolean enabled = false;
+			for (String enabledRawValue : enabledRawValues) {
+				if (enabledRawValues.equals("true")) {
+					enabled = true;
+					break;
+				} else if(enabledRawValue.toUpperCase().contains("onJDK".toUpperCase())) {
+					if (Integer.valueOf(enabledRawValue.toUpperCase().replace("onJDK".toUpperCase(), "")).compareTo(Info.Provider.getInfoInstance().getVersion()) == 0) {
+						enabled = true;
+						break;
+					}
+				}
+			}
+			if (enabled) {
 				Runnable task =
 					onlyShowComputed ?
 						() ->
