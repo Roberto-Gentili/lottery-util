@@ -146,11 +146,23 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		int maxParallelTasks = Optional.ofNullable(taskMaxParallel).map(Integer::valueOf)
 				.orElseGet(() -> Math.max((Runtime.getRuntime().availableProcessors() / 2) - 1, 1));
 		Collection<CompletableFuture<Void>> futures = new CopyOnWriteArrayList<>();
+		boolean onlyShowComputed = false;
+		for (String arg : args) {
+			if (arg != null && arg.contains("onlyShowComputed")) {
+				onlyShowComputed = true;
+				LogUtils.INSTANCE.info("Analysis disabled");
+				break;
+			}
+		}
 		for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles)) {
 			if (CollectionUtils.INSTANCE.retrieveBoolean(config, "enabled", "false")) {
-				Runnable task = () ->
-					analyze(config);
-				if (CollectionUtils.INSTANCE.retrieveBoolean(config, "async", "false")) {
+				Runnable task =
+					onlyShowComputed ?
+						() ->
+							showComputed(config) :
+						() ->
+							analyze(config);
+				if (!onlyShowComputed && CollectionUtils.INSTANCE.retrieveBoolean(config, "async", "false")) {
 					ConcurrentUtils.INSTANCE.addTask(futures, task);
 				} else {
 					task.run();
@@ -184,7 +196,8 @@ public class SEIntegralSystemAnalyzer extends Shared {
 	}
 
 	protected static void showComputed(Properties config) {
-
+		ProcessingContext processingContext = new ProcessingContext(config);
+		printData(processingContext.record);
 	}
 
 	protected static void analyze(Properties config) {
@@ -235,9 +248,9 @@ public class SEIntegralSystemAnalyzer extends Shared {
 							LogUtils.INSTANCE.info(
 								"Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems\n" +
 								"Cache succesfully restored, starting from index " + MathUtils.INSTANCE.format(iterationData.getCounter()) + ". " +
-								MathUtils.INSTANCE.format(remainedSystems(processingContext.cacheRecord)) + " systems remained."
+								MathUtils.INSTANCE.format(remainedSystems(processingContext.record)) + " systems remained."
 							);
-							printDataIfChanged(processingContext.cacheRecord, processingContext.previousLoggedRankWrapper);
+							printDataIfChanged(processingContext.record, processingContext.previousLoggedRankWrapper);
 							return;
 						}
 					}
@@ -285,16 +298,16 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					}
 				}
 				if (iterationData.getCounter().mod(processingContext.modderForAutoSave).compareTo(BigInteger.ZERO) == 0 || iterationData.getCounter().compareTo(currentBlock.end) == 0) {
-					store(processingContext.basePath, processingContext.cacheKey, iterationData, processingContext.systemsRank, processingContext.cacheRecord, currentBlock, processingContext.rankSize);
-					printDataIfChanged(processingContext.cacheRecord, processingContext.previousLoggedRankWrapper);
-					LogUtils.INSTANCE.info(MathUtils.INSTANCE.format(processedSystemsCounter(processingContext.cacheRecord)) + " of systems have been processed");
+					store(processingContext.basePath, processingContext.cacheKey, iterationData, processingContext.systemsRank, processingContext.record, currentBlock, processingContext.rankSize);
+					printDataIfChanged(processingContext.record, processingContext.previousLoggedRankWrapper);
+					LogUtils.INSTANCE.info(MathUtils.INSTANCE.format(processedSystemsCounter(processingContext.record)) + " of systems have been processed");
 	    		}
 			});
 			if (processingContext.assignedBlocks.isEmpty()) {
-				processingContext.assignedBlocks.addAll(retrieveAssignedBlocks(config, processingContext.cacheRecord));
+				processingContext.assignedBlocks.addAll(retrieveAssignedBlocks(config, processingContext.record));
 			}
 		}
-		printData(processingContext.cacheRecord);
+		printData(processingContext.record);
 		//LogUtils.INSTANCE.info(processedSystemsCounterWrapper.get() + " of combinations analyzed");
 	}
 
@@ -637,7 +650,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 
 	private static class ProcessingContext {
 		private List<Block> assignedBlocks;
-		private Record cacheRecord;
+		private Record record;
 		private Integer rankSize;
 		private ComboHandler comboHandler;
 		private BigInteger modderForSkipLog;
@@ -672,16 +685,16 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			basePath = PersistentStorage.buildWorkingPath("Analisi sistemi integrali");
 			cacheKey = buildCacheKey(comboHandler, sEStats, premiumsToBeAnalyzed, rankSize);
 			systemsRank = buildDataCollection(orderedPremiumsToBeAnalyzed);
-			cacheRecord = prepareCacheRecord(
+			record = prepareCacheRecord(
 				basePath,
 				cacheKey,
 				comboHandler,
 				systemsRank
 			);
-			assignedBlocks = retrieveAssignedBlocks(config, cacheRecord);
+			assignedBlocks = retrieveAssignedBlocks(config, record);
 			previousLoggedRankWrapper = new AtomicReference<>();
-			if (cacheRecord.data != null && !cacheRecord.data.isEmpty() && cacheRecord.data.size() >= rankSize) {
-				chooseAndPrintNextCompetitionSystem(cacheRecord, rankSize);
+			if (record.data != null && !record.data.isEmpty() && record.data.size() >= rankSize) {
+				chooseAndPrintNextCompetitionSystem(record, rankSize);
 			}
 		}
 	}
