@@ -67,6 +67,9 @@ public class SEIntegralSystemAnalyzer extends Shared {
 
 	public static void main(String[] args) throws IOException {
 		try {
+			String firebaseUrl = Optional.ofNullable(System.getenv().get("integral-system-analysis.firebase.url"))
+				.orElseGet(() -> System.getenv().get("INTEGRAL_SYSTEM_ANALYSIS_FIREBASE_URL"));
+			LogUtils.INSTANCE.info("Database URL " + firebaseUrl);
 			InputStream serviceAccount;
 			try {
 				serviceAccount = new ByteArrayInputStream(
@@ -86,9 +89,6 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					);
 				LogUtils.INSTANCE.info("Credentials loaded from " + credentialsFilePath);
 			}
-			String firebaseUrl = Optional.ofNullable(System.getenv().get("integral-system-analysis.firebase.url"))
-					.orElseGet(() -> System.getenv().get("INTEGRAL_SYSTEM_ANALYSIS_FIREBASE_URL"));
-			LogUtils.INSTANCE.info("Database URL " + firebaseUrl);
 			FirebaseOptions options = FirebaseOptions.builder()
 				  .setCredentials(com.google.auth.oauth2.GoogleCredentials.fromStream(serviceAccount))
 				  .setDatabaseUrl(firebaseUrl)
