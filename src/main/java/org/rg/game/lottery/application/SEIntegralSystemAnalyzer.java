@@ -183,41 +183,13 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		};
 	}
 
+	protected static void showComputed(Properties config) {
+
+	}
+
 	protected static void analyze(Properties config) {
-		String premiumsToBeAnalyzed = config.getProperty(
-			"rank.premiums",
-			String.join(",", Premium.allTypesListReversed().stream().map(Object::toString).collect(Collectors.toList()))
-		).replaceAll("\\s+","");
-		Number[] orderedPremiumsToBeAnalyzed =
-			Arrays.asList(
-				premiumsToBeAnalyzed.split(",")
-			).stream().map(Premium::parseType).toArray(Number[]::new);
-		long combinationSize = Long.valueOf(config.getProperty("combination.components"));
-		ComboHandler comboHandler = new ComboHandler(SEStats.NUMBERS, combinationSize);
-		BigInteger modderForSkipLog = BigInteger.valueOf(1_000_000_000);
-		BigInteger modderForAutoSave = new BigInteger(config.getProperty("autosave-every", "1000000"));
-		int rankSize = Integer.valueOf(config.getProperty("rank.size", "100"));
-		SEStats sEStats = SEStats.get(
-			config.getProperty("competition.archive.start-date"),
-			config.getProperty("competition.archive.end-date")
-		);
-		Collection<List<Integer>> allWinningCombos = sEStats.getAllWinningCombosWithJollyAndSuperstar().values();
-		LogUtils.INSTANCE.info("All " + combinationSize + " based integral systems size (" + comboHandler.getNumbers().size() + " numbers): " +  MathUtils.INSTANCE.format(comboHandler.getSize()));
-		String basePath = PersistentStorage.buildWorkingPath("Analisi sistemi integrali");
-		String cacheKey = buildCacheKey(comboHandler, sEStats, premiumsToBeAnalyzed, rankSize);
-		TreeSet<Map.Entry<List<Integer>, Map<Number, Integer>>> systemsRank = buildDataCollection(orderedPremiumsToBeAnalyzed);
-		Record cacheRecord = prepareCacheRecord(
-			basePath,
-			cacheKey,
-			comboHandler,
-			systemsRank
-		);
-		List<Block> assignedBlocks = retrieveAssignedBlocks(config, cacheRecord);
-		AtomicReference<String> previousLoggedRankWrapper = new AtomicReference<>();
-		if (cacheRecord.data != null && !cacheRecord.data.isEmpty() && cacheRecord.data.size() >= rankSize) {
-			chooseAndPrintNextCompetitionSystem(cacheRecord, rankSize);
-		}
-		while (!assignedBlocks.isEmpty()) {
+		ProcessingContext processingContext = new ProcessingContext(config);
+		while (!processingContext.assignedBlocks.isEmpty()) {
 			AtomicReference<Block> currentBlockWrapper = new AtomicReference<>();
 			AtomicBoolean blockNotAlignedWrapper = new AtomicBoolean(false);
 			Supplier<Block> blockSupplier = () -> {
@@ -226,7 +198,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					currentBlockWrapper.set(block = null);
 				}
 				if (block == null) {
-					Iterator<Block> blocksIterator =  assignedBlocks.iterator();
+					Iterator<Block> blocksIterator =  processingContext.assignedBlocks.iterator();
 					while (blocksIterator.hasNext()) {
 						block = blocksIterator.next();
 						blocksIterator.remove();
@@ -241,7 +213,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				}
 				return block;
 			};
-			comboHandler.iterate(iterationData -> {
+			processingContext.comboHandler.iterate(iterationData -> {
 				Block currentBlock = blockSupplier.get();
 				if (currentBlock == null) {
 					iterationData.terminateIteration();
@@ -249,7 +221,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				}
 				if (blockNotAlignedWrapper.get()) {
 					if (iterationData.getCounter().compareTo(currentBlock.start) < 0 || iterationData.getCounter().compareTo(currentBlock.end) > 0) {
-						if (iterationData.getCounter().mod(modderForSkipLog).compareTo(BigInteger.ZERO) == 0) {
+						if (iterationData.getCounter().mod(processingContext.modderForSkipLog).compareTo(BigInteger.ZERO) == 0) {
 							LogUtils.INSTANCE.info("Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems");
 						}
 						return;
@@ -263,9 +235,9 @@ public class SEIntegralSystemAnalyzer extends Shared {
 							LogUtils.INSTANCE.info(
 								"Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems\n" +
 								"Cache succesfully restored, starting from index " + MathUtils.INSTANCE.format(iterationData.getCounter()) + ". " +
-								MathUtils.INSTANCE.format(remainedSystems(cacheRecord)) + " systems remained."
+								MathUtils.INSTANCE.format(remainedSystems(processingContext.cacheRecord)) + " systems remained."
 							);
-							printDataIfChanged(cacheRecord, previousLoggedRankWrapper);
+							printDataIfChanged(processingContext.cacheRecord, processingContext.previousLoggedRankWrapper);
 							return;
 						}
 					}
@@ -274,10 +246,10 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				currentBlock.counter = iterationData.getCounter();
 				List<Integer> combo = iterationData.getCombo();
 				Map<Number, Integer> allPremiums = new LinkedHashMap<>();
-				for (Number premiumType : orderedPremiumsToBeAnalyzed) {
+				for (Number premiumType : processingContext.orderedPremiumsToBeAnalyzed) {
 					allPremiums.put(premiumType, 0);
 				}
-				for (List<Integer> winningComboWithSuperStar : allWinningCombos) {
+				for (List<Integer> winningComboWithSuperStar : processingContext.allWinningCombos) {
 					Map<Number, Integer> premiums = SEPremium.checkIntegral(combo, winningComboWithSuperStar);
 					for (Map.Entry<Number, Integer> premiumTypeAndCounter : allPremiums.entrySet()) {
 						Number premiumType = premiumTypeAndCounter.getKey();
@@ -296,9 +268,9 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				}
 				if (highWinningFound) {
 					Map.Entry<List<Integer>, Map<Number, Integer>> addedItem = new AbstractMap.SimpleEntry<>(combo, allPremiums);
-					boolean addedItemFlag = systemsRank.add(addedItem);
-					if (systemsRank.size() > rankSize) {
-						Map.Entry<List<Integer>, Map<Number, Integer>> removedItem = systemsRank.pollLast();
+					boolean addedItemFlag = processingContext.systemsRank.add(addedItem);
+					if (processingContext.systemsRank.size() > processingContext.rankSize) {
+						Map.Entry<List<Integer>, Map<Number, Integer>> removedItem = processingContext.systemsRank.pollLast();
 						if (removedItem != addedItem) {
 							//store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock, rankSize);
 							LogUtils.INSTANCE.info(
@@ -312,17 +284,17 @@ public class SEIntegralSystemAnalyzer extends Shared {
 						LogUtils.INSTANCE.info("Added data to rank: " + ComboHandler.toString(combo, ", ") + ": " + allPremiums);
 					}
 				}
-				if (iterationData.getCounter().mod(modderForAutoSave).compareTo(BigInteger.ZERO) == 0 || iterationData.getCounter().compareTo(currentBlock.end) == 0) {
-					store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock, rankSize);
-					printDataIfChanged(cacheRecord, previousLoggedRankWrapper);
-					LogUtils.INSTANCE.info(MathUtils.INSTANCE.format(processedSystemsCounter(cacheRecord)) + " of systems have been processed");
+				if (iterationData.getCounter().mod(processingContext.modderForAutoSave).compareTo(BigInteger.ZERO) == 0 || iterationData.getCounter().compareTo(currentBlock.end) == 0) {
+					store(processingContext.basePath, processingContext.cacheKey, iterationData, processingContext.systemsRank, processingContext.cacheRecord, currentBlock, processingContext.rankSize);
+					printDataIfChanged(processingContext.cacheRecord, processingContext.previousLoggedRankWrapper);
+					LogUtils.INSTANCE.info(MathUtils.INSTANCE.format(processedSystemsCounter(processingContext.cacheRecord)) + " of systems have been processed");
 	    		}
 			});
-			if (assignedBlocks.isEmpty()) {
-				assignedBlocks.addAll(retrieveAssignedBlocks(config, cacheRecord));
+			if (processingContext.assignedBlocks.isEmpty()) {
+				processingContext.assignedBlocks.addAll(retrieveAssignedBlocks(config, processingContext.cacheRecord));
 			}
 		}
-		printData(cacheRecord);
+		printData(processingContext.cacheRecord);
 		//LogUtils.INSTANCE.info(processedSystemsCounterWrapper.get() + " of combinations analyzed");
 	}
 
@@ -661,6 +633,57 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			return "Block [start=" + MathUtils.INSTANCE.format(start) + ", end=" + MathUtils.INSTANCE.format(end) + ", counter=" + MathUtils.INSTANCE.format(counter) + "]";
 		}
 
+	}
+
+	private static class ProcessingContext {
+		private List<Block> assignedBlocks;
+		private Record cacheRecord;
+		private Integer rankSize;
+		private ComboHandler comboHandler;
+		private BigInteger modderForSkipLog;
+		private AtomicReference<String> previousLoggedRankWrapper;
+		private Number[] orderedPremiumsToBeAnalyzed;
+		private Collection<List<Integer>> allWinningCombos;
+		private TreeSet<Map.Entry<List<Integer>, Map<Number, Integer>>> systemsRank;
+		private BigInteger modderForAutoSave;
+		private String basePath;
+		private String cacheKey;
+
+		private ProcessingContext(Properties config) {
+			String premiumsToBeAnalyzed = config.getProperty(
+				"rank.premiums",
+				String.join(",", Premium.allTypesListReversed().stream().map(Object::toString).collect(Collectors.toList()))
+			).replaceAll("\\s+","");
+			orderedPremiumsToBeAnalyzed =
+				Arrays.asList(
+					premiumsToBeAnalyzed.split(",")
+				).stream().map(Premium::parseType).toArray(Number[]::new);
+			long combinationSize = Long.valueOf(config.getProperty("combination.components"));
+			comboHandler = new ComboHandler(SEStats.NUMBERS, combinationSize);
+			modderForSkipLog = BigInteger.valueOf(1_000_000_000);
+			modderForAutoSave = new BigInteger(config.getProperty("autosave-every", "1000000"));
+			rankSize = Integer.valueOf(config.getProperty("rank.size", "100"));
+			SEStats sEStats = SEStats.get(
+				config.getProperty("competition.archive.start-date"),
+				config.getProperty("competition.archive.end-date")
+			);
+			allWinningCombos = sEStats.getAllWinningCombosWithJollyAndSuperstar().values();
+			LogUtils.INSTANCE.info("All " + combinationSize + " based integral systems size (" + comboHandler.getNumbers().size() + " numbers): " +  MathUtils.INSTANCE.format(comboHandler.getSize()));
+			basePath = PersistentStorage.buildWorkingPath("Analisi sistemi integrali");
+			cacheKey = buildCacheKey(comboHandler, sEStats, premiumsToBeAnalyzed, rankSize);
+			systemsRank = buildDataCollection(orderedPremiumsToBeAnalyzed);
+			cacheRecord = prepareCacheRecord(
+				basePath,
+				cacheKey,
+				comboHandler,
+				systemsRank
+			);
+			assignedBlocks = retrieveAssignedBlocks(config, cacheRecord);
+			previousLoggedRankWrapper = new AtomicReference<>();
+			if (cacheRecord.data != null && !cacheRecord.data.isEmpty() && cacheRecord.data.size() >= rankSize) {
+				chooseAndPrintNextCompetitionSystem(cacheRecord, rankSize);
+			}
+		}
 	}
 
 }
