@@ -156,7 +156,6 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					LogUtils.INSTANCE.info("Analysis disabled");
 				} else if (arg.contains("timeout")) {
 					timeoutRawValue = arg.split("=")[1];
-					LogUtils.INSTANCE.info("Set timeout to " + timeoutRawValue + " seconds");
 				}
 			}
 		}
@@ -165,6 +164,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				.orElseGet(() -> System.getenv().get("TIMEOUT"));
 		}
 		if (timeoutRawValue != null) {
+			LogUtils.INSTANCE.info("Set timeout to " + timeoutRawValue + " seconds");
 			long timeout = Long.valueOf(timeoutRawValue);
 			Thread exiter = new Thread(() -> {
 				long elapsedTimeFromStart = System.currentTimeMillis() - startTime;
