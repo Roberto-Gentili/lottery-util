@@ -331,11 +331,11 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		for (Map<String, Number> blocksAsRawValue : (Collection<Map<String, Number>>)recordAsRawValue.get("blocks")) {
 			blocks.add(
 				new Block(
-					BigInteger.valueOf(((Number)blocksAsRawValue.get("start")).longValue()),
-					BigInteger.valueOf(((Number)blocksAsRawValue.get("end")).longValue()),
+					new BigInteger(blocksAsRawValue.get("start").toString()),
+					new BigInteger(blocksAsRawValue.get("end").toString()),
 					Optional.ofNullable(
-						(Number)blocksAsRawValue.get("counter")
-					).map(Number::longValue).map(BigInteger::valueOf).orElseGet(() -> null)
+						blocksAsRawValue.get("counter")
+					).map(Object::toString).map(BigInteger::new).orElseGet(() -> null)
 				)
 			);
 		}
