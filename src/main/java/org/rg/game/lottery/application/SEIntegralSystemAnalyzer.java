@@ -68,6 +68,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 	private static BiFunction<String, String, Consumer<Record>> recordWriter;
 
 	public static void main(String[] args) throws IOException {
+		long startTime = System.currentTimeMillis();
 		try {
 			String firebaseUrl = Optional.ofNullable(System.getenv().get("integral-system-analysis.firebase.url"))
 				.orElseGet(() -> System.getenv().get("INTEGRAL_SYSTEM_ANALYSIS_FIREBASE_URL"));
@@ -147,12 +148,35 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				.orElseGet(() -> Math.max((Runtime.getRuntime().availableProcessors() / 2) - 1, 1));
 		Collection<CompletableFuture<Void>> futures = new CopyOnWriteArrayList<>();
 		boolean onlyShowComputed = false;
+		String timeoutRawValue = null;
 		for (String arg : args) {
-			if (arg != null && arg.contains("onlyShowComputed")) {
-				onlyShowComputed = true;
-				LogUtils.INSTANCE.info("Analysis disabled");
-				break;
+			if (arg != null) {
+				if (arg.contains("onlyShowComputed")) {
+					onlyShowComputed = true;
+					LogUtils.INSTANCE.info("Analysis disabled");
+				} else if (arg.contains("timeout")) {
+					timeoutRawValue = arg.split("=")[1];
+					LogUtils.INSTANCE.info("Set timeout to " + timeoutRawValue + " seconds");
+				}
 			}
+		}
+		if (timeoutRawValue != null) {
+			long timeout = Long.valueOf(timeoutRawValue);
+			Thread exiter = new Thread(() -> {
+				long elapsedTimeFromStart = System.currentTimeMillis() - startTime;
+				long effectiveTimeout = (timeout * 1000) - elapsedTimeFromStart;
+				if (effectiveTimeout > 0) {
+					try {
+						Thread.sleep(effectiveTimeout);
+					} catch (InterruptedException e) {
+
+					}
+				}
+				LogUtils.INSTANCE.info("Timeout reached");
+				System.exit(0);
+			});
+			exiter.setDaemon(true);
+			exiter.start();
 		}
 		for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles)) {
 			if (CollectionUtils.INSTANCE.retrieveBoolean(config, "enabled", "false")) {
