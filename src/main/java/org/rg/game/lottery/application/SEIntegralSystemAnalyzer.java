@@ -198,6 +198,17 @@ public class SEIntegralSystemAnalyzer extends Shared {
 	protected static void showComputed(Properties config) {
 		ProcessingContext processingContext = new ProcessingContext(config);
 		printData(processingContext.record);
+		BigInteger counter = BigInteger.ZERO;
+		for (Block block : processingContext.record.blocks) {
+			if (block.counter != null) {
+				counter = counter.add(block.counter.subtract(block.start));
+			}
+		}
+		LogUtils.INSTANCE.info(
+			MathUtils.INSTANCE.format(counter) + " of " +
+			MathUtils.INSTANCE.format(processingContext.comboHandler.getSize()) +
+			" systems have been processed\n"
+		);
 	}
 
 	protected static void analyze(Properties config) {
