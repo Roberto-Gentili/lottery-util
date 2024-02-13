@@ -2,6 +2,7 @@ package org.rg.game.lottery.application;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -65,8 +66,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 
 	public static void main(String[] args) throws IOException {
 		try {
-			{
-				InputStream serviceAccount;
+			InputStream serviceAccount;
 			try {
 				serviceAccount = new ByteArrayInputStream(
 					Optional.ofNullable(System.getenv().get("integral-system-analysis.firebase.credentials"))
