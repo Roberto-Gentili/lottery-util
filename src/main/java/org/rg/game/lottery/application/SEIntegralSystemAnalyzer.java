@@ -187,7 +187,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			String[] enabledRawValues = config.getProperty("enabled", "false").split(";");
 			boolean enabled = false;
 			for (String enabledRawValue : enabledRawValues) {
-				if (enabledRawValues.equals("true")) {
+				if (enabledRawValue.equals("true")) {
 					enabled = true;
 					break;
 				} else if(enabledRawValue.toUpperCase().contains("onJDK".toUpperCase())) {
