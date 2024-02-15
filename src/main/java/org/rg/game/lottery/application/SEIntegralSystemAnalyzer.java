@@ -34,6 +34,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -48,6 +49,7 @@ import org.rg.game.core.NetworkUtils;
 import org.rg.game.core.ResourceUtils;
 import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.ComboHandler;
+import org.rg.game.lottery.engine.ComboHandler.IterationData;
 import org.rg.game.lottery.engine.PersistentStorage;
 import org.rg.game.lottery.engine.Premium;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
@@ -257,20 +259,41 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		ProcessingContext processingContext = new ProcessingContext(config);
 		int[] previousIndexes = null;
 		BigInteger previousCounter = null;
-		for (Block block : processingContext.record.blocks) {
-			if (block.indexes == null) {
-				if (previousIndexes != null) {
-
-				} else {
-					processingContext.comboHandler.iterate(iterationData -> {
-
-					});
-				}
+		Function<Block, Consumer<IterationData>> action = currentBlock -> iterationData -> {
+			if (iterationData.getCounter().compareTo(currentBlock.start) == 0) {
+				currentBlock.counter = iterationData.getCounter();
+				currentBlock.indexes = iterationData.copyOfIndexes();
+				List<Integer> combo = iterationData.getCombo();
+				tryToAddCombo(
+					processingContext,
+					combo,
+					computePremiums(processingContext, combo)
+				);
+				iterationData.terminateIteration();
 			}
-			previousIndexes = block.indexes;
-			previousCounter = block.counter;
+		};
+		for (Block currentBlock : processingContext.record.blocks) {
+			if (currentBlock.indexes == null) {
+				if (previousIndexes != null && previousCounter != null) {
+					processingContext.comboHandler.iterateFrom(
+						processingContext.comboHandler.new IterationData(previousIndexes, previousCounter),
+						action.apply(currentBlock)
+					);
+				} else {
+					processingContext.comboHandler.iterate(action.apply(currentBlock));
+				}
+				store(
+					processingContext.basePath,
+					processingContext.cacheKey,
+					processingContext.systemsRank,
+					processingContext.record,
+					currentBlock,
+					processingContext.rankSize
+				);
+			}
+			previousIndexes = Arrays.copyOf(currentBlock.indexes, currentBlock.indexes.length) ;
+			previousCounter = currentBlock.counter;
 		}
-		//store(sEStatsDefaultDate, sEStatsDefaultDate, null, null, null, null, 0);
 		printData(processingContext.record);
 		LogUtils.INSTANCE.info(
 			MathUtils.INSTANCE.format(processedSystemsCounter(processingContext.record)) + " of " +
@@ -341,47 +364,19 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					currentBlock.counter = iterationData.getCounter();
 					currentBlock.indexes = iterationData.copyOfIndexes();
 					List<Integer> combo = iterationData.getCombo();
-					Map<Number, Integer> allPremiums = new LinkedHashMap<>();
-					for (Number premiumType : processingContext.orderedPremiumsToBeAnalyzed) {
-						allPremiums.put(premiumType, 0);
-					}
-					for (List<Integer> winningComboWithSuperStar : processingContext.allWinningCombos) {
-						Map<Number, Integer> premiums = SEPremium.checkIntegral(combo, winningComboWithSuperStar);
-						for (Map.Entry<Number, Integer> premiumTypeAndCounter : allPremiums.entrySet()) {
-							Number premiumType = premiumTypeAndCounter.getKey();
-							Integer premiumCounter = premiums.get(premiumType);
-							if (premiumCounter != null) {
-								allPremiums.put(premiumType, allPremiums.get(premiumType) + premiumCounter);
-							}
-						}
-					}
-					boolean highWinningFound = false;
-					for (Map.Entry<Number, Integer> premiumTypeAndCounter : allPremiums.entrySet()) {
-						if (premiumTypeAndCounter.getKey().doubleValue() > Premium.TYPE_FIVE.doubleValue() && premiumTypeAndCounter.getValue() > 0) {
-							highWinningFound = true;
-							break;
-						}
-					}
-					if (highWinningFound) {
-						Map.Entry<List<Integer>, Map<Number, Integer>> addedItem = new AbstractMap.SimpleEntry<>(combo, allPremiums);
-						boolean addedItemFlag = processingContext.systemsRank.add(addedItem);
-						if (processingContext.systemsRank.size() > processingContext.rankSize) {
-							Map.Entry<List<Integer>, Map<Number, Integer>> removedItem = processingContext.systemsRank.pollLast();
-							if (removedItem != addedItem) {
-								//store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock, rankSize);
-								LogUtils.INSTANCE.info(
-									"Replaced data from rank:\n\t" + ComboHandler.toString(removedItem.getKey(), ", ") + ": " + removedItem.getValue() + "\n" +
-									"\t\twith\n"+
-									"\t" + ComboHandler.toString(addedItem.getKey(), ", ") + ": " + addedItem.getValue()
-								);
-							}
-						} else if (addedItemFlag) {
-							//store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock, rankSize);
-							LogUtils.INSTANCE.info("Added data to rank: " + ComboHandler.toString(combo, ", ") + ": " + allPremiums);
-						}
+					Map<Number, Integer> allPremiums = computePremiums(processingContext, combo);
+					if (filterCombo(allPremiums, Premium.TYPE_FIVE)) {
+						tryToAddCombo(processingContext, combo, allPremiums);
 					}
 					if (iterationData.getCounter().mod(processingContext.modderForAutoSave).compareTo(BigInteger.ZERO) == 0 || iterationData.getCounter().compareTo(currentBlock.end) == 0) {
-						store(processingContext.basePath, processingContext.cacheKey, processingContext.systemsRank, processingContext.record, currentBlock, processingContext.rankSize);
+						store(
+							processingContext.basePath,
+							processingContext.cacheKey,
+							processingContext.systemsRank,
+							processingContext.record,
+							currentBlock,
+							processingContext.rankSize
+						);
 						printDataIfChanged(processingContext.record, processingContext.previousLoggedRankWrapper);
 						LogUtils.INSTANCE.info(MathUtils.INSTANCE.format(processedSystemsCounter(processingContext.record)) + " of systems have been processed");
 		    		}
@@ -393,6 +388,58 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		}
 		printData(processingContext.record);
 		//LogUtils.INSTANCE.info(processedSystemsCounterWrapper.get() + " of combinations analyzed");
+	}
+
+	protected static boolean filterCombo(Map<Number, Integer> allPremiums, Integer premiumType) {
+		boolean highWinningFound = false;
+		for (Map.Entry<Number, Integer> premiumTypeAndCounter : allPremiums.entrySet()) {
+			if (premiumTypeAndCounter.getKey().doubleValue() > premiumType.doubleValue() && premiumTypeAndCounter.getValue() > 0) {
+				highWinningFound = true;
+				break;
+			}
+		}
+		return highWinningFound;
+	}
+
+	protected static boolean tryToAddCombo(ProcessingContext processingContext, List<Integer> combo,
+			Map<Number, Integer> allPremiums) {
+		Map.Entry<List<Integer>, Map<Number, Integer>> addedItem = new AbstractMap.SimpleEntry<>(combo, allPremiums);
+		boolean addedItemFlag = processingContext.systemsRank.add(addedItem);
+		if (processingContext.systemsRank.size() > processingContext.rankSize) {
+			Map.Entry<List<Integer>, Map<Number, Integer>> removedItem = processingContext.systemsRank.pollLast();
+			if (removedItem != addedItem) {
+				//store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock, rankSize);
+				LogUtils.INSTANCE.info(
+					"Replaced data from rank:\n\t" + ComboHandler.toString(removedItem.getKey(), ", ") + ": " + removedItem.getValue() + "\n" +
+					"\t\twith\n"+
+					"\t" + ComboHandler.toString(addedItem.getKey(), ", ") + ": " + addedItem.getValue()
+				);
+			}
+			return true;
+		} else if (addedItemFlag) {
+			//store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock, rankSize);
+			LogUtils.INSTANCE.info("Added data to rank: " + ComboHandler.toString(combo, ", ") + ": " + allPremiums);
+			return true;
+		}
+		return false;
+	}
+
+	protected static Map<Number, Integer> computePremiums(ProcessingContext processingContext, List<Integer> combo) {
+		Map<Number, Integer> allPremiums = new LinkedHashMap<>();
+		for (Number premiumType : processingContext.orderedPremiumsToBeAnalyzed) {
+			allPremiums.put(premiumType, 0);
+		}
+		for (List<Integer> winningComboWithSuperStar : processingContext.allWinningCombosWithJollyAndSuperstar) {
+			Map<Number, Integer> premiums = SEPremium.checkIntegral(combo, winningComboWithSuperStar);
+			for (Map.Entry<Number, Integer> premiumTypeAndCounter : allPremiums.entrySet()) {
+				Number premiumType = premiumTypeAndCounter.getKey();
+				Integer premiumCounter = premiums.get(premiumType);
+				if (premiumCounter != null) {
+					allPremiums.put(premiumType, allPremiums.get(premiumType) + premiumCounter);
+				}
+			}
+		}
+		return allPremiums;
 	}
 
 	protected static Record readFromJson(String recordAsFlatRawValue) {
@@ -746,7 +793,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		private BigInteger modderForSkipLog;
 		private AtomicReference<String> previousLoggedRankWrapper;
 		private Number[] orderedPremiumsToBeAnalyzed;
-		private Collection<List<Integer>> allWinningCombos;
+		private Collection<List<Integer>> allWinningCombosWithJollyAndSuperstar;
 		private TreeSet<Map.Entry<List<Integer>, Map<Number, Integer>>> systemsRank;
 		private BigInteger modderForAutoSave;
 		private String basePath;
@@ -770,7 +817,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				config.getProperty("competition.archive.start-date"),
 				config.getProperty("competition.archive.end-date")
 			);
-			allWinningCombos = sEStats.getAllWinningCombosWithJollyAndSuperstar().values();
+			allWinningCombosWithJollyAndSuperstar = sEStats.getAllWinningCombosWithJollyAndSuperstar().values();
 			LogUtils.INSTANCE.info("All " + combinationSize + " based integral systems size (" + comboHandler.getNumbers().size() + " numbers): " +  MathUtils.INSTANCE.format(comboHandler.getSize()));
 			basePath = PersistentStorage.buildWorkingPath("Analisi sistemi integrali");
 			cacheKey = buildCacheKey(comboHandler, sEStats, premiumsToBeAnalyzed, rankSize);

@@ -368,7 +368,7 @@ public class ComboHandler {
 		ComboHandler SECmbh = new ComboHandler(SEStats.NUMBERS, combo.length);
 		BigInteger index = SECmbh.computeCounter(combo);
 		SECmbh.iterate(iterationData -> {
-			if (iterationData.getCounter().longValue() == index.longValue()) {
+			if (iterationData.getCounter().longValue() == 518845526) {
 				System.out.println(
 					iterationData.getCombo().stream()
 		            .map(Object::toString)
@@ -414,6 +414,6 @@ public class ComboHandler {
 			})
 		);
 		tasks.stream().forEach(CompletableFuture::join);
-	}
-	*/
+	}*/
+
 }
