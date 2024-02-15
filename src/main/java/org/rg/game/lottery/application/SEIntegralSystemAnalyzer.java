@@ -448,6 +448,9 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		Map<String, Object> recordAsRawValue = IOUtils.INSTANCE.readFromJSONFormat(recordAsFlatRawValue, Map.class);
 		Collection<Block> blocks = new ArrayList<>();
 		for (Map<String, Object> blocksAsRawValue : (Collection<Map<String, Object>>)recordAsRawValue.get("blocks")) {
+			int[] indexes =
+				(int[])Optional.ofNullable((Collection<Integer>)blocksAsRawValue.get("indexes"))
+				.map(numbers -> numbers.stream().mapToInt(Integer::intValue).toArray()).orElseGet(() -> null);
 			blocks.add(
 				new Block(
 					new BigInteger(blocksAsRawValue.get("start").toString()),
@@ -455,7 +458,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					Optional.ofNullable(
 						blocksAsRawValue.get("counter")
 					).map(Object::toString).map(BigInteger::new).orElseGet(() -> null),
-					(int[])blocksAsRawValue.get("indexes")
+					indexes
 				)
 			);
 		}
