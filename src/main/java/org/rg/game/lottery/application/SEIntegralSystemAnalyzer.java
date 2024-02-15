@@ -150,8 +150,8 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				.orElseGet(() -> Math.max((Runtime.getRuntime().availableProcessors() / 2) - 1, 1));
 		Collection<CompletableFuture<Void>> futures = new CopyOnWriteArrayList<>();
 		boolean onlyShowComputed = false;
-		boolean index = false;
 		String timeoutRawValue = null;
+		String indexRawValue = null;
 		for (String arg : args) {
 			if (arg != null) {
 				if (arg.contains("onlyShowComputed")) {
@@ -160,8 +160,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				} else if (arg.contains("timeout")) {
 					timeoutRawValue = arg.split("=")[1];
 				} else if (arg.contains("index")) {
-					index = true;
-					LogUtils.INSTANCE.info("Indexing mode");
+					indexRawValue = "index";
 				}
 			}
 		}
@@ -187,6 +186,15 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			});
 			exiter.setDaemon(true);
 			exiter.start();
+		}
+		boolean index = indexRawValue != null;
+		if (indexRawValue == null) {
+			indexRawValue = Optional.ofNullable(System.getenv().get("index"))
+					.orElseGet(() -> System.getenv().get("INDEX"));
+			index = indexRawValue != null;
+		}
+		if (index) {
+			LogUtils.INSTANCE.info("Indexing mode");
 		}
 		for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles)) {
 			String[] enabledRawValues = config.getProperty("enabled", "false").split(";");
