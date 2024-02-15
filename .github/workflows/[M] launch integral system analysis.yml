@@ -126,7 +126,7 @@ jobs:
         run: mvn -B compile exec:java -P integral-system-analysis --file pom.xml
        
   launch-integral-system-analysis:
-    name: Build -> Test (JVM ${{ matrix.java }}, ${{ matrix.os }})
+    name: Analyze on (JVM ${{ matrix.java }}, ${{ matrix.os }})
     needs: [launch-integral-system-indexing-on-JDK-11]
     strategy:
       fail-fast: true
@@ -161,7 +161,7 @@ jobs:
         run: mvn -B compile exec:java -P integral-system-analysis --file pom.xml
 
   launch-integral-system-analysis:
-    name: Build -> Test (JVM ${{ matrix.java }}, ${{ matrix.os }})
+    name: Analyze on (JVM ${{ matrix.java }}, ${{ matrix.os }})
     needs: [launch-integral-system-indexing-on-JDK-17]
     strategy:
       fail-fast: true
