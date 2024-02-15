@@ -48,7 +48,6 @@ import org.rg.game.core.NetworkUtils;
 import org.rg.game.core.ResourceUtils;
 import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.ComboHandler;
-import org.rg.game.lottery.engine.ComboHandler.IterationData;
 import org.rg.game.lottery.engine.PersistentStorage;
 import org.rg.game.lottery.engine.Premium;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
@@ -271,7 +270,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			previousIndexes = block.indexes;
 			previousCounter = block.counter;
 		}
-		store(sEStatsDefaultDate, sEStatsDefaultDate, null, null, null, null, 0);
+		//store(sEStatsDefaultDate, sEStatsDefaultDate, null, null, null, null, 0);
 		printData(processingContext.record);
 		LogUtils.INSTANCE.info(
 			MathUtils.INSTANCE.format(processedSystemsCounter(processingContext.record)) + " of " +
@@ -382,7 +381,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 						}
 					}
 					if (iterationData.getCounter().mod(processingContext.modderForAutoSave).compareTo(BigInteger.ZERO) == 0 || iterationData.getCounter().compareTo(currentBlock.end) == 0) {
-						store(processingContext.basePath, processingContext.cacheKey, iterationData, processingContext.systemsRank, processingContext.record, currentBlock, processingContext.rankSize);
+						store(processingContext.basePath, processingContext.cacheKey, processingContext.systemsRank, processingContext.record, currentBlock, processingContext.rankSize);
 						printDataIfChanged(processingContext.record, processingContext.previousLoggedRankWrapper);
 						LogUtils.INSTANCE.info(MathUtils.INSTANCE.format(processedSystemsCounter(processingContext.record)) + " of systems have been processed");
 		    		}
@@ -640,7 +639,6 @@ public class SEIntegralSystemAnalyzer extends Shared {
 	private static void store(
 		String basePath,
 		String cacheKey,
-		IterationData iterationData,
 		TreeSet<Entry<List<Integer>, Map<Number, Integer>>> systemsRank,
 		Record toBeCached,
 		Block currentBlock,
