@@ -132,13 +132,81 @@ public class ComboHandler {
 	    return collector;
 	}
 
-	public void iterate(
+	private int[] toIndexes(int[] combo) {
+		int[] indexes = new int[(int)combinationSize];
+		for (int i = 0; i < combo.length; i++) {
+			indexes[i] = numbers.indexOf(Integer.valueOf(combo[i]));
+		}
+		return indexes;
+	}
+
+	public BigInteger computeCounter(int[] combo) {
+		int[] indexes = toIndexes(combo);
+		return computeCounterFromIndexes(indexes);
+	}
+
+	protected BigInteger computeCounterFromIndexes(int[] indexes) {
+		int[] startIndexes = new int[(int)combinationSize];
+		int maxIndexesElementValue = numbers.size() - 1;
+		for (int i = 0;i < startIndexes.length;i++) {
+			startIndexes[i] = i;
+		}
+
+		int endIndex = numbers.size() - 1;
+		BigInteger counter = BigInteger.ONE;
+		while(!areEquals(indexes, startIndexes, 0, indexes.length - 1)) {
+			for (int i = startIndexes.length - 1; i >= 0; i--) {
+				if (startIndexes[i] < (endIndex - ((startIndexes.length - 1) -i))) {
+					if (i == startIndexes.length - 1) {
+						counter = counter.add(BigInteger.valueOf(maxIndexesElementValue - startIndexes[i]));
+						startIndexes[i] = maxIndexesElementValue;
+					} else {
+						++startIndexes[i];
+						counter = counter.add(BigInteger.ONE);
+					}
+					for (int j = i + 1; j < startIndexes.length;j++) {
+						startIndexes[j] = startIndexes[j - 1] + 1;
+					}
+					break;
+				}
+			}
+		}
+		return counter.add(BigInteger.valueOf(indexes[indexes.length - 1] - startIndexes[indexes.length - 1]));
+	}
+
+	private boolean areEquals(int[] a, int[] b, int startIndex, int endIndex) {
+		for (int k = 0; k < endIndex;k++) {
+			if (a[k] != b[k]) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private void iterateFrom(
 		Consumer<IterationData> action,
 		IterationData iterationData
 	) {
 		try {
 			int endIndex = numbers.size() - 1;
-			while ((iterationData.setIndexes(computeCombo(iterationData.indexes, endIndex)) != null)) {
+			while ((iterationData.setIndexes(nextIndexes(iterationData.indexes, endIndex)) != null)) {
+				action.accept(iterationData);
+			}
+		} catch (TerminateIteration exc) {
+
+		}
+	}
+
+	public void iterateFrom(
+		Consumer<IterationData> action,
+		int[] combo
+	) {
+		try {
+			int[] indexes = toIndexes(combo);
+			IterationData iterationData = new IterationData(indexes, computeCounterFromIndexes(indexes));
+			toIndexes(combo);
+			int endIndex = numbers.size() - 1;
+			while ((iterationData.setIndexes(nextIndexes(iterationData.indexes, endIndex)) != null)) {
 				action.accept(iterationData);
 			}
 		} catch (TerminateIteration exc) {
@@ -149,10 +217,10 @@ public class ComboHandler {
 	public void iterate(
 		Consumer<IterationData> action
 	) {
-		iterate(action, new IterationData());
+		iterateFrom(action, new IterationData());
 	}
 
-	protected int[] computeCombo(int[] indexes, int endIndex) {
+	protected int[] nextIndexes(int[] indexes, int endIndex) {
 		try {
 			for (int i = indexes.length - 1; i >= 0; i--) {
 				if (indexes[i] < (endIndex - ((indexes.length - 1) -i))) {
@@ -244,8 +312,13 @@ public class ComboHandler {
 		private BigInteger counter;
 		private transient List<Integer> combo;
 
-		private IterationData() {
+		public IterationData() {
 			counter = BigInteger.ZERO;
+		}
+
+		public IterationData(int indexes[], BigInteger counter) {
+			this.indexes = indexes;
+			this.counter = counter;
 		}
 
 		public int[] setIndexes(int[] indexes) {
@@ -285,6 +358,18 @@ public class ComboHandler {
 
 	/*
 	public static void main(String[] args) {
+		int[] combo = {1,2,3,4,5,6};
+		ComboHandler SECmbh = new ComboHandler(SEStats.NUMBERS, combo.length);
+		BigInteger index = SECmbh.computeCounter(combo);
+		SECmbh.iterate(iterationData -> {
+			if (iterationData.getCounter().longValue() == index.longValue()) {
+				System.out.println(
+					iterationData.getCombo().stream()
+		            .map(Object::toString)
+		            .collect(Collectors.joining(", "))
+		        );
+			}
+		});
 		ComboHandler comboHandler = new ComboHandler(SEStats.NUMBERS, 4);
 		org.rg.game.lottery.engine.old.ComboHandler oldComboHandler = new org.rg.game.lottery.engine.old.ComboHandler(SEStats.NUMBERS, 4);
 		LocalDate now = LocalDate.now();
