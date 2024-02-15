@@ -283,6 +283,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				LogUtils.INSTANCE.info("Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems");
 			}
 		};
+		int processedBlock = 0;
 		for (Block currentBlock : processingContext.record.blocks) {
 			if (currentBlock.indexes == null) {
 				if (previousIndexes != null && previousCounter != null) {
@@ -301,7 +302,8 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					currentBlock,
 					processingContext.rankSize
 				);
-				LogUtils.INSTANCE.info(MathUtils.INSTANCE.format(processedSystemsCounter(processingContext.record)) + " of systems have been processed");
+				processedBlock++;
+				LogUtils.INSTANCE.info(MathUtils.INSTANCE.format(processedBlock) + " of blocks have been processed");
 			}
 			previousIndexes = Arrays.copyOf(currentBlock.indexes, currentBlock.indexes.length) ;
 			previousCounter = currentBlock.counter;
