@@ -139,7 +139,6 @@ public class ComboHandler {
 		try {
 			int endIndex = numbers.size() - 1;
 			while ((iterationData.setIndexes(computeCombo(iterationData.indexes, endIndex)) != null)) {
-				iterationData.incrementCounter();
 				action.accept(iterationData);
 			}
 		} catch (TerminateIteration exc) {
@@ -252,15 +251,12 @@ public class ComboHandler {
 		public int[] setIndexes(int[] indexes) {
 			this.combo = null;
 			this.indexes = indexes;
+			counter = counter.add(BigInteger.ONE);
 			return this.indexes;
 		}
 
 		public BigInteger getCounter() {
 			return counter;
-		}
-
-		private void incrementCounter() {
-			counter = counter.add(BigInteger.ONE);
 		}
 
 		public List<Integer> getCombo() {
