@@ -302,7 +302,6 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					currentBlock,
 					processingContext.rankSize
 				);
-				processedBlock++;
 				LogUtils.INSTANCE.info(
 					MathUtils.INSTANCE.format(processedBlock) + " blocks of " +
 					MathUtils.INSTANCE.format(processingContext.record.blocks.size()) + " have been processed"
@@ -310,6 +309,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			}
 			previousIndexes = Arrays.copyOf(currentBlock.indexes, currentBlock.indexes.length) ;
 			previousCounter = currentBlock.counter;
+			processedBlock++;
 		}
 		printData(processingContext.record);
 	}
