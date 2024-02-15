@@ -271,6 +271,9 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				);
 				iterationData.terminateIteration();
 			}
+			if (iterationData.getCounter().mod(processingContext.modderForSkipLog).compareTo(BigInteger.ZERO) == 0) {
+				LogUtils.INSTANCE.info("Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems");
+			}
 		};
 		for (Block currentBlock : processingContext.record.blocks) {
 			if (currentBlock.indexes == null) {
@@ -290,16 +293,12 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					currentBlock,
 					processingContext.rankSize
 				);
+				LogUtils.INSTANCE.info(MathUtils.INSTANCE.format(processedSystemsCounter(processingContext.record)) + " of systems have been processed");
 			}
 			previousIndexes = Arrays.copyOf(currentBlock.indexes, currentBlock.indexes.length) ;
 			previousCounter = currentBlock.counter;
 		}
 		printData(processingContext.record);
-		LogUtils.INSTANCE.info(
-			MathUtils.INSTANCE.format(processedSystemsCounter(processingContext.record)) + " of " +
-			MathUtils.INSTANCE.format(processingContext.comboHandler.getSize()) +
-			" systems have been processed\n"
-		);
 	}
 
 	protected static void analyze(Properties config) {
