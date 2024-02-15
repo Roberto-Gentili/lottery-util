@@ -786,6 +786,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			this.start = start;
 			this.end = end;
 			this.counter = counter;
+			this.indexes = indexes;
 		}
 
 		@Override
