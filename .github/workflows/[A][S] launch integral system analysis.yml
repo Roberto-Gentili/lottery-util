@@ -111,7 +111,7 @@ jobs:
           INDEX: 'index'
         run: mvn -B compile exec:java -P integral-system-analysis --file pom.xml
        
-  launch-integral-system-analysis:
+  launch-integral-system-analysis-on-JDK-11:
     name: Analyze on (JVM ${{ matrix.java }}, ${{ matrix.os }})
     needs: [launch-integral-system-indexing-on-JDK-11]
     strategy:
@@ -119,7 +119,7 @@ jobs:
 #      max-parallel: 15
       matrix:
         os: [ubuntu-latest]
-        java: [17,17,17,17,17,17,17,17,17,17,17,17]
+        java: [11,11,11,11,11,11,11,11]
         architecture: [x64]
     runs-on: ${{ matrix.os }}
     steps:
@@ -146,7 +146,7 @@ jobs:
           TIMEOUT: 20700
         run: mvn -B compile exec:java -P integral-system-analysis --file pom.xml
 
-  launch-integral-system-analysis:
+  launch-integral-system-analysis-on-JDK-17:
     name: Analyze on (JVM ${{ matrix.java }}, ${{ matrix.os }})
     needs: [launch-integral-system-indexing-on-JDK-17]
     strategy:
