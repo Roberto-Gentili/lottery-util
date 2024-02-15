@@ -302,14 +302,14 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					currentBlock,
 					processingContext.rankSize
 				);
-				LogUtils.INSTANCE.info(
-					MathUtils.INSTANCE.format(processedBlock) + " of " +
-					MathUtils.INSTANCE.format(processingContext.record.blocks.size()) + " blocks have been indexed"
-				);
 			}
 			previousIndexes = Arrays.copyOf(currentBlock.indexes, currentBlock.indexes.length) ;
 			previousCounter = currentBlock.counter;
 			processedBlock++;
+			LogUtils.INSTANCE.info(
+				MathUtils.INSTANCE.format(processedBlock) + " of " +
+				MathUtils.INSTANCE.format(processingContext.record.blocks.size()) + " blocks have been indexed"
+			);
 		}
 		printData(processingContext.record);
 	}
