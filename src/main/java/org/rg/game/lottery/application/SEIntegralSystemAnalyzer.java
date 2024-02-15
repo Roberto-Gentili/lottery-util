@@ -273,83 +273,88 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				}
 				return block;
 			};
-			processingContext.comboHandler.iterate(iterationData -> {
-				Block currentBlock = blockSupplier.get();
-				if (currentBlock == null) {
-					iterationData.terminateIteration();
-					return;
-				}
-				if (blockNotAlignedWrapper.get()) {
-					if (iterationData.getCounter().compareTo(currentBlock.start) < 0 || iterationData.getCounter().compareTo(currentBlock.end) > 0) {
-						if (iterationData.getCounter().mod(processingContext.modderForSkipLog).compareTo(BigInteger.ZERO) == 0) {
-							LogUtils.INSTANCE.info("Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems");
-						}
+			Block absignedBlock = blockSupplier.get();
+			processingContext.comboHandler.iterateFrom(
+				iterationData -> {
+					Block currentBlock = blockSupplier.get();
+					if (currentBlock == null) {
+						iterationData.terminateIteration();
 						return;
 					}
-					BigInteger currentBlockCounter = currentBlock.counter;
-					if (currentBlockCounter != null) {
-						if (currentBlockCounter.compareTo(iterationData.getCounter()) > 0) {
+					if (blockNotAlignedWrapper.get()) {
+						if (iterationData.getCounter().compareTo(currentBlock.start) < 0 || iterationData.getCounter().compareTo(currentBlock.end) > 0) {
+							if (iterationData.getCounter().mod(processingContext.modderForSkipLog).compareTo(BigInteger.ZERO) == 0) {
+								LogUtils.INSTANCE.info("Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems");
+							}
 							return;
 						}
-						if (currentBlockCounter.compareTo(iterationData.getCounter()) == 0) {
-							LogUtils.INSTANCE.info(
-								"Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems\n" +
-								"Cache succesfully restored, starting from index " + MathUtils.INSTANCE.format(iterationData.getCounter()) + ". " +
-								MathUtils.INSTANCE.format(remainedSystems(processingContext.record)) + " systems remained."
-							);
-							printDataIfChanged(processingContext.record, processingContext.previousLoggedRankWrapper);
-							return;
+						BigInteger currentBlockCounter = currentBlock.counter;
+						if (currentBlockCounter != null) {
+							if (currentBlockCounter.compareTo(iterationData.getCounter()) > 0) {
+								return;
+							}
+							if (currentBlockCounter.compareTo(iterationData.getCounter()) == 0) {
+								LogUtils.INSTANCE.info(
+									"Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems\n" +
+									"Cache succesfully restored, starting from index " + MathUtils.INSTANCE.format(iterationData.getCounter()) + ". " +
+									MathUtils.INSTANCE.format(remainedSystems(processingContext.record)) + " systems remained."
+								);
+								printDataIfChanged(processingContext.record, processingContext.previousLoggedRankWrapper);
+								return;
+							}
+						}
+						blockNotAlignedWrapper.set(false);
+					}
+					currentBlock.counter = iterationData.getCounter();
+					currentBlock.indexes = iterationData.copyOfIndexes();
+					List<Integer> combo = iterationData.getCombo();
+					Map<Number, Integer> allPremiums = new LinkedHashMap<>();
+					for (Number premiumType : processingContext.orderedPremiumsToBeAnalyzed) {
+						allPremiums.put(premiumType, 0);
+					}
+					for (List<Integer> winningComboWithSuperStar : processingContext.allWinningCombos) {
+						Map<Number, Integer> premiums = SEPremium.checkIntegral(combo, winningComboWithSuperStar);
+						for (Map.Entry<Number, Integer> premiumTypeAndCounter : allPremiums.entrySet()) {
+							Number premiumType = premiumTypeAndCounter.getKey();
+							Integer premiumCounter = premiums.get(premiumType);
+							if (premiumCounter != null) {
+								allPremiums.put(premiumType, allPremiums.get(premiumType) + premiumCounter);
+							}
 						}
 					}
-					blockNotAlignedWrapper.set(false);
-				}
-				currentBlock.counter = iterationData.getCounter();
-				List<Integer> combo = iterationData.getCombo();
-				Map<Number, Integer> allPremiums = new LinkedHashMap<>();
-				for (Number premiumType : processingContext.orderedPremiumsToBeAnalyzed) {
-					allPremiums.put(premiumType, 0);
-				}
-				for (List<Integer> winningComboWithSuperStar : processingContext.allWinningCombos) {
-					Map<Number, Integer> premiums = SEPremium.checkIntegral(combo, winningComboWithSuperStar);
+					boolean highWinningFound = false;
 					for (Map.Entry<Number, Integer> premiumTypeAndCounter : allPremiums.entrySet()) {
-						Number premiumType = premiumTypeAndCounter.getKey();
-						Integer premiumCounter = premiums.get(premiumType);
-						if (premiumCounter != null) {
-							allPremiums.put(premiumType, allPremiums.get(premiumType) + premiumCounter);
+						if (premiumTypeAndCounter.getKey().doubleValue() > Premium.TYPE_FIVE.doubleValue() && premiumTypeAndCounter.getValue() > 0) {
+							highWinningFound = true;
+							break;
 						}
 					}
-				}
-				boolean highWinningFound = false;
-				for (Map.Entry<Number, Integer> premiumTypeAndCounter : allPremiums.entrySet()) {
-					if (premiumTypeAndCounter.getKey().doubleValue() > Premium.TYPE_FIVE.doubleValue() && premiumTypeAndCounter.getValue() > 0) {
-						highWinningFound = true;
-						break;
-					}
-				}
-				if (highWinningFound) {
-					Map.Entry<List<Integer>, Map<Number, Integer>> addedItem = new AbstractMap.SimpleEntry<>(combo, allPremiums);
-					boolean addedItemFlag = processingContext.systemsRank.add(addedItem);
-					if (processingContext.systemsRank.size() > processingContext.rankSize) {
-						Map.Entry<List<Integer>, Map<Number, Integer>> removedItem = processingContext.systemsRank.pollLast();
-						if (removedItem != addedItem) {
+					if (highWinningFound) {
+						Map.Entry<List<Integer>, Map<Number, Integer>> addedItem = new AbstractMap.SimpleEntry<>(combo, allPremiums);
+						boolean addedItemFlag = processingContext.systemsRank.add(addedItem);
+						if (processingContext.systemsRank.size() > processingContext.rankSize) {
+							Map.Entry<List<Integer>, Map<Number, Integer>> removedItem = processingContext.systemsRank.pollLast();
+							if (removedItem != addedItem) {
+								//store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock, rankSize);
+								LogUtils.INSTANCE.info(
+									"Replaced data from rank:\n\t" + ComboHandler.toString(removedItem.getKey(), ", ") + ": " + removedItem.getValue() + "\n" +
+									"\t\twith\n"+
+									"\t" + ComboHandler.toString(addedItem.getKey(), ", ") + ": " + addedItem.getValue()
+								);
+							}
+						} else if (addedItemFlag) {
 							//store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock, rankSize);
-							LogUtils.INSTANCE.info(
-								"Replaced data from rank:\n\t" + ComboHandler.toString(removedItem.getKey(), ", ") + ": " + removedItem.getValue() + "\n" +
-								"\t\twith\n"+
-								"\t" + ComboHandler.toString(addedItem.getKey(), ", ") + ": " + addedItem.getValue()
-							);
+							LogUtils.INSTANCE.info("Added data to rank: " + ComboHandler.toString(combo, ", ") + ": " + allPremiums);
 						}
-					} else if (addedItemFlag) {
-						//store(basePath, cacheKey, iterationData, systemsRank, cacheRecord, currentBlock, rankSize);
-						LogUtils.INSTANCE.info("Added data to rank: " + ComboHandler.toString(combo, ", ") + ": " + allPremiums);
 					}
-				}
-				if (iterationData.getCounter().mod(processingContext.modderForAutoSave).compareTo(BigInteger.ZERO) == 0 || iterationData.getCounter().compareTo(currentBlock.end) == 0) {
-					store(processingContext.basePath, processingContext.cacheKey, iterationData, processingContext.systemsRank, processingContext.record, currentBlock, processingContext.rankSize);
-					printDataIfChanged(processingContext.record, processingContext.previousLoggedRankWrapper);
-					LogUtils.INSTANCE.info(MathUtils.INSTANCE.format(processedSystemsCounter(processingContext.record)) + " of systems have been processed");
-	    		}
-			});
+					if (iterationData.getCounter().mod(processingContext.modderForAutoSave).compareTo(BigInteger.ZERO) == 0 || iterationData.getCounter().compareTo(currentBlock.end) == 0) {
+						store(processingContext.basePath, processingContext.cacheKey, iterationData, processingContext.systemsRank, processingContext.record, currentBlock, processingContext.rankSize);
+						printDataIfChanged(processingContext.record, processingContext.previousLoggedRankWrapper);
+						LogUtils.INSTANCE.info(MathUtils.INSTANCE.format(processedSystemsCounter(processingContext.record)) + " of systems have been processed");
+		    		}
+				},
+				processingContext.comboHandler.new IterationData(absignedBlock.indexes, absignedBlock.counter)
+			);
 			if (processingContext.assignedBlocks.isEmpty()) {
 				processingContext.assignedBlocks.addAll(retrieveAssignedBlocks(config, processingContext.record));
 			}
@@ -364,14 +369,15 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		}
 		Map<String, Object> recordAsRawValue = IOUtils.INSTANCE.readFromJSONFormat(recordAsFlatRawValue, Map.class);
 		Collection<Block> blocks = new ArrayList<>();
-		for (Map<String, Number> blocksAsRawValue : (Collection<Map<String, Number>>)recordAsRawValue.get("blocks")) {
+		for (Map<String, Object> blocksAsRawValue : (Collection<Map<String, Object>>)recordAsRawValue.get("blocks")) {
 			blocks.add(
 				new Block(
 					new BigInteger(blocksAsRawValue.get("start").toString()),
 					new BigInteger(blocksAsRawValue.get("end").toString()),
 					Optional.ofNullable(
 						blocksAsRawValue.get("counter")
-					).map(Object::toString).map(BigInteger::new).orElseGet(() -> null)
+					).map(Object::toString).map(BigInteger::new).orElseGet(() -> null),
+					(int[])blocksAsRawValue.get("indexes")
 				)
 			);
 		}
@@ -637,11 +643,11 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		BigInteger blockStart = BigInteger.ONE;
 		for (int i = 0; i < blockNumber; i++) {
 			BigInteger blockEnd = blockStart.add(blockSize.subtract(BigInteger.ONE));
-			blocks.add(new Block(blockStart, blockEnd, null));
+			blocks.add(new Block(blockStart, blockEnd, null, null));
 			blockStart = blockEnd.add(BigInteger.ONE);
 		}
 		if (remainedSize.compareTo(BigInteger.ZERO) != 0) {
-			blocks.add(new Block(blockStart, blockStart.add(remainedSize.subtract(BigInteger.ONE)), null));
+			blocks.add(new Block(blockStart, blockStart.add(remainedSize.subtract(BigInteger.ONE)), null, null));
 		}
 		return blocks;
 	}
@@ -682,7 +688,10 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		@JsonProperty("counter")
 		private BigInteger counter;
 
-		public Block(BigInteger start, BigInteger end, BigInteger counter) {
+		@JsonProperty("indexes")
+		private int[] indexes;
+
+		public Block(BigInteger start, BigInteger end, BigInteger counter, int[] indexes) {
 			this.start = start;
 			this.end = end;
 			this.counter = counter;
@@ -690,8 +699,10 @@ public class SEIntegralSystemAnalyzer extends Shared {
 
 		@Override
 		public String toString() {
-			return "Block [start=" + MathUtils.INSTANCE.format(start) + ", end=" + MathUtils.INSTANCE.format(end) + ", counter=" + MathUtils.INSTANCE.format(counter) + "]";
+			return "Block [start=" + start + ", end=" + end + ", counter=" + counter + ", indexes="
+					+ Arrays.toString(indexes) + "]";
 		}
+
 
 	}
 

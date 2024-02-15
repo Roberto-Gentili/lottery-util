@@ -347,6 +347,12 @@ public class ComboHandler {
 			return numbers;
 		}
 
+		public int[] copyOfIndexes() {
+			int[] indexesCopy = new int[indexes.length];
+			System.arraycopy(indexes, 0, indexesCopy, 0, indexes.length);
+			return indexesCopy;
+		}
+
 		public <T> T terminateIteration() {
 			throw TerminateIteration.NOTIFICATION;
 		}
