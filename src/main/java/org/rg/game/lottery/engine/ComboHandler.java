@@ -183,7 +183,7 @@ public class ComboHandler {
 		return true;
 	}
 
-	private void iterateFrom(
+	public void iterateFrom(
 		Consumer<IterationData> action,
 		IterationData iterationData
 	) {
@@ -318,7 +318,7 @@ public class ComboHandler {
 
 		public IterationData(int indexes[], BigInteger counter) {
 			this.indexes = indexes;
-			this.counter = counter;
+			this.counter = counter != null ? counter :BigInteger.ZERO;
 		}
 
 		public int[] setIndexes(int[] indexes) {
