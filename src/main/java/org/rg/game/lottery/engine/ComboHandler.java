@@ -184,8 +184,8 @@ public class ComboHandler {
 	}
 
 	public void iterateFrom(
-		Consumer<IterationData> action,
-		IterationData iterationData
+		IterationData iterationData,
+		Consumer<IterationData> action
 	) {
 		try {
 			int endIndex = numbers.size() - 1;
@@ -198,8 +198,8 @@ public class ComboHandler {
 	}
 
 	public void iterateFrom(
-		Consumer<IterationData> action,
-		int[] combo
+		int[] combo,
+		Consumer<IterationData> action
 	) {
 		try {
 			int[] indexes = toIndexes(combo);
@@ -217,7 +217,7 @@ public class ComboHandler {
 	public void iterate(
 		Consumer<IterationData> action
 	) {
-		iterateFrom(action, new IterationData());
+		iterateFrom(new IterationData(), action);
 	}
 
 	protected int[] nextIndexes(int[] indexes, int endIndex) {

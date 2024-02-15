@@ -149,6 +149,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				.orElseGet(() -> Math.max((Runtime.getRuntime().availableProcessors() / 2) - 1, 1));
 		Collection<CompletableFuture<Void>> futures = new CopyOnWriteArrayList<>();
 		boolean onlyShowComputed = false;
+		boolean index = false;
 		String timeoutRawValue = null;
 		for (String arg : args) {
 			if (arg != null) {
@@ -157,6 +158,9 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					LogUtils.INSTANCE.info("Analysis disabled");
 				} else if (arg.contains("timeout")) {
 					timeoutRawValue = arg.split("=")[1];
+				} else if (arg.contains("index")) {
+					index = true;
+					LogUtils.INSTANCE.info("Indexing mode");
 				}
 			}
 		}
@@ -202,6 +206,9 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					onlyShowComputed ?
 						() ->
 							showComputed(config) :
+					index ?
+						() ->
+							index(config):
 						() ->
 							analyze(config);
 				if (!onlyShowComputed && CollectionUtils.INSTANCE.retrieveBoolean(config, "async", "false")) {
@@ -247,6 +254,32 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		);
 	}
 
+	protected static void index(Properties config) {
+		ProcessingContext processingContext = new ProcessingContext(config);
+		int[] previousIndexes = null;
+		BigInteger previousCounter = null;
+		for (Block block : processingContext.record.blocks) {
+			if (block.indexes == null) {
+				if (previousIndexes != null) {
+
+				} else {
+					processingContext.comboHandler.iterate(iterationData -> {
+
+					});
+				}
+			}
+			previousIndexes = block.indexes;
+			previousCounter = block.counter;
+		}
+		store(sEStatsDefaultDate, sEStatsDefaultDate, null, null, null, null, 0);
+		printData(processingContext.record);
+		LogUtils.INSTANCE.info(
+			MathUtils.INSTANCE.format(processedSystemsCounter(processingContext.record)) + " of " +
+			MathUtils.INSTANCE.format(processingContext.comboHandler.getSize()) +
+			" systems have been processed\n"
+		);
+	}
+
 	protected static void analyze(Properties config) {
 		ProcessingContext processingContext = new ProcessingContext(config);
 		while (!processingContext.assignedBlocks.isEmpty()) {
@@ -275,6 +308,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			};
 			Block absignedBlock = blockSupplier.get();
 			processingContext.comboHandler.iterateFrom(
+				processingContext.comboHandler.new IterationData(absignedBlock.indexes, absignedBlock.counter),
 				iterationData -> {
 					Block currentBlock = blockSupplier.get();
 					if (currentBlock == null) {
@@ -352,8 +386,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 						printDataIfChanged(processingContext.record, processingContext.previousLoggedRankWrapper);
 						LogUtils.INSTANCE.info(MathUtils.INSTANCE.format(processedSystemsCounter(processingContext.record)) + " of systems have been processed");
 		    		}
-				},
-				processingContext.comboHandler.new IterationData(absignedBlock.indexes, absignedBlock.counter)
+				}
 			);
 			if (processingContext.assignedBlocks.isEmpty()) {
 				processingContext.assignedBlocks.addAll(retrieveAssignedBlocks(config, processingContext.record));
@@ -626,6 +659,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				BigInteger cachedBlockCounter = cachedBlock.counter;
 				if (cachedBlockCounter != null && (toBeCachedBlock.counter == null || cachedBlockCounter.compareTo(toBeCachedBlock.counter) > 0)) {
 					toBeCachedBlock.counter = cachedBlock.counter;
+					toBeCachedBlock.indexes = cachedBlock.indexes;
 				}
 			}
 		}
