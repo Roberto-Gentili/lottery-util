@@ -304,7 +304,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				);
 				LogUtils.INSTANCE.info(
 					MathUtils.INSTANCE.format(processedBlock) + " of " +
-					MathUtils.INSTANCE.format(processingContext.record.blocks.size()) + " blocks have been processed"
+					MathUtils.INSTANCE.format(processingContext.record.blocks.size()) + " blocks have been indexed"
 				);
 			}
 			previousIndexes = Arrays.copyOf(currentBlock.indexes, currentBlock.indexes.length) ;
@@ -390,7 +390,10 @@ public class SEIntegralSystemAnalyzer extends Shared {
 							processingContext.rankSize
 						);
 						printDataIfChanged(processingContext.record, processingContext.previousLoggedRankWrapper);
-						LogUtils.INSTANCE.info(MathUtils.INSTANCE.format(processedSystemsCounter(processingContext.record)) + " of systems have been processed");
+						LogUtils.INSTANCE.info(
+							MathUtils.INSTANCE.format(processedSystemsCounter(processingContext.record)) + " of " +
+							MathUtils.INSTANCE.format(processingContext.comboHandler.getSize()) + " systems have been analyzed"
+						);
 		    		}
 				}
 			);
