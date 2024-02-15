@@ -1,6 +1,5 @@
-package org.rg.game.lottery.engine;
+package org.rg.game.lottery.engine.old;
 
-import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,9 +14,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.rg.game.core.MathUtils;
+import org.rg.game.lottery.engine.TerminateIteration;
 
 public class ComboHandler {
 
@@ -133,45 +132,50 @@ public class ComboHandler {
 	}
 
 	public void iterate(
-		Consumer<IterationData> action,
-		IterationData iterationData
+		Consumer<IterationData> action
 	) {
+		IterationData iterationData = new IterationData();
 		try {
-			int endIndex = numbers.size() - 1;
-			while ((iterationData.setIndexes(computeCombo(iterationData.indexes, endIndex)) != null)) {
-				iterationData.incrementCounter();
-				action.accept(iterationData);
-			}
+			iterate(
+				iterationData,
+				0,
+				numbers.size() - 1,
+				0,
+				action
+			);
 		} catch (TerminateIteration exc) {
 
 		}
 	}
 
-	public void iterate(
+	private void iterate(
+		IterationData iterationData,
+		int start,
+		int end,
+		int index,
 		Consumer<IterationData> action
 	) {
-		iterate(action, new IterationData());
-	}
-
-	protected int[] computeCombo(int[] indexes, int endIndex) {
-		try {
-			for (int i = indexes.length - 1; i >= 0; i--) {
-				if (indexes[i] < (endIndex - ((indexes.length - 1) -i))) {
-					++indexes[i];
-					for (int j = i + 1; j < indexes.length;j++) {
-						indexes[j] = indexes[j - 1] + 1;
-					}
-					return indexes;
-				}
-			}
-			return null;
-		} catch (NullPointerException exc) {
-			indexes = new int[(int)combinationSize];
-			for (int i = 0;i < indexes.length;i++) {
-				indexes[i] = i;
-			}
-			return indexes;
-		}
+	    if (index == iterationData.indexes.length) {
+	    	iterationData.combo = null;
+	    	iterationData.incrementCounter();
+	    	action.accept(iterationData);
+	    } else if (start <= end) {
+	    	iterationData.indexes[index] = start;
+	        iterate(
+        		iterationData,
+        		start + 1,
+        		end,
+        		index + 1,
+        		action
+    		);
+	        iterate(
+        		iterationData,
+        		start + 1,
+        		end,
+        		index,
+        		action
+			);
+	    }
 	}
 
 	public static String toExpression(Collection<Integer> numbers) {
@@ -216,10 +220,6 @@ public class ComboHandler {
 		);
 	}
 
-	public static List<Integer> fromString(String values) {
-		return Stream.of(values.replaceAll("\\s+","").split(",")).map(Integer::valueOf).collect(Collectors.toCollection(ArrayList::new));
-	}
-
 	public static int sumValues(List<Integer> combo) {
 		return combo.stream().collect(Collectors.summingInt(Integer::intValue)).intValue();
 	}
@@ -237,22 +237,14 @@ public class ComboHandler {
 		.stream().collect(Collectors.summingInt(Integer::intValue)).intValue();
 	}
 
-	public class IterationData implements Serializable {
-
-		private static final long serialVersionUID = 1135569763057593292L;
-
-		private int indexes[];
-		private BigInteger counter;
-		private transient List<Integer> combo;
+	public class IterationData {
+		int indexes[];
+		List<Integer> combo;
+		BigInteger counter;
 
 		private IterationData() {
+			indexes = new int[(int)combinationSize];
 			counter = BigInteger.ZERO;
-		}
-
-		public int[] setIndexes(int[] indexes) {
-			this.combo = null;
-			this.indexes = indexes;
-			return this.indexes;
 		}
 
 		public BigInteger getCounter() {
@@ -281,52 +273,6 @@ public class ComboHandler {
 		public <T> T terminateIteration() {
 			throw TerminateIteration.NOTIFICATION;
 		}
-
-		public boolean isLatest() {
-			return counter.compareTo(getSize()) == 0;
-		}
 	}
 
-	/*
-	public static void main(String[] args) {
-		ComboHandler comboHandler = new ComboHandler(SEStats.NUMBERS, 4);
-		org.rg.game.lottery.engine.old.ComboHandler oldComboHandler = new org.rg.game.lottery.engine.old.ComboHandler(SEStats.NUMBERS, 4);
-		LocalDate now = LocalDate.now();
-		long startTime = System.currentTimeMillis();
-		PersistentStorage storageForOld = new PersistentStorage(
-			LocalDate.now(),
-			(int) comboHandler.getCombinationSize(),
-			comboHandler.getSizeAsInt(), "test", "testWithOld"
-		);
-		List<CompletableFuture<Void>> tasks = new ArrayList<>();
-		tasks.add(
-			CompletableFuture.runAsync(() -> {
-				oldComboHandler.iterate(iterationData -> {
-					storageForOld.addCombo(iterationData.getCombo());
-				});
-			})
-		);
-		PersistentStorage storageForNew = new PersistentStorage(
-			LocalDate.now(),
-			(int) comboHandler.getCombinationSize(),
-			comboHandler.getSizeAsInt(), "test", "testWithNew"
-		);
-		tasks.add(
-			CompletableFuture.runAsync(() -> {
-				comboHandler.iterate(iterationData -> {
-					storageForNew.addCombo(iterationData.getCombo());
-					if (iterationData.getCounter().longValue() % 1000000 == 0 || iterationData.isLatest()) {
-						System.out.println(iterationData.getCounter());
-						System.out.println(
-							iterationData.getCombo().stream()
-				            .map(Object::toString)
-				            .collect(Collectors.joining(", "))
-				        );
-					}
-				});
-			})
-		);
-		tasks.stream().forEach(CompletableFuture::join);
-	}
-	*/
 }
