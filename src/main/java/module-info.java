@@ -18,6 +18,7 @@ module org.rg.game.lottery {
     requires com.google.auth;
     requires com.google.api.apicommon;
     requires com.google.auth.oauth2;
+	requires gax;
 
 	opens org.rg.game.lottery.application to com.fasterxml.jackson.databind;
 	exports org.rg.game.lottery.application;
