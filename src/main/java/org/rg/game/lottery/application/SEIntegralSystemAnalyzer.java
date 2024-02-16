@@ -407,7 +407,10 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					if (blockNotAlignedWrapper.get()) {
 						if (iterationData.getCounter().compareTo(currentBlock.start) < 0 || iterationData.getCounter().compareTo(currentBlock.end) > 0) {
 							if (iterationData.getCounter().mod(processingContext.modderForSkipLog).compareTo(BigInteger.ZERO) == 0) {
-								LogUtils.INSTANCE.info("Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems");
+								LogUtils.INSTANCE.info(
+									"Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) +
+									" of " + sizeOfIntegralSystemMatrixAsString + "systems"
+								);
 							}
 							return;
 						}
@@ -418,7 +421,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 							}
 							if (currentBlockCounter.compareTo(iterationData.getCounter()) == 0) {
 								LogUtils.INSTANCE.info(
-									"Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " systems of " + sizeOfIntegralSystemMatrixAsString + "\n" +
+									"Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of " + sizeOfIntegralSystemMatrixAsString + " systems\n" +
 									"Cache succesfully restored, starting from the " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " system. " +
 									MathUtils.INSTANCE.format(remainedSystems(processingContext.record)) + " systems remained."
 								);
