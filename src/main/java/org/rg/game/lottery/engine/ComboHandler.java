@@ -17,6 +17,7 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.rg.game.core.CollectionUtils;
 import org.rg.game.core.MathUtils;
 
 public class ComboHandler {
@@ -348,9 +349,7 @@ public class ComboHandler {
 		}
 
 		public int[] copyOfIndexes() {
-			int[] indexesCopy = new int[indexes.length];
-			System.arraycopy(indexes, 0, indexesCopy, 0, indexes.length);
-			return indexesCopy;
+			return CollectionUtils.INSTANCE.copyOf(indexes);
 		}
 
 		public <T> T terminateIteration() {

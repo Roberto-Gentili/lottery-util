@@ -20,6 +20,12 @@ public class CollectionUtils {
         return subLists;
 	}
 
+	public <A> int[] copyOf(int[] array) {
+		int[] arrayCopy = new int[array.length];
+		System.arraycopy(array, 0, arrayCopy, 0, array.length);
+		return arrayCopy;
+	}
+
 	public boolean retrieveBoolean(Properties config, String key) {
 		return retrieveBoolean(config, key, null);
 	}
