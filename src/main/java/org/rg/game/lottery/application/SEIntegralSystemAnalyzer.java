@@ -85,7 +85,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			addDefaultRecordLoader();
 			addDefaultRecordWriter();
 			addJSONRecordLoader();
-			addJSONRecordLoader();
+			addJSONRecordWriter();
 		}
 
 		String[] configurationFileFolders = ResourceUtils.INSTANCE.pathsFromSystemEnv(
