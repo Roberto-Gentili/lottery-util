@@ -240,7 +240,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 	protected static void addFirebaseRecordLoader(Firestore firestore) {
 		recordLoaders.add(
 			(String key, String basePath) -> {
-				LogUtils.INSTANCE.info(key + "/" + basePath);
+				LogUtils.INSTANCE.info(basePath + "/" + key);
 				DocumentReference recordAsDocumentWrapper =
 					firestore.document("IntegralSystemStats/"+key);
 					//firestore.collection("IntegralSystemStats").document(key);
@@ -752,7 +752,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		Block currentBlock,
 		int rankSize
 	){
-		Record cacheRecord = loadRecord(cacheKey, basePath);
+		Record cacheRecord = loadRecord(basePath, cacheKey);
 		if (cacheRecord != null) {
 			systemsRank.addAll(cacheRecord.data);
 			List<Block> cachedBlocks = (List<Block>)cacheRecord.blocks;
