@@ -353,7 +353,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					processingContext.rankSize
 				);
 			}
-			previousIndexes = Arrays.copyOf(currentBlock.indexes, currentBlock.indexes.length) ;
+			previousIndexes = CollectionUtils.INSTANCE.copyOf(currentBlock.indexes);
 			previousCounter = currentBlock.counter;
 			processedBlock++;
 			if (processedBlock % 10 == 0 || processedBlock == processingContext.record.blocks.size()) {
@@ -417,7 +417,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 							if (currentBlockCounter.compareTo(iterationData.getCounter()) == 0) {
 								LogUtils.INSTANCE.info(
 									"Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems\n" +
-									"Cache succesfully restored, starting from index " + MathUtils.INSTANCE.format(iterationData.getCounter()) + ". " +
+									"Cache succesfully restored, starting from the " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " system. " +
 									MathUtils.INSTANCE.format(remainedSystems(processingContext.record)) + " systems remained."
 								);
 								printDataIfChanged(processingContext.record, processingContext.previousLoggedRankWrapper);
@@ -427,13 +427,16 @@ public class SEIntegralSystemAnalyzer extends Shared {
 						blockNotAlignedWrapper.set(false);
 					}
 					currentBlock.counter = iterationData.getCounter();
-					currentBlock.indexes = iterationData.copyOfIndexes();
+					//Operazione spostata prima dell'operazione di store per motivi di performance:
+					//in caso di anomalie decomentarla e cancellare la riga più in basso
+					//currentBlock.indexes = iterationData.copyOfIndexes();
 					List<Integer> combo = iterationData.getCombo();
 					Map<Number, Integer> allPremiums = computePremiums(processingContext, combo);
 					if (filterCombo(allPremiums, Premium.TYPE_FIVE)) {
 						tryToAddCombo(processingContext, combo, allPremiums);
 					}
 					if (iterationData.getCounter().mod(processingContext.modderForAutoSave).compareTo(BigInteger.ZERO) == 0 || iterationData.getCounter().compareTo(currentBlock.end) == 0) {
+						currentBlock.indexes = iterationData.copyOfIndexes(); //Ottimizzazione: in caso di anomalie eliminare questa riga e decommentare la riga più in alto (vedere commento)
 						store(
 							processingContext.cacheKey,
 							processingContext.systemsRank,
