@@ -255,7 +255,10 @@ public class SEIntegralSystemAnalyzer extends Shared {
 
 	protected static void showComputed(Properties config) {
 		ProcessingContext processingContext = new ProcessingContext(config);
-		if (processingContext.record.data != null && !processingContext.record.data.isEmpty() && processingContext.record.data.size() >= processingContext.rankSize) {
+		if (processingContext.record.data != null && !processingContext.record.data.isEmpty() &&
+			processingContext.record.data.size() >= processingContext.rankSize
+		) {
+			//Sceglie una combinazione casuale fra quelle in classifica
 			chooseAndPrintNextCompetitionSystem(processingContext.record, processingContext.rankSize);
 		}
 		printData(processingContext.record);
