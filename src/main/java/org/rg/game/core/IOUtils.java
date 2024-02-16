@@ -72,7 +72,7 @@ public class IOUtils {
 
 	}
 
-	public void store(String key, Serializable object, String basePath) {
+	public void store(String basePath, String key, Serializable object) {
 		try (
 			FileOutputStream fout = new FileOutputStream(basePath + "/" + key /*Base64.getEncoder().encodeToString(key.getBytes(StandardCharsets.UTF_8))*/ + ".ser");
 			ObjectOutputStream oos = new ObjectOutputStream(fout)

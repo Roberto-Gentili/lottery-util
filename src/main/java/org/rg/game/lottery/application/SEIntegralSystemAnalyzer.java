@@ -32,7 +32,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -66,8 +65,8 @@ import com.google.firebase.FirebaseOptions;
 import com.google.firebase.cloud.FirestoreClient;
 
 public class SEIntegralSystemAnalyzer extends Shared {
-	private static List<BiFunction<String, String, Record>> recordLoaders;
-	private static List<BiFunction<String, String, Consumer<Record>>> recordWriters;
+	private static List<Function<String, Record>> recordLoaders;
+	private static List<Function<String, Consumer<Record>>> recordWriters;
 
 	public static void main(String[] args) throws IOException {
 		long startTime = System.currentTimeMillis();
@@ -223,7 +222,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 
 	protected static void addFirebaseRecordWriter(Firestore firestore) {
 		recordWriters.add(
-			(String key, String basePath) -> record -> {
+			(String key) -> record -> {
 				DocumentReference recordAsDocumentWrapper =
 					firestore.document("IntegralSystemStats/"+key);
 					//firestore.collection("IntegralSystemStats").document(key);
@@ -241,7 +240,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 
 	protected static void addFirebaseRecordLoader(Firestore firestore) {
 		recordLoaders.add(
-			(String key, String basePath) -> {
+			(String key) -> {
 				//LogUtils.INSTANCE.info("Loading " + basePath + "/" + key);
 				DocumentReference recordAsDocumentWrapper =
 					firestore.document("IntegralSystemStats/"+key);
@@ -258,10 +257,11 @@ public class SEIntegralSystemAnalyzer extends Shared {
 	}
 
 	protected static void addDefaultRecordWriter() {
+		String basePath = PersistentStorage.buildWorkingPath("Analisi sistemi integrali");
 		recordWriters.add(
-			(String key, String basePath) -> record -> {
+			(String key) -> record -> {
 				try {
-					IOUtils.INSTANCE.store(key, record, basePath);
+					IOUtils.INSTANCE.store(basePath, key, record);
 					IOUtils.INSTANCE.writeToJSONPrettyFormat(new File(basePath + "/" + key + ".json"), record);
 				} catch (Throwable exc) {
 					//LogUtils.INSTANCE.error(exc, "Unable to store data to file system");
@@ -272,8 +272,9 @@ public class SEIntegralSystemAnalyzer extends Shared {
 	}
 
 	protected static void addDefaultRecordLoader() {
+		String basePath = PersistentStorage.buildWorkingPath("Analisi sistemi integrali");
 		recordLoaders.add(
-			(String key, String basePath) -> {
+			(String key) -> {
 				Record record =
 					IOUtils.INSTANCE.load(basePath, key);
 				if (record == null) {
@@ -337,7 +338,6 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					processingContext.comboHandler.iterate(action.apply(currentBlock));
 				}
 				store(
-					processingContext.basePath,
 					processingContext.cacheKey,
 					processingContext.systemsRank,
 					processingContext.record,
@@ -426,7 +426,6 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					}
 					if (iterationData.getCounter().mod(processingContext.modderForAutoSave).compareTo(BigInteger.ZERO) == 0 || iterationData.getCounter().compareTo(currentBlock.end) == 0) {
 						store(
-							processingContext.basePath,
 							processingContext.cacheKey,
 							processingContext.systemsRank,
 							processingContext.record,
@@ -587,10 +586,10 @@ public class SEIntegralSystemAnalyzer extends Shared {
 	}
 
 	protected static Record prepareCacheRecord(
-		String basePath, String cacheKey, ComboHandler cH,
+		String cacheKey, ComboHandler cH,
 		TreeSet<Map.Entry<List<Integer>, Map<Number, Integer>>> systemsRank
 	){
-		Record cacheRecordTemp = loadRecord(basePath, cacheKey);
+		Record cacheRecordTemp = loadRecord(cacheKey);
 		if (cacheRecordTemp != null) {
 			systemsRank.addAll(cacheRecordTemp.data);
 		} else {
@@ -738,7 +737,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		Record cacheRecord
 	) {
 		cacheRecord.data = new ArrayList<>(record.data);
-		IOUtils.INSTANCE.store(cacheKey, cacheRecord, basePath);
+		IOUtils.INSTANCE.store(basePath, cacheKey, cacheRecord);
 	}
 
 	private static Record load(String cacheKey, String basePath) {
@@ -746,14 +745,13 @@ public class SEIntegralSystemAnalyzer extends Shared {
 	}
 
 	private static void store(
-		String basePath,
 		String cacheKey,
 		TreeSet<Entry<List<Integer>, Map<Number, Integer>>> systemsRank,
 		Record toBeCached,
 		Block currentBlock,
 		int rankSize
 	){
-		Record cacheRecord = loadRecord(basePath, cacheKey);
+		Record cacheRecord = loadRecord(cacheKey);
 		if (cacheRecord != null) {
 			systemsRank.addAll(cacheRecord.data);
 			List<Block> cachedBlocks = (List<Block>)cacheRecord.blocks;
@@ -774,14 +772,14 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			systemsRank.pollLast();
 		}
 		toBeCached.data = new ArrayList<>(systemsRank);
-		writeRecord(basePath, cacheKey, toBeCached);
+		writeRecord(cacheKey, toBeCached);
 	}
 
-	protected static Record loadRecord(String basePath, String cacheKey) {
+	protected static Record loadRecord(String cacheKey) {
 		List<Throwable> exceptions = new ArrayList<>();
-		for (BiFunction<String, String, Record> recordLoader : recordLoaders) {
+		for (Function<String, Record> recordLoader : recordLoaders) {
 			try {
-				return recordLoader.apply(cacheKey, basePath);
+				return recordLoader.apply(cacheKey);
 			} catch (Throwable exc) {
 				LogUtils.INSTANCE.error(exc, "Unable to load data:");
 				exceptions.add(exc);
@@ -793,11 +791,11 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		return null;
 	}
 
-	protected static void writeRecord(String basePath, String cacheKey, Record toBeCached) {
+	protected static void writeRecord(String cacheKey, Record toBeCached) {
 		List<Throwable> exceptions = new ArrayList<>();
-		for (BiFunction<String, String, Consumer<Record>> recordWriter : recordWriters) {
+		for (Function<String, Consumer<Record>> recordWriter : recordWriters) {
 			try {
-				recordWriter.apply(cacheKey, basePath).accept(toBeCached);
+				recordWriter.apply(cacheKey).accept(toBeCached);
 			} catch (Throwable exc) {
 				LogUtils.INSTANCE.error(exc, "Unable to store data");
 				exceptions.add(exc);
@@ -890,7 +888,6 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		private Collection<List<Integer>> allWinningCombosWithJollyAndSuperstar;
 		private TreeSet<Map.Entry<List<Integer>, Map<Number, Integer>>> systemsRank;
 		private BigInteger modderForAutoSave;
-		private String basePath;
 		private String cacheKey;
 
 		private ProcessingContext(Properties config) {
@@ -913,11 +910,9 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			);
 			allWinningCombosWithJollyAndSuperstar = sEStats.getAllWinningCombosWithJollyAndSuperstar().values();
 			LogUtils.INSTANCE.info("All " + combinationSize + " based integral systems size (" + comboHandler.getNumbers().size() + " numbers): " +  MathUtils.INSTANCE.format(comboHandler.getSize()));
-			basePath = PersistentStorage.buildWorkingPath("Analisi sistemi integrali");
 			cacheKey = buildCacheKey(comboHandler, sEStats, premiumsToBeAnalyzed, rankSize);
 			systemsRank = buildDataCollection(orderedPremiumsToBeAnalyzed);
 			record = prepareCacheRecord(
-				basePath,
 				cacheKey,
 				comboHandler,
 				systemsRank
