@@ -72,6 +72,10 @@ public class MathUtils {
 		return factorial(BigInteger.valueOf(number));
 	}
 
+	public int sumOfNaturalNumbersBetween(int a, int b) {
+		return ((a + b)/2)*((b-a)+1);
+	}
+
 	/*
 	public BigInteger factorial(BigInteger number) {
 		BigInteger factorial = BigInteger.ONE;
