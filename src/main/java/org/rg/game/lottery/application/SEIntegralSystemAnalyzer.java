@@ -305,11 +305,11 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			//Sceglie una combinazione casuale fra quelle in classifica
 			chooseAndPrintNextCompetitionSystem(processingContext.record, processingContext.rankSize);
 		}
-		printData(processingContext.record);
+		printData(processingContext.record, false);
 		LogUtils.INSTANCE.info(
 			MathUtils.INSTANCE.format(processedSystemsCounter(processingContext.record)) + " of " +
 			MathUtils.INSTANCE.format(processingContext.comboHandler.getSize()) +
-			" systems have been processed\n"
+			" systems processed\n"
 		);
 	}
 
@@ -366,7 +366,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		LogUtils.INSTANCE.info(
 			"All " + MathUtils.INSTANCE.format(processingContext.record.blocks.size()) + " blocks are indexed"
 		);
-		printData(processingContext.record);
+		printData(processingContext.record, true);
 	}
 
 
@@ -426,7 +426,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 								LogUtils.INSTANCE.info(
 									"Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of " + sizeOfIntegralSystemMatrixAsString + " systems\n" +
 									"Cache succesfully restored, starting from the " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " system. " +
-									MathUtils.INSTANCE.format(remainedSystems(processingContext.record)) + " systems remained."
+									MathUtils.INSTANCE.format(remainedSystemsCounter(processingContext.record)) + " systems remained."
 								);
 								printDataIfChanged(processingContext.record, processingContext.previousLoggedRankWrapper);
 								return;
@@ -464,7 +464,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				processingContext.assignedBlocks.addAll(retrieveAssignedBlocks(config, processingContext.record));
 			}
 		}
-		printData(processingContext.record);
+		printData(processingContext.record, true);
 		//LogUtils.INSTANCE.info(processedSystemsCounterWrapper.get() + " of combinations analyzed");
 	}
 
@@ -607,10 +607,15 @@ public class SEIntegralSystemAnalyzer extends Shared {
 	}
 
 
-	protected static BigInteger remainedSystems(Record record) {
+	protected static BigInteger remainedSystemsCounter(Record record) {
 		BigInteger processedSystemsCounter = processedSystemsCounter(record);
 		Block latestBlock = CollectionUtils.INSTANCE.getLastElement(record.blocks);
 		return latestBlock.end.subtract(processedSystemsCounter);
+	}
+
+	protected static BigInteger systemsCounter(Record record) {
+		Block latestBlock = CollectionUtils.INSTANCE.getLastElement(record.blocks);
+		return latestBlock.end;
 	}
 
 
@@ -718,7 +723,8 @@ public class SEIntegralSystemAnalyzer extends Shared {
 
 
 	protected static void printData(
-		Record record
+		Record record,
+		boolean showBlockInfo
 	) {
 		String currentRank = String.join(
 			"\n\t",
@@ -726,14 +732,16 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				ComboHandler.toString(entry.getKey(), ", ") + ": " + Premium.toString(entry.getValue(), "=", ", ")
 			).collect(Collectors.toList())
 		);
-		String currentLog = "\nBlocks (size: " + record.blocks.size() + ") status:\n" +
-			"\t" + String.join(
-				"\n\t",
-				record.blocks.stream().map(Object::toString).collect(Collectors.toList())
-			) + "\n" +
-			"Rank (size: " + record.data.size() + "):\n" +
-			"\t" + currentRank + "\n"
-		;
+		String currentLog = "";
+		if (showBlockInfo) {
+			currentLog += "\nBlocks (size: " + record.blocks.size() + ") status:\n" +
+				"\t" + String.join(
+					"\n\t",
+					record.blocks.stream().map(Object::toString).collect(Collectors.toList())
+				) + "\n";
+		}
+		currentLog += "Rank (size: " + record.data.size() + "):\n" +
+			"\t" + currentRank + "\n";				;
 		LogUtils.INSTANCE.info(currentLog);
 	}
 
