@@ -67,6 +67,7 @@ import com.google.firebase.cloud.FirestoreClient;
 public class SEIntegralSystemAnalyzer extends Shared {
 	private static List<Function<String, Record>> recordLoaders;
 	private static List<Function<String, Consumer<Record>>> recordWriters;
+	private static List<Function<String, Consumer<Record>>> localRecordWriters;
 
 
 	public static void main(String[] args) throws IOException {
@@ -74,6 +75,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		try {
 			recordWriters = new ArrayList<>();
 			recordLoaders = new ArrayList<>();
+			localRecordWriters = new ArrayList<>();
 			addFirebaseRecordLoaderAndWriter();
 		} catch (NoSuchElementException exc) {
 			LogUtils.INSTANCE.info(exc.getMessage());
@@ -82,6 +84,8 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		} finally {
 			addDefaultRecordLoader();
 			addDefaultRecordWriter();
+			addJSONRecordLoader();
+			addJSONRecordLoader();
 		}
 
 		String[] configurationFileFolders = ResourceUtils.INSTANCE.pathsFromSystemEnv(
@@ -263,35 +267,55 @@ public class SEIntegralSystemAnalyzer extends Shared {
 
 	protected static void addDefaultRecordWriter() {
 		String basePath = PersistentStorage.buildWorkingPath("Analisi sistemi integrali");
-		recordWriters.add(
-			(String key) -> record -> {
-				try {
-					IOUtils.INSTANCE.store(basePath, key, record);
-					IOUtils.INSTANCE.writeToJSONPrettyFormat(new File(basePath + "/" + key + ".json"), record);
-				} catch (Throwable exc) {
-					//LogUtils.INSTANCE.error(exc, "Unable to store data to file system");
-					//Throwables.INSTANCE.throwException(exc);
-				}
+		Function<String, Consumer<Record>> writer = (String key) -> record -> {
+			try {
+				IOUtils.INSTANCE.store(basePath, key, record);
+			} catch (Throwable exc) {
+				//LogUtils.INSTANCE.error(exc, "Unable to store data to file system");
+				//Throwables.INSTANCE.throwException(exc);
 			}
-		);
+		};
+		recordWriters.add(writer);
+		localRecordWriters.add(writer);
 	}
+
+
+	protected static void addJSONRecordWriter() {
+		String basePath = PersistentStorage.buildWorkingPath("Analisi sistemi integrali");
+		Function<String, Consumer<Record>> writer = (String key) -> record -> {
+			try {
+				IOUtils.INSTANCE.writeToJSONPrettyFormat(new File(basePath + "/" + key + ".json"), record);
+			} catch (Throwable exc) {
+				//LogUtils.INSTANCE.error(exc, "Unable to store data to file system");
+				//Throwables.INSTANCE.throwException(exc);
+			}
+		};
+		recordWriters.add(writer);
+		localRecordWriters.add(writer);
+	}
+
 
 
 	protected static void addDefaultRecordLoader() {
 		String basePath = PersistentStorage.buildWorkingPath("Analisi sistemi integrali");
 		recordLoaders.add(
 			(String key) -> {
-				Record record =
+				return
 					IOUtils.INSTANCE.load(basePath, key);
-				if (record == null) {
-					record = readFromJson(
-						IOUtils.INSTANCE.fileToString(
+			}
+		);
+	}
+
+	protected static void addJSONRecordLoader() {
+		String basePath = PersistentStorage.buildWorkingPath("Analisi sistemi integrali");
+		recordLoaders.add(
+			(String key) -> {
+				return readFromJson(
+					IOUtils.INSTANCE.fileToString(
 							basePath + "/" + key + ".json",
 							StandardCharsets.UTF_8
 						)
 					);
-				}
-				return record;
 			}
 		);
 	}
@@ -299,6 +323,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 
 	protected static void showComputed(Properties config) {
 		ProcessingContext processingContext = new ProcessingContext(config);
+		writeRecordToLocal(processingContext.cacheKey, processingContext.record);
 		if (processingContext.record.data != null && !processingContext.record.data.isEmpty() &&
 			processingContext.record.data.size() >= processingContext.rankSize
 		) {
@@ -789,6 +814,36 @@ public class SEIntegralSystemAnalyzer extends Shared {
 	}
 
 
+	protected static void writeRecord(String cacheKey, Record toBeCached) {
+		writeRecordTo(cacheKey, toBeCached, recordWriters);
+	}
+
+	protected static void writeRecordToLocal(String cacheKey, Record toBeCached) {
+		writeRecordTo(cacheKey, toBeCached, localRecordWriters);
+	}
+
+
+	protected static void writeRecordTo(
+		String cacheKey,
+		Record toBeCached,
+		List<Function<String,
+		Consumer<Record>>> recordWriters
+	) {
+		List<Throwable> exceptions = new ArrayList<>();
+		for (Function<String, Consumer<Record>> recordWriter : recordWriters) {
+			try {
+				recordWriter.apply(cacheKey).accept(toBeCached);
+			} catch (Throwable exc) {
+				LogUtils.INSTANCE.error(exc, "Unable to store data");
+				exceptions.add(exc);
+				if (exceptions.size() == recordLoaders.size()) {
+					Throwables.INSTANCE.throwException(exceptions.get(0));
+				}
+			}
+		}
+	}
+
+
 	private static void mergeAndStore(
 		String cacheKey,
 		TreeSet<Entry<List<Integer>, Map<Number, Integer>>> systemsRank,
@@ -846,22 +901,6 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			blocks.add(new Block(blockStart, blockStart.add(remainedSize.subtract(BigInteger.ONE)), null, null));
 		}
 		return blocks;
-	}
-
-
-	protected static void writeRecord(String cacheKey, Record toBeCached) {
-		List<Throwable> exceptions = new ArrayList<>();
-		for (Function<String, Consumer<Record>> recordWriter : recordWriters) {
-			try {
-				recordWriter.apply(cacheKey).accept(toBeCached);
-			} catch (Throwable exc) {
-				LogUtils.INSTANCE.error(exc, "Unable to store data");
-				exceptions.add(exc);
-				if (exceptions.size() == recordLoaders.size()) {
-					Throwables.INSTANCE.throwException(exceptions.get(0));
-				}
-			}
-		}
 	}
 
 
