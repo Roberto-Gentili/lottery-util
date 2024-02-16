@@ -345,7 +345,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				} else {
 					processingContext.comboHandler.iterate(action.apply(currentBlock));
 				}
-				store(
+				mergeAndStore(
 					processingContext.cacheKey,
 					processingContext.systemsRank,
 					processingContext.record,
@@ -445,7 +445,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					}
 					if (iterationData.getCounter().mod(processingContext.modderForAutoSave).compareTo(BigInteger.ZERO) == 0 || iterationData.getCounter().compareTo(currentBlock.end) == 0) {
 						currentBlock.indexes = iterationData.copyOfIndexes(); //Ottimizzazione: in caso di anomalie eliminare questa riga e decommentare la riga più in alto (vedere commento)
-						store(
+						mergeAndStore(
 							processingContext.cacheKey,
 							processingContext.systemsRank,
 							processingContext.record,
@@ -781,7 +781,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 	}
 
 
-	private static void store(
+	private static void mergeAndStore(
 		String cacheKey,
 		TreeSet<Entry<List<Integer>, Map<Number, Integer>>> systemsRank,
 		Record toBeCached,
