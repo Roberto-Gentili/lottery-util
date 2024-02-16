@@ -123,6 +123,8 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					recordAsDocumentWrapper.set(recordAsRawValue).get();
 				} catch (InterruptedException | ExecutionException exc) {
 					Throwables.INSTANCE.throwException(exc);
+				} catch  (Throwable exc) {
+					LogUtils.INSTANCE.error(exc, "Unable to connect to Firebase");
 				}
 			};
 		} catch (NoSuchElementException exc) {
