@@ -255,6 +255,9 @@ public class SEIntegralSystemAnalyzer extends Shared {
 
 	protected static void showComputed(Properties config) {
 		ProcessingContext processingContext = new ProcessingContext(config);
+		if (processingContext.record.data != null && !processingContext.record.data.isEmpty() && processingContext.record.data.size() >= processingContext.rankSize) {
+			chooseAndPrintNextCompetitionSystem(processingContext.record, processingContext.rankSize);
+		}
 		printData(processingContext.record);
 		LogUtils.INSTANCE.info(
 			MathUtils.INSTANCE.format(processedSystemsCounter(processingContext.record)) + " of " +
@@ -851,9 +854,6 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			);
 			assignedBlocks = retrieveAssignedBlocks(config, record);
 			previousLoggedRankWrapper = new AtomicReference<>();
-			if (record.data != null && !record.data.isEmpty() && record.data.size() >= rankSize) {
-				chooseAndPrintNextCompetitionSystem(record, rankSize);
-			}
 		}
 	}
 
