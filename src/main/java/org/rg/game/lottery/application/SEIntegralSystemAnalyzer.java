@@ -3,6 +3,7 @@ package org.rg.game.lottery.application;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -29,7 +30,6 @@ import java.util.Random;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
@@ -66,73 +66,22 @@ import com.google.firebase.FirebaseOptions;
 import com.google.firebase.cloud.FirestoreClient;
 
 public class SEIntegralSystemAnalyzer extends Shared {
-	private static BiFunction<String, String, Record> recordLoader;
-	private static BiFunction<String, String, Consumer<Record>> recordWriter;
+	private static List<BiFunction<String, String, Record>> recordLoaders;
+	private static List<BiFunction<String, String, Consumer<Record>>> recordWriters;
 
 	public static void main(String[] args) throws IOException {
 		long startTime = System.currentTimeMillis();
 		try {
-			String firebaseUrl = Optional.ofNullable(System.getenv().get("integral-system-analysis.firebase.url"))
-				.orElseGet(() -> System.getenv().get("INTEGRAL_SYSTEM_ANALYSIS_FIREBASE_URL"));
-			if (firebaseUrl == null) {
-				throw new NoSuchElementException("Firebase URL not set");
-			}
-			LogUtils.INSTANCE.info("Database URL " + firebaseUrl);
-			InputStream serviceAccount;
-			try {
-				serviceAccount = new ByteArrayInputStream(
-					Optional.ofNullable(System.getenv().get("integral-system-analysis.firebase.credentials"))
-					.orElseGet(() -> System.getenv().get("INTEGRAL_SYSTEM_ANALYSIS_FIREBASE_CREDENTIALS")
-				).getBytes());
-				LogUtils.INSTANCE.info("Credentials loaded from integral-system-analysis.firebase.credentials");
-			} catch (Throwable exc) {
-				String credentialsFilePath =
-					Paths.get(
-						Optional.ofNullable(System.getenv().get("integral-system-analysis.firebase.credentials.file"))
-							.orElseGet(() -> System.getenv().get("INTEGRAL_SYSTEM_ANALYSIS_FIREBASE_CREDENTIALS_FILE"))
-					).normalize().toAbsolutePath().toString();
-				serviceAccount =
-					new FileInputStream(
-						credentialsFilePath
-					);
-				LogUtils.INSTANCE.info("Credentials loaded from " + credentialsFilePath);
-			}
-			FirebaseOptions options = FirebaseOptions.builder()
-				  .setCredentials(com.google.auth.oauth2.GoogleCredentials.fromStream(serviceAccount))
-				  .setDatabaseUrl(firebaseUrl)
-				  .build();
-
-			FirebaseApp.initializeApp(options);
-			Firestore firestore = FirestoreClient.getFirestore();
-			recordLoader = (String key, String basePath) -> {
-				DocumentReference recordAsDocumentWrapper = firestore.collection("IntegralSystemStats").document(key);
-				ApiFuture<DocumentSnapshot> ap = recordAsDocumentWrapper.get();
-				DocumentSnapshot recordAsDocument;
-				try {
-					recordAsDocument = ap.get();
-				} catch (InterruptedException | ExecutionException exc) {
-					return Throwables.INSTANCE.throwException(exc);
-				}
-				return readFromJson((String)recordAsDocument.get("value"));
-			};
-			recordWriter = (String key, String basePath) -> record -> {
-				DocumentReference recordAsDocumentWrapper = firestore.collection("IntegralSystemStats").document(key);
-				Map<String, Object> recordAsRawValue = new LinkedHashMap<>();
-				recordAsRawValue.put("value", IOUtils.INSTANCE.writeToJSONFormat(record));
-				try {
-					recordAsDocumentWrapper.set(recordAsRawValue).get();
-				} catch (InterruptedException | ExecutionException exc) {
-					Throwables.INSTANCE.throwException(exc);
-				} catch  (Throwable exc) {
-					LogUtils.INSTANCE.error(exc, "Unable to connect to Firebase");
-				}
-			};
+			recordWriters = new ArrayList<>();
+			recordLoaders = new ArrayList<>();
+			addFirebaseRecordLoaderAndWriter();
 		} catch (NoSuchElementException exc) {
 			LogUtils.INSTANCE.info(exc.getMessage());
-			setDefaultRecordLoaderAndWriter();
 		} catch (Throwable exc) {
 			LogUtils.INSTANCE.error(exc, "Unable to connect to Firebase");
-			setDefaultRecordLoaderAndWriter();
+		} finally {
+			addDefaultRecordLoader();
+			addDefaultRecordWriter();
 		}
 
 		String[] configurationFileFolders = ResourceUtils.INSTANCE.pathsFromSystemEnv(
@@ -235,24 +184,105 @@ public class SEIntegralSystemAnalyzer extends Shared {
 
 	}
 
-	protected static void setDefaultRecordLoaderAndWriter() {
-		recordLoader = (String key, String basePath) -> {
-			Record record =
-				IOUtils.INSTANCE.load(basePath, key);
-			if (record == null) {
-				record = readFromJson(
-					IOUtils.INSTANCE.fileToString(
-						basePath + "/" + key + ".json",
-						StandardCharsets.UTF_8
-					)
+	protected static void addFirebaseRecordLoaderAndWriter() throws FileNotFoundException, IOException {
+		String firebaseUrl = Optional.ofNullable(System.getenv().get("integral-system-analysis.firebase.url"))
+			.orElseGet(() -> System.getenv().get("INTEGRAL_SYSTEM_ANALYSIS_FIREBASE_URL"));
+		if (firebaseUrl == null) {
+			throw new NoSuchElementException("Firebase URL not set");
+		}
+		LogUtils.INSTANCE.info("Database URL " + firebaseUrl);
+		InputStream serviceAccount;
+		try {
+			serviceAccount = new ByteArrayInputStream(
+				Optional.ofNullable(System.getenv().get("integral-system-analysis.firebase.credentials"))
+				.orElseGet(() -> System.getenv().get("INTEGRAL_SYSTEM_ANALYSIS_FIREBASE_CREDENTIALS")
+			).getBytes());
+			LogUtils.INSTANCE.info("Credentials loaded from integral-system-analysis.firebase.credentials");
+		} catch (Throwable exc) {
+			String credentialsFilePath =
+				Paths.get(
+					Optional.ofNullable(System.getenv().get("integral-system-analysis.firebase.credentials.file"))
+						.orElseGet(() -> System.getenv().get("INTEGRAL_SYSTEM_ANALYSIS_FIREBASE_CREDENTIALS_FILE"))
+				).normalize().toAbsolutePath().toString();
+			serviceAccount =
+				new FileInputStream(
+					credentialsFilePath
 				);
+			LogUtils.INSTANCE.info("Credentials loaded from " + credentialsFilePath);
+		}
+		FirebaseOptions options = FirebaseOptions.builder()
+			  .setCredentials(com.google.auth.oauth2.GoogleCredentials.fromStream(serviceAccount))
+			  .setDatabaseUrl(firebaseUrl)
+			  .build();
+
+		FirebaseApp.initializeApp(options);
+		Firestore firestore = FirestoreClient.getFirestore();
+		addFirebaseRecordLoader(firestore);
+		addFirebaseRecordWriter(firestore);
+	}
+
+	protected static void addFirebaseRecordWriter(Firestore firestore) {
+		recordWriters.add(
+			(String key, String basePath) -> record -> {
+				DocumentReference recordAsDocumentWrapper = firestore.collection("IntegralSystemStats").document(key);
+				Map<String, Object> recordAsRawValue = new LinkedHashMap<>();
+				recordAsRawValue.put("value", IOUtils.INSTANCE.writeToJSONFormat(record));
+				try {
+					recordAsDocumentWrapper.set(recordAsRawValue).get();
+				} catch (Throwable exc) {
+					//LogUtils.INSTANCE.error(exc, "Unable to store data to Firebase");
+					Throwables.INSTANCE.throwException(exc);
+				}
 			}
-			return record;
-		};
-		recordWriter = (String key, String basePath) -> record -> {
-			IOUtils.INSTANCE.store(key, record, basePath);
-			IOUtils.INSTANCE.writeToJSONPrettyFormat(new File(basePath + "/" + key + ".json"), record);
-		};
+		);
+	}
+
+	protected static void addFirebaseRecordLoader(Firestore firestore) {
+		recordLoaders.add(
+			(String key, String basePath) -> {
+				DocumentReference recordAsDocumentWrapper = firestore.collection("IntegralSystemStats").document(key);
+				ApiFuture<DocumentSnapshot> ap = recordAsDocumentWrapper.get();
+				DocumentSnapshot recordAsDocument;
+				try {
+					recordAsDocument = ap.get();
+				} catch (Throwable exc) {
+					return Throwables.INSTANCE.throwException(exc);
+				}
+				return readFromJson((String)recordAsDocument.get("value"));
+			}
+		);
+	}
+
+	protected static void addDefaultRecordWriter() {
+		recordWriters.add(
+			(String key, String basePath) -> record -> {
+				try {
+					IOUtils.INSTANCE.store(key, record, basePath);
+					IOUtils.INSTANCE.writeToJSONPrettyFormat(new File(basePath + "/" + key + ".json"), record);
+				} catch (Throwable exc) {
+					//LogUtils.INSTANCE.error(exc, "Unable to store data to file system");
+					//Throwables.INSTANCE.throwException(exc);
+				}
+			}
+		);
+	}
+
+	protected static void addDefaultRecordLoader() {
+		recordLoaders.add(
+			(String key, String basePath) -> {
+				Record record =
+					IOUtils.INSTANCE.load(basePath, key);
+				if (record == null) {
+					record = readFromJson(
+						IOUtils.INSTANCE.fileToString(
+							basePath + "/" + key + ".json",
+							StandardCharsets.UTF_8
+						)
+					);
+				}
+				return record;
+			}
+		);
 	}
 
 	protected static void showComputed(Properties config) {
@@ -556,7 +586,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		String basePath, String cacheKey, ComboHandler cH,
 		TreeSet<Map.Entry<List<Integer>, Map<Number, Integer>>> systemsRank
 	){
-		Record cacheRecordTemp = recordLoader.apply(cacheKey, basePath);
+		Record cacheRecordTemp = loadRecord(basePath, cacheKey);
 		if (cacheRecordTemp != null) {
 			systemsRank.addAll(cacheRecordTemp.data);
 		} else {
@@ -719,7 +749,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		Block currentBlock,
 		int rankSize
 	){
-		Record cacheRecord = recordLoader.apply(cacheKey, basePath);
+		Record cacheRecord = loadRecord(cacheKey, basePath);
 		if (cacheRecord != null) {
 			systemsRank.addAll(cacheRecord.data);
 			List<Block> cachedBlocks = (List<Block>)cacheRecord.blocks;
@@ -740,7 +770,39 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			systemsRank.pollLast();
 		}
 		toBeCached.data = new ArrayList<>(systemsRank);
-		recordWriter.apply(cacheKey, basePath).accept(toBeCached);
+		writeRecord(basePath, cacheKey, toBeCached);
+	}
+
+	protected static Record loadRecord(String basePath, String cacheKey) {
+		List<Throwable> exceptions = new ArrayList<>();
+		for (BiFunction<String, String, Record> recordLoader : recordLoaders) {
+			try {
+				return recordLoader.apply(cacheKey, basePath);
+			} catch (Throwable exc) {
+				LogUtils.INSTANCE.error(exc, "Unable to store data:");
+				exceptions.add(exc);
+				if (exceptions.size() == recordLoaders.size()) {
+					return Throwables.INSTANCE.throwException(exceptions.get(0));
+				}
+			}
+		}
+		return null;
+	}
+
+	protected static void writeRecord(String basePath, String cacheKey, Record toBeCached) {
+		List<Throwable> exceptions = new ArrayList<>();
+		for (BiFunction<String, String, Consumer<Record>> recordWriter : recordWriters) {
+			try {
+				recordWriter.apply(cacheKey, basePath).accept(toBeCached);
+				break;
+			} catch (Throwable exc) {
+				LogUtils.INSTANCE.error(exc, "Unable to store data to file system");
+				exceptions.add(exc);
+				if (exceptions.size() == recordLoaders.size()) {
+					Throwables.INSTANCE.throwException(exceptions.get(0));
+				}
+			}
+		}
 	}
 
 	public static List<Block> divide(BigInteger size, long blockNumber) {
