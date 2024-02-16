@@ -779,7 +779,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			try {
 				return recordLoader.apply(cacheKey, basePath);
 			} catch (Throwable exc) {
-				LogUtils.INSTANCE.error(exc, "Unable to store data:");
+				LogUtils.INSTANCE.error(exc, "Unable to load data:");
 				exceptions.add(exc);
 				if (exceptions.size() == recordLoaders.size()) {
 					return Throwables.INSTANCE.throwException(exceptions.get(0));
