@@ -794,7 +794,6 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		for (BiFunction<String, String, Consumer<Record>> recordWriter : recordWriters) {
 			try {
 				recordWriter.apply(cacheKey, basePath).accept(toBeCached);
-				break;
 			} catch (Throwable exc) {
 				LogUtils.INSTANCE.error(exc, "Unable to store data to file system");
 				exceptions.add(exc);
