@@ -224,9 +224,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 	protected static void addFirebaseRecordWriter(Firestore firestore) {
 		recordWriters.add(
 			(String key, String basePath) -> record -> {
-				DocumentReference recordAsDocumentWrapper =
-					firestore.document("IntegralSystemStats\\"+ key);
-					//firestore.collection("IntegralSystemStats").document(key);
+				DocumentReference recordAsDocumentWrapper = firestore.collection("IntegralSystemStats").document(key);
 				Map<String, Object> recordAsRawValue = new LinkedHashMap<>();
 				recordAsRawValue.put("value", IOUtils.INSTANCE.writeToJSONFormat(record));
 				try {
@@ -242,9 +240,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 	protected static void addFirebaseRecordLoader(Firestore firestore) {
 		recordLoaders.add(
 			(String key, String basePath) -> {
-				DocumentReference recordAsDocumentWrapper =
-					firestore.document("IntegralSystemStats\\"+ key);
-					//firestore.collection("IntegralSystemStats").document(key);
+				DocumentReference recordAsDocumentWrapper = firestore.collection("IntegralSystemStats").document(key);
 				ApiFuture<DocumentSnapshot> ap = recordAsDocumentWrapper.get();
 				DocumentSnapshot recordAsDocument;
 				try {
@@ -799,7 +795,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			try {
 				recordWriter.apply(cacheKey, basePath).accept(toBeCached);
 			} catch (Throwable exc) {
-				LogUtils.INSTANCE.error(exc, "Unable to store data to file system");
+				LogUtils.INSTANCE.error(exc, "Unable to store data");
 				exceptions.add(exc);
 				if (exceptions.size() == recordLoaders.size()) {
 					Throwables.INSTANCE.throwException(exceptions.get(0));
