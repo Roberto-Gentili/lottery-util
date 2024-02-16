@@ -68,6 +68,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 	private static List<Function<String, Record>> recordLoaders;
 	private static List<Function<String, Consumer<Record>>> recordWriters;
 
+
 	public static void main(String[] args) throws IOException {
 		long startTime = System.currentTimeMillis();
 		try {
@@ -183,6 +184,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 
 	}
 
+
 	protected static void addFirebaseRecordLoaderAndWriter() throws FileNotFoundException, IOException {
 		String firebaseUrl = Optional.ofNullable(System.getenv().get("integral-system-analysis.firebase.url"))
 			.orElseGet(() -> System.getenv().get("INTEGRAL_SYSTEM_ANALYSIS_FIREBASE_URL"));
@@ -220,6 +222,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		addFirebaseRecordWriter(firestore);
 	}
 
+
 	protected static void addFirebaseRecordWriter(Firestore firestore) {
 		recordWriters.add(
 			(String key) -> record -> {
@@ -237,6 +240,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			}
 		);
 	}
+
 
 	protected static void addFirebaseRecordLoader(Firestore firestore) {
 		recordLoaders.add(
@@ -256,6 +260,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		);
 	}
 
+
 	protected static void addDefaultRecordWriter() {
 		String basePath = PersistentStorage.buildWorkingPath("Analisi sistemi integrali");
 		recordWriters.add(
@@ -270,6 +275,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			}
 		);
 	}
+
 
 	protected static void addDefaultRecordLoader() {
 		String basePath = PersistentStorage.buildWorkingPath("Analisi sistemi integrali");
@@ -290,6 +296,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		);
 	}
 
+
 	protected static void showComputed(Properties config) {
 		ProcessingContext processingContext = new ProcessingContext(config);
 		if (processingContext.record.data != null && !processingContext.record.data.isEmpty() &&
@@ -305,6 +312,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			" systems have been processed\n"
 		);
 	}
+
 
 	protected static void index(Properties config) {
 		ProcessingContext processingContext = new ProcessingContext(config);
@@ -357,6 +365,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		}
 		printData(processingContext.record);
 	}
+
 
 	protected static void analyze(Properties config) {
 		ProcessingContext processingContext = new ProcessingContext(config);
@@ -448,6 +457,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		//LogUtils.INSTANCE.info(processedSystemsCounterWrapper.get() + " of combinations analyzed");
 	}
 
+
 	protected static boolean filterCombo(Map<Number, Integer> allPremiums, Integer premiumType) {
 		boolean highWinningFound = false;
 		for (Map.Entry<Number, Integer> premiumTypeAndCounter : allPremiums.entrySet()) {
@@ -458,6 +468,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		}
 		return highWinningFound;
 	}
+
 
 	protected static boolean tryToAddCombo(ProcessingContext processingContext, List<Integer> combo,
 			Map<Number, Integer> allPremiums) {
@@ -482,6 +493,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		return false;
 	}
 
+
 	protected static Map<Number, Integer> computePremiums(ProcessingContext processingContext, List<Integer> combo) {
 		Map<Number, Integer> allPremiums = new LinkedHashMap<>();
 		for (Number premiumType : processingContext.orderedPremiumsToBeAnalyzed) {
@@ -499,6 +511,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		}
 		return allPremiums;
 	}
+
 
 	protected static Record readFromJson(String recordAsFlatRawValue) {
 		if (recordAsFlatRawValue == null) {
@@ -538,6 +551,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		return new Record(blocks, data);
 	}
 
+
 	protected static void chooseAndPrintNextCompetitionSystem(Record cacheRecord, int rankSize) {
 		LocalDate nextExtractionDate = SELotteryMatrixGeneratorEngine.DEFAULT_INSTANCE.computeNextExtractionDate(LocalDate.now(), false);
 		Map.Entry<LocalDate, Long> seedData = getSEAllStats().getSeedData(nextExtractionDate);
@@ -562,12 +576,14 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		});
 	}
 
+
 	protected static String buildCacheKey(ComboHandler comboHandler, SEStats sEStats, String premiumsToBeAnalyzed, int rankSize) {
 		return "[" + MathUtils.INSTANCE.format(comboHandler.getSize()).replace(".", "_") + "][" + comboHandler.getCombinationSize() + "]" +
 				"[" + premiumsToBeAnalyzed.replace(".", "_") + "]" + "[" + rankSize + "]" +
 				"[" + TimeUtils.getAlternativeDateFormat().format(sEStats.getStartDate()) + "]" +
 				"[" + TimeUtils.getAlternativeDateFormat().format(sEStats.getEndDate()) + "]";
 	}
+
 
 	protected static BigInteger processedSystemsCounter(Record record) {
 		BigInteger processed = BigInteger.ZERO;
@@ -579,11 +595,13 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		return processed;
 	}
 
+
 	protected static BigInteger remainedSystems(Record record) {
 		BigInteger processedSystemsCounter = processedSystemsCounter(record);
 		Block latestBlock = CollectionUtils.INSTANCE.getLastElement(record.blocks);
 		return latestBlock.end.subtract(processedSystemsCounter);
 	}
+
 
 	protected static Record prepareCacheRecord(
 		String cacheKey, ComboHandler cH,
@@ -605,6 +623,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		}
 		return cacheRecordTemp;
 	}
+
 
 	protected static List<Block> retrieveAssignedBlocks(Properties config, Record cacheRecordTemp) {
 		String blockAssignees = config.getProperty("blocks.assegnee");
@@ -664,6 +683,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		return toBeProcessed;
 	}
 
+
 	protected static TreeSet<Map.Entry<List<Integer>, Map<Number, Integer>>> buildDataCollection(Number[] orderedPremiumsToBeAnalyzed) {
 		TreeSet<Map.Entry<List<Integer>, Map<Number, Integer>>> bestSystems = new TreeSet<>((itemOne, itemTwo) -> {
 			if (itemOne != itemTwo) {
@@ -685,6 +705,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		return bestSystems;
 	}
 
+
 	protected static void printData(
 		Record record
 	) {
@@ -704,6 +725,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		;
 		LogUtils.INSTANCE.info(currentLog);
 	}
+
 
 	protected static void printDataIfChanged(
 		Record record,
@@ -730,19 +752,23 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		previousLoggedRankWrapper.set(currentRank);
 	}
 
-	protected static void store(
-		String basePath,
-		String cacheKey,
-		Record record,
-		Record cacheRecord
-	) {
-		cacheRecord.data = new ArrayList<>(record.data);
-		IOUtils.INSTANCE.store(basePath, cacheKey, cacheRecord);
-	}
 
-	private static Record load(String cacheKey, String basePath) {
+	protected static Record loadRecord(String cacheKey) {
+		List<Throwable> exceptions = new ArrayList<>();
+		for (Function<String, Record> recordLoader : recordLoaders) {
+			try {
+				return recordLoader.apply(cacheKey);
+			} catch (Throwable exc) {
+				LogUtils.INSTANCE.error(exc, "Unable to load data:");
+				exceptions.add(exc);
+				if (exceptions.size() == recordLoaders.size()) {
+					return Throwables.INSTANCE.throwException(exceptions.get(0));
+				}
+			}
+		}
 		return null;
 	}
+
 
 	private static void store(
 		String cacheKey,
@@ -775,36 +801,17 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		writeRecord(cacheKey, toBeCached);
 	}
 
-	protected static Record loadRecord(String cacheKey) {
-		List<Throwable> exceptions = new ArrayList<>();
-		for (Function<String, Record> recordLoader : recordLoaders) {
-			try {
-				return recordLoader.apply(cacheKey);
-			} catch (Throwable exc) {
-				LogUtils.INSTANCE.error(exc, "Unable to load data:");
-				exceptions.add(exc);
-				if (exceptions.size() == recordLoaders.size()) {
-					return Throwables.INSTANCE.throwException(exceptions.get(0));
-				}
-			}
-		}
-		return null;
+
+	protected static void store(
+		String basePath,
+		String cacheKey,
+		Record record,
+		Record cacheRecord
+	) {
+		cacheRecord.data = new ArrayList<>(record.data);
+		IOUtils.INSTANCE.store(basePath, cacheKey, cacheRecord);
 	}
 
-	protected static void writeRecord(String cacheKey, Record toBeCached) {
-		List<Throwable> exceptions = new ArrayList<>();
-		for (Function<String, Consumer<Record>> recordWriter : recordWriters) {
-			try {
-				recordWriter.apply(cacheKey).accept(toBeCached);
-			} catch (Throwable exc) {
-				LogUtils.INSTANCE.error(exc, "Unable to store data");
-				exceptions.add(exc);
-				if (exceptions.size() == recordLoaders.size()) {
-					Throwables.INSTANCE.throwException(exceptions.get(0));
-				}
-			}
-		}
-	}
 
 	public static List<Block> divide(BigInteger size, long blockNumber) {
 		BigInteger blockSize = size.divide(BigInteger.valueOf(blockNumber));
@@ -821,6 +828,23 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		}
 		return blocks;
 	}
+
+
+	protected static void writeRecord(String cacheKey, Record toBeCached) {
+		List<Throwable> exceptions = new ArrayList<>();
+		for (Function<String, Consumer<Record>> recordWriter : recordWriters) {
+			try {
+				recordWriter.apply(cacheKey).accept(toBeCached);
+			} catch (Throwable exc) {
+				LogUtils.INSTANCE.error(exc, "Unable to store data");
+				exceptions.add(exc);
+				if (exceptions.size() == recordLoaders.size()) {
+					Throwables.INSTANCE.throwException(exceptions.get(0));
+				}
+			}
+		}
+	}
+
 
 	public static class Record implements Serializable {
 
