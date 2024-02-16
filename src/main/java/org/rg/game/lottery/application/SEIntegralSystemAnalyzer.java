@@ -240,7 +240,9 @@ public class SEIntegralSystemAnalyzer extends Shared {
 	protected static void addFirebaseRecordLoader(Firestore firestore) {
 		recordLoaders.add(
 			(String key, String basePath) -> {
-				DocumentReference recordAsDocumentWrapper = firestore.collection("IntegralSystemStats").document(key);
+				DocumentReference recordAsDocumentWrapper =
+					firestore.document("IntegralSystemStats/"+key);
+					//firestore.collection("IntegralSystemStats").document(key);
 				ApiFuture<DocumentSnapshot> ap = recordAsDocumentWrapper.get();
 				DocumentSnapshot recordAsDocument;
 				try {
