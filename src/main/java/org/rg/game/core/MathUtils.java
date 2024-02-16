@@ -72,8 +72,12 @@ public class MathUtils {
 		return factorial(BigInteger.valueOf(number));
 	}
 
-	public int sumOfNaturalNumbersBetween(int a, int b) {
+	public double sumOfNaturalNumbersBetween(double a, double b) {
 		return ((a + b)/2)*((b-a)+1);
+	}
+
+	public int sumOfNaturalNumbersBetween(int a, int b) {
+		return (int)sumOfNaturalNumbersBetween((double)a, (double)b);
 	}
 
 	/*
