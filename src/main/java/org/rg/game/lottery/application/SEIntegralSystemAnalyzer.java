@@ -306,10 +306,12 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			previousIndexes = Arrays.copyOf(currentBlock.indexes, currentBlock.indexes.length) ;
 			previousCounter = currentBlock.counter;
 			processedBlock++;
-			LogUtils.INSTANCE.info(
-				MathUtils.INSTANCE.format(processedBlock) + " of " +
-				MathUtils.INSTANCE.format(processingContext.record.blocks.size()) + " blocks have been indexed"
-			);
+			if (processedBlock % 10 == 0 || processedBlock == processingContext.record.blocks.size()) {
+				LogUtils.INSTANCE.info(
+					MathUtils.INSTANCE.format(processedBlock) + " of " +
+					MathUtils.INSTANCE.format(processingContext.record.blocks.size()) + " blocks have been indexed"
+				);
+			}
 		}
 		printData(processingContext.record);
 	}
