@@ -394,6 +394,8 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				return block;
 			};
 			Block absignedBlock = blockSupplier.get();
+			BigInteger sizeOfIntegralSystemMatrix = processingContext.comboHandler.getSize();
+			String sizeOfIntegralSystemMatrixAsString = MathUtils.INSTANCE.format(sizeOfIntegralSystemMatrix);
 			processingContext.comboHandler.iterateFrom(
 				processingContext.comboHandler.new IterationData(absignedBlock.indexes, absignedBlock.counter),
 				iterationData -> {
@@ -416,7 +418,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 							}
 							if (currentBlockCounter.compareTo(iterationData.getCounter()) == 0) {
 								LogUtils.INSTANCE.info(
-									"Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems\n" +
+									"Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " systems of " + sizeOfIntegralSystemMatrixAsString + "\n" +
 									"Cache succesfully restored, starting from the " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " system. " +
 									MathUtils.INSTANCE.format(remainedSystems(processingContext.record)) + " systems remained."
 								);
@@ -447,7 +449,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 						printDataIfChanged(processingContext.record, processingContext.previousLoggedRankWrapper);
 						LogUtils.INSTANCE.info(
 							MathUtils.INSTANCE.format(processedSystemsCounter(processingContext.record)) + " of " +
-							MathUtils.INSTANCE.format(processingContext.comboHandler.getSize()) + " systems have been analyzed"
+							sizeOfIntegralSystemMatrixAsString + " systems have been analyzed"
 						);
 		    		}
 				}
