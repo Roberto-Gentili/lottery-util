@@ -224,7 +224,9 @@ public class SEIntegralSystemAnalyzer extends Shared {
 	protected static void addFirebaseRecordWriter(Firestore firestore) {
 		recordWriters.add(
 			(String key, String basePath) -> record -> {
-				DocumentReference recordAsDocumentWrapper = firestore.collection("IntegralSystemStats").document(key);
+				DocumentReference recordAsDocumentWrapper =
+					firestore.document("IntegralSystemStats\\"+ key);
+					//firestore.collection("IntegralSystemStats").document(key);
 				Map<String, Object> recordAsRawValue = new LinkedHashMap<>();
 				recordAsRawValue.put("value", IOUtils.INSTANCE.writeToJSONFormat(record));
 				try {
@@ -240,7 +242,9 @@ public class SEIntegralSystemAnalyzer extends Shared {
 	protected static void addFirebaseRecordLoader(Firestore firestore) {
 		recordLoaders.add(
 			(String key, String basePath) -> {
-				DocumentReference recordAsDocumentWrapper = firestore.collection("IntegralSystemStats").document(key);
+				DocumentReference recordAsDocumentWrapper =
+					firestore.document("IntegralSystemStats\\"+ key);
+					//firestore.collection("IntegralSystemStats").document(key);
 				ApiFuture<DocumentSnapshot> ap = recordAsDocumentWrapper.get();
 				DocumentSnapshot recordAsDocument;
 				try {
