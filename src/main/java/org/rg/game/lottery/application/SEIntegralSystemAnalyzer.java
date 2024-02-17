@@ -437,7 +437,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 							if (iterationData.getCounter().mod(processingContext.modderForSkipLog).compareTo(BigInteger.ZERO) == 0) {
 								LogUtils.INSTANCE.info(
 									"Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) +
-									" of " + sizeOfIntegralSystemMatrixAsString + "systems"
+									" of " + sizeOfIntegralSystemMatrixAsString + " systems"
 								);
 							}
 							return;
