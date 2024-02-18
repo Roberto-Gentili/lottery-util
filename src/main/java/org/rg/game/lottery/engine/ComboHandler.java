@@ -133,15 +133,15 @@ public class ComboHandler {
 	    return collector;
 	}
 
-	private int[] toIndexes(int[] combo) {
+	private int[] toIndexes(List<Integer> combo) {
 		int[] indexes = new int[(int)combinationSize];
-		for (int i = 0; i < combo.length; i++) {
-			indexes[i] = numbers.indexOf(Integer.valueOf(combo[i]));
+		for (int i = 0; i < combo.size(); i++) {
+			indexes[i] = numbers.indexOf(Integer.valueOf(combo.get(i)));
 		}
 		return indexes;
 	}
 
-	public BigInteger computeCounter(int[] combo) {
+	public BigInteger computeCounter(List<Integer> combo) {
 		int[] indexes = toIndexes(combo);
 		return computeCounterFromIndexes(indexes);
 	}
@@ -176,13 +176,12 @@ public class ComboHandler {
 	}
 
 	public void iterateFrom(
-		int[] combo,
+		List<Integer> combo,
 		Consumer<IterationData> action
 	) {
 		try {
 			int[] indexes = toIndexes(combo);
 			IterationData iterationData = new IterationData(indexes, computeCounterFromIndexes(indexes));
-			toIndexes(combo);
 			int endIndex = numbers.size() - 1;
 			while ((iterationData.setIndexes(nextIndexes(iterationData.indexes, endIndex)) != null)) {
 				action.accept(iterationData);
