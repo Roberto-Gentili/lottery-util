@@ -149,8 +149,7 @@ public class ComboHandler {
 		Consumer<IterationData> action
 	) {
 		try {
-			int[] indexes = toIndexes(combo);
-			IterationData iterationData = new IterationData(indexes, computeCounterFromIndexes(indexes));
+			IterationData iterationData = new IterationData(toIndexes(combo));
 			int endIndex = numbers.size() - 1;
 			while ((iterationData.setIndexes(nextIndexes(iterationData.indexes, endIndex)) != null)) {
 				action.accept(iterationData);
@@ -262,9 +261,9 @@ public class ComboHandler {
 			counter = BigInteger.ZERO;
 		}
 
-		public IterationData(int indexes[], BigInteger counter) {
+		public IterationData(int indexes[]) {
 			this.indexes = indexes;
-			this.counter = counter != null ? counter :BigInteger.ZERO;
+			this.counter = computeCounterFromIndexes(indexes);
 		}
 
 		public int[] setIndexes(int[] indexes) {
