@@ -147,42 +147,18 @@ public class ComboHandler {
 	}
 
 	protected BigInteger computeCounterFromIndexes(int[] indexes) {
-		int[] startIndexes = new int[(int)combinationSize];
-		int maxIndexesElementValue = numbers.size() - 1;
-		for (int i = 0;i < startIndexes.length;i++) {
-			startIndexes[i] = i;
+		BigInteger counter = BigInteger.ZERO;
+		for (int i = 0; i < indexes.length; i++) {
+			counter = counter.add(
+				ComboHandler.sizeOf(
+					BigInteger.valueOf(getNumbers().size() - (indexes[i] + 1)),
+					combinationSize - i
+				)
+			);
 		}
-
-		int endIndex = numbers.size() - 1;
-		BigInteger counter = BigInteger.ONE;
-		while(!areEquals(indexes, startIndexes, 0, indexes.length - 1)) {
-			for (int i = startIndexes.length - 1; i >= 0; i--) {
-				if (startIndexes[i] < (endIndex - ((startIndexes.length - 1) -i))) {
-					if (i == startIndexes.length - 1) {
-						counter = counter.add(BigInteger.valueOf(maxIndexesElementValue - startIndexes[i]));
-						startIndexes[i] = maxIndexesElementValue;
-					} else {
-						++startIndexes[i];
-						counter = counter.add(BigInteger.ONE);
-					}
-					for (int j = i + 1; j < startIndexes.length;j++) {
-						startIndexes[j] = startIndexes[j - 1] + 1;
-					}
-					break;
-				}
-			}
-		}
-		return counter.add(BigInteger.valueOf(indexes[indexes.length - 1] - startIndexes[indexes.length - 1]));
+		return getSize().subtract(counter);
 	}
 
-	private boolean areEquals(int[] a, int[] b, int startIndex, int endIndex) {
-		for (int k = 0; k < endIndex;k++) {
-			if (a[k] != b[k]) {
-				return false;
-			}
-		}
-		return true;
-	}
 
 	public void iterateFrom(
 		IterationData iterationData,
