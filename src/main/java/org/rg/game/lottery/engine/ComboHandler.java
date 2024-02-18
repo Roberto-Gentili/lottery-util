@@ -261,7 +261,7 @@ public class ComboHandler {
 			counter = BigInteger.ZERO;
 		}
 
-		public IterationData(int indexes[]) {
+		public IterationData(int[] indexes) {
 			this.indexes = indexes;
 			this.counter = computeCounterFromIndexes(indexes);
 		}
@@ -269,7 +269,7 @@ public class ComboHandler {
 		public int[] setIndexes(int[] indexes) {
 			this.combo = null;
 			this.indexes = indexes;
-			counter = counter.add(BigInteger.ONE);
+			this.counter = counter.add(BigInteger.ONE);
 			return this.indexes;
 		}
 
