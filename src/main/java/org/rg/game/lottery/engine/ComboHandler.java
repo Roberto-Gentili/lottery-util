@@ -22,9 +22,9 @@ import org.rg.game.core.MathUtils;
 
 public class ComboHandler {
 
-	private List<Integer> numbers;
-	private long combinationSize;
-	private BigInteger size;
+	protected List<Integer> numbers;
+	protected long combinationSize;
+	protected BigInteger size;
 
 	public ComboHandler(List<Integer> numbers, long combinationSize) {
 		this.numbers = new ArrayList<>(numbers);

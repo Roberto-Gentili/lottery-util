@@ -3,6 +3,7 @@ package org.rg.game.lottery.engine;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -16,126 +17,44 @@ public class ComboHandlerTest {
 		public ComboHandlerEnhanced(List<Integer> numbers, long combinationSize) {
 			super(numbers, combinationSize);
 		}
-		@Override
-		protected BigInteger computeCounterFromIndexes(int[] indexes) {
-			int[] startIndexes = new int[(int)getCombinationSize()];
-			int endIndex = getNumbers().size() - 1;
-			for (int i = 0;i < startIndexes.length;i++) {
-				startIndexes[i] = i;
+
+		protected List<Integer> computeComboFromCounter(BigInteger counter) {
+			int[] indexes = new int[(int)combinationSize];
+			int numbersCount = numbers.size();
+			BigInteger diff = getSize().subtract(counter);
+			//diff = (a!/(6!*((a-6)!)))+(b!/(5!*((b-5)!)))+(c!/(4!*((c-4)!)))+(d!/(3!*((d-3)!)))+(e!/(2!*((e-2)!)))+(f!/(1!*((f-1)!)))
+			for (int i = 0; i < indexes.length; i++) {
+				diff = diff.multiply(
+					MathUtils.INSTANCE.factorial(
+						combinationSize - i
+					).multiply(
+						MathUtils.INSTANCE.factorial(numbersCount - combinationSize - i)
+					)
+				);
+				indexes[i] = numbersCount - MathUtils.Factorial.inverse_factorial(
+					diff
+				).intValue();
+//				counter = counter.subtract(
+//					ComboHandler.sizeOf(
+//						BigInteger.valueOf(numbersSize - (indexes[i] + 1)),
+//						combinationSize - i
+//					)
+//				);
 			}
-			BigInteger counter = BigInteger.ZERO;
-			if (indexes.length == 2) {
-				/*counter = counter.add(
-					BigInteger.valueOf(
-						MathUtils.INSTANCE.sumOfNaturalNumbersBetween(
-							endIndex - indexes[indexes.length - 2],
-							endIndex
-						)
-					)
-				);
-				return counter.subtract(
-					BigInteger.valueOf(
-						endIndex - (indexes[indexes.length - 2])
-					)
-				).add(
-					BigInteger.valueOf(indexes[indexes.length - 1] - indexes[indexes.length - 2])
-				);*/
-				counter = counter.add(
-					BigInteger.valueOf(
-						MathUtils.INSTANCE.sumOfNaturalNumbersBetween(
-							endIndex - (indexes[indexes.length - 2] -1),
-							endIndex
-						)
-					)
-				);
-				return counter = counter.add(
-					BigInteger.valueOf(
-						indexes[indexes.length - 1] - indexes[indexes.length - 2]
-					)
-				);
-			} else if (indexes.length == 3) {
-//				for (int i = 0; i < indexes[indexes.length - 3]; i++) {
-//					counter = counter.add(
-//						BigInteger.valueOf(
-//							MathUtils.INSTANCE.sumOfNaturalNumbersBetween(
-//								startIndexes[startIndexes.length - 2],
-//								endIndex - (i + 1)
-//							)
-//						)
-//					);
-//				}
-				counter = counter.add(
-					BigInteger.valueOf(
-						computeIncrementation(
-							1,
-							endIndex - indexes[indexes.length - 3],
-							endIndex - 1
-						)
-					)
-				).add(
-					BigInteger.valueOf(
-						MathUtils.INSTANCE.sumOfNaturalNumbersBetween(
-							endIndex - (indexes[indexes.length - 2] - 1),
-							endIndex - (indexes[indexes.length - 3] + 1)
-						)
-					)
-				).add(
-					BigInteger.valueOf(
-						indexes[indexes.length - 1] - indexes[indexes.length - 2]
-					)
-				);
-//				BigInteger.valueOf(
-//					MathUtils.INSTANCE.sumOfNaturalNumbersBetween(startIndexes[1], maxIndexesElementValue - 1)
-//				).add(
-//					BigInteger.valueOf(
-//						MathUtils.INSTANCE.sumOfNaturalNumbersBetween(startIndexes[1], maxIndexesElementValue - 2)
-//				)
-//				).add(
-//						BigInteger.valueOf(
-//								MathUtils.INSTANCE.sumOfNaturalNumbersBetween(startIndexes[1], maxIndexesElementValue - 3)
-//					)).add(
-//							BigInteger.valueOf(
-//									MathUtils.INSTANCE.sumOfNaturalNumbersBetween(maxIndexesElementValue - (indexes[1] - 1), maxIndexesElementValue - 4) +
-//									indexes[2] - indexes[1]
-//						));
-//				MathUtils.INSTANCE.sumOfNaturalNumbersBetween(maxIndexesElementValue - (indexes[1] - 1), maxIndexesElementValue - 1) +
-//				indexes[2] - indexes[1]
-			} else if (indexes.length == 4) {
-				for (int i = 0; i < indexes[indexes.length - 3]; i++) {
-					counter = counter.add(
-						BigInteger.valueOf(
-							MathUtils.INSTANCE.sumOfNaturalNumbersBetween(
-								1,
-								endIndex - (i + startIndexes[startIndexes.length - 2])
-							)
-						)
-					);
-				}
-				counter = BigInteger.ZERO;
-				return counter.add(
-					BigInteger.valueOf(
-						indexes[indexes.length - 1] - indexes[indexes.length - 2]
-					)
-				);
-			}
-			return counter;
-//			return BigInteger.valueOf(
-//					MathUtils.INSTANCE.sumOfNaturalNumbersBetween(
-//							startIndexes[startIndexes.length - 3],
-//							87
-//						)
-//					);
+			return Arrays.stream(indexes).boxed().collect(Collectors.toList());
 		}
+
 	}
 
 	public static void main(String[] args) {
 		//87 86	85 83
 		//88 87 86 84
 		//int[] combo = {1, 2, 3, 4};
-		int[] combo = {1, 26, 56, 75};
-		ComboHandler SECmbh = new ComboHandlerEnhanced(SEStats.NUMBERS, combo.length);
-		BigInteger index = SECmbh.computeCounter(combo);
-		SECmbh.iterate(iterationData -> {
+		List<Integer> combo = Arrays.asList(1, 25, 80, 82, 84, 86);
+		//int[] combo = {1, 26, 56, 75};
+		ComboHandlerEnhanced sECmbh = new ComboHandlerEnhanced(SEStats.NUMBERS, combo.size());
+		BigInteger index = sECmbh.computeCounter(combo);
+		sECmbh.iterate(iterationData -> {
 			if (iterationData.getCounter().longValue() == index.longValue()) {
 				System.out.println(
 					iterationData.getCombo().stream()
@@ -144,6 +63,7 @@ public class ComboHandlerTest {
 		        );
 			}
 		});
+		combo = sECmbh.computeComboFromCounter(index);
 		ComboHandler comboHandler = new ComboHandler(SEStats.NUMBERS, 4);
 		org.rg.game.lottery.engine.old.ComboHandler oldComboHandler = new org.rg.game.lottery.engine.old.ComboHandler(SEStats.NUMBERS, 4);
 		LocalDate now = LocalDate.now();
