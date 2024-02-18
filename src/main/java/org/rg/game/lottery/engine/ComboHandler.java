@@ -147,16 +147,16 @@ public class ComboHandler {
 	}
 
 	protected BigInteger computeCounterFromIndexes(int[] indexes) {
-		BigInteger counter = BigInteger.ZERO;
+		BigInteger counter = getSize();
 		for (int i = 0; i < indexes.length; i++) {
-			counter = counter.add(
+			counter = counter.subtract(
 				ComboHandler.sizeOf(
 					BigInteger.valueOf(getNumbers().size() - (indexes[i] + 1)),
 					combinationSize - i
 				)
 			);
 		}
-		return getSize().subtract(counter);
+		return counter;
 	}
 
 
