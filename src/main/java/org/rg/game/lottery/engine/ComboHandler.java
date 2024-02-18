@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.TreeSet;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
@@ -82,55 +81,25 @@ public class ComboHandler {
 			return result;
 		}
 		Collection<Long> indexesToBeFound = useSameCollectionInstance ? indexes : new HashSet<>(indexes);
-		find(
-			numbers,
-			new AtomicLong(0),
-			new int[(int)combinationSize],
-			0,
-			numbers.size() - 1,
-			0,
-			indexesToBeFound,
-			result
-		);
-		if (!indexesToBeFound.isEmpty()) {
-			throw new NoSuchElementException("Not all indexes have been found");
-		}
-		return result;
-	}
-
-	private Map<Long, List<Integer>> find(
-		List<Integer> numbers,
-		AtomicLong combinationCounter,
-		int indexes[],
-		int start,
-		int end,
-		int index,
-		Collection<Long> indexesToBeFound,
-		Map<Long, List<Integer>> collector
-	) {
-        if (indexesToBeFound.isEmpty()) {
-        	return collector;
-        }
-	    if (index == indexes.length) {
-	    	Long currentIndex = combinationCounter.getAndIncrement();
-	    	if (indexesToBeFound.remove(currentIndex)) {
-	    		collector.put(
+		iterate(iterationData -> {
+			Long currentIndex = iterationData.getCounter().subtract(BigInteger.ONE).longValue();
+			if (indexesToBeFound.remove(currentIndex)) {
+				result.put(
     				currentIndex,
-    				Arrays.stream(indexes)
+    				Arrays.stream(iterationData.indexes)
 					.map(numbers::get)
 					.boxed()
 				    .collect(Collectors.toList())
 	    		);
+				if (indexes.isEmpty()) {
+					iterationData.terminateIteration();
+				}
 	    	}
-	    	/*if ((combinationCounter.get() % 10_000_000) == 0) {
-	    		LogUtils.INSTANCE.logInfo("Tested " + combinationCounter.get() + " of combinations");
-    		}*/
-	    } else if (start <= end) {
-	        indexes[index] = start;
-	        find(numbers, combinationCounter, indexes, start + 1, end, index + 1, indexesToBeFound, collector);
-	        find(numbers, combinationCounter, indexes, start + 1, end, index, indexesToBeFound, collector);
-	    }
-	    return collector;
+		});
+		if (!indexesToBeFound.isEmpty()) {
+			throw new NoSuchElementException("Not all indexes have been found");
+		}
+		return result;
 	}
 
 	private int[] toIndexes(List<Integer> combo) {

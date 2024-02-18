@@ -31,7 +31,7 @@ public class ComboHandlerTest {
 						MathUtils.INSTANCE.factorial(numbersCount - combinationSize - i)
 					)
 				);
-				indexes[i] = numbersCount - MathUtils.Factorial.inverse_factorial(
+				indexes[i] = numbersCount - MathUtils.Factorial.inverse(
 					diff
 				).intValue();
 //				counter = counter.subtract(
