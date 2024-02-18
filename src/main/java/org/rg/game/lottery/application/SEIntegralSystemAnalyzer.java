@@ -397,6 +397,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 
 	protected static void analyze(Properties config) {
 		ProcessingContext processingContext = new ProcessingContext(config);
+		boolean printBlocks = CollectionUtils.INSTANCE.retrieveBoolean(config, "log.print.blocks", "true");
 		while (!processingContext.assignedBlocks.isEmpty()) {
 			AtomicReference<Block> currentBlockWrapper = new AtomicReference<>();
 			AtomicBoolean blockNotAlignedWrapper = new AtomicBoolean(false);
@@ -489,7 +490,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				processingContext.assignedBlocks.addAll(retrieveAssignedBlocks(config, processingContext.record));
 			}
 		}
-		printData(processingContext.record, true);
+		printData(processingContext.record, printBlocks);
 		//LogUtils.INSTANCE.info(processedSystemsCounterWrapper.get() + " of combinations analyzed");
 	}
 
