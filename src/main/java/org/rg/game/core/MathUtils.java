@@ -153,6 +153,18 @@ public class MathUtils {
 			return this;
 		}
 
+		public static BigInteger inverse(BigInteger factorial){
+		    BigInteger current = BigInteger.ONE;
+		    while (factorial.compareTo(current) > 0) {
+		        factorial = factorial.divide(current);
+		        current = current.add(BigInteger.ONE);
+		    }
+		    if (current.compareTo(factorial) == 0) {
+		        return current;
+		    }
+		    return null;
+		}
+
 		public BigInteger get() {
 			if (computed) {
 				return factorial;
