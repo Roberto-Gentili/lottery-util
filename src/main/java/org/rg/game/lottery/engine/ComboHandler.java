@@ -148,10 +148,11 @@ public class ComboHandler {
 
 	protected BigInteger computeCounterFromIndexes(int[] indexes) {
 		BigInteger counter = getSize();
+		int numbersSize = numbers.size();
 		for (int i = 0; i < indexes.length; i++) {
 			counter = counter.subtract(
 				ComboHandler.sizeOf(
-					BigInteger.valueOf(getNumbers().size() - (indexes[i] + 1)),
+					BigInteger.valueOf(numbersSize - (indexes[i] + 1)),
 					combinationSize - i
 				)
 			);
