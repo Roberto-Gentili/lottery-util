@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -46,9 +47,14 @@ public class ComboHandler {
 	}
 
 	public static BigInteger sizeOf(Number numbersCount, Number combinationCount) {
+		BigInteger numbersCountAsBI = new BigInteger(numbersCount.toString());
+		BigInteger combinationCountAsBI = new BigInteger(combinationCount.toString());
+		if (numbersCountAsBI.compareTo(BigInteger.ZERO) <= 0 || combinationCountAsBI.compareTo(BigInteger.ZERO) <= 0) {
+			return BigInteger.ZERO;
+		}
 		return sizeOf(
-			BigInteger.valueOf(numbersCount.longValue()),
-			BigInteger.valueOf(combinationCount.longValue())
+			numbersCountAsBI,
+			combinationCountAsBI
 		);
 	}
 
@@ -75,27 +81,25 @@ public class ComboHandler {
 		return numbers;
 	}
 
-	public Map<Long, List<Integer>> find(Collection<Long> indexes, boolean useSameCollectionInstance) {
+	public Map<Long, List<Integer>> find(Collection<Long> indexesColl, boolean useSameCollectionInstance) {
 		Map<Long, List<Integer>> result = new HashMap<>();
-		if (indexes.isEmpty()) {
+		if (indexesColl.isEmpty()) {
 			return result;
 		}
-		Collection<Long> indexesToBeFound = useSameCollectionInstance ? indexes : new HashSet<>(indexes);
-		iterate(iterationData -> {
-			Long currentIndex = iterationData.getCounter().subtract(BigInteger.ONE).longValue();
-			if (indexesToBeFound.remove(currentIndex)) {
+		Collection<Long> indexesToBeFound = useSameCollectionInstance ? indexesColl : new HashSet<>(indexesColl);
+		Iterator<Long> indexesToBeFoundIterator = indexesToBeFound.iterator();
+		while (indexesToBeFoundIterator.hasNext()) {
+			Long currentIndex = indexesToBeFoundIterator.next();
+			BigInteger currentCounter = BigInteger.valueOf(currentIndex + 1L);
+			int[] indexes = computeIndexesFromCounter(currentCounter);
+			if (indexes != null) {
+				indexesToBeFoundIterator.remove();
 				result.put(
     				currentIndex,
-    				Arrays.stream(iterationData.indexes)
-					.map(numbers::get)
-					.boxed()
-				    .collect(Collectors.toList())
+    				toCombo(indexes)
 	    		);
-				if (indexes.isEmpty()) {
-					iterationData.terminateIteration();
-				}
-	    	}
-		});
+			}
+		}
 		if (!indexesToBeFound.isEmpty()) {
 			throw new NoSuchElementException("Not all indexes have been found");
 		}
@@ -108,6 +112,13 @@ public class ComboHandler {
 			indexes[i] = numbers.indexOf(Integer.valueOf(combo.get(i)));
 		}
 		return indexes;
+	}
+
+	private List<Integer> toCombo(int[] indexes) {
+		return Arrays.stream(indexes)
+			.map(numbers::get)
+			.boxed()
+		    .collect(Collectors.toList());
 	}
 
 
@@ -141,6 +152,9 @@ public class ComboHandler {
 
 
 	protected int[] computeIndexesFromCounter(BigInteger counter) {
+		if (counter.compareTo(getSize()) > 0 || counter.compareTo(BigInteger.ZERO) <= 0) {
+			return null;
+		}
 		int[] indexes = new int[(int)combinationSize];
 		for (int i = 0;i < indexes.length;i++) {
 			indexes[i] = i;
