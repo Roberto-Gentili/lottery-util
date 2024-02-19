@@ -454,7 +454,11 @@ public class SEIntegralSystemAnalyzer extends Shared {
 									"Cache succesfully restored, starting from the " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " system. " +
 									MathUtils.INSTANCE.format(remainedSystemsCounter(processingContext.record)) + " systems remained."
 								);
-								printDataIfChanged(processingContext.record, processingContext.previousLoggedRankWrapper);
+								printDataIfChanged(
+									processingContext.record,
+									processingContext.previousLoggedRankWrapper,
+									printBlocks
+								);
 								return;
 							}
 						}
@@ -478,7 +482,11 @@ public class SEIntegralSystemAnalyzer extends Shared {
 							currentBlock,
 							processingContext.rankSize
 						);
-						printDataIfChanged(processingContext.record, processingContext.previousLoggedRankWrapper);
+						printDataIfChanged(
+							processingContext.record,
+							processingContext.previousLoggedRankWrapper,
+							printBlocks
+						);
 						LogUtils.INSTANCE.info(
 							MathUtils.INSTANCE.format(processedSystemsCounter(processingContext.record)) + " of " +
 							sizeOfIntegralSystemMatrixAsString + " systems have been analyzed"
@@ -774,7 +782,8 @@ public class SEIntegralSystemAnalyzer extends Shared {
 
 	protected static void printDataIfChanged(
 		Record record,
-		AtomicReference<String> previousLoggedRankWrapper
+		AtomicReference<String> previousLoggedRankWrapper,
+		boolean showBlockInfo
 	) {
 		String currentRank = String.join(
 			"\n\t",
@@ -782,14 +791,16 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				ComboHandler.toString(entry.getKey(), ", ") + ": " + Premium.toString(entry.getValue(), "=", ", ")
 			).collect(Collectors.toList())
 		);
-		String currentLog = "\nBlocks (size: " + record.blocks.size() + ") status:\n" +
-			"\t" + String.join(
-				"\n\t",
-				record.blocks.stream().map(Object::toString).collect(Collectors.toList())
-			) + "\n" +
-			"Rank (size: " + record.data.size() + "):\n" +
-			"\t" + currentRank + "\n"
-		;
+		String currentLog = "";
+		if (showBlockInfo) {
+			currentLog += "\nBlocks (size: " + record.blocks.size() + ") status:\n" +
+				"\t" + String.join(
+					"\n\t",
+					record.blocks.stream().map(Object::toString).collect(Collectors.toList())
+				) + "\n";
+		}
+		currentLog += "Rank (size: " + record.data.size() + "):\n" +
+			"\t" + currentRank + "\n";
 		String previousLoggedRank = previousLoggedRankWrapper.get();
 		if (previousLoggedRank == null || !previousLoggedRank.equals(currentRank)) {
 			LogUtils.INSTANCE.info(currentLog);
