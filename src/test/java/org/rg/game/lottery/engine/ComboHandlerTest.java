@@ -1,11 +1,8 @@
 package org.rg.game.lottery.engine;
 
 import java.math.BigInteger;
-import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import org.rg.game.core.MathUtils;
@@ -64,44 +61,6 @@ public class ComboHandlerTest {
 			}
 		});
 		combo = sECmbh.computeComboFromCounter(index);
-		ComboHandler comboHandler = new ComboHandler(SEStats.NUMBERS, 4);
-		org.rg.game.lottery.engine.old.ComboHandler oldComboHandler = new org.rg.game.lottery.engine.old.ComboHandler(SEStats.NUMBERS, 4);
-		LocalDate now = LocalDate.now();
-		long startTime = System.currentTimeMillis();
-		PersistentStorage storageForOld = new PersistentStorage(
-			LocalDate.now(),
-			(int) comboHandler.getCombinationSize(),
-			comboHandler.getSizeAsInt(), "test", "testWithOld"
-		);
-		List<CompletableFuture<Void>> tasks = new ArrayList<>();
-		tasks.add(
-			CompletableFuture.runAsync(() -> {
-				oldComboHandler.iterate(iterationData -> {
-					storageForOld.addCombo(iterationData.getCombo());
-				});
-			})
-		);
-		PersistentStorage storageForNew = new PersistentStorage(
-			LocalDate.now(),
-			(int) comboHandler.getCombinationSize(),
-			comboHandler.getSizeAsInt(), "test", "testWithNew"
-		);
-		tasks.add(
-			CompletableFuture.runAsync(() -> {
-				comboHandler.iterate(iterationData -> {
-					storageForNew.addCombo(iterationData.getCombo());
-					if (iterationData.getCounter().longValue() % 1000000 == 0 || iterationData.isLatest()) {
-						System.out.println(iterationData.getCounter());
-						System.out.println(
-							iterationData.getCombo().stream()
-				            .map(Object::toString)
-				            .collect(Collectors.joining(", "))
-				        );
-					}
-				});
-			})
-		);
-		tasks.stream().forEach(CompletableFuture::join);
 	}
 
 	public static double computeIncrementation(double y, double n, double m) {
