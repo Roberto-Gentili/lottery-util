@@ -110,10 +110,12 @@ public class ComboHandler {
 		return indexes;
 	}
 
+
 	public BigInteger computeCounter(List<Integer> combo) {
 		int[] indexes = toIndexes(combo);
 		return computeCounterFromIndexes(indexes);
 	}
+
 
 	protected BigInteger computeCounterFromIndexes(int[] indexes) {
 		BigInteger counter = getSize();
@@ -127,6 +129,37 @@ public class ComboHandler {
 			);
 		}
 		return counter;
+	}
+
+
+	public List<Integer> computeCombo(BigInteger counter) {
+		return Arrays.stream(computeIndexesFromCounter(counter))
+			.map(numbers::get)
+			.boxed()
+		    .collect(Collectors.toList());
+	}
+
+
+	protected int[] computeIndexesFromCounter(BigInteger counter) {
+		int[] indexes = new int[(int)combinationSize];
+		for (int i = 0;i < indexes.length;i++) {
+			indexes[i] = i;
+		}
+		int i = 0;
+		int compareResult;
+		while((compareResult = computeCounterFromIndexes(indexes).compareTo(counter)) != 0) {
+			if (compareResult < 0) {
+				for (int j = i; j < indexes.length; j++) {
+					indexes[j]++;
+				}
+			} else if (compareResult > 0) {
+				for (int j = i; j < indexes.length; j++) {
+					indexes[j]--;
+				}
+				i++;
+			}
+		}
+		return indexes;
 	}
 
 

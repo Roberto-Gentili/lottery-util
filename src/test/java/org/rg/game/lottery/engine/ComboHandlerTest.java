@@ -19,7 +19,10 @@ public class ComboHandlerTest {
 			int[] indexes = new int[(int)combinationSize];
 			int numbersCount = numbers.size();
 			BigInteger diff = getSize().subtract(counter);
+			//diff = ((90 - a)!/(6!*(((90 - a)-6)!)))+((90 - b)!/(5!*(((90 - b)-5)!)))+((90 - c)!/(4!*(((90 - c)-4)!)))+((90 - d)!/(3!*(((90 - d)-3)!)))+((90 - e)!/(2!*(((90 - e)-2)!)))+((90 - f)!/(1!*(((90 - f)-1)!)))
 			//diff = (a!/(6!*((a-6)!)))+(b!/(5!*((b-5)!)))+(c!/(4!*((c-4)!)))+(d!/(3!*((d-3)!)))+(e!/(2!*((e-2)!)))+(f!/(1!*((f-1)!)))
+
+			//620938055
 			for (int i = 0; i < indexes.length; i++) {
 				diff = diff.multiply(
 					MathUtils.INSTANCE.factorial(
@@ -47,10 +50,12 @@ public class ComboHandlerTest {
 		//87 86	85 83
 		//88 87 86 84
 		//int[] combo = {1, 2, 3, 4};
-		List<Integer> combo = Arrays.asList(1, 25, 80, 82, 84, 86);
+		List<Integer> combo = Arrays.asList(25, 36, 45, 54, 63, 72);
 		//int[] combo = {1, 26, 56, 75};
-		ComboHandlerEnhanced sECmbh = new ComboHandlerEnhanced(SEStats.NUMBERS, combo.size());
+		ComboHandler sECmbh = new ComboHandler(SEStats.NUMBERS, combo.size());
 		BigInteger index = sECmbh.computeCounter(combo);
+
+		List<Integer> cmb = sECmbh.computeCombo(index);
 		sECmbh.iterate(iterationData -> {
 			if (iterationData.getCounter().longValue() == index.longValue()) {
 				System.out.println(
@@ -60,7 +65,6 @@ public class ComboHandlerTest {
 		        );
 			}
 		});
-		combo = sECmbh.computeComboFromCounter(index);
 	}
 
 	public static double computeIncrementation(double y, double n, double m) {
