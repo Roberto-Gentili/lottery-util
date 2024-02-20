@@ -295,7 +295,6 @@ public class SEIntegralSystemAnalyzer extends Shared {
 	}
 
 
-
 	protected static void addDefaultRecordLoader() {
 		String basePath = PersistentStorage.buildWorkingPath("Analisi sistemi integrali");
 		recordLoaders.add(
@@ -374,7 +373,6 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				final BigInteger processedBlockOnStoring = new BigInteger(processedBlock.toString());
 				writingTask.join();
 				writingTask = CompletableFuture.runAsync(() -> {
-					long elapsedTime = System.currentTimeMillis();
 					Block[] blocks = toBeMerged.stream().toArray(Block[]::new);
 					merge(
 						processingContext.cacheKey,
@@ -387,8 +385,6 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					for (Block block : blocks) {
 						toBeMerged.remove(block);
 					}
-					elapsedTime = System.currentTimeMillis() - elapsedTime;
-					LogUtils.INSTANCE.info("milliseconds " + elapsedTime);
 					LogUtils.INSTANCE.info(
 						MathUtils.INSTANCE.format(processedBlockOnStoring) + " of " +
 						MathUtils.INSTANCE.format(
@@ -884,6 +880,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		Block... blocks
 	){
 		Record cacheRecord = loadRecord(cacheKey);
+		//long elapsedTime = System.currentTimeMillis();
 		if (cacheRecord != null) {
 			systemsRank.addAll(cacheRecord.data);
 			for (Block currentBlock : blocks) {
@@ -906,6 +903,8 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			systemsRank.pollLast();
 		}
 		toBeCached.data = new ArrayList<>(systemsRank);
+		//elapsedTime = System.currentTimeMillis() - elapsedTime;
+		//LogUtils.INSTANCE.info("milliseconds " + elapsedTime);
 	}
 
 
