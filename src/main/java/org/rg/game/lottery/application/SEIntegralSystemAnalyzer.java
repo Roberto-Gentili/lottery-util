@@ -371,7 +371,9 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			if (processedBlock % 10 == 0 || processedBlock == processingContext.record.blocks.size()) {
 				LogUtils.INSTANCE.info(
 					MathUtils.INSTANCE.format(processedBlock) + " of " +
-					MathUtils.INSTANCE.format(processingContext.record.blocks.size()) + " blocks have been indexed"
+					MathUtils.INSTANCE.format(
+						processingContext.record.blocks.size()) + " blocks have been " + (indexMode.compareTo(0) > 0 ? "indexed" : "unindexed"
+					)
 				);
 			}
 		}
