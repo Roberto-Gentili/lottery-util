@@ -113,8 +113,8 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					LogUtils.INSTANCE.info("Analysis disabled");
 				} else if (arg.contains("timeout")) {
 					timeoutRawValue = arg.split("=")[1];
-				} else if (arg.contains("index")) {
-					indexRawValue = "index";
+				} else if (arg.contains("index.mode")) {
+					indexRawValue = arg.split("=")[1];
 				}
 			}
 		}
@@ -141,15 +141,16 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			exiter.setDaemon(true);
 			exiter.start();
 		}
-		boolean index = indexRawValue != null;
+		Integer indexMode = indexRawValue != null? Integer.valueOf(indexRawValue) : Integer.valueOf(-1);
 		if (indexRawValue == null) {
-			indexRawValue = Optional.ofNullable(System.getenv().get("index"))
-					.orElseGet(() -> System.getenv().get("INDEX"));
-			index = indexRawValue != null;
+			indexRawValue = Optional.ofNullable(System.getenv().get("index.mode"))
+					.orElseGet(() -> System.getenv().get("INDEX_MODE"));
+			indexMode = indexRawValue != null? Integer.valueOf(indexRawValue) : Integer.valueOf(-1);
 		}
-		if (index) {
-			LogUtils.INSTANCE.info("Indexing mode");
+		if (indexMode > Integer.valueOf(-1)) {
+			LogUtils.INSTANCE.info("Indexing mode: " + indexMode);
 		}
+		Integer indexModeFinal = indexMode;
 		for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles)) {
 			String[] enabledRawValues = config.getProperty("enabled", "false").split(";");
 			boolean enabled = false;
@@ -169,9 +170,9 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					onlyShowComputed ?
 						() ->
 							showComputed(config) :
-					index ?
+					indexMode > Integer.valueOf(-1) ?
 						() ->
-							index(config):
+							index(config, indexModeFinal):
 						() ->
 							analyze(config);
 				if (!onlyShowComputed && CollectionUtils.INSTANCE.retrieveBoolean(config, "async", "false")) {
@@ -338,11 +339,11 @@ public class SEIntegralSystemAnalyzer extends Shared {
 	}
 
 
-	protected static void index(Properties config) {
+	protected static void index(Properties config, Integer indexMode) {
 		ProcessingContext processingContext = new ProcessingContext(config);
 		int processedBlock = 0;
 		for (Block currentBlock : processingContext.record.blocks) {
-			if (currentBlock.indexes == null) {
+			if (currentBlock.indexes == null && indexMode.compareTo(0) > 0) {
 				currentBlock.counter = currentBlock.start;
 				currentBlock.indexes = processingContext.comboHandler.computeIndexes(currentBlock.start);
 				List<Integer> combo = processingContext.comboHandler.toCombo(currentBlock.indexes);
@@ -358,8 +359,12 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					currentBlock,
 					processingContext.rankSize
 				);
+			} else if (currentBlock.indexes != null && indexMode.compareTo(0) == 0) {
+				currentBlock.counter = null;
+				currentBlock.indexes = null;
+				writeRecord(processingContext.cacheKey, processingContext.record);
 			}
-			if (currentBlock.counter.compareTo(currentBlock.start) < 0 && currentBlock.counter.compareTo(currentBlock.end) > 0) {
+			if (currentBlock.counter != null && currentBlock.counter.compareTo(currentBlock.start) < 0 && currentBlock.counter.compareTo(currentBlock.end) > 0) {
 				LogUtils.INSTANCE.warn("Unaligned block: " + currentBlock);
 			}
 			processedBlock++;

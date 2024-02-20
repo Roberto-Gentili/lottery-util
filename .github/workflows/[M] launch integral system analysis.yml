@@ -50,7 +50,9 @@ jobs:
           RESOURCES_INTEGRAL_SYSTEM_ANALYSIS_FOLDER: 'integralSystemsAnalysis'
           TASKS_MAX_PARALLEL: 5
           TIMEOUT: 21300
-          INDEX: 'index'
+          #value 0: reset
+          #value 1: index
+          INDEX_MODE: '1'
         run: mvn -B compile exec:java -P integral-system-analysis --file pom.xml
        
   launch-integral-system-analysis:
