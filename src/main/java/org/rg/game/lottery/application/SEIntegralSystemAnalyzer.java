@@ -342,46 +342,63 @@ public class SEIntegralSystemAnalyzer extends Shared {
 	protected static void index(Properties config, Integer indexMode) {
 		ProcessingContext processingContext = new ProcessingContext(config);
 		BigInteger processedBlock = BigInteger.ZERO;
-		for (Block currentBlock : processingContext.record.blocks) {
+		CompletableFuture<Void> writingTask = CompletableFuture.runAsync(() -> {});
+		Collection<Block> toBeMerged = new CopyOnWriteArrayList<>();
+ 		for (Block currentBlock : processingContext.record.blocks) {
 			boolean writeRecord = false;
 			processedBlock = processedBlock.add(BigInteger.ONE);
-			if (currentBlock.indexes == null && indexMode.compareTo(0) > 0) {
-				currentBlock.counter = currentBlock.start;
-				currentBlock.indexes = processingContext.comboHandler.computeIndexes(currentBlock.start);
-				List<Integer> combo = processingContext.comboHandler.toCombo(currentBlock.indexes);
-				tryToAddCombo(
-					processingContext,
-					combo,
-					computePremiums(processingContext, combo)
-				);
-				merge(
-					processingContext.cacheKey,
-					processingContext.systemsRank,
-					processingContext.record,
-					currentBlock,
-					processingContext.rankSize
-				);
-				writeRecord = processedBlock.mod(BigInteger.valueOf(50)).compareTo(BigInteger.ZERO) == 0 ||
-					processedBlock.intValue() == processingContext.record.blocks.size();
-			} else if (currentBlock.indexes != null && indexMode.compareTo(0) == 0) {
-				currentBlock.counter = null;
-				currentBlock.indexes = null;
-				writeRecord = processedBlock.mod(BigInteger.valueOf(10000)).compareTo(BigInteger.ZERO) == 0 ||
-					processedBlock.intValue() == processingContext.record.blocks.size();
+			synchronized(currentBlock) {
+				if (currentBlock.indexes == null && indexMode.compareTo(0) > 0) {
+					currentBlock.counter = currentBlock.start;
+					currentBlock.indexes = processingContext.comboHandler.computeIndexes(currentBlock.start);
+					List<Integer> combo = processingContext.comboHandler.toCombo(currentBlock.indexes);
+					tryToAddCombo(
+						processingContext,
+						combo,
+						computePremiums(processingContext, combo)
+					);
+					toBeMerged.add(currentBlock);
+					writeRecord = processedBlock.mod(processingContext.modderForAutoSave).compareTo(BigInteger.ZERO) == 0 ||
+						processedBlock.intValue() == processingContext.record.blocks.size();
+				} else if (currentBlock.indexes != null && indexMode.compareTo(0) == 0) {
+					currentBlock.counter = null;
+					currentBlock.indexes = null;
+					writeRecord = processedBlock.mod(processingContext.modderForAutoSave).compareTo(BigInteger.ZERO) == 0 ||
+						processedBlock.intValue() == processingContext.record.blocks.size();
+				}
 			}
 			if (currentBlock.counter != null && currentBlock.counter.compareTo(currentBlock.start) < 0 && currentBlock.counter.compareTo(currentBlock.end) > 0) {
 				LogUtils.INSTANCE.warn("Unaligned block: " + currentBlock);
 			}
 			if (writeRecord) {
-				writeRecord(processingContext.cacheKey, processingContext.record);
-				LogUtils.INSTANCE.info(
-					MathUtils.INSTANCE.format(processedBlock) + " of " +
-					MathUtils.INSTANCE.format(
-						processingContext.record.blocks.size()) + " blocks have been " + (indexMode.compareTo(0) > 0 ? "indexed" : "unindexed"
-					)
-				);
+				final BigInteger processedBlockOnStoring = new BigInteger(processedBlock.toString());
+				writingTask.join();
+				writingTask = CompletableFuture.runAsync(() -> {
+					long elapsedTime = System.currentTimeMillis();
+					Block[] blocks = toBeMerged.stream().toArray(Block[]::new);
+					merge(
+						processingContext.cacheKey,
+						processingContext.record,
+						processingContext.systemsRank,
+						processingContext.rankSize,
+						blocks
+					);
+					writeRecord(processingContext.cacheKey, processingContext.record);
+					for (Block block : blocks) {
+						toBeMerged.remove(block);
+					}
+					elapsedTime = System.currentTimeMillis() - elapsedTime;
+					LogUtils.INSTANCE.info("milliseconds " + elapsedTime);
+					LogUtils.INSTANCE.info(
+						MathUtils.INSTANCE.format(processedBlockOnStoring) + " of " +
+						MathUtils.INSTANCE.format(
+							processingContext.record.blocks.size()) + " blocks have been " + (indexMode.compareTo(0) > 0 ? "indexed" : "unindexed"
+						)
+					);
+				});
 			}
 		}
+		writingTask.join();
 		printData(processingContext.record, true);
 	}
 
@@ -468,10 +485,10 @@ public class SEIntegralSystemAnalyzer extends Shared {
 						currentBlock.indexes = iterationData.copyOfIndexes(); //Ottimizzazione: in caso di anomalie eliminare questa riga e decommentare la riga più in alto (vedere commento)
 						mergeAndStore(
 							processingContext.cacheKey,
-							processingContext.systemsRank,
 							processingContext.record,
-							currentBlock,
-							processingContext.rankSize
+							processingContext.systemsRank,
+							processingContext.rankSize,
+							currentBlock
 						);
 						printDataIfChanged(
 							processingContext.record,
@@ -849,37 +866,39 @@ public class SEIntegralSystemAnalyzer extends Shared {
 
 	private static void mergeAndStore(
 		String cacheKey,
-		TreeSet<Entry<List<Integer>, Map<Number, Integer>>> systemsRank,
 		Record toBeCached,
-		Block currentBlock,
-		int rankSize
+		TreeSet<Entry<List<Integer>, Map<Number, Integer>>> systemsRank,
+		int rankSize,
+		Block... blocks
 	){
-		merge(cacheKey, systemsRank, toBeCached, currentBlock, rankSize);
+		merge(cacheKey, toBeCached, systemsRank, rankSize, blocks);
 		writeRecord(cacheKey, toBeCached);
 	}
 
 
 	private static void merge(
 		String cacheKey,
-		TreeSet<Entry<List<Integer>, Map<Number, Integer>>> systemsRank,
 		Record toBeCached,
-		Block currentBlock,
-		int rankSize
+		TreeSet<Entry<List<Integer>, Map<Number, Integer>>> systemsRank,
+		int rankSize,
+		Block... blocks
 	){
 		Record cacheRecord = loadRecord(cacheKey);
 		if (cacheRecord != null) {
 			systemsRank.addAll(cacheRecord.data);
-			List<Block> cachedBlocks = (List<Block>)cacheRecord.blocks;
-			for (int i = 0; i < cachedBlocks.size(); i++) {
-				Block toBeCachedBlock = ((List<Block>)toBeCached.blocks).get(i);
-				if (currentBlock == toBeCachedBlock) {
-					continue;
-				}
-				Block cachedBlock = cachedBlocks.get(i);
-				BigInteger cachedBlockCounter = cachedBlock.counter;
-				if (cachedBlockCounter != null && (toBeCachedBlock.counter == null || cachedBlockCounter.compareTo(toBeCachedBlock.counter) > 0)) {
-					toBeCachedBlock.counter = cachedBlock.counter;
-					toBeCachedBlock.indexes = cachedBlock.indexes;
+			for (Block currentBlock : blocks) {
+				List<Block> cachedBlocks = (List<Block>)cacheRecord.blocks;
+				for (int i = 0; i < cachedBlocks.size(); i++) {
+					Block toBeCachedBlock = ((List<Block>)toBeCached.blocks).get(i);
+					if (currentBlock == toBeCachedBlock) {
+						continue;
+					}
+					Block cachedBlock = cachedBlocks.get(i);
+					BigInteger cachedBlockCounter = cachedBlock.counter;
+					if (cachedBlockCounter != null && (toBeCachedBlock.counter == null || cachedBlockCounter.compareTo(toBeCachedBlock.counter) > 0)) {
+						toBeCachedBlock.counter = cachedBlock.counter;
+						toBeCachedBlock.indexes = cachedBlock.indexes;
+					}
 				}
 			}
 		}
