@@ -804,7 +804,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			try {
 				return recordLoader.apply(cacheKey);
 			} catch (Throwable exc) {
-				LogUtils.INSTANCE.error(exc, "Unable to load data:");
+				LogUtils.INSTANCE.error(exc, "Unable to load data: " + cacheKey);
 				exceptions.add(exc);
 				if (exceptions.size() == recordLoaders.size()) {
 					return Throwables.INSTANCE.throwException(exceptions.get(0));
