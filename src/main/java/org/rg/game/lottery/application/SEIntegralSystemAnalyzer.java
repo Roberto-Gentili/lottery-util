@@ -341,7 +341,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 
 	protected static void index(Properties config, Integer indexMode) {
 		ProcessingContext processingContext = new ProcessingContext(config);
-		int processedBlock = 0;
+		BigInteger processedBlock = BigInteger.ZERO;
 		for (Block currentBlock : processingContext.record.blocks) {
 			if (currentBlock.indexes == null && indexMode.compareTo(0) > 0) {
 				currentBlock.counter = currentBlock.start;
@@ -366,8 +366,10 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			if (currentBlock.counter != null && currentBlock.counter.compareTo(currentBlock.start) < 0 && currentBlock.counter.compareTo(currentBlock.end) > 0) {
 				LogUtils.INSTANCE.warn("Unaligned block: " + currentBlock);
 			}
-			processedBlock++;
-			if (processedBlock % 100 == 0 || processedBlock == processingContext.record.blocks.size()) {
+			processedBlock = processedBlock.add(BigInteger.ONE);
+			if (processedBlock.mod(processingContext.modderForAutoSave).compareTo(BigInteger.ZERO) == 0 ||
+				processedBlock.intValue() == processingContext.record.blocks.size()
+			) {
 				writeRecord(processingContext.cacheKey, processingContext.record);
 				LogUtils.INSTANCE.info(
 					MathUtils.INSTANCE.format(processedBlock) + " of " +
