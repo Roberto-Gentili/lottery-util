@@ -379,9 +379,6 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				);
 			}
 		}
-		LogUtils.INSTANCE.info(
-			"All " + MathUtils.INSTANCE.format(processingContext.record.blocks.size()) + " blocks are indexed"
-		);
 		printData(processingContext.record, true);
 	}
 
