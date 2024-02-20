@@ -343,6 +343,8 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		ProcessingContext processingContext = new ProcessingContext(config);
 		BigInteger processedBlock = BigInteger.ZERO;
 		for (Block currentBlock : processingContext.record.blocks) {
+			boolean writeRecord = false;
+			processedBlock = processedBlock.add(BigInteger.ONE);
 			if (currentBlock.indexes == null && indexMode.compareTo(0) > 0) {
 				currentBlock.counter = currentBlock.start;
 				currentBlock.indexes = processingContext.comboHandler.computeIndexes(currentBlock.start);
@@ -359,17 +361,18 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					currentBlock,
 					processingContext.rankSize
 				);
+				writeRecord = processedBlock.mod(BigInteger.valueOf(50)).compareTo(BigInteger.ZERO) == 0 ||
+					processedBlock.intValue() == processingContext.record.blocks.size();
 			} else if (currentBlock.indexes != null && indexMode.compareTo(0) == 0) {
 				currentBlock.counter = null;
 				currentBlock.indexes = null;
+				writeRecord = processedBlock.mod(BigInteger.valueOf(10000)).compareTo(BigInteger.ZERO) == 0 ||
+					processedBlock.intValue() == processingContext.record.blocks.size();
 			}
 			if (currentBlock.counter != null && currentBlock.counter.compareTo(currentBlock.start) < 0 && currentBlock.counter.compareTo(currentBlock.end) > 0) {
 				LogUtils.INSTANCE.warn("Unaligned block: " + currentBlock);
 			}
-			processedBlock = processedBlock.add(BigInteger.ONE);
-			if (processedBlock.mod(processingContext.modderForAutoSave).compareTo(BigInteger.ZERO) == 0 ||
-				processedBlock.intValue() == processingContext.record.blocks.size()
-			) {
+			if (writeRecord) {
 				writeRecord(processingContext.cacheKey, processingContext.record);
 				LogUtils.INSTANCE.info(
 					MathUtils.INSTANCE.format(processedBlock) + " of " +
