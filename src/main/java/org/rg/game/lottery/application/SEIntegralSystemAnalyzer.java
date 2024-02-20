@@ -48,7 +48,6 @@ import org.rg.game.core.NetworkUtils;
 import org.rg.game.core.ResourceUtils;
 import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.ComboHandler;
-import org.rg.game.lottery.engine.ComboHandler.IterationData;
 import org.rg.game.lottery.engine.PersistentStorage;
 import org.rg.game.lottery.engine.Premium;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
@@ -341,35 +340,17 @@ public class SEIntegralSystemAnalyzer extends Shared {
 
 	protected static void index(Properties config) {
 		ProcessingContext processingContext = new ProcessingContext(config);
-		int[] previousIndexes = null;
-		BigInteger previousCounter = null;
-		Function<Block, Consumer<IterationData>> action = currentBlock -> iterationData -> {
-			if (iterationData.getCounter().compareTo(currentBlock.start) == 0) {
-				currentBlock.counter = iterationData.getCounter();
-				currentBlock.indexes = iterationData.copyOfIndexes();
-				List<Integer> combo = iterationData.getCombo();
+		int processedBlock = 0;
+		for (Block currentBlock : processingContext.record.blocks) {
+			if (currentBlock.indexes == null) {
+				currentBlock.counter = currentBlock.start;
+				currentBlock.indexes = processingContext.comboHandler.computeIndexes(currentBlock.start);
+				List<Integer> combo = processingContext.comboHandler.toCombo(currentBlock.indexes);
 				tryToAddCombo(
 					processingContext,
 					combo,
 					computePremiums(processingContext, combo)
 				);
-				iterationData.terminateIteration();
-			}
-			if (iterationData.getCounter().mod(processingContext.modderForSkipLog).compareTo(BigInteger.ZERO) == 0) {
-				LogUtils.INSTANCE.info("Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) + " of systems");
-			}
-		};
-		int processedBlock = 0;
-		for (Block currentBlock : processingContext.record.blocks) {
-			if (currentBlock.indexes == null) {
-				if (previousIndexes != null && previousCounter != null) {
-					processingContext.comboHandler.iterateFrom(
-						processingContext.comboHandler.new IterationData(previousIndexes, previousCounter),
-						action.apply(currentBlock)
-					);
-				} else {
-					processingContext.comboHandler.iterate(action.apply(currentBlock));
-				}
 				mergeAndStore(
 					processingContext.cacheKey,
 					processingContext.systemsRank,
@@ -381,8 +362,6 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			if (currentBlock.counter.compareTo(currentBlock.start) < 0 && currentBlock.counter.compareTo(currentBlock.end) > 0) {
 				LogUtils.INSTANCE.warn("Unaligned block: " + currentBlock);
 			}
-			previousIndexes = CollectionUtils.INSTANCE.copyOf(currentBlock.indexes);
-			previousCounter = currentBlock.counter;
 			processedBlock++;
 			if (processedBlock % 10 == 0 || processedBlock == processingContext.record.blocks.size()) {
 				LogUtils.INSTANCE.info(

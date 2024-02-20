@@ -91,7 +91,7 @@ public class ComboHandler {
 		while (indexesToBeFoundIterator.hasNext()) {
 			Long currentIndex = indexesToBeFoundIterator.next();
 			BigInteger currentCounter = BigInteger.valueOf(currentIndex + 1L);
-			int[] indexes = computeIndexesFromCounter(currentCounter);
+			int[] indexes = computeIndexes(currentCounter);
 			if (indexes != null) {
 				indexesToBeFoundIterator.remove();
 				result.put(
@@ -106,7 +106,7 @@ public class ComboHandler {
 		return result;
 	}
 
-	private int[] toIndexes(List<Integer> combo) {
+	public int[] toIndexes(List<Integer> combo) {
 		int[] indexes = new int[(int)combinationSize];
 		for (int i = 0; i < combo.size(); i++) {
 			indexes[i] = numbers.indexOf(Integer.valueOf(combo.get(i)));
@@ -114,7 +114,7 @@ public class ComboHandler {
 		return indexes;
 	}
 
-	private List<Integer> toCombo(int[] indexes) {
+	public List<Integer> toCombo(int[] indexes) {
 		return Arrays.stream(indexes)
 			.map(numbers::get)
 			.boxed()
@@ -124,11 +124,11 @@ public class ComboHandler {
 
 	public BigInteger computeCounter(List<Integer> combo) {
 		int[] indexes = toIndexes(combo);
-		return computeCounterFromIndexes(indexes);
+		return computeCounter(indexes);
 	}
 
 
-	protected BigInteger computeCounterFromIndexes(int[] indexes) {
+	public BigInteger computeCounter(int[] indexes) {
 		BigInteger counter = getSize();
 		int numbersSize = numbers.size();
 		for (int i = 0; i < indexes.length; i++) {
@@ -144,14 +144,14 @@ public class ComboHandler {
 
 
 	public List<Integer> computeCombo(BigInteger counter) {
-		return Arrays.stream(computeIndexesFromCounter(counter))
+		return Arrays.stream(computeIndexes(counter))
 			.map(numbers::get)
 			.boxed()
 		    .collect(Collectors.toList());
 	}
 
 
-	protected int[] computeIndexesFromCounter(BigInteger counter) {
+	public int[] computeIndexes(BigInteger counter) {
 		if (counter.compareTo(getSize()) > 0 || counter.compareTo(BigInteger.ZERO) <= 0) {
 			return null;
 		}
@@ -161,7 +161,7 @@ public class ComboHandler {
 		}
 		int i = 0;
 		int compareResult;
-		while((compareResult = computeCounterFromIndexes(indexes).compareTo(counter)) != 0) {
+		while((compareResult = computeCounter(indexes).compareTo(counter)) != 0) {
 			if (compareResult < 0) {
 				for (int j = i; j < indexes.length; j++) {
 					indexes[j]++;
@@ -309,7 +309,7 @@ public class ComboHandler {
 		}
 
 		public IterationData(int[] indexes) {
-			this(indexes, computeCounterFromIndexes(indexes));
+			this(indexes, computeCounter(indexes));
 		}
 
 		public IterationData(int[] indexes, BigInteger counter) {
