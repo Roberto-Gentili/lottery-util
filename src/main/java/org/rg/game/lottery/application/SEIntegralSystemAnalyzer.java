@@ -378,6 +378,9 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					processingContext.rankSize
 				);
 			}
+			if (currentBlock.counter.compareTo(currentBlock.start) < 0 && currentBlock.counter.compareTo(currentBlock.end) > 0) {
+				LogUtils.INSTANCE.warn("Unaligned block: " + currentBlock);
+			}
 			previousIndexes = CollectionUtils.INSTANCE.copyOf(currentBlock.indexes);
 			previousCounter = currentBlock.counter;
 			processedBlock++;
