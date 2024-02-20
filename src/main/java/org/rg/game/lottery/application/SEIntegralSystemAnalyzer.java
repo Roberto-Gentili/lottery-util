@@ -352,7 +352,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					combo,
 					computePremiums(processingContext, combo)
 				);
-				mergeAndStore(
+				merge(
 					processingContext.cacheKey,
 					processingContext.systemsRank,
 					processingContext.record,
@@ -362,13 +362,13 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			} else if (currentBlock.indexes != null && indexMode.compareTo(0) == 0) {
 				currentBlock.counter = null;
 				currentBlock.indexes = null;
-				writeRecord(processingContext.cacheKey, processingContext.record);
 			}
 			if (currentBlock.counter != null && currentBlock.counter.compareTo(currentBlock.start) < 0 && currentBlock.counter.compareTo(currentBlock.end) > 0) {
 				LogUtils.INSTANCE.warn("Unaligned block: " + currentBlock);
 			}
 			processedBlock++;
-			if (processedBlock % 10 == 0 || processedBlock == processingContext.record.blocks.size()) {
+			if (processedBlock % 100 == 0 || processedBlock == processingContext.record.blocks.size()) {
+				writeRecord(processingContext.cacheKey, processingContext.record);
 				LogUtils.INSTANCE.info(
 					MathUtils.INSTANCE.format(processedBlock) + " of " +
 					MathUtils.INSTANCE.format(
@@ -852,6 +852,18 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		Block currentBlock,
 		int rankSize
 	){
+		merge(cacheKey, systemsRank, toBeCached, currentBlock, rankSize);
+		writeRecord(cacheKey, toBeCached);
+	}
+
+
+	private static void merge(
+		String cacheKey,
+		TreeSet<Entry<List<Integer>, Map<Number, Integer>>> systemsRank,
+		Record toBeCached,
+		Block currentBlock,
+		int rankSize
+	){
 		Record cacheRecord = loadRecord(cacheKey);
 		if (cacheRecord != null) {
 			systemsRank.addAll(cacheRecord.data);
@@ -873,7 +885,6 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			systemsRank.pollLast();
 		}
 		toBeCached.data = new ArrayList<>(systemsRank);
-		writeRecord(cacheKey, toBeCached);
 	}
 
 
