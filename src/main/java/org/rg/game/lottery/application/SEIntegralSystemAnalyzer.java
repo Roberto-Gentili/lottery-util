@@ -943,9 +943,9 @@ public class SEIntegralSystemAnalyzer extends Shared {
 
 			@Override
 			public Record deserialize(
-				JsonParser p, DeserializationContext ctxt
+				JsonParser jsonParser, DeserializationContext context
 			) throws IOException, JacksonException {
-				JsonNode recordNode = p.getCodec().readTree(p);
+				JsonNode recordNode = jsonParser.getCodec().readTree(jsonParser);
 				Iterator<JsonNode> blockNodeIterator = recordNode.get("blocks").iterator();
 				Collection<Block> blocks = new ArrayList<>();
 				while (blockNodeIterator.hasNext()) {
