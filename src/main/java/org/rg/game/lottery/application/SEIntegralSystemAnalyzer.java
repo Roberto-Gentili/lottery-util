@@ -55,6 +55,16 @@ import org.rg.game.lottery.engine.SEPremium;
 import org.rg.game.lottery.engine.SEStats;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JacksonException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.BeanProperty;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.DocumentSnapshot;
@@ -72,6 +82,9 @@ public class SEIntegralSystemAnalyzer extends Shared {
 	public static void main(String[] args) throws IOException {
 		long startTime = System.currentTimeMillis();
 		try {
+			IOUtils.INSTANCE.getObjectMapper().registerModule(
+				new SimpleModule().addDeserializer(Record.class, new Record.Deserializer())
+			);
 			recordWriters = new ArrayList<>();
 			recordLoaders = new ArrayList<>();
 			localRecordWriters = new ArrayList<>();
@@ -566,38 +579,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		if (recordAsFlatRawValue == null) {
 			return null;
 		}
-		Map<String, Object> recordAsRawValue = IOUtils.INSTANCE.readFromJSONFormat(recordAsFlatRawValue, Map.class);
-		Collection<Block> blocks = new ArrayList<>();
-		for (Map<String, Object> blocksAsRawValue : (Collection<Map<String, Object>>)recordAsRawValue.get("blocks")) {
-			int[] indexes =
-				(int[])Optional.ofNullable((Collection<Integer>)blocksAsRawValue.get("indexes"))
-				.map(numbers -> numbers.stream().mapToInt(Integer::intValue).toArray()).orElseGet(() -> null);
-			blocks.add(
-				new Block(
-					new BigInteger(blocksAsRawValue.get("start").toString()),
-					new BigInteger(blocksAsRawValue.get("end").toString()),
-					Optional.ofNullable(
-						blocksAsRawValue.get("counter")
-					).map(Object::toString).map(BigInteger::new).orElseGet(() -> null),
-					indexes
-				)
-			);
-		}
-		Collection<Map.Entry<List<Integer>, Map<Number, Integer>>> data = new ArrayList<>();
-		for (Map<String, Map<String, Integer>> comboForResultAsRawValue : (Collection<Map<String, Map<String, Integer>>>) recordAsRawValue.get("data")) {
-			Map.Entry<String, Map<String, Integer>> comboForResultAsRawValueEntry = comboForResultAsRawValue.entrySet().iterator().next();
-			Map<Number, Integer> premiums = new LinkedHashMap<>();
-			for (Map.Entry<String, Integer> premium : comboForResultAsRawValueEntry.getValue().entrySet()) {
-				premiums.put(Premium.parseType(premium.getKey()), premium.getValue());
-			}
-			data.add(
-				new AbstractMap.SimpleEntry<>(
-					ComboHandler.fromString(comboForResultAsRawValueEntry.getKey().replaceAll("\\[|\\]", "")),
-					premiums
-				)
-			);
-		}
-		return new Record(blocks, data);
+		return IOUtils.INSTANCE.readFromJSONFormat(recordAsFlatRawValue, Record.class);
 	}
 
 
@@ -955,6 +937,70 @@ public class SEIntegralSystemAnalyzer extends Shared {
 
 		public Block getBlock(int index) {
 			return ((List<Block>)blocks).get(index);
+		}
+
+		public static class Deserializer extends JsonDeserializer<Record> implements ContextualDeserializer {
+
+			@Override
+			public Record deserialize(
+				JsonParser p, DeserializationContext ctxt
+			) throws IOException, JacksonException {
+				JsonNode recordNode = p.getCodec().readTree(p);
+				Iterator<JsonNode> blockNodeIterator = recordNode.get("blocks").iterator();
+				Collection<Block> blocks = new ArrayList<>();
+				while (blockNodeIterator.hasNext()) {
+					JsonNode blockNode = blockNodeIterator.next();
+					ArrayNode indexesNode = (ArrayNode)blockNode.get("indexes");
+					int[] indexes = null;
+					if (indexesNode != null) {
+						Iterator<JsonNode> indexesNodeIterator = indexesNode.iterator();
+						indexes = new int[indexesNode.size()];
+						for (int i = 0; indexesNodeIterator.hasNext(); i++) {
+							indexes[i] = indexesNodeIterator.next().asInt();
+						}
+					}
+					blocks.add(
+						new Block(
+							new BigInteger(blockNode.get("start").asText()),
+							new BigInteger(blockNode.get("end").asText()),
+							Optional.ofNullable(
+								blockNode.get("counter")
+							).map(JsonNode::asText).map(BigInteger::new).orElseGet(() -> null),
+							indexes
+						)
+					);
+				}
+
+				Collection<Map.Entry<List<Integer>, Map<Number, Integer>>> data = new ArrayList<>();
+				recordNode.get("data").forEach(comboForResultNode -> {
+					Map<Number, Integer> premiums = new LinkedHashMap<>();
+					comboForResultNode.forEach(premiumsNode -> {
+						for (String premiumForCounterRaw : premiumsNode.toString().replaceAll("\"|\\{|\\}| ", "").split(",")) {
+							String[] premiumForCounter = premiumForCounterRaw.split(":");
+							premiums.put(
+								Premium.parseType(premiumForCounter[0]), Integer.valueOf(premiumForCounter[1])
+							);
+						}
+					});
+					data.add(
+						new AbstractMap.SimpleEntry<>(
+							ComboHandler.fromString(comboForResultNode.toString().split(":")[0].replaceAll("\"|\\{|\\[|\\]", "")),
+							premiums
+						)
+					);
+				});
+
+				return new Record(blocks, data);
+			}
+
+
+			@Override
+			public JsonDeserializer<?> createContextual(
+				DeserializationContext ctxt,
+				BeanProperty property
+			) throws JsonMappingException {
+		        return this;
+			}
 		}
 
 	}
