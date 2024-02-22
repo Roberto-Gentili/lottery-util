@@ -26,6 +26,9 @@ public class IOUtils {
 	public static final IOUtils INSTANCE = new IOUtils();
 	final ObjectMapper objectMapper = new ObjectMapper();
 
+	public ObjectMapper getObjectMapper() {
+		return objectMapper;
+	}
 
 	public void copy(InputStream input, OutputStream output) {
 		try {
