@@ -8,7 +8,7 @@ jobs:
             
   ask-for-authorization:
     name: Ask for authorization
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
     - uses: octokit/request-action@v2.0.0
       with:
