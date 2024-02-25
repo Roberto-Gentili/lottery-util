@@ -592,9 +592,6 @@ public class SEIntegralSystemAnalyzer extends Shared {
 	protected static void chooseAndPrintNextCompetitionSystem(Record cacheRecord, Properties config) {
 		LocalDate nextExtractionDate = SELotteryMatrixGeneratorEngine.DEFAULT_INSTANCE.computeNextExtractionDate(LocalDate.now(), false);
 		int rankSize = ProcessingContext.getRankSize(config);
-		if (rankSize > cacheRecord.data.size()) {
-			rankSize = cacheRecord.data.size();
-		}
 		Map.Entry<LocalDate, Long> seedData = getSEAllStats().getSeedData(nextExtractionDate);
 		if (CollectionUtils.INSTANCE.retrieveBoolean(config, "choice-of-systems.random", "true")) {
 			seedData.getValue();
@@ -658,15 +655,18 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					"\nLe combinazioni scelte per il concorso " + seedData.getValue() + " del " +
 					TimeUtils.defaultLocalDateFormat.format(nextExtractionDate) + " sono:"
 				);
+				Set<Integer> selectedIntegralSystemsIndexesFlat = new LinkedHashSet<>();
 				List<List<Integer>> selectedIntegralSystemsFlat = new ArrayList<>();
 				for (List<Integer> selectedIntegralSystemsRow : selectedIntegralSystems) {
 					for (Integer systemRankPosition : selectedIntegralSystemsRow) {
-						List<Integer> selectedIntegralSystem = cacheRecord.data.get(systemRankPosition).getKey();
-						selectedIntegralSystemsFlat.add(selectedIntegralSystem);
-						LogUtils.INSTANCE.info(
-							"\t" + ComboHandler.toString(selectedIntegralSystem, ", ") +
-								"\t posizionata al " + (systemRankPosition + 1) + "° posto."
-						);
+						if (selectedIntegralSystemsIndexesFlat.add(systemRankPosition)) {
+							List<Integer> selectedIntegralSystem = cacheRecord.data.get(systemRankPosition).getKey();
+							selectedIntegralSystemsFlat.add(selectedIntegralSystem);
+							LogUtils.INSTANCE.info(
+								"\t" + ComboHandler.toString(selectedIntegralSystem, ", ") +
+									"\t posizionata al " + (systemRankPosition + 1) + "° posto."
+							);
+						}
 					}
 				}
 				LogUtils.INSTANCE.info("Il relativo sistema integrale è composto dalle seguenti combinazioni:");
@@ -676,10 +676,6 @@ public class SEIntegralSystemAnalyzer extends Shared {
 						LogUtils.INSTANCE.info("\t" + ComboHandler.toString(iterationData.getCombo()));
 					});
 				}
-//				\n\t" + ComboHandler.toString(combo.getKey(), ", ") +
-//					"\nposizionata al " + nextLong + "° posto. Il relativo sistema è:"
-//				);
-				System.out.println();
 			}
 		}
 	}
