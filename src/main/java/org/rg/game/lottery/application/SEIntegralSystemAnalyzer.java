@@ -27,6 +27,7 @@ import java.util.Optional;
 import java.util.PrimitiveIterator.OfLong;
 import java.util.Properties;
 import java.util.Random;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -36,6 +37,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.burningwave.Throwables;
 import org.rg.game.core.CollectionUtils;
@@ -65,6 +67,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.DocumentSnapshot;
@@ -340,7 +343,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			processingContext.record.data.size() >= processingContext.rankSize
 		) {
 			//Sceglie una combinazione casuale fra quelle in classifica
-			chooseAndPrintNextCompetitionSystem(processingContext.record, processingContext.rankSize);
+			chooseAndPrintNextCompetitionSystem(processingContext.record, config);
 		}
 		printData(processingContext.record, false);
 		LogUtils.INSTANCE.info(
@@ -442,6 +445,9 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			Block absignedBlock = blockSupplier.get();
 			BigInteger sizeOfIntegralSystemMatrix = processingContext.comboHandler.getSize();
 			String sizeOfIntegralSystemMatrixAsString = MathUtils.INSTANCE.format(sizeOfIntegralSystemMatrix);
+			if (absignedBlock.counter == null && absignedBlock.indexes == null) {
+				absignedBlock.counter = BigInteger.ZERO;
+			}
 			processingContext.comboHandler.iterateFrom(
 				processingContext.comboHandler.new IterationData(absignedBlock.indexes, absignedBlock.counter),
 				iterationData -> {
@@ -583,28 +589,99 @@ public class SEIntegralSystemAnalyzer extends Shared {
 	}
 
 
-	protected static void chooseAndPrintNextCompetitionSystem(Record cacheRecord, int rankSize) {
+	protected static void chooseAndPrintNextCompetitionSystem(Record cacheRecord, Properties config) {
 		LocalDate nextExtractionDate = SELotteryMatrixGeneratorEngine.DEFAULT_INSTANCE.computeNextExtractionDate(LocalDate.now(), false);
-		Map.Entry<LocalDate, Long> seedData = getSEAllStats().getSeedData(nextExtractionDate);
-		seedData.getValue();
-		Long size = cacheRecord.blocks.stream().reduce((first, second) -> second)
-		  .orElse(null).end.longValue();
-		Random random = new Random(seedData.getValue());
-		OfLong randomizer = random.longs(1L, size + 1).iterator();
-		long nextLong = -1;
-		while (nextLong > rankSize || nextLong < 0) {
-			nextLong = randomizer.nextLong();
+		int rankSize = ProcessingContext.getRankSize(config);
+		if (rankSize > cacheRecord.data.size()) {
+			rankSize = cacheRecord.data.size();
 		}
-		Map.Entry<List<Integer>, Map<Number, Integer>> combo = new ArrayList<>(cacheRecord.data).get(Long.valueOf(nextLong).intValue());
-		ComboHandler cH = new ComboHandler(combo.getKey(), 6);
-		LogUtils.INSTANCE.info(
-			"La combinazione scelta per il concorso " + seedData.getValue() + " del " +
-			TimeUtils.defaultLocalDateFormat.format(nextExtractionDate) + " è:\n\t" + ComboHandler.toString(combo.getKey(), ", ") +
-			"\nposizionata al " + nextLong + "° posto. Il relativo sistema è:"
-		);
-		cH.iterate(iterationData -> {
-			LogUtils.INSTANCE.info("\t" + ComboHandler.toString(iterationData.getCombo()));
-		});
+		Map.Entry<LocalDate, Long> seedData = getSEAllStats().getSeedData(nextExtractionDate);
+		if (CollectionUtils.INSTANCE.retrieveBoolean(config, "choice-of-systems.random", "true")) {
+			seedData.getValue();
+			Long size = cacheRecord.blocks.stream().reduce((first, second) -> second)
+			  .orElse(null).end.longValue();
+			Random random = new Random(seedData.getValue());
+			OfLong randomizer = random.longs(1L, size + 1).iterator();
+			long nextLong = -1;
+			while (nextLong > rankSize || nextLong < 0) {
+				nextLong = randomizer.nextLong();
+			}
+			Map.Entry<List<Integer>, Map<Number, Integer>> combo = new ArrayList<>(cacheRecord.data).get(Long.valueOf(nextLong).intValue());
+			ComboHandler cH = new ComboHandler(combo.getKey(), 6);
+			LogUtils.INSTANCE.info(
+				"\nLa combinazione scelta per il concorso " + seedData.getValue() + " del " +
+				TimeUtils.defaultLocalDateFormat.format(nextExtractionDate) + " è:\n\t" + ComboHandler.toString(combo.getKey(), ", ") +
+				"\nposizionata al " + nextLong + "° posto. Il relativo sistema integrale è composto dalle seguenti combinazioni:"
+			);
+			cH.iterate(iterationData -> {
+				LogUtils.INSTANCE.info("\t" + ComboHandler.toString(iterationData.getCombo()));
+			});
+		}
+		if (config.get("choice-of-systems.numbers") != null) {
+			List<Integer> numbersToBePlayed =
+				new SELotteryMatrixGeneratorEngine().setup(config, false).computeNumbersToBePlayed(nextExtractionDate);
+			if (!numbersToBePlayed.isEmpty()) {
+				TreeSet<Map.Entry<BigInteger, Integer>> rankComboPositionForNumbersPositions = new TreeSet<>((itemOne, itemTwo) -> {
+					if (itemOne != itemTwo) {
+						return itemOne.getValue().compareTo(itemTwo.getValue()) == 0 ?
+							itemOne.getKey().compareTo(itemTwo.getKey()) :
+								itemOne.getValue().compareTo(itemTwo.getValue()) > 0 ? -1 : 1;
+
+					}
+					return 0;
+				});
+				ComboHandler rankAsComboHandler = new ComboHandler(
+					IntStream.range(0, rankSize).boxed().collect(Collectors.toList()),
+					Integer.valueOf(config.getProperty("choice-of-systems.size"))
+				).iterate(iterationData -> {
+					Set<Integer> allComboNumbers = new LinkedHashSet<>();
+					for (Integer index : iterationData.getCombo()) {
+						allComboNumbers.addAll(cacheRecord.data.get(index).getKey());
+					}
+					allComboNumbers.retainAll(numbersToBePlayed);
+					rankComboPositionForNumbersPositions.add(new AbstractMap.SimpleEntry<BigInteger, Integer>(iterationData.getCounter(), allComboNumbers.size()));
+					if (rankComboPositionForNumbersPositions.size() > 1) {
+						rankComboPositionForNumbersPositions.pollLast();
+					}
+				});
+				List<List<Integer>> selectedIntegralSystems = new ArrayList<>();
+				for (Map.Entry<BigInteger, Integer> rankComboPositionForNumbersCounter : rankComboPositionForNumbersPositions) {
+					List<Integer> selectedIntegralSystemsRow = new ArrayList<>();
+					for (Integer selectedComboPosition : rankAsComboHandler.computeCombo(rankComboPositionForNumbersCounter.getKey())) {
+						selectedIntegralSystemsRow.add(
+							selectedComboPosition.intValue()
+						);
+					}
+					selectedIntegralSystems.add(selectedIntegralSystemsRow);
+				}
+				LogUtils.INSTANCE.info(
+					"\nLe combinazioni scelte per il concorso " + seedData.getValue() + " del " +
+					TimeUtils.defaultLocalDateFormat.format(nextExtractionDate) + " sono:"
+				);
+				List<List<Integer>> selectedIntegralSystemsFlat = new ArrayList<>();
+				for (List<Integer> selectedIntegralSystemsRow : selectedIntegralSystems) {
+					for (Integer systemRankPosition : selectedIntegralSystemsRow) {
+						List<Integer> selectedIntegralSystem = cacheRecord.data.get(systemRankPosition).getKey();
+						selectedIntegralSystemsFlat.add(selectedIntegralSystem);
+						LogUtils.INSTANCE.info(
+							"\t" + ComboHandler.toString(selectedIntegralSystem, ", ") +
+								"\t posizionata al " + (systemRankPosition + 1) + "° posto."
+						);
+					}
+				}
+				LogUtils.INSTANCE.info("Il relativo sistema integrale è composto dalle seguenti combinazioni:");
+				for (List<Integer> selectedIntegralSystem : selectedIntegralSystemsFlat) {
+					ComboHandler cH = new ComboHandler(selectedIntegralSystem, 6);
+					cH.iterate(iterationData -> {
+						LogUtils.INSTANCE.info("\t" + ComboHandler.toString(iterationData.getCombo()));
+					});
+				}
+//				\n\t" + ComboHandler.toString(combo.getKey(), ", ") +
+//					"\nposizionata al " + nextLong + "° posto. Il relativo sistema è:"
+//				);
+				System.out.println();
+			}
+		}
 	}
 
 
@@ -924,16 +1001,16 @@ public class SEIntegralSystemAnalyzer extends Shared {
 
 		Record() {}
 
-		Record(Collection<Block> blocks, Collection<Map.Entry<List<Integer>, Map<Number, Integer>>> data) {
+		Record(List<Block> blocks, List<Map.Entry<List<Integer>, Map<Number, Integer>>> data) {
 			this.blocks = blocks;
 			this.data = data;
 		}
 
 		@JsonProperty("blocks")
-		private Collection<Block> blocks;
+		private List<Block> blocks;
 
 		@JsonProperty("data")
-		private Collection<Map.Entry<List<Integer>, Map<Number, Integer>>> data;
+		private List<Map.Entry<List<Integer>, Map<Number, Integer>>> data;
 
 		public Block getBlock(int index) {
 			return ((List<Block>)blocks).get(index);
@@ -947,31 +1024,31 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			) throws IOException, JacksonException {
 				JsonNode recordNode = jsonParser.getCodec().readTree(jsonParser);
 				Iterator<JsonNode> blockNodeIterator = recordNode.get("blocks").iterator();
-				Collection<Block> blocks = new ArrayList<>();
+				List<Block> blocks = new ArrayList<>();
 				while (blockNodeIterator.hasNext()) {
 					JsonNode blockNode = blockNodeIterator.next();
-					ArrayNode indexesNode = (ArrayNode)blockNode.get("indexes");
+					JsonNode indexesNode = blockNode.get("indexes");
 					int[] indexes = null;
-					if (indexesNode != null) {
+					if (indexesNode instanceof ArrayNode) {
 						Iterator<JsonNode> indexesNodeIterator = indexesNode.iterator();
 						indexes = new int[indexesNode.size()];
 						for (int i = 0; indexesNodeIterator.hasNext(); i++) {
 							indexes[i] = indexesNodeIterator.next().asInt();
 						}
 					}
+					JsonNode counterNode = blockNode.get("counter");
+					BigInteger counter = !(counterNode instanceof NullNode)? new BigInteger(counterNode.asText()) : null;
 					blocks.add(
 						new Block(
 							new BigInteger(blockNode.get("start").asText()),
 							new BigInteger(blockNode.get("end").asText()),
-							Optional.ofNullable(
-								blockNode.get("counter")
-							).map(JsonNode::asText).map(BigInteger::new).orElseGet(() -> null),
+							counter,
 							indexes
 						)
 					);
 				}
 
-				Collection<Map.Entry<List<Integer>, Map<Number, Integer>>> data = new ArrayList<>();
+				List<Map.Entry<List<Integer>, Map<Number, Integer>>> data = new ArrayList<>();
 				recordNode.get("data").forEach(comboForResultNode -> {
 					Map<Number, Integer> premiums = new LinkedHashMap<>();
 					comboForResultNode.forEach(premiumsNode -> {
@@ -1063,7 +1140,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			comboHandler = new ComboHandler(SEStats.NUMBERS, combinationSize);
 			modderForSkipLog = BigInteger.valueOf(1_000_000_000);
 			modderForAutoSave = new BigInteger(config.getProperty("autosave-every", "1000000"));
-			rankSize = Integer.valueOf(config.getProperty("rank.size", "100"));
+			rankSize = getRankSize(config);
 			SEStats sEStats = SEStats.get(
 				config.getProperty("competition.archive.start-date"),
 				config.getProperty("competition.archive.end-date")
@@ -1079,6 +1156,10 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			);
 			assignedBlocks = retrieveAssignedBlocks(config, record);
 			previousLoggedRankWrapper = new AtomicReference<>();
+		}
+
+		protected static Integer getRankSize(Properties config) {
+			return Integer.valueOf(config.getProperty("rank.size", "100"));
 		}
 	}
 

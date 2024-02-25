@@ -838,6 +838,10 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 			return executor;
 		}
 
+		public List<Integer> computeNumbersToBePlayed(LocalDate extractionDate) {
+			return (List<Integer>)basicDataSupplier.apply(extractionDate).get("numbersToBePlayed");
+		}
+
 	}
 
 }

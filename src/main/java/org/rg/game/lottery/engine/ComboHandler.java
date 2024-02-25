@@ -177,7 +177,7 @@ public class ComboHandler {
 	}
 
 
-	public void iterateFrom(
+	public ComboHandler iterateFrom(
 		IterationData iterationData,
 		Consumer<IterationData> action
 	) {
@@ -189,9 +189,10 @@ public class ComboHandler {
 		} catch (TerminateIteration exc) {
 
 		}
+		return this;
 	}
 
-	public void iterateFrom(
+	public ComboHandler iterateFrom(
 		List<Integer> combo,
 		Consumer<IterationData> action
 	) {
@@ -204,12 +205,14 @@ public class ComboHandler {
 		} catch (TerminateIteration exc) {
 
 		}
+		return this;
 	}
 
-	public void iterate(
+	public ComboHandler iterate(
 		Consumer<IterationData> action
 	) {
 		iterateFrom(new IterationData(), action);
+		return this;
 	}
 
 	protected int[] nextIndexes(int[] indexes, int endIndex) {
