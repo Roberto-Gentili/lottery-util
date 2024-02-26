@@ -253,7 +253,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				recordAsRawValue.put("value", IOUtils.INSTANCE.writeToJSONFormat(record));
 				try {
 					recordAsDocumentWrapper.set(recordAsRawValue).get();
-					LogUtils.INSTANCE.info("Object with id '" + key + "' stored in the firebase cache");
+					LogUtils.INSTANCE.info("Object with id '" + key + "' stored in the Firebase cache");
 				} catch (Throwable exc) {
 					//LogUtils.INSTANCE.error(exc, "Unable to store data to Firebase");
 					Throwables.INSTANCE.throwException(exc);
