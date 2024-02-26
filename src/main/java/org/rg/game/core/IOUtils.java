@@ -81,7 +81,7 @@ public class IOUtils {
 			ObjectOutputStream oos = new ObjectOutputStream(fout)
 		) {
 			oos.writeObject(object);
-			LogUtils.INSTANCE.info("Object with id '" + key + "' stored in the physical cache");
+			LogUtils.INSTANCE.info("Object with id '" + key + "' stored in the local cache");
 		} catch (Throwable exc) {
 			Throwables.INSTANCE.throwException(exc);
 		}
