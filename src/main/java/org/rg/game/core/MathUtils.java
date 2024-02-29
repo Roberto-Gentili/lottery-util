@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 
 import org.burningwave.Throwables;
@@ -80,22 +81,15 @@ public class MathUtils {
 		return (int)sumOfNaturalNumbersBetween((double)a, (double)b);
 	}
 
-	/*
-	public BigInteger factorial(BigInteger number) {
-		BigInteger factorial = BigInteger.ONE;
-		BigInteger divisor = BigInteger.valueOf(100_000);
-		BigInteger initialValue = number;
-		while (number.compareTo(BigInteger.ZERO) > 0) {
-			factorial = factorial.multiply(number);
-			number = number.subtract(BigInteger.ONE);
-			BigInteger processedNumbers = initialValue.subtract(number);
-			if (processedNumbers.mod(divisor).compareTo(BigInteger.ZERO) == 0) {
-				LogUtils.INSTANCE.info("Processed " + processedNumbers
-					.toString() + " numbers - Factorial: " + factorial.toString());
-			}
-		}
-		return factorial;
-	}*/
+	public BigInteger random(BigInteger upperLimit) {
+		Random randomSource = new Random();
+		BigInteger number;
+		do {
+			number = new BigInteger(upperLimit.bitLength(), randomSource);
+		} while (number.compareTo(upperLimit) >= 0);
+		return number;
+	}
+
 
 	public BigInteger factorial(Number number) {
 		return factorial(BigInteger.valueOf(number.longValue()));
