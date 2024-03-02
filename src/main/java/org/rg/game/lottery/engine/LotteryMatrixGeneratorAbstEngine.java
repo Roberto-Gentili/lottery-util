@@ -88,6 +88,9 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 		}
 		processingContext.comboIndexSelectorType = config.getProperty("combination.selector", "random");
 		String combinationFilterRaw = config.getProperty("combination.filter");
+		String numbersProcessorConfigPrefix = Optional.of(
+			config.getProperty("numbers-processor.config.prefix")
+		).map(value -> value + ".").orElseGet(() -> "");
 		processingContext.basicDataSupplier = extractionDate -> {
 			if (processingContext.combinationFilter == null) {
 				processingContext.combinationFilter = CombinationFilterFactory.INSTANCE.parse(
@@ -100,9 +103,11 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 			);
 			List<Integer> chosenNumbers = numberProcessor.retrieveNumbersToBePlayed(
 				numberProcessorContext,
-				config.getProperty("numbers", getDefaultNumberRange()),
+				config.getProperty(numbersProcessorConfigPrefix + "numbers", getDefaultNumberRange()),
 				extractionDate,
-				CollectionUtils.INSTANCE.retrieveBoolean(config, "numbers.ordered", "false")
+				CollectionUtils.INSTANCE.retrieveBoolean(
+					config, numbersProcessorConfigPrefix + "numbers.ordered", "false"
+				)
 			);
 			data.put("chosenNumbers", chosenNumbers);
 			List<Integer> numbersToBePlayed = new ArrayList<>(chosenNumbers);
@@ -110,10 +115,10 @@ public abstract class LotteryMatrixGeneratorAbstEngine {
 				"numbersToBeDiscarded",
 				numberProcessor.retrieveNumbersToBeExcluded(
 					numberProcessorContext,
-					config.getProperty("numbers.discard"),
+					config.getProperty(numbersProcessorConfigPrefix + "numbers.discard"),
 					extractionDate,
 					numbersToBePlayed,
-					CollectionUtils.INSTANCE.retrieveBoolean(config, "numbers.ordered", "false")
+					CollectionUtils.INSTANCE.retrieveBoolean(config, numbersProcessorConfigPrefix + "numbers.ordered", "false")
 				)
 			);
 			data.put("numbersToBePlayed", numbersToBePlayed);

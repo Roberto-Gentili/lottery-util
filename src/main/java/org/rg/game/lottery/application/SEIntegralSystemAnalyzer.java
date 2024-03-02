@@ -168,6 +168,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		}
 		Integer indexModeFinal = indexMode;
 		for (Properties config : ResourceUtils.INSTANCE.toOrderedProperties(configurationFiles)) {
+			config.setProperty("numbers-processor.config.prefix", "choice-of-systems");
 			String[] enabledRawValues = config.getProperty("enabled", "false").split(";");
 			boolean enabled = false;
 			for (String enabledRawValue : enabledRawValues) {
@@ -344,7 +345,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			processingContext.record.data.size() >= processingContext.rankSize
 		) {
 			//Sceglie una combinazione casuale fra quelle in classifica
-			chooseAndPrintNextCompetitionSystem(processingContext.record, config);
+			chooseAndPrintSelectedSystems(processingContext.record, config);
 		}
 		printData(processingContext.record, false);
 		LogUtils.INSTANCE.info(
@@ -590,7 +591,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 	}
 
 
-	protected static void chooseAndPrintNextCompetitionSystem(Record cacheRecord, Properties config) {
+	protected static void chooseAndPrintSelectedSystems(Record cacheRecord, Properties config) {
 		LocalDate nextExtractionDate = SELotteryMatrixGeneratorEngine.DEFAULT_INSTANCE.computeNextExtractionDate(LocalDate.now(), false);
 		int rankSize = ProcessingContext.getRankSize(config);
 		Map.Entry<LocalDate, Long> seedData = getSEAllStats().getSeedData(nextExtractionDate);
@@ -653,7 +654,9 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					selectedIntegralSystems.add(selectedIntegralSystemsRow);
 				}
 				LogUtils.INSTANCE.info(
-					"\nLe combinazioni scelte per il concorso " + seedData.getValue() + " del " +
+					"\nLe combinazioni scelte, sulla base dei numeri scelti (" +
+					ComboHandler.toString(numbersToBePlayed, ", ") +
+					") per il concorso " + seedData.getValue() + " del " +
 					TimeUtils.defaultLocalDateFormat.format(nextExtractionDate) + " sono:"
 				);
 				Set<Integer> selectedIntegralSystemsIndexesFlat = new LinkedHashSet<>();
