@@ -16,6 +16,13 @@ public class ComboHandlerTest {
 		}
 
 		protected List<Integer> computeComboFromCounter(BigInteger counter) {
+			ComboHandler comboHandler = new ComboHandler(SEStats.NUMBERS, 6);
+			BigInteger position = comboHandler.computeCounter(
+				Arrays.asList(40,51,53,56,68,72)
+			);
+			List<Integer> combo = comboHandler.computeCombo(position);
+			System.out.println(toString(combo));
+
 			int[] indexes = new int[(int)combinationSize];
 			int numbersCount = numbers.size();
 			BigInteger diff = getSize().subtract(counter);

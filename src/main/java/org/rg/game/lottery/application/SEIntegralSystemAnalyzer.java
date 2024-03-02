@@ -685,7 +685,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 							selectedIntegralSystemsFlat.add(selectedIntegralSystem);
 							LogUtils.INSTANCE.info(
 								"\t" + ComboHandler.toString(selectedIntegralSystem, ", ") +
-									"\t posizionata al " + (systemRankPosition + 1) + "° posto."
+								"\t posizionata al " + (systemRankPosition + 1) + "° posto."
 							);
 						}
 					}
