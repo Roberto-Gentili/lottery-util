@@ -690,10 +690,6 @@ public class SEIntegralSystemAnalyzer extends Shared {
 						}
 					}
 				}
-				Map<String, Object> report = getSEStats().checkQuality(
-					selectedIntegralSystemsFlat::iterator,
-					Premium.allHighTypesList().stream().toArray(Number[]::new)
-				);
 				for (List<Integer> selectedIntegralSystem : selectedIntegralSystemsFlat) {
 					new ComboHandler(selectedIntegralSystem, 6).iterate(premiumFilter);
 				}
