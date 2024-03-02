@@ -598,11 +598,12 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		int rankSize = ProcessingContext.getRankSize(config);
 		Map.Entry<LocalDate, Long> seedData = getSEAllStats().getSeedData(nextExtractionDate);
 		Number premium = Premium.parseType(config.getProperty("choice-of-systems.filter", "0"));
+		List<String> selectedCombosData = new ArrayList<>();
 		Consumer<IterationData> premiumFilter = iterationData -> {
 			List<Integer> cmb = iterationData.getCombo();
 			Map<Number, Integer> premiums = computePremiums(processingContext, cmb);
 			if (premium.intValue() == 0 || premiums.get(premium).compareTo(0) > 0) {
-				LogUtils.INSTANCE.info("\t" + ComboHandler.toString(cmb));
+				selectedCombosData.add(ComboHandler.toString(cmb));
 			}
 		};
 		if (CollectionUtils.INSTANCE.retrieveBoolean(config, "choice-of-systems.random", "true")) {
@@ -617,12 +618,15 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			}
 			Map.Entry<List<Integer>, Map<Number, Integer>> combo = new ArrayList<>(cacheRecord.data).get(Long.valueOf(nextLong).intValue());
 			ComboHandler cH = new ComboHandler(combo.getKey(), 6);
+			cH.iterate(premiumFilter);
 			LogUtils.INSTANCE.info(
 				"\nLa combinazione scelta per il concorso " + seedData.getValue() + " del " +
 				TimeUtils.defaultLocalDateFormat.format(nextExtractionDate) + " è:\n\t" + ComboHandler.toString(combo.getKey(), ", ") +
-				"\nposizionata al " + nextLong + "° posto. Il relativo sistema integrale è composto dalle seguenti combinazioni:"
+				"\nposizionata al " + nextLong + "° posto. Il relativo sistema integrale è composto da " + selectedCombosData.size() + " combinazioni:"
 			);
-			cH.iterate(premiumFilter);
+			for (String cmbData : selectedCombosData) {
+				LogUtils.INSTANCE.info("\t" + cmbData);
+			}
 		}
 		if (config.get("choice-of-systems.numbers") != null) {
 			List<Integer> numbersToBePlayed =
@@ -681,13 +685,16 @@ public class SEIntegralSystemAnalyzer extends Shared {
 						}
 					}
 				}
-				LogUtils.INSTANCE.info("Il relativo sistema integrale è composto dalle seguenti combinazioni:");
 				Map<String, Object> report = getSEStats().checkQuality(
 					selectedIntegralSystemsFlat::iterator,
 					Premium.allHighTypesList().stream().toArray(Number[]::new)
 				);
 				for (List<Integer> selectedIntegralSystem : selectedIntegralSystemsFlat) {
 					new ComboHandler(selectedIntegralSystem, 6).iterate(premiumFilter);
+				}
+				LogUtils.INSTANCE.info("Il relativo sistema integrale è composto da " + selectedCombosData.size() + " combinazioni:");
+				for (String cmbData : selectedCombosData) {
+					LogUtils.INSTANCE.info("\t" + cmbData);
 				}
 			}
 		}
