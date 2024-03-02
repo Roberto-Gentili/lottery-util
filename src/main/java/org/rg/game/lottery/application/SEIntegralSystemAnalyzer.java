@@ -602,7 +602,12 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		Consumer<IterationData> premiumFilter = iterationData -> {
 			List<Integer> cmb = iterationData.getCombo();
 			Map<Number, Integer> premiums = computePremiums(processingContext, cmb);
-			if (premium.intValue() == 0 || premiums.get(premium).compareTo(0) > 0) {
+			if (premium.intValue() == 0 || premiums.entrySet().stream().filter(
+				(premiumTypeAndCounter) -> {
+					return premiumTypeAndCounter.getKey().doubleValue() >= premium.doubleValue() &&
+						premiumTypeAndCounter.getValue().compareTo(0) > 0;
+				}
+			).findFirst().orElseGet(null) != null) {
 				selectedCombosData.add(ComboHandler.toString(cmb) + ": " + Premium.toString(premiums, "=", ", "));
 			}
 		};
