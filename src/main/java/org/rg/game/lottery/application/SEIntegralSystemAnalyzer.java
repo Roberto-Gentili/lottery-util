@@ -603,7 +603,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			List<Integer> cmb = iterationData.getCombo();
 			Map<Number, Integer> premiums = computePremiums(processingContext, cmb);
 			if (premium.intValue() == 0 || premiums.get(premium).compareTo(0) > 0) {
-				selectedCombosData.add(ComboHandler.toString(cmb));
+				selectedCombosData.add(ComboHandler.toString(cmb) + ": " + Premium.toString(premiums, "=", ", "));
 			}
 		};
 		if (CollectionUtils.INSTANCE.retrieveBoolean(config, "choice-of-systems.random", "true")) {
