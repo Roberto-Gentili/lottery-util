@@ -607,7 +607,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					return premiumTypeAndCounter.getKey().doubleValue() >= premium.doubleValue() &&
 						premiumTypeAndCounter.getValue().compareTo(0) > 0;
 				}
-			).findFirst().orElseGet(null) != null) {
+			).findFirst().orElseGet(() -> null) != null) {
 				selectedCombosData.add(ComboHandler.toString(cmb) + ": " + Premium.toString(premiums, "=", ", "));
 			}
 		};
