@@ -50,6 +50,7 @@ import org.rg.game.core.NetworkUtils;
 import org.rg.game.core.ResourceUtils;
 import org.rg.game.core.TimeUtils;
 import org.rg.game.lottery.engine.ComboHandler;
+import org.rg.game.lottery.engine.ComboHandler.IterationData;
 import org.rg.game.lottery.engine.PersistentStorage;
 import org.rg.game.lottery.engine.Premium;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
@@ -345,7 +346,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 			processingContext.record.data.size() >= processingContext.rankSize
 		) {
 			//Sceglie una combinazione casuale fra quelle in classifica
-			chooseAndPrintSelectedSystems(processingContext.record, config);
+			chooseAndPrintSelectedSystems(processingContext, config);
 		}
 		printData(processingContext.record, false);
 		LogUtils.INSTANCE.info(
@@ -591,10 +592,19 @@ public class SEIntegralSystemAnalyzer extends Shared {
 	}
 
 
-	protected static void chooseAndPrintSelectedSystems(Record cacheRecord, Properties config) {
+	protected static void chooseAndPrintSelectedSystems(ProcessingContext processingContext, Properties config) {
+		Record cacheRecord = processingContext.record;
 		LocalDate nextExtractionDate = SELotteryMatrixGeneratorEngine.DEFAULT_INSTANCE.computeNextExtractionDate(LocalDate.now(), false);
 		int rankSize = ProcessingContext.getRankSize(config);
 		Map.Entry<LocalDate, Long> seedData = getSEAllStats().getSeedData(nextExtractionDate);
+		Number premium = Premium.parseType(config.getProperty("choice-of-systems.filter", "0"));
+		Consumer<IterationData> premiumFilter = iterationData -> {
+			List<Integer> cmb = iterationData.getCombo();
+			Map<Number, Integer> premiums = computePremiums(processingContext, cmb);
+			if (premium.intValue() == 0 || premiums.get(premium).compareTo(0) > 0) {
+				LogUtils.INSTANCE.info("\t" + ComboHandler.toString(cmb));
+			}
+		};
 		if (CollectionUtils.INSTANCE.retrieveBoolean(config, "choice-of-systems.random", "true")) {
 			seedData.getValue();
 			Long size = cacheRecord.blocks.stream().reduce((first, second) -> second)
@@ -612,9 +622,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 				TimeUtils.defaultLocalDateFormat.format(nextExtractionDate) + " è:\n\t" + ComboHandler.toString(combo.getKey(), ", ") +
 				"\nposizionata al " + nextLong + "° posto. Il relativo sistema integrale è composto dalle seguenti combinazioni:"
 			);
-			cH.iterate(iterationData -> {
-				LogUtils.INSTANCE.info("\t" + ComboHandler.toString(iterationData.getCombo()));
-			});
+			cH.iterate(premiumFilter);
 		}
 		if (config.get("choice-of-systems.numbers") != null) {
 			List<Integer> numbersToBePlayed =
@@ -674,11 +682,12 @@ public class SEIntegralSystemAnalyzer extends Shared {
 					}
 				}
 				LogUtils.INSTANCE.info("Il relativo sistema integrale è composto dalle seguenti combinazioni:");
+				Map<String, Object> report = getSEStats().checkQuality(
+					selectedIntegralSystemsFlat::iterator,
+					Premium.allHighTypesList().stream().toArray(Number[]::new)
+				);
 				for (List<Integer> selectedIntegralSystem : selectedIntegralSystemsFlat) {
-					ComboHandler cH = new ComboHandler(selectedIntegralSystem, 6);
-					cH.iterate(iterationData -> {
-						LogUtils.INSTANCE.info("\t" + ComboHandler.toString(iterationData.getCombo()));
-					});
+					new ComboHandler(selectedIntegralSystem, 6).iterate(premiumFilter);
 				}
 			}
 		}
