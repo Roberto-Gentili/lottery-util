@@ -461,7 +461,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 						return;
 					}
 					if (blockNotAlignedWrapper.get()) {
-						if (iterationData.getCounter().compareTo(currentBlock.start) < 0 || iterationData.getCounter().compareTo(currentBlock.end) > 0) {
+						if (iterationData.getCounter().compareTo(currentBlock.start) < 0) {
 							if (iterationData.getCounter().mod(processingContext.modderForSkipLog).compareTo(BigInteger.ZERO) == 0) {
 								LogUtils.INSTANCE.info(
 									"Skipped " + MathUtils.INSTANCE.format(iterationData.getCounter()) +
@@ -469,6 +469,10 @@ public class SEIntegralSystemAnalyzer extends Shared {
 									currentBlock
 								);
 							}
+							return;
+						} else if (iterationData.getCounter().compareTo(currentBlock.end) > 0) {//In caso di anomalia terminiamo l'iterazione del blocco
+							currentBlockWrapper.set(null);
+							LogUtils.INSTANCE.warn("Right bound exceeded for " + currentBlock + ". Counter value: " + iterationData.getCounter());
 							return;
 						}
 						BigInteger currentBlockCounter = currentBlock.counter;
