@@ -2,7 +2,7 @@ name: Launch integral system analysis
 
 on:
   schedule:
-    - cron: "0 0,8,16 * * *"
+    - cron: ${{vars.INTEGRAL_SYSTEM_ANALYSIS_CHRON_PLANNING}}
 
 jobs:
    
