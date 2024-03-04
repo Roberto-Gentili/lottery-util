@@ -55,15 +55,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
       - name: Build and launch
-        env:
-          INTEGRAL_SYSTEM_ANALYSIS_FIREBASE_CREDENTIALS: ${{ secrets.INTEGRAL_SYSTEM_ANALYSIS_FIREBASE_CREDENTIALS }}
-          INTEGRAL_SYSTEM_ANALYSIS_FIREBASE_URL: ${{ secrets.INTEGRAL_SYSTEM_ANALYSIS_FIREBASE_URL }}
-          RESOURCES_INTEGRAL_SYSTEM_ANALYSIS_FOLDER: 'integralSystemsAnalysis'
-          TASKS_MAX_PARALLEL: 5
-          TIMEOUT: 21300
-          #value 0: reset
-          #value 1: index
-          INDEX_MODE: '1'
         run: mvn -B compile exec:java -P integral-system-analysis --file pom.xml
        
   launch-integral-system-analysis:
@@ -93,10 +84,4 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
       - name: Build and launch
-        env:
-          INTEGRAL_SYSTEM_ANALYSIS_FIREBASE_CREDENTIALS: ${{ secrets.INTEGRAL_SYSTEM_ANALYSIS_FIREBASE_CREDENTIALS }}
-          INTEGRAL_SYSTEM_ANALYSIS_FIREBASE_URL: ${{ secrets.INTEGRAL_SYSTEM_ANALYSIS_FIREBASE_URL }}
-          RESOURCES_INTEGRAL_SYSTEM_ANALYSIS_FOLDER: 'integralSystemsAnalysis'
-          TASKS_MAX_PARALLEL: ${{ vars.INTEGRAL_SYSTEM_ANALYSIS_JOB_TASKS_MAX_PARALLEL }}
-          TIMEOUT: ${{ vars.INTEGRAL_SYSTEM_ANALYSIS_JOB_TIMEOUT }}
         run: mvn -B compile exec:java -P integral-system-analysis --file pom.xml
