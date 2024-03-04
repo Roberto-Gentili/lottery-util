@@ -471,9 +471,8 @@ public class SEIntegralSystemAnalyzer extends Shared {
 							}
 							return;
 						} else if (iterationData.getCounter().compareTo(currentBlock.end) > 0) {//In caso di anomalia terminiamo l'iterazione del blocco
-							currentBlockWrapper.set(null);
 							LogUtils.INSTANCE.warn("Right bound exceeded for " + currentBlock + ". Counter value: " + iterationData.getCounter());
-							return;
+							iterationData.terminateIteration();
 						}
 						BigInteger currentBlockCounter = currentBlock.counter;
 						if (currentBlockCounter != null) {
