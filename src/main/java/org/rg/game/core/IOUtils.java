@@ -65,8 +65,12 @@ public class IOUtils {
 	}
 
 	public String fileToString(String absolutePath, Charset encoding) {
+		return new String(fileContent(absolutePath), encoding);
+	}
+
+	public byte[] fileContent(String absolutePath) {
 		try {
-			return new String(Files.readAllBytes(Paths.get(absolutePath)), encoding);
+			return Files.readAllBytes(Paths.get(absolutePath));
 		} catch (NoSuchFileException exc) {
 			return null;
 		} catch (IOException exc) {
