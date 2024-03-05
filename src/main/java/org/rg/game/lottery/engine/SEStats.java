@@ -840,7 +840,7 @@ public class SEStats {
 			LogUtils.INSTANCE.info();
 			Map.Entry<Date, List<Integer>> latestWinningCombo = getLatestWinningCombo();
 			if (TimeUtils.isBetween(latestWinningCombo.getKey(), startDate, endDate)) {
-				allWinningCombos.put(latestWinningCombo.getKey(), latestWinningCombo.getValue().subList(0, 6));
+				allWinningCombos.put(latestWinningCombo.getKey(), new ArrayList<>(latestWinningCombo.getValue().subList(0, 6)));
 				allWinningCombosWithJollyAndSuperstar.put(latestWinningCombo.getKey(), latestWinningCombo.getValue());
 			}
 			for (int year : IntStream.range(startYear, (endYear + 1)).map(i -> (endYear + 1) - i + startYear - 1).toArray()) {
@@ -1137,17 +1137,13 @@ public class SEStats {
 				Map<String, Object> recordAsRawValue = new LinkedHashMap<>();
 				recordAsRawValue.put("startDate", sEStats.startDate);
 				recordAsRawValue.put("endDate", sEStats.endDate);
-				Map<Date, List<Integer>> winningCombos = new LinkedHashMap<>();
-				winningCombos.putAll(sEStats.allWinningCombos);
 				recordAsRawValue.put(
 					"allWinningCombos",
-					IOUtils.INSTANCE.serializeAndEncode(winningCombos)
+					IOUtils.INSTANCE.serializeAndEncode(new LinkedHashMap<>(sEStats.allWinningCombos))
 				);
-				winningCombos.clear();
-				winningCombos.putAll(sEStats.allWinningCombosWithJollyAndSuperstar);
 				recordAsRawValue.put(
 					"allWinningCombosWithJollyAndSuperstar",
-					IOUtils.INSTANCE.serializeAndEncode(winningCombos)
+					IOUtils.INSTANCE.serializeAndEncode(new LinkedHashMap<>(sEStats.allWinningCombosWithJollyAndSuperstar))
 				);
 				FirestoreWrapper.get().write(getPath(), recordAsRawValue);
 			}
