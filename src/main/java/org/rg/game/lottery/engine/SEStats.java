@@ -1137,13 +1137,17 @@ public class SEStats {
 				Map<String, Object> recordAsRawValue = new LinkedHashMap<>();
 				recordAsRawValue.put("startDate", sEStats.startDate);
 				recordAsRawValue.put("endDate", sEStats.endDate);
+				Map<Date, List<Integer>> winningCombos = new LinkedHashMap<>();
+				winningCombos.putAll(sEStats.allWinningCombos);
 				recordAsRawValue.put(
 					"allWinningCombos",
-					IOUtils.INSTANCE.serializeAndEncode(new LinkedHashMap<>(sEStats.allWinningCombos))
+					IOUtils.INSTANCE.serializeAndEncode(winningCombos)
 				);
+				winningCombos.clear();
+				winningCombos.putAll(sEStats.allWinningCombosWithJollyAndSuperstar);
 				recordAsRawValue.put(
 					"allWinningCombosWithJollyAndSuperstar",
-					IOUtils.INSTANCE.serializeAndEncode(new LinkedHashMap<>(sEStats.allWinningCombosWithJollyAndSuperstar))
+					IOUtils.INSTANCE.serializeAndEncode(winningCombos)
 				);
 				FirestoreWrapper.get().write(getPath(), recordAsRawValue);
 			}
