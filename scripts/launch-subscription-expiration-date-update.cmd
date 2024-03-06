@@ -2,6 +2,8 @@
 
 call "%~dp0set-env.cmd"
 
+set logger.show-time=false
+
 ::call  "%JAVA_HOME%\bin\%JAVA_COMMAND%" -cp %classPath%;%LIBS%;"%CURRENT_DIR%binaries.jar"; org.rg.game.lottery.application.SubscriptionExpirationDateUpdater Liberati-Claudio,4w;Carrazza-Alessandro,4w;Coletta-Antonello,4w;Coletta-Giuseppe,4w;
 ::call  "%JAVA_HOME%\bin\%JAVA_COMMAND%" -cp %classPath%;%LIBS%;"%CURRENT_DIR%binaries.jar"; org.rg.game.lottery.application.SubscriptionExpirationDateUpdater Bellacanzone-Emanuele,4w;
 ::call  "%JAVA_HOME%\bin\%JAVA_COMMAND%" -cp %classPath%;%LIBS%;"%CURRENT_DIR%binaries.jar"; org.rg.game.lottery.application.SubscriptionExpirationDateUpdater Fusi-Francesco,4w;
