@@ -196,7 +196,7 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		}
 		futures.forEach(CompletableFuture::join);
 		LogUtils.INSTANCE.warn("All activities are finished");
-
+		FirestoreWrapper.shutdownDefaultInstance();
 	}
 
 
