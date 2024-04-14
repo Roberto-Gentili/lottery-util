@@ -107,6 +107,9 @@ public class SEIntegralSystemAnalyzer extends Shared {
 		);
 		Collection<CompletableFuture<Void>> futures = new CopyOnWriteArrayList<>();
 		boolean onlyShowComputed = CollectionUtils.INSTANCE.retrieveBoolean(null, "onlyShowComputed", false);
+		if (onlyShowComputed) {
+			LogUtils.INSTANCE.info("Analysis disabled");
+		}
 		Long timeout = CollectionUtils.INSTANCE.retrieveLong(null, "timeout");
 		if (timeout != null) {
 			LogUtils.INSTANCE.info("Set timeout to " + timeout + " seconds");
