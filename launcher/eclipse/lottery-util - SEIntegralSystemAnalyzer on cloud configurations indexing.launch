@@ -21,7 +21,7 @@
     <stringAttribute key="org.eclipse.jdt.launching.JRE_CONTAINER" value="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/21/"/>
     <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="org.rg.game.lottery.application.SEIntegralSystemAnalyzer"/>
     <stringAttribute key="org.eclipse.jdt.launching.MODULE_NAME" value="org.rg.game.lottery"/>
-    <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="index.mode=1"/>
     <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="lottery-util"/>
     <stringAttribute key="org.eclipse.jdt.launching.SOURCE_PATH_PROVIDER" value="org.eclipse.m2e.launchconfig.sourcepathProvider"/>
+    <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Dindex.mode=1"/>
 </launchConfiguration>
