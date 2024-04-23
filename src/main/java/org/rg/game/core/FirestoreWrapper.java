@@ -2,6 +2,7 @@ package org.rg.game.core;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Paths;
@@ -38,16 +39,20 @@ public class FirestoreWrapper {
 			);
 			LogUtils.INSTANCE.info("Credentials loaded from firebase.credentials");
 		} catch (Throwable exc) {
-			String credentialsFileVar = CollectionUtils.INSTANCE.retrieveValue(prefix + "firebase.credentials.file");
-			LogUtils.INSTANCE.info(prefix + "firebase.credentials.file=" + credentialsFileVar);
-			String credentialsFilePath =
-				Paths.get(
-					credentialsFileVar
-				).normalize().toAbsolutePath().toString();
-			serviceAccount =
-				new FileInputStream(
-					credentialsFilePath
-				);
+			String credentialsFilePath = CollectionUtils.INSTANCE.retrieveValue(prefix + "firebase.credentials.file");
+			try {
+				serviceAccount =
+					new FileInputStream(
+						credentialsFilePath
+					);
+			} catch (FileNotFoundException inExc) {
+				serviceAccount =
+					new FileInputStream(
+						Paths.get(
+							credentialsFilePath
+						).normalize().toAbsolutePath().toString()
+					);
+			}
 			LogUtils.INSTANCE.info("Credentials loaded from " + credentialsFilePath);
 		}
 		FirebaseOptions options = FirebaseOptions.builder()
