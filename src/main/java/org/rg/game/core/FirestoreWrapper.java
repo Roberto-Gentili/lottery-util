@@ -7,7 +7,6 @@ import java.io.InputStream;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 import org.burningwave.Throwables;
@@ -26,7 +25,8 @@ public class FirestoreWrapper {
 
 	public FirestoreWrapper(String prfx) throws IOException {
 		String prefix = prfx != null && !prfx.isEmpty()? prfx + "." : "";
-		String firebaseUrl = System.getenv().getOrDefault(prefix + "firebase.url", System.getenv().get(prefix.toUpperCase().replace(".", "_") + "FIREBASE_URL"));
+		String firebaseUrl =
+			CollectionUtils.INSTANCE.retrieveValue(prefix + "firebase.url");
 		if (firebaseUrl == null) {
 			throw new NoSuchElementException("Firebase URL not set");
 		}
@@ -34,16 +34,13 @@ public class FirestoreWrapper {
 		InputStream serviceAccount;
 		try {
 			serviceAccount = new ByteArrayInputStream(
-				System.getenv().getOrDefault(
-					prefix + "firebase.credentials",
-					System.getenv().get(prefix.toUpperCase().replace(".", "_") + "FIREBASE_CREDENTIALS")
-				).getBytes());
+				CollectionUtils.INSTANCE.retrieveValue(prefix + "firebase.credentials").getBytes()
+			);
 			LogUtils.INSTANCE.info("Credentials loaded from firebase.credentials");
 		} catch (Throwable exc) {
 			String credentialsFilePath =
 				Paths.get(
-					Optional.ofNullable(System.getenv().get(prefix + "firebase.credentials.file"))
-						.orElseGet(() -> System.getenv().get(prefix.toUpperCase().replace(".", "_") + "FIREBASE_CREDENTIALS_FILE"))
+					CollectionUtils.INSTANCE.retrieveValue(prefix + "firebase.credentials.file")
 				).normalize().toAbsolutePath().toString();
 			serviceAccount =
 				new FileInputStream(
