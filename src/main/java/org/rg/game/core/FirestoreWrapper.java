@@ -1,6 +1,7 @@
 package org.rg.game.core;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,8 +42,7 @@ public class FirestoreWrapper {
 			String credentialsFilePath = Paths.get(
 				CollectionUtils.INSTANCE.retrieveValue(prefix + "firebase.credentials.file")
 			).normalize().toAbsolutePath().toString();
-			LogUtils.INSTANCE.info("Credential file path: " + credentialsFilePath);
-			serviceAccount = new FileInputStream(credentialsFilePath);
+			serviceAccount = new FileInputStream(new File(credentialsFilePath));
 			LogUtils.INSTANCE.info("Credentials loaded from " + credentialsFilePath);
 		}
 		FirebaseOptions options = FirebaseOptions.builder()
