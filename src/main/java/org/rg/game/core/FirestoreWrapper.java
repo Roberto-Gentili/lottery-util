@@ -41,6 +41,7 @@ public class FirestoreWrapper {
 			String credentialsFilePath = Paths.get(
 				CollectionUtils.INSTANCE.retrieveValue(prefix + "firebase.credentials.file")
 			).normalize().toAbsolutePath().toString();
+			LogUtils.INSTANCE.info("Credential file path: " + credentialsFilePath);
 			serviceAccount = new FileInputStream(credentialsFilePath);
 			LogUtils.INSTANCE.info("Credentials loaded from " + credentialsFilePath);
 		}
