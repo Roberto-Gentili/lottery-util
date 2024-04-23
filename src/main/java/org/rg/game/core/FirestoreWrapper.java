@@ -45,8 +45,7 @@ public class FirestoreWrapper {
 			String credentialsFileBasePath =
 				credentialsFilePath.substring(0, credentialsFilePath.lastIndexOf(File.separator));
 			String credentialsFileName = credentialsFilePath.substring(credentialsFilePath.lastIndexOf(File.separator) + 1);
-			File configFile = new File(credentialsFileBasePath, credentialsFileName);
-			serviceAccount = new FileInputStream("/ho" + configFile.getAbsolutePath());
+			serviceAccount = new FileInputStream(new File(credentialsFileBasePath, credentialsFileName));
 			LogUtils.INSTANCE.info("Credentials loaded from " + credentialsFilePath);
 		}
 		FirebaseOptions options = FirebaseOptions.builder()
