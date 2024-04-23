@@ -1,10 +1,10 @@
 package org.rg.game.core;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -39,14 +39,11 @@ public class FirestoreWrapper {
 			);
 			LogUtils.INSTANCE.info("Credentials loaded from firebase.credentials");
 		} catch (Throwable exc) {
-			String credentialsFilePath = Paths.get(
+			Path credentialsFilePath = Paths.get(
 				CollectionUtils.INSTANCE.retrieveValue(prefix + "firebase.credentials.file")
-			).normalize().toAbsolutePath().toString();
-			String credentialsFileBasePath =
-				credentialsFilePath.substring(0, credentialsFilePath.lastIndexOf(File.separator));
-			String credentialsFileName = credentialsFilePath.substring(credentialsFilePath.lastIndexOf(File.separator) + 1);
-			serviceAccount = new FileInputStream(new File(credentialsFileBasePath, credentialsFileName));
-			LogUtils.INSTANCE.info("Credentials loaded from " + credentialsFilePath);
+			).normalize().toAbsolutePath();
+			serviceAccount =  Files.newInputStream(credentialsFilePath);
+			LogUtils.INSTANCE.info("Credentials loaded from " + credentialsFilePath.toString());
 		}
 		FirebaseOptions options = FirebaseOptions.builder()
 			  .setCredentials(com.google.auth.oauth2.GoogleCredentials.fromStream(serviceAccount))
