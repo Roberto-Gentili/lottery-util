@@ -43,8 +43,8 @@ public class FirestoreWrapper {
 				CollectionUtils.INSTANCE.retrieveValue(prefix + "firebase.credentials.file")
 			).normalize().toAbsolutePath().toString();
 			String credentialsFileBasePath =
-				credentialsFilePath.substring(0, credentialsFilePath.lastIndexOf(File.pathSeparator));
-			String credentialsFileName = credentialsFilePath.substring(credentialsFilePath.lastIndexOf(File.pathSeparator) + 1);
+				credentialsFilePath.substring(0, credentialsFilePath.lastIndexOf(File.separator));
+			String credentialsFileName = credentialsFilePath.substring(credentialsFilePath.lastIndexOf(File.separator) + 1);
 			serviceAccount = new FileInputStream(new File(credentialsFileBasePath, credentialsFileName));
 			LogUtils.INSTANCE.info("Credentials loaded from " + credentialsFilePath);
 		}
