@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ExecutionException;
@@ -43,9 +44,16 @@ public class FirestoreWrapper {
 				CollectionUtils.INSTANCE.retrieveValue(prefix + "firebase.credentials.file")
 			).normalize().toAbsolutePath();
 			if (credentialsFilePath.toString().equals("/home/dale/lottery-util-firebase-credentials.json")) {
-				LogUtils.INSTANCE.info("equals: " + credentialsFilePath.toString().getBytes() + " - " + "/home/dale/lottery-util-firebase-credentials.json");
+				LogUtils.INSTANCE.info("equals:\n" +
+					Arrays.toString(credentialsFilePath.toString().getBytes()) + "\n" +
+					Arrays.toString("/home/dale/lottery-util-firebase-credentials.json".getBytes())
+
+				);
 			} else {
-				LogUtils.INSTANCE.info("not equals: " + credentialsFilePath.toString().getBytes() + " - " + "/home/dale/lottery-util-firebase-credentials.json");
+				LogUtils.INSTANCE.info("equals:\n" +
+					Arrays.toString(credentialsFilePath.toString().getBytes()) + "\n" +
+					Arrays.toString("/home/dale/lottery-util-firebase-credentials.json".getBytes())
+				);
 			}
 			serviceAccount =  Files.newInputStream(credentialsFilePath);
 			LogUtils.INSTANCE.info("Credentials loaded from " + credentialsFilePath.toString());
