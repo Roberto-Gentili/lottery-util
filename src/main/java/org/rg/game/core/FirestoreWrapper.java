@@ -40,7 +40,7 @@ public class FirestoreWrapper {
 			LogUtils.INSTANCE.info("Credentials loaded from firebase.credentials");
 		} catch (Throwable exc) {
 			Path credentialsFilePath = Paths.get(
-				CollectionUtils.INSTANCE.retrieveValue(prefix + "firebase.credentials.file").trim()
+				CollectionUtils.INSTANCE.retrieveValue(prefix + "firebase.credentials.file")
 			).normalize().toAbsolutePath();
 			serviceAccount =  Files.newInputStream(credentialsFilePath);
 			LogUtils.INSTANCE.info("Credentials loaded from " + credentialsFilePath.toString());
