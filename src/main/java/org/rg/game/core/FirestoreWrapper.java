@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ExecutionException;
@@ -43,7 +42,7 @@ public class FirestoreWrapper {
 			Path credentialsFilePath = Paths.get(
 				CollectionUtils.INSTANCE.retrieveValue(prefix + "firebase.credentials.file")
 			).normalize().toAbsolutePath();
-			serviceAccount =  Files.newInputStream(credentialsFilePath, StandardOpenOption.READ);
+			serviceAccount =  Files.newInputStream(credentialsFilePath);
 			LogUtils.INSTANCE.info("Credentials loaded from " + credentialsFilePath.toString());
 		}
 		FirebaseOptions options = FirebaseOptions.builder()
@@ -63,14 +62,17 @@ public class FirestoreWrapper {
 						try {
 							DEFAULT_INSTANCE = new FirestoreWrapper(null);
 						} catch (IOException exc) {
+							LogUtils.INSTANCE.error(exc);
 							return Throwables.INSTANCE.throwException(exc);
 						}
 					}
 				}
 			}
 		} catch (NoSuchElementException exc) {
+			LogUtils.INSTANCE.error(exc);
 			LogUtils.INSTANCE.info(exc.getMessage());
 		} catch (Throwable exc) {
+			LogUtils.INSTANCE.error(exc);
 			LogUtils.INSTANCE.error(exc, "Unable to connect to Firebase");
 		}
 		return DEFAULT_INSTANCE;
