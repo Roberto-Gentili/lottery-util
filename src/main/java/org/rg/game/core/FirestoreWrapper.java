@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ExecutionException;
@@ -42,7 +43,7 @@ public class FirestoreWrapper {
 			Path credentialsFilePath = Paths.get(
 				CollectionUtils.INSTANCE.retrieveValue(prefix + "firebase.credentials.file")
 			).normalize().toAbsolutePath();
-			serviceAccount =  Files.newInputStream(credentialsFilePath);
+			serviceAccount =  Files.newInputStream(credentialsFilePath, StandardOpenOption.READ);
 			LogUtils.INSTANCE.info("Credentials loaded from " + credentialsFilePath.toString());
 		}
 		FirebaseOptions options = FirebaseOptions.builder()
