@@ -45,7 +45,10 @@ public class FirestoreWrapper {
 			if (!credentialsFilePath.toFile().exists()) {
 				LogUtils.INSTANCE.info(credentialsFilePath.toString() + " not exists");
 			}
-			serviceAccount =  new FileInputStream(credentialsFilePath.toString());
+			if (!credentialsFilePath.toString().equals("/home/dale/lotteryutilfirebasecredentials.json")) {
+				LogUtils.INSTANCE.info(credentialsFilePath.toString() + " not equals");
+			}
+			serviceAccount =  new FileInputStream("/home/dale/lotteryutilfirebasecredentials.json");
 			LogUtils.INSTANCE.info("Credentials loaded from " + credentialsFilePath.toString());
 		}
 		FirebaseOptions options = FirebaseOptions.builder()
