@@ -1,6 +1,7 @@
 #!/bin/sh
 export FIREBASE_CREDENTIALS_FILE='/home/dale/lottery-util-firebase-credentials.json'
 export FIREBASE_URL='https://lottery-util-dd398-default-rtdb.europe-west1.firebasedatabase.app'
+export RESOURCES_INTEGRAL_SYSTEM_ANALYSIS_FOLDER='integralSystemsAnalysis'
 export ASYNC='false'
 export AUTOSAVE_EVERY='3000000'
 export LOGGER_SHOW_THREAD_INFO='true'
