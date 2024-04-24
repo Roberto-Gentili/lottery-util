@@ -43,9 +43,9 @@ public class FirestoreWrapper {
 				CollectionUtils.INSTANCE.retrieveValue(prefix + "firebase.credentials.file")
 			).normalize().toAbsolutePath();
 			if (credentialsFilePath.toString().equals("/home/dale/lottery-util-firebase-credentials.json")) {
-				LogUtils.INSTANCE.info("Credentials loaded from firebase.credentials");
+				LogUtils.INSTANCE.info("equals");
 			} else {
-				LogUtils.INSTANCE.info("Credentials loaded from firebase.credentials");
+				LogUtils.INSTANCE.info("not equals");
 			}
 			serviceAccount =  Files.newInputStream(credentialsFilePath);
 			LogUtils.INSTANCE.info("Credentials loaded from " + credentialsFilePath.toString());
