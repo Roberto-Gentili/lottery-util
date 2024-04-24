@@ -1,4 +1,4 @@
-#!bin/bash
+#!/bin/sh
 export FIREBASE_CREDENTIALS_FILE='/home/dale/lottery-util-firebase-credentials.json'
 export FIREBASE_URL='https://lottery-util-dd398-default-rtdb.europe-west1.firebasedatabase.app'
 export ASYNC='false'
