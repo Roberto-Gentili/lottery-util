@@ -35,14 +35,13 @@ public class FirestoreWrapper {
 		LogUtils.INSTANCE.info("Database URL " + firebaseUrl);
 		InputStream serviceAccount;
 		try {
-			LogUtils.INSTANCE.info("valore:" + Arrays.toString(System.getenv("FIREBASE_CREDENTIALS_FILE").getBytes()));
 			serviceAccount = new ByteArrayInputStream(
 				CollectionUtils.INSTANCE.retrieveValue(prefix + "firebase.credentials").getBytes()
 			);
 			LogUtils.INSTANCE.info("Credentials loaded from firebase.credentials");
 		} catch (Throwable exc) {
 			Path credentialsFilePath = Paths.get(
-				CollectionUtils.INSTANCE.retrieveValue(prefix + "firebase.credentials.file")
+				CollectionUtils.INSTANCE.retrieveValue(prefix + "firebase.credentials.file").trim()
 			).normalize().toAbsolutePath();
 			if (credentialsFilePath.toString().equals("/home/dale/lottery-util-firebase-credentials.json")) {
 				LogUtils.INSTANCE.info("equals:\n" +
