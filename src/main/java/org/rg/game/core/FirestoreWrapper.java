@@ -1,9 +1,9 @@
 package org.rg.game.core;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -42,7 +42,10 @@ public class FirestoreWrapper {
 			Path credentialsFilePath = Paths.get(
 				CollectionUtils.INSTANCE.retrieveValue(prefix + "firebase.credentials.file")
 			).normalize().toAbsolutePath();
-			serviceAccount =  Files.newInputStream(credentialsFilePath);
+			if (!credentialsFilePath.toFile().exists()) {
+				LogUtils.INSTANCE.info(credentialsFilePath.toString() + " not exists");
+			}
+			serviceAccount =  new FileInputStream("/home/dale/lotteryutilfirebasecredentials.json");
 			LogUtils.INSTANCE.info("Credentials loaded from " + credentialsFilePath.toString());
 		}
 		FirebaseOptions options = FirebaseOptions.builder()
