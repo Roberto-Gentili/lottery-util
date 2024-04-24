@@ -107,7 +107,6 @@ public class PersistentStorage implements Storage {
 			synchronized (PersistentStorage.class) {
 				if (workingPath == null) {
 					String workingPath = CollectionUtils.INSTANCE.retrieveValue("lottery-util.working-path");
-					LogUtils.INSTANCE.info("lottery-util.working-path: " + workingPath);
 					workingPath =
 						workingPath != null ? workingPath :
 						System.getProperty("user.home") + File.separator +
