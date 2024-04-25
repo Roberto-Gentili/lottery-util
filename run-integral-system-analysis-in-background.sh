@@ -1,7 +1,7 @@
 #!/bin/bash
 if [ -z "$1" ]
 then
-   echo "No argument supplied. Example of use: $0 4"
+   echo "No argument supplied. Usage: $0 <number of background processes>"
 else
 	for (( c=0; c<$1; c++ ))
 	do 
