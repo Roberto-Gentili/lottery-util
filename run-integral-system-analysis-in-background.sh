@@ -12,5 +12,6 @@ fi
 #List all background sessions
 screen -ls;
 echo "To resume a session use: screen -r <session id>"
-echo "To kill a detached session use: screen -X -S <session id> quit"
+echo "To kill session use: screen -X -S <session id> quit"
+echo "To kill all sessions use: killall screen"
 echo "To detach from a session use: CTRL+A+D"
