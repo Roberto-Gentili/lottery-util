@@ -8,4 +8,3 @@ export AUTOSAVE_EVERY='3000000'
 export LOGGER_SHOW_THREAD_INFO='true'
 export TASKS_MAX_PARALLEL='8'
 mvn -B compile exec:java -P integral-system-analysis --file pom.xml
-asdfadsf
