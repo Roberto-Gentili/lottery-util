@@ -1,9 +1,14 @@
 #!/bin/bash
-for (( c=0; c<$1; c++ ));
-do 
-	#Run in detached mode
-	screen -d -m ./run-integral-system-analysis.sh;
-done;
+if [ -z "$1" ]
+then
+   echo "No argument supplied. Example of use: $0 4"
+else
+	for (( c=0; c<$1; c++ ))
+	do 
+		#Run in detached mode
+		screen -d -m ./run-integral-system-analysis.sh
+	done
+fi
 #List all background sessions
 screen -ls;
 #To kill a detached session: screen -X -S ${processId} quit
