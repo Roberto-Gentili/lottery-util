@@ -1,7 +1,7 @@
 #!/bin/bash
 if [ -z "$1" ]
 then
-   echo "No argument supplied. Usage: $0 <number of background processes>"
+   echo "No argument supplied. Usage: $0 <number of sessions>"
 else
 	for (( c=0; c<$1; c++ ))
 	do 
@@ -11,6 +11,6 @@ else
 fi
 #List all background sessions
 screen -ls;
-#To kill a detached session: screen -X -S ${processId} quit
-#To attach to a background session: screen -r ${processId}
-#To detach from process: CTRL+A+D
+echo "To resume a session use: screen -r <session id>"
+echo "To kill a detached session use: screen -X -S <session id> quit"
+echo "To detach from a session use: CTRL+A+D"
