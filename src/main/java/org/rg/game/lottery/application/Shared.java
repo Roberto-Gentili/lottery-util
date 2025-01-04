@@ -30,7 +30,7 @@ import org.rg.game.lottery.engine.PersistentStorage;
 import org.rg.game.lottery.engine.SELotteryMatrixGeneratorEngine;
 import org.rg.game.lottery.engine.SEStats;
 
-class Shared {
+public class Shared {
 
 	static {
 		ZipSecureFile.setMinInflateRatio(0);
@@ -118,15 +118,15 @@ class Shared {
 		return sheet;
 	}
 
-	static SEStats getSEStats() {
+	public static SEStats getSEStats() {
 		return SEStats.get(Shared.sEStatsDefaultDate, TimeUtils.getDefaultDateFormat().format(new Date()));
 	}
 
-	static SEStats getSEStatsForLatestExtractionDate() {
+	public static SEStats getSEStatsForLatestExtractionDate() {
 		return SEStats.get(Shared.sEStatsDefaultDate, TimeUtils.getDefaultDateFormat().format(getSEStats().getLatestExtractionDate()));
 	}
 
-	static SEStats getSEAllStats() {
+	public static SEStats getSEAllStats() {
 		return SEStats.get(SEStats.FIRST_EXTRACTION_DATE_AS_STRING, TimeUtils.getDefaultDateFormat().format(new Date()));
 	}
 

@@ -1,11 +1,23 @@
 package org.rg.game.lottery.engine;
 
 import java.math.BigInteger;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Random;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import org.rg.game.core.MathUtils;
+import org.rg.game.lottery.application.Shared;
 
 public class ComboHandlerTest {
 
@@ -54,6 +66,61 @@ public class ComboHandlerTest {
 	}
 
 	public static void main(String[] args) {
+		ComboHandler comboHandler = new ComboHandler(SEStats.NUMBERS, 6);
+		int blockSize = comboHandler.getSizeAsInt()/(comboHandler.getSizeAsInt()/1000000) + 1;
+		int latestBlockIndex = comboHandler.getSizeAsInt() / blockSize;
+		int latestBlockSize = comboHandler.getSizeAsInt() - (latestBlockIndex * blockSize);
+		Map<Integer, Integer> counters = new LinkedHashMap<>();
+		SEStats sEStats = Shared.getSEStatsForLatestExtractionDate();
+		for (Map.Entry<Date, List<Integer>> extractionData : sEStats.getAllWinningCombosReversed().entrySet()) {
+			Integer index = comboHandler.computeCounter(extractionData.getValue()).intValue();
+//			System.out.println(
+//				TimeUtils.getDefaultDateFormat().format(extractionData.getKey()) + ": " +
+//				index
+//			);
+			Integer key = index/blockSize;
+			Integer counter = counters.get(key);
+			if (counter == null) {
+				counters.put(key, 1);
+			} else {
+				counters.put(key, ++counter);
+			}
+
+		}
+		counters = sortByValue(counters);
+		List<Integer> indexes = counters.keySet().stream().collect(Collectors.toList());
+		Collections.reverse(indexes);
+		for (Integer index : indexes) {
+			System.out.println(index + ": " + counters.get(index));
+		}
+		LocalDate nextExtractionDate = SELotteryMatrixGeneratorEngine.DEFAULT_INSTANCE.computeNextExtractionDate(LocalDate.now(), false);
+		Random randomizer = new Random(
+			Shared.getSEAllStats().getSeedData(
+				nextExtractionDate
+			).getValue()
+		);
+		TreeMap<Integer, List<Integer>> combos = new TreeMap<>();
+		for (int i = 0; i < 25; i++) {
+			int blockIndex = indexes.get(i);
+			int randomBound = blockIndex < latestBlockIndex? blockSize : latestBlockSize;
+			int counter = (randomizer.nextInt(randomBound) + 1) + (indexes.get(i) * blockSize);
+			List<Integer> combo = comboHandler.computeCombo(BigInteger.valueOf(counter));
+			/*System.out.println(
+				"From block " +
+					(blockIndex + 1) +
+					" (" + ((indexes.get(i) * blockSize) + 1) + " -> " +
+					((indexes.get(i) * blockSize) + randomBound) + "):\t" +
+					counter + "\t->\t" +
+				comboHandler.toString(combo)
+			);*/
+			combos.put(counter, combo);
+		}
+		System.out.println("Per il concorso numero " + (Shared.getSEAllStats().getAllWinningCombos().size() + 1) +
+			" del " + nextExtractionDate.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG)) + " il sistema è composto da " + combos.size() + " combinazioni");
+		for (Entry<Integer, List<Integer>> row : combos.entrySet()) {
+			System.out.println(comboHandler.toString(row.getValue()));
+		}
+
 		//87 86	85 83
 		//88 87 86 84
 		//int[] combo = {1, 2, 3, 4};
@@ -73,6 +140,18 @@ public class ComboHandlerTest {
 			}
 		});
 	}
+
+	public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
+        List<Entry<K, V>> list = new ArrayList<>(map.entrySet());
+        list.sort(Entry.comparingByValue());
+
+        Map<K, V> result = new LinkedHashMap<>();
+        for (Entry<K, V> entry : list) {
+            result.put(entry.getKey(), entry.getValue());
+        }
+
+        return result;
+    }
 
 	public static double computeIncrementation(double y, double n, double m) {
 		return
