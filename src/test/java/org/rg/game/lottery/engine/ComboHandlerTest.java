@@ -132,8 +132,7 @@ public class ComboHandlerTest {
 		List<Integer> randomBlocks = new ArrayList<>();
 		for (int i = 0; i < comboForGroup[1]; i++) {
 			Integer selectedBlock = null;
-			while (selectedBlocks.contains(selectedBlock = randomizer.nextInt(latestBlockIndex + 1))) {}
-			selectedBlocks.add(selectedBlock);
+			while (!selectedBlocks.add(selectedBlock = randomizer.nextInt(latestBlockIndex + 1))) {}
 			randomBlocks.add(selectedBlock);
 		}
 		combos.clear();
