@@ -9,10 +9,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
@@ -103,10 +105,12 @@ public class ComboHandlerTest {
 			).getValue()
 		);
 		TreeMap<Integer, List<Integer>> combos = new TreeMap<>();
+		Set<Integer> selectedBlocks = new LinkedHashSet<>();
 		for (int i = 0; i < comboForGroup[0]; i++) {
 			int blockIndex = indexes.get(i);
 			int randomBound = blockIndex < latestBlockIndex? blockSize : latestBlockSize;
 			int counter = (randomizer.nextInt(randomBound) + 1) + (indexes.get(i) * blockSize);
+			selectedBlocks.add(indexes.get(i));
 			List<Integer> combo = comboHandler.computeCombo(BigInteger.valueOf(counter));
 			/*System.out.println(
 				"From block " +
@@ -127,7 +131,10 @@ public class ComboHandlerTest {
 
 		List<Integer> randomBlocks = new ArrayList<>();
 		for (int i = 0; i < comboForGroup[1]; i++) {
-			randomBlocks.add(randomizer.nextInt(latestBlockIndex + 1));
+			Integer selectedBlock = null;
+			while (selectedBlocks.contains(selectedBlock = randomizer.nextInt(latestBlockIndex + 1))) {}
+			selectedBlocks.add(selectedBlock);
+			randomBlocks.add(selectedBlock);
 		}
 		combos.clear();
 		for (Integer blockIndex : randomBlocks) {
