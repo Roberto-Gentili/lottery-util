@@ -188,7 +188,7 @@ public class SEStats {
 					break;
 				}
 			} catch (Throwable exc) {
-				LogUtils.INSTANCE.warn(dataLoader.getClass() + " in unable to load extractions data: " + exc.getMessage());
+				LogUtils.INSTANCE.warn(dataLoader.getClass() + " is unable to load extractions data: " + exc.getMessage());
 			}
 		}
 		if (!dataLoaded) {
@@ -794,6 +794,8 @@ public class SEStats {
 	public static class InternetDataLoader extends org.rg.game.lottery.engine.SEStats.DataLoader.Abst {
 		public static final String LATEST_WINNING_COMBO_URL = "https://www.gntn-pgd.it/gntn-info-web/rest/gioco/superenalotto/estrazioni/ultimoconcorso";
 		public static final String EXTRACTIONS_ARCHIVE_URL = "https://www.superenalotto.net/estrazioni/${year}";
+		public static final Long EXTRACTIONS_ARCHIVE_PAUSE =
+				Long.parseLong(System.getenv().getOrDefault("se-stats.loading-from-internet-pause", "500"));
 
 		InternetDataLoader(Date startDate, Date endDate) {
 			super(startDate, endDate);
@@ -849,6 +851,9 @@ public class SEStats {
 			for (int year : IntStream.range(startYear, (endYear + 1)).map(i -> (endYear + 1) - i + startYear - 1).toArray()) {
 				LogUtils.INSTANCE.info("Loading all extraction data of " + year);
 				Document doc = Jsoup.connect(EXTRACTIONS_ARCHIVE_URL.replace("${year}", String.valueOf(year))).get();
+				if (EXTRACTIONS_ARCHIVE_PAUSE > 0) {
+					Thread.sleep(EXTRACTIONS_ARCHIVE_PAUSE);
+				}
 				Element table = doc.select("table[class=resultsTable table light]").first();
 				Iterator<Element> itr = table.select("tr").iterator();
 				while (itr.hasNext()) {
