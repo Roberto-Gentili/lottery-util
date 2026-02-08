@@ -792,7 +792,7 @@ public class SEStats {
 	}
 
 	public static class InternetDataLoader extends org.rg.game.lottery.engine.SEStats.DataLoader.Abst {
-		public static final String LATEST_WINNING_COMBO_URL = "https://www.gntn-pgd.it/gntn-info-web/rest/gioco/superenalotto/estrazioni/ultimoconcorso";
+		public static final String LATEST_WINNING_COMBO_URL = "http://www.gntn-pgd.it/gntn-info-web/rest/gioco/superenalotto/estrazioni/ultimoconcorso";
 		public static final String EXTRACTIONS_ARCHIVE_URL = "https://www.superenalotto.net/estrazioni/${year}";
 		public static final Long EXTRACTIONS_ARCHIVE_PAUSE =
 				Long.parseLong(System.getenv().getOrDefault("se-stats.loading-from-internet-pause", "500"));
@@ -826,7 +826,8 @@ public class SEStats {
 				winningCombo.add(Integer.valueOf((String)winningComboData.get("superstar")));
 				return new AbstractMap.SimpleEntry<>(extractionDate, winningCombo);
 			} catch (IOException exc) {
-				return Throwables.INSTANCE.throwException(exc);
+				LogUtils.INSTANCE.warn(InternetDataLoader.class + " is unable to retrieve latest winning combo: " + exc.getMessage());
+				return null;
 			}
 		}
 
@@ -844,9 +845,11 @@ public class SEStats {
 			int endYear = calendar.get(Calendar.YEAR);
 			LogUtils.INSTANCE.info();
 			Map.Entry<Date, List<Integer>> latestWinningCombo = getLatestWinningCombo();
-			if (TimeUtils.isBetween(latestWinningCombo.getKey(), startDate, endDate)) {
-				allWinningCombos.put(latestWinningCombo.getKey(), new ArrayList<>(latestWinningCombo.getValue().subList(0, 6)));
-				allWinningCombosWithJollyAndSuperstar.put(latestWinningCombo.getKey(), latestWinningCombo.getValue());
+			if (latestWinningCombo != null) {
+				if (TimeUtils.isBetween(latestWinningCombo.getKey(), startDate, endDate)) {
+					allWinningCombos.put(latestWinningCombo.getKey(), new ArrayList<>(latestWinningCombo.getValue().subList(0, 6)));
+					allWinningCombosWithJollyAndSuperstar.put(latestWinningCombo.getKey(), latestWinningCombo.getValue());
+				}
 			}
 			for (int year : IntStream.range(startYear, (endYear + 1)).map(i -> (endYear + 1) - i + startYear - 1).toArray()) {
 				LogUtils.INSTANCE.info("Loading all extraction data of " + year);
